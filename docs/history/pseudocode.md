@@ -1,5 +1,8 @@
 # Stride: pseudocode
 
+> History. This was written before Stride 1.0 and describes the language as it was planned then, not as it is. What
+> Stride is now: [the guide](../guide.md) and [the specification](../spec.md).
+
 The design is `design.md`. This is each part in pseudocode, in the order the program is built.
 
 ## 1. Values

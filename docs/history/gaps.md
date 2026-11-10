@@ -1,5 +1,8 @@
 # Stride against Starlark-Go: the gap list
 
+> History. This was written before Stride 1.0 and describes the language as it was planned then, not as it is. What
+> Stride is now: [the guide](../guide.md) and [the specification](../spec.md).
+
 Every behaviour of Starlark-Go (github.com/google/starlark-go, cloned and read file by file: syntax/scan.go,
 parse.go, syntax.go, walk.go, quote.go, options.go; resolve/resolve.go, binding.go; internal/compile/compile.go,
 serial.go; internal/spell; starlark/interp.go, eval.go, value.go, library.go, int.go, debug.go; lib/math, lib/time,

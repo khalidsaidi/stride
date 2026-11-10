@@ -1,5 +1,8 @@
 # Stride: design
 
+> History. This was written before Stride 1.0 and describes the language as it was planned then, not as it is. What
+> Stride is now: [the guide](../guide.md) and [the specification](../spec.md).
+
 Stride is the language a form's workflow is written in. This is its design: what it must do,
 the language, the compiler, the virtual machine and the tools, and how each is built. The construction is
 taken from Docassemble (`jhpyle/docassemble`, MIT, read in full on 2026-11-07 at commit 36d7bd4) where it

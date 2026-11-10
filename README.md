@@ -2,9 +2,9 @@
 
 Stride is a small programming language for turning a fillable PDF form into a guided workflow: you write
 which questions to ask and which box each answer goes in, and the person filling the form answers them one at a
-time. A program is checked against the form before it runs: every box it writes exists, is written once on every
-way through, and every question's words are printed beside its box. Every loop is bounded, so every program
-ends. The PDF itself is never changed.
+time. The filled PDF downloads from the page; the original is never changed.
+
+Before a workflow runs, Stride checks it against the form, so no box is missed or written twice.
 
 ```stride
 form consent
@@ -70,8 +70,9 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
 - [docs/guide.md](docs/guide.md): how to write Stride; [docs/coming-from.md](docs/coming-from.md) for someone who
   knows Go, Java, JavaScript or Python.
 - [docs/spec.md](docs/spec.md): the specification, the authority on what every construct means.
-- [docs/grammar.md](docs/grammar.md): the short reference; [docs/design.md](docs/design.md),
-  [docs/pseudocode.md](docs/pseudocode.md) and [docs/gaps.md](docs/gaps.md): how it was designed.
+- [docs/grammar.md](docs/grammar.md): the short reference.
+- [docs/history/](docs/history/): the design notes written before 1.0. They describe the language as it was
+  planned, not as it is.
 
 ## Tests
 

@@ -1807,7 +1807,7 @@ name the fault's code with `// rule F006`, and are run and counted by `stride se
 
 ## 20. The gap list decided
 
-Every line of `gaps.md`, and where this specification settles it.
+Every line of `history/gaps.md`, an early list of what Stride lacked, and where this specification settles it.
 
 | Gap | Decided |
 |---|---|
