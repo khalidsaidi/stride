@@ -1,6 +1,6 @@
 # Stride
 
-Stride is a small programming language for turning a fillable PDF form into a guided questionnaire: you write
+Stride is a small programming language for turning a fillable PDF form into a guided workflow: you write
 which questions to ask and which box each answer goes in, and the person filling the form answers them one at a
 time. A program is checked against the form before it runs: every box it writes exists, is written once on every
 way through, and every question's words are printed beside its box. Every loop is bounded, so every program
