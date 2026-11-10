@@ -54,7 +54,7 @@ export const stdSource = () => {
 // The language's version (spec §21): what a program written for it can count on.
 export const LANGUAGE = "1.0.0";
 
-export function compile(source, name, { dir = ".", header = null, resources = {}, read = diskRead, stdPath = STD_PATH, until = "generate", certain = true, depth = 0, trace = false, libraries = [], session = false } = {}) {
+export function compile(source, name, { dir = ".", header = null, resources = {}, read = diskRead, stdPath = STD_PATH, until = "generate", depth = 0, trace = false, libraries = [], session = false } = {}) {
   const diagnostics = new Diagnostics();
   const file = new SourceFile(name, source);
   file.depth = depth;
@@ -85,7 +85,7 @@ export function compile(source, name, { dir = ".", header = null, resources = {}
   phase("check");
   if (!diagnostics.empty) return out;
 
-  flow(resolved, diagnostics, { certain, session });
+  flow(resolved, diagnostics, { session });
   phase("flow");
   if (!diagnostics.empty || until === "flow") return out;
 

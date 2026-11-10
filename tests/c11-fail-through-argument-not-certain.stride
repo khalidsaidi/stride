@@ -8,6 +8,6 @@ define maybe(x: number) {
 ask n: number "N"
 maybe(1)
 maybe(n)
-# rule 11.3.2 11.1
+# rule 11.1
 # answers {"n": "0"}
 # asked ["n"]

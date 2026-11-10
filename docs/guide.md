@@ -404,7 +404,6 @@ fault F001: division by zero
 | | When | What happens |
 |---|---|---|
 | a mistake | before anything runs | nothing runs, and nothing is compiled |
-| a fault certain before the form opens (S413) | before anything runs | a mistake: `1 / 0` is never a fault waiting for a person |
 | a fault | as it runs, on some answers | the run stops; nothing it wrote counts; the page says so and keeps the answers |
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
 | an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |

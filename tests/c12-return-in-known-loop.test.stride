@@ -10,4 +10,4 @@ define by_each() -> number {
 }
 expect by_for() == 1
 expect by_each() == 2
-# rule 9.6 11.3.2 S405
+# rule 9.6 S405

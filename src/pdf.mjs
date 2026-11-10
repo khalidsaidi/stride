@@ -95,28 +95,11 @@ function taints(v) {
   if (v instanceof StrideRecord) return new Set(v.fields.flatMap((x) => [...taints(x)]));
   return new Set();
 }
-const taintSize = (v) => taints(v).size;
 const known = (v) => !isTop(v) && !(Array.isArray(v) && v.some((x) => !known(x))) && !(v instanceof StrideRecord && v.fields.some((x) => !known(x)));
 
 // Values copied when a path splits: lists and records are changed in place as the program runs.
 const copy = (v) => V.copy(v);
 const forkState = (st) => st.copy();
-
-// What two paths' values have in common: the value where they agree, unknown where they do not.
-function meet(a, b) {
-  if (isTop(a) && (b === null || b === undefined)) return a;
-  if (isTop(b) && (a === null || a === undefined)) return b;
-  // Two lists of a known most each, whatever they hold, are a list of at most the larger.
-  const ma = mostBound(a), mb = mostBound(b);
-  const bounds = ma !== undefined && mb !== undefined ? { most: Math.max(ma, mb) } : {};
-  if (isTop(a) || isTop(b)) return new Top(new Set([...taints(a), ...taints(b)]), isTop(a) && isTop(b) && a.direct === b.direct ? a.direct : null, bounds);
-  if (Array.isArray(a) && Array.isArray(b) && a.length !== b.length && !V.isSet(a)) return new Top(new Set([...taints(a), ...taints(b)]), null, bounds);
-  if (Array.isArray(a) && Array.isArray(b) && a.length === b.length) return V.isSet(a) ? (V.equal(a, b) ? a : new Top(new Set())) : V.list(a.map((x, i) => meet(x, b[i])), Math.max(V.mostOf(a), V.mostOf(b)));
-  if (a instanceof StrideRecord && b instanceof StrideRecord && a.type === b.type) return new StrideRecord(a.type, a.fields.map((x, i) => meet(x, b.fields[i])), a.names);
-  // Numbers and dates are objects: the same value is the same however it was made.
-  if (a === b || (a !== null && b !== null && !Array.isArray(a) && !Array.isArray(b) && V.equal(a, b))) return a;
-  return new Top(new Set([...taints(a), ...taints(b)]));
-}
 
 // A path's turn of the loops whose counters are given.
 const turnOf = (st, counters) => counters.map((l) => shape(st.locals.get(l) ?? null)).join("|");

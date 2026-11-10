@@ -6,5 +6,5 @@ define idle(m: number) -> number {
   return m
 }
 print(idle(200000))
-# rule 15.1 11.3.1 S602
-# mistake 8:7 S602 working out a value
+# rule 15.1 S602
+# mistake 8:7 S602 the PDF check working out a pure call

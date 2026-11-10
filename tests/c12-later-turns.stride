@@ -18,6 +18,6 @@ define second_turn() -> number {
   }
 }
 print(second_turn())
-# rule 12.1.1 11.3.2 9.6
+# rule 12.1.1 9.6
 # answers {"a[1]": "1", "a[2]": "2"}
 # prints ["1", "2", "7", "2"]

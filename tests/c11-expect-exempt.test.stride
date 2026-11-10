@@ -3,4 +3,4 @@ define half(x: number) -> number {
 }
 expect half(1) faults "F001"
 expect 1 / 0 faults "F001"
-# rule 11.3.4 7.17
+# rule 7.17

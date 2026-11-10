@@ -865,7 +865,7 @@ async function main(argv) {
         out(`${red("BUG")} seed ${b.seed}: ${b.problem}`);
         if (flags.has("--show")) out(`${b.source}${b.answers ? ` answers: ${JSON.stringify(b.answers)}` : ""}`);
       }
-      out(`${runs} programs from seed ${seed}: ${counts.agreed} agreed, ${counts.refused} refused for a certain fault (S413) and confirmed by a run that reached it, ${counts.inconclusive} refused (S413) where no run reached the refused instance, ${counts.budget} stopped at a compiler budget (S602), ${counts.exhausted} exhausted, ${counts.bug} bugs`);
+      out(`${runs} programs from seed ${seed}: ${counts.agreed} agreed, ${counts.budget} stopped at a compiler budget (S602), ${counts.exhausted} exhausted, ${counts.bug} bugs`);
       out(`${compared} runs compared; how they ended: ${Object.entries(faults).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ")}`);
       return bugs.length ? 1 : 0;
     }

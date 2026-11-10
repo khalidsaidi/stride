@@ -64,7 +64,7 @@ export function test() {
     json(["check", "bad.stride"], "check with a mistake", (d, x) => x.status === 1 && !d.ok && d.files[0].diagnostics[0].code === "S201");
     json(["compile", "warn.stride", "-o", "w.sbc"], "compile", (d) => d.ok && d.output === "w.sbc" && d.bytes > 0);
     json(["eval", "1 + 1"], "eval", (d) => d.ok && d.value === "2");
-    json(["eval", "1 / 0"], "eval with a mistake", (d, x) => x.status === 1 && !d.ok && d.diagnostics[0].code === "S413");
+    json(["eval", "nosuch"], "eval with a mistake", (d, x) => x.status === 1 && !d.ok && d.diagnostics[0].code === "S201");
     mkdirSync(join(dir, "warn.tests"));
     writeFileSync(join(dir, "warn.tests", "one.json"), JSON.stringify({ prints: ["result"] }));
     json(["test", "warn.stride"], "test", (d) => d.ok && d.files[0].tests[0].name === "one" && d.files[0].tests[0].ok);

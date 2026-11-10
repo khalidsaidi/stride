@@ -158,11 +158,8 @@ stated (§3.7.3.1).
   of the place it goes to when that place states one (`var l: list of text most 4 = empty` has most 4), and 0 when
   it does not: given to a parameter `list of T` without `most`, or as an operand of `l + m` (§6.5.1). A list of most
   0 has no positions: any position read from it is F004. With `define second(xs: list of number) -> number { return
-  xs[2] }`, `second(empty)` faults F004 at `xs[2]` whenever it runs; written in a program it is a pure call on
-  known arguments that always faults, so the compiler refuses it as S413 (§11.3.1). The fault itself is shown by
-  a test, where S413 does not apply (§11.3.4): `expect second(empty) faults "F004"`. In a program the same fault
-  happens only at run time, when the argument depends on an answer: `second([n])`, with n an answer, gives a list
-  of most 1 and is F004 whatever n is; `second([n, n])` gives most 2 and n. `count(empty)` given to such a parameter is 0, and `for each` runs no turns.
+  xs[2] }`, `second(empty)` faults F004 at `xs[2]` whenever it runs; a test shows it: `expect second(empty) faults
+  "F004"`. `second([n])`, with n an answer, gives a list of most 1 and is F004 whatever n is; `second([n, n])` gives most 2 and n. `count(empty)` given to such a parameter is 0, and `for each` runs no turns.
 - 3.7.4. A function's result type always states its most (S211), except a natives' result, whose most §14 states.
   A result worked out from returns (§9.6) has the largest most of its returns.
 - 3.7.5. The most of what an operation makes: a slice `l[a..b]` and a comprehension over l, l's most; `l + m`, the
@@ -520,8 +517,7 @@ test file's included, it is S236): `expect e ["words"]`: e yes-no; the expectati
 not yes.
 `expect e faults "code or words"`: working out e must be a fault. A selector matching F[0-9]{3} exactly matches
 only the fault code. Every other selector matches a case-sensitive substring of the message. There is no message
-fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The expression of `expect … faults` is exempt from S413 (§11.3): a fault it is certain to give is
-what it tests, so the compiler leaves it to run, and the test passes only when
+fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The test passes only when
 both engines give that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
 faults "F013"`): S370 does not apply there.
 
@@ -796,7 +792,7 @@ allowed.
 path (S512); a question asked at most once (S507).
 - 10.4.0. **Which paths.** The PDF check tracks current var values and uses pure-call results it can determine
   independently of answers and impure operations. A determined condition follows its selected branch; an
-  undetermined condition follows both. These additional facts do not make values known under §11.1 or change S413.
+  undetermined condition follows both. These additional facts do not make values known under §11.1.
   Impure calls, including today, remain unknown. Paths may be combined only while preserving the information
   required by the remaining checks. This includes live values' types, carried list limits (§3.7), answer
   dependencies and predicate meanings. Each earlier write, ask, skip and pick retains the conditions under which it
@@ -870,48 +866,20 @@ collect, a skip's reason, a list's most, a constant's value, a parameter's defau
 asks or writes boxes (S403). A parameter used where a known value is needed becomes known-only; every call gives it
 a known value (S404). Such a value must be the same in every turn of a loop that does not count it (S412).
 
-11.3. **Faults certain before the form opens.**
-- 11.3.1. An operation whose operands are all known, or a pure function called with known arguments, that faults
-  whenever it runs (`1 / 0`, `7 // 0`, `round(1.25, 2.5)`, `pad_left("a", 2000)`, `fail` of §11.3.2 aside) is
-mistake S413 at the operation,
-  wherever it stands in reachable code, even in a branch that runs only for some answers: it is a mistake in the
-  program, not in an answer. Each instance is judged on its own: the operation in each turn of a loop the compiler
-  follows (§11.3.6), with that turn's facts, and in a function, with what each reachable call gives it. One
-  instance whose operands are known and that faults is S413, whatever other turns or calls of the same operation
-  do: `for i in 0..2 { print(1 / i) }` is S413, its first turn dividing by 0. A pure call with known arguments
-  remains S413 at the call (`second(empty)`, §3.7.3.1). An operation checked within a particular call or turn points
-  at that operation, with its context noted (§16.2.1). The same fault has one primary diagnosis: an operation that
-  faults whatever any call gives it (`1 / 0` in a function) is S413 there, and not again at its calls. When the
-  check cannot finish within its budget (§15.1), it is S602, never a pass.
-- 11.3.2. A `fail(…)` is a fault the program means: a mistake (S413) only when every run reaches it, as the
-  compiler can tell from what is known before the form opens, whatever syntax surrounds it. The compiler reduces
-  the program's flow first: a branch whose condition is known takes only that branch (`if yes { fail("stop") }`
-  is the `fail` alone), a `match` on a known subject only its arm, a `for` with known bounds runs exactly its
-  turns (`for i in 1..3 { fail(…) }` reaches it; `for i in 1..0` does not), a `for each` over a list whose number
-  of items is known (a literal) its items, and a collect, a `for each` over answers, and any condition on an
-  answer may run zero times or either way. A `fail` is reached on every run when, in the reduced flow, it lies on
-  every path from the program's start to its end; a call of a function reaches a `fail` when the function's
-  reduced flow reaches it on every path, and that call lies on every path in turn.
+11.3. **A fault in what the compiler works out.** The compiler works out a constant's value (§5.3) and a
+parameter's default (§9.2). One whose working out faults (`const X = 1 / 0`) is mistake S413 at the operation,
+wherever it stands. Every other operation that faults does so when it runs (§13): `print(1 / 0)` compiles, and
+is F001 when it runs. The compiler does not predict a run's faults.
 - 11.3.3. **Unreachable code.** A branch whose condition is known before the form opens to be no (`if no`, `if
   MOST > 10` with `MOST = 4`, a `match` arm a known subject never takes), the body of a loop that runs zero times
   with known bounds, and statements after a `return`, `break` or `continue`, never run. They are checked for
-  syntax, names, types and flow (S406 for the statements after a return), but not for S413, nor by the PDF check
-  (§10): their boxes are not written and their questions not asked. This is what is
-  known by §11.1; the PDF check also follows the further facts of §10.4.0 (vars, pure calls), which leave S413 and
-  what §11.1 calls known as they are.
-  For S413 alone, two more are not checked: the part of an expression a known value decides is never worked out —
-  the right of `no and …` and of `yes or …`, the side of `if … then … else` a known condition does not take — and a
-  function that no call in code that can run reaches, a call inside the expression of `expect … faults` reaching
-  nothing for this (§11.3.4); the same function reached by another call is checked from that call. The exemption
-  for `expect … faults` applies only to S413. Its expression and the functions it calls still execute, and are followed by
-  the PDF check under §4.3. Only code known never to execute is excluded from PDF analysis. The working out the compiler must do of
-  constants (§5.3, §11.3.5) and of defaults (§9.2) is checked wherever they stand.
-- 11.3.4. Exempt: the expression of `expect … faults` (§7.17).
+  syntax, names, types and flow (S406 for the statements after a return), but not by the PDF check (§10): their
+  boxes are not written and their questions not asked. This is what is known by §11.1; the PDF check also follows
+  the further facts of §10.4.0 (vars, pure calls), which leave what §11.1 calls known as it is.
 - 11.3.5. **Precedence.** S413 belongs to the flow phase, after the type phase (§16.1). A fault the type phase
   already reports keeps that code and is not reported again: a known list position outside 1 to the list's most is
   S360, not S413; a known number literal or constant out of range is S009.
-- 11.3.6. **Loop facts.** To decide what code can run and what faults are certain (S405, S407, S413, a `fail` on
-  every run), the compiler follows a `for` with known bounds turn by turn, its counter known in each turn, and a
+- 11.3.6. **Loop facts.** To decide what code can run (S405, S407), the compiler follows a `for` with known bounds turn by turn, its counter known in each turn, and a
   `for each` over a list of known items (a literal) item by item, its item and its number known in each turn: in
   every loop, whether or not it asks or writes boxes. These additional loop facts do not enlarge what §11.1 calls
   known. A value already known under §11.1 remains usable wherever §11.2 requires a known value. A value known
@@ -938,7 +906,7 @@ if c { let y = 7 }
 print(y)            # S407: when c is no, y is never declared
 ```
 
-The flow check reduces branches and loops whose conditions are known (§11.3.2) before it decides.
+The flow check reduces branches and loops whose conditions are known (§11.3.3, §11.3.6) before it decides.
 
 12.2. A name is known from the statement that defines it on (S202 says where it is). A name defined inside a loop
 is known only there (S203).
@@ -1004,8 +972,7 @@ words given to `print`, and a fault or none.
 - 14.0.3.1. **Checking comes before empty.** A function first checks its control arguments — positions, places,
   widths, paddings, patterns, separators where stated — and faults when one is wrong, whether or not its main
   argument is empty; only then does an empty main argument give empty. So `format(empty, "invalid")` is F010 and
-  `grouped(empty, 2.5)` is F008, both at run time when the control argument depends on an answer, and S413 when it
-  is known (§11.3.1). An empty control argument is wrong (F007, F008, F009, F010) unless the entry gives it a
+  `grouped(empty, 2.5)` is F008. An empty control argument is wrong (F007, F008, F009, F010) unless the entry gives it a
   meaning.
 - 14.0.4. **Positions** are whole numbers of 1 or more (F007 otherwise, empty included); characters are Unicode
   code points. A position past the end gives empty, or fewer characters.
@@ -1133,7 +1100,7 @@ is taken as proved.
 
 | Budget | Counts | |
 |---|---|---|
-| working out a value before the form opens | expressions, statements and loop turns, an empty body's turns included, of one working out of a constant, a default, or a pure call with known arguments (§11.3.1); the calls nested in it share its budget | 100,000 (S602) |
+| working out a value before the form opens | the expressions of one working out of a constant, a default or another value that must be known (§11.2) | 100,000 (S602) |
 | loop turns in the flow phase | turns actually followed one by one (§11.3.6) over the whole flow phase, every repeated visit of the analysis counted, not the size of the written range; a safe summary or an early exit is allowed | 100,000 (S602) |
 | paths in the PDF check | paths the PDF check keeps apart at one analysis point in one context (§10.4.0): one call of a function, one turn of each loop it follows by known turns; separate calls and known loop turns are not alternative paths at one point | 100,000 (S602) |
 | loop turns in the PDF check | paths the PDF check follows into the head of a loop (§10.4.0), over the whole check, every visit counted, known turns and turns of a loop whose turns are not known alike | 100,000 (S602) |
@@ -1170,14 +1137,11 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
   token met beyond the 200th level, with what surrounds it — an inner value after brackets, or the operator that
   crosses the limit; it need not be an opening bracket;
 - S401 and S402: the call that closes the circle (in S402, the call in the first function of the circle in the
-  order the file declares them); S413 for a `fail` reached through calls: the call, in the program's body, that
-  every run reaches; S518: the option's own line in its set or block; S515 and
+  order the file declares them); S518: the option's own line in its set or block; S515 and
   S516: the program's first line (the header), with the box named in the message; S501: the `pdf` line; S502:
   the `form` line; S503 and S508: the box name's expression; S511: the button name's expression; S514: the
   entry's value; S517: the question's printed words; S323: the second `default`, the first as related code;
-  S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413 for one
-  turn of a loop or one call of a function: the operation, with a note on the loop's turn (`when i is 0`) or the
-  call; S602: the loop whose turns passed the budget, the call whose working out did, the statement where the
+  S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the operation that faults; S602: the loop whose turns passed the budget, the call whose working out did, the statement where the
   PDF check kept one path too many, the statement whose proof that conditions exclude each other did, or the write
   whose answer values did; S407: the read,
   with a label on a path that leaves the name without a value — the branch that skips it, a loop that may run no
@@ -1428,7 +1392,7 @@ its call: the function's name in the call.
 | S410 | a collected item asked and never read | The same. |
 | S411 | a let or var never used | Remove it. |
 | S412 | a known value that changes between turns of a loop | Box names and printed words in a loop are made from its counter, words and constants. |
-| S413 | a fault certain before the form opens | The operation always faults; the message gives the fault. |
+| S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
 | S503 | a skip of a box the PDF lacks | The message gives the nearest. |
@@ -1786,14 +1750,7 @@ names the engine. No test claims that every engine exhausts on the same run.
 
 19.2. `stride fuzz` generates valid programs and answers and runs each in both engines, and
 through the PDF check; a disagreement, a crash, or a mistake on a valid program is a bug. It reports apart the
-programs that agreed, those refused with S413, those stopped by a budget (S602), and the runs the reference
-exhausted. An S413 refusal is confirmed by a run that reaches the refused instance, in the same turn of each loop
-and through the same calls, each value matched with its type and carried list limit, and faults there with the
-fault named; a run that reaches the same place in another turn or call confirms nothing. A run that does not reach
-the refused instance is inconclusive, not a confirmation or counterexample. It reports whether the instance was
-exercised. For a claim that fail is reached on every run, a non-resource-exhausted reference run that does not
-reach it is a counterexample; one matching fault does not establish that universal claim. Tests name S602 as their
-own mistake, never as S413.
+programs that agreed, those stopped by a budget (S602), and the runs the reference exhausted.
 
 19.3. **Faults no type-correct program reaches.** F006, F016, F018 and F019 guard against a fault in the
 compiler or the machine itself; no program the compiler accepts can reach them. They are tested by the machine's

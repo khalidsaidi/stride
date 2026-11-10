@@ -260,7 +260,7 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
 - **Flow:** a function that reaches itself; something that must be known before the form opens and is not; a let
   or var read where not every path has given it a value; a function with a result that does not return one on
   every path; a statement after a return, break or continue; an answer, a let or a var never used; a field asked
-  and never read anywhere; a fault certain before the form opens, such as `1 / 0` (§11.3).
+  and never read anywhere; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
 - **The PDF** (against the header): a box the PDF does not have (with the nearest one); a statement of the wrong
   kind for its box; a button a radio group does not have; a box written twice, or a question asked twice, on one
   path through the program; a box neither written nor skipped; a question's printed words not among those

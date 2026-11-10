@@ -1,6 +1,6 @@
 // stride fuzz (docs/spec.md §19.2): programs made at random, valid by construction, each with answers made
 // at random, run in the machine and the intermediate form's interpreter, and through the PDF
-// check. A crash, a disagreement between the four (§19.1), or a mistake on a program the generator meant to be
+// check. A crash, a disagreement between the two (§19.1), or a mistake on a program the generator meant to be
 // valid is a bug; each is reported with its seed, so `stride fuzz --seed S --runs 1` gives it again.
 //
 // The generator writes a program as a person would: an option set and a record, a few functions (pure ones that
@@ -8,18 +8,12 @@
 // matches, loops, for eaches, collects, comprehensions and every kind of box write, each name used after it is
 // declared and every answer and let read. Expressions are made by type, to a depth, from what is in scope.
 //
-// What a random program may rightly be refused for is not a bug: a fault certain before the form opens (S413:
-// `x / 0` where the 0 is worked out from constants). Such a program is counted and passed over, apart by whether a run
-// reached the instance refused (confirmed) or none did (inconclusive). So is one a check
-// stops at its budget (S602, §15.1), counted apart: neither an agreement nor a refusal. A run the
-// machine exhausts (F014, F015) is not compared (§19.1.1).
+// A program a check stops at its budget (S602, §15.1) is counted apart, not a bug. A run the machine exhausts
+// (F014, F015) is not compared (§19.1.1).
 import { compile } from "./compile.mjs";
 import { load, run, boxValues } from "../runtime/vm.mjs";
-import { placeAt } from "../runtime/bytecode.mjs";
 import { interpretProgram } from "./interpret.mjs";
 import { autoHeader } from "./selftest.mjs";
-import { exact } from "./flow.mjs";
-import * as V from "../runtime/values.mjs";
 
 const PDF = "0".repeat(64);
 
@@ -550,54 +544,6 @@ const view = (x) =>
     fault: x.fault ? { code: x.fault.code, message: x.fault.message, file: x.fault.file, line: x.fault.line, column: x.fault.column, stack: x.fault.stack.map((f) => `${f.function} ${f.file}:${f.line}:${f.column}`) } : null,
   });
 
-// S413 says a fault is certain wherever its operation runs (§11.3.1), or that a fail is reached on every run
-// (§11.3.2). The program is built without that check and run, unanswered and on answers made at random: wherever
-// the place S413 named runs in the instance it named (the turn of each loop, the values of the call, each of its
-// type and list's most, §19.2), the run must stop there with that fault; the same place in another turn or call
-// confirms nothing, and a run that does not reach the instance is neither a confirmation nor a counterexample.
-// A claim that every run reaches a fail is contradicted by a run the reference does not exhaust that ends without
-// it; runs that reach it do not prove it. Gives { wrong } when a run contradicts a claim, else { exercised }: whether
-// a run reached every refused instance.
-export function checkRefusal(source, mistakes, seed) {
-  const header = autoHeader(source, "fuzz.stride", { certain: false });
-  const out = compile(source, "fuzz.stride", { header, certain: false });
-  if (!out.bytecode && out.diagnostics.sorted().some((d) => d.code === "S602")) return { budget: true };
-  if (!out.bytecode) return { wrong: `without S413 the program has other mistakes: ${out.diagnostics.sorted().find((d) => d.severity === "error")?.message}` };
-  const p = load(out.bytecode);
-  const claims = mistakes.map((m) => ({ line: m.line, column: m.column, code: m.message.match(/: (F\d{3}) /)?.[1] ?? "F013", every: m.message.includes("on every run"), context: m.context ?? [] }));
-  // Whether a function's locals are those of the instance a claim names: each name has the value exactly.
-  const inContext = (c, fn, locals) => c.context.every(({ name, value }) => fn.localNames.some((n, i) => n === name && exact(locals[i] ?? null) === value));
-  const r = random(seed ^ 0xfa11);
-  const answers = {};
-  const reached = new Set();
-  for (let round = 0; round < 3; round++) {
-    const ran = new Set();
-    const last = new Map(); // a claimed place -> whether the last time it ran was in the claimed instance
-    const x = run(p, answers, { today: "2026-11-07", trace: ({ fn, at, locals }) => {
-      const pl = placeAt(p, at);
-      if (!pl) return;
-      const k = `${pl.line}:${pl.column}`;
-      for (const c of claims) {
-        if (`${c.line}:${c.column}` !== k) continue;
-        const inside = inContext(c, fn, locals);
-        last.set(k, inside);
-        if (inside) ran.add(k);
-      }
-    } });
-    const exhausted = ["F014", "F015"].includes(x.fault?.code);
-    for (const c of claims) {
-      const at = `${c.line}:${c.column}`;
-      // The fault at the claimed place, in the claimed turn and call: the same place in another confirms nothing.
-      const there = x.fault && x.fault.code === c.code && x.fault.stack.some((f) => `${f.line}:${f.column}` === at) && (c.every || last.get(at) === true);
-      if (there) reached.add(c);
-      if (c.every && !there && !exhausted) return { wrong: `S413 at ${at} says every run reaches a fail, and a run ended ${x.fault ? `with ${x.fault.code} at ${x.fault.line}:${x.fault.column}` : "without it"}` };
-      if (!c.every && ran.has(at) && !there && !(x.fault && x.fault.line < c.line)) return { wrong: `S413 at ${at} says ${c.code} is certain there; the place ran and the run ${x.fault ? `stopped with ${x.fault.code} at ${x.fault.line}:${x.fault.column}` : "finished"}` };
-    }
-    for (const s of x.steps) if (!(s.key in answers)) answers[s.key] = answerFor(r, s);
-  }
-  return { exercised: claims.every((c) => reached.has(c)) };
-}
-
 // One program made from `seed`, run on answers grown over a few runs. Gives { seed, outcome, problem?, source }.
 export function fuzzOne(seed) {
   let made;
@@ -618,11 +564,6 @@ export function fuzzOne(seed) {
   if (mistakes.length) {
     // A check stopped at its budget proves nothing either way, whatever it found before it stopped (§15.1).
     if (mistakes.some((m) => m.code === "S602")) return { seed, outcome: "budget", source };
-    if (mistakes.every((m) => m.code === "S413")) {
-      const { wrong, exercised, budget } = checkRefusal(source, mistakes, seed);
-      if (budget) return { seed, outcome: "budget", source };
-      return wrong ? { seed, outcome: "bug", problem: wrong, source } : { seed, outcome: exercised ? "refused" : "inconclusive", source };
-    }
     return { seed, outcome: "bug", problem: `a mistake on a program meant to be valid: ${mistakes.slice(0, 3).map((m) => `${m.line}:${m.column} ${m.code} ${m.message}`).join("; ")}`, source };
   }
 
@@ -671,7 +612,7 @@ export function fuzzOne(seed) {
 }
 
 export function fuzz({ runs = 100, seed = 1 } = {}) {
-  const counts = { agreed: 0, refused: 0, inconclusive: 0, budget: 0, exhausted: 0, bug: 0 };
+  const counts = { agreed: 0, budget: 0, exhausted: 0, bug: 0 };
   const bugs = [];
   const faults = {}; // runs compared, by the fault they stopped on: how much of the machine's checking was met
   let compared = 0;

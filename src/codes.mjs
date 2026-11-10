@@ -798,8 +798,8 @@ export const CODES = {
     "explanation": "Box names and printed words in a loop are made from its counter, words and constants."
   },
   "S413": {
-    "when": "a fault certain before the form opens",
-    "explanation": "The operation always faults; the message gives the fault."
+    "when": "a constant's value or a default that faults",
+    "explanation": "The compiler works these out; the message gives the fault."
   },
   "S501": {
     "when": "the header for another PDF",

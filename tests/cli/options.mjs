@@ -38,8 +38,6 @@ export function test() {
   expect(["fuzz", "--seed", "xyz"], 2, "--seed takes a whole number");
   expect(["eval", "1", "--use", "nolib"], 2, "there is no lib/nolib.stride");
   expect(["eval", "--1"], 0, "1");
-  expect(["fuzz", "--runs", "1", "--seed", "32033689"], 0, "1 refused (S413) where no run reached");
-  expect(["fuzz", "--runs", "1", "--seed", "32036049"], 0, "1 stopped at a compiler budget");
   expect(["compile", "x.stride", "-o"], 2, "-o needs a value");
   const dir = mkdtempSync(join(tmpdir(), "stride-options-"));
   try {

@@ -186,9 +186,6 @@ fault F013: born after the day
   called from main, guide.stride:9:7
 ```
 
-Had the second call been `age_on(date_of(2030, 1, 1), …)`, with every value known, the compiler would have refused
-the program before it ran: it reaches the `fail` whatever the answers (S413).
-
 A test can say a fault is what it expects: `expect age_on(...) faults "F013"` (`stride guide tests`).
 
 ## Every run ends

@@ -12,5 +12,5 @@ define whole(m: number) -> number {
 }
 print(part(12000))
 print(whole(12000))
-# rule 15.1 11.3.1 S602
-# mistake 14:7 S602 working out a value
+# rule 15.1 S602
+# mistake 14:7 S602 the PDF check working out a pure call

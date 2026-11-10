@@ -26,4 +26,4 @@ define by_match() -> number {
 expect by_for() == 3
 expect by_each() == 2
 expect by_match() == 1
-# rule 12.1.1 11.3.2
+# rule 12.1.1

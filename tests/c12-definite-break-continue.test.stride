@@ -36,4 +36,4 @@ expect by_break() == 1
 expect by_continue() == 2
 expect inner_break() == 2
 expect each_break() == 5
-# rule 12.1.1 11.3.2 7.13
+# rule 12.1.1 7.13

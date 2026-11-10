@@ -19,8 +19,7 @@ export function test() {
     // The setup's names are read after the example, which a let left unread would be a mistake (S411).
     const source = `${head}\n${x.verb === "gives" ? `print(${x.expr})` : x.expr}\nprint(count(warm) + count(cool) + count(people))\n`;
     {
-      // A fault the example shows is certain before the form opens; it is run, as `expect … faults` is (§11.3.4).
-      const out = compile(source, "example.stride", { certain: x.verb !== "faults" });
+      const out = compile(source, "example.stride", {});
       const mistakes = out.diagnostics.sorted().filter((d) => d.severity === "error");
       if (mistakes.length) {
         problems.push(`${x.text}: ${mistakes[0].line}:${mistakes[0].column} ${mistakes[0].code} ${mistakes[0].message}`);

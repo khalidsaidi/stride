@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define second(xs: list of number) -> number {
-  return xs[2]
-}
-print(second(empty))
-# rule 3.7.3.1 S413
-# mistake 6:7 S413

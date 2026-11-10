@@ -17,7 +17,7 @@ for each k in kids {
 if no {
   fail("no")
 }
-# rule 11.3.2 11.3.3 F013
+# rule 11.3.3 F013
 # run no fault
 # answers {"c": "no", "kids#any": "no"}
 # prints []

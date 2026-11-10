@@ -24,7 +24,7 @@ function build(head, list) {
 }
 
 export function test() {
-  const out = compile(`form t\npdf ${"0".repeat(64)}\nprint(1 / 0)\n`, "p.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] }, certain: false });
+  const out = compile(`form t\npdf ${"0".repeat(64)}\nprint(1 / 0)\n`, "p.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] } });
   if (!out.bytecode) return ["the fixture did not compile"];
   const head = out.bytecode.subarray(0, 5);
   const all = sections(out.bytecode);

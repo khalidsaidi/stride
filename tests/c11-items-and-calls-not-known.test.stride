@@ -9,5 +9,5 @@ let zs = [0]
 expect d(zs[1]) faults "F001"
 expect d(z()) faults "F001"
 expect d(zs[1]) == 1
-# rule 11.1 11.3.1 7.17.1
+# rule 11.1 7.17.1
 # results ["pass", "pass", "fail"]

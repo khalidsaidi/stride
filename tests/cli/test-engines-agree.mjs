@@ -8,7 +8,7 @@ import { runTest } from "../../src/test.mjs";
 
 const HEADER = { form: "t", pdf: "0".repeat(64), boxes: [{ field: "A", kind: "text", near: ["Name"], printed: "Name" }] };
 const build = (body) => {
-  const out = compile(`form t\npdf ${"0".repeat(64)}\n${body}`, "t.stride", { header: HEADER, certain: false });
+  const out = compile(`form t\npdf ${"0".repeat(64)}\n${body}`, "t.stride", { header: HEADER });
   if (!out.bytecode) throw new Error(out.diagnostics.sorted()[0]?.message);
   return out;
 };
