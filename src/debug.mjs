@@ -1,4 +1,4 @@
-// The debugger (§17.15): a program run as written, unoptimised, in the intermediate form (which agrees with the
+// The debugger (§17.15): a program run as written, in the intermediate form (which agrees with the
 // machine, §19.1), stopping where it is told: at a breakpoint's line, or after a step in, over or out. Stopped, it
 // shows the calls that led there and each one's values, and evaluates a name or an expression of them. Two faces on
 // one core: `stride debug`, at the terminal, and `stride dap`, the Debug Adapter Protocol for editors.
@@ -18,11 +18,11 @@ const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");
 function prepare(file) {
   let out;
   try {
-    out = compileFile(file, { optimise: false, trace: true });
+    out = compileFile(file, { trace: true });
   } catch (e) {
     return { error: e.message };
   }
-  if (!out.header && !out.program?.script && !out.program?.test) out = compileFile(file, { optimise: false, trace: true, header: { form: null, pdf: "0".repeat(64), boxes: [] } });
+  if (!out.header && !out.program?.script && !out.program?.test) out = compileFile(file, { trace: true, header: { form: null, pdf: "0".repeat(64), boxes: [] } });
   const mistakes = out.diagnostics.sorted().filter((d) => d.severity === "error");
   if (mistakes.length) return { error: mistakes.map((d) => d.format({ color: false })).join("\n\n") };
   const paths = new Map(); // a file's name as the compiler gives it -> its path

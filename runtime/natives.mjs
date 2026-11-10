@@ -1,8 +1,7 @@
 // The functions of Stride's standard library that the machine provides, the natives (docs/spec.md §14). The
 // standard library (lib/std.stride) declares each with its parameters, defaults and result; the
-// compiler checks calls against those declarations, the optimiser runs a pure native on values it already knows,
-// and the machine runs it on the person's answers: the same function, so a program means the same before and after
-// it is optimised. Values are those of runtime/values.mjs.
+// compiler checks calls against those declarations and runs a pure native on values it already knows, and the
+// machine runs it on the person's answers: the same function. Values are those of runtime/values.mjs.
 //
 // A native checks its control arguments first — positions, places, widths, paddings, patterns — and faults when one
 // is wrong, whether or not its main argument is empty (§14.0.3.1); only then does an empty main argument give its

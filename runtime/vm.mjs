@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 3) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 4) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -150,19 +150,12 @@ function execute(p, answers, limit, depth, trace, prints) {
   };
   frames.push(frame(0, []));
 
-  // The logical frames at an address of a physical frame: its place, then the calls it was inlined through.
+  // The frame at an address: its function and its place.
   const logical = (fn, address) => {
     const place = placeAt(p, address);
     // A program without its places section (§18.1): the frame has its function and no source place.
     if (!place) return [{ function: fn.name, file: null, line: null, column: null }];
-    const out = [];
-    let at = { file: place.file, line: place.line, column: place.column };
-    for (const x of place.inlined) {
-      out.push({ function: x.function, ...at });
-      at = x.call;
-    }
-    out.push({ function: fn.name, ...at });
-    return out;
+    return [{ function: fn.name, file: place.file, line: place.line, column: place.column }];
   };
   const stackTrail = (address) => {
     const out = [];

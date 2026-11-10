@@ -1,4 +1,4 @@
-// Stride's bytecode, version 3 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 4 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -11,8 +11,7 @@
 //    7 natives    the natives the code calls: name and how many values each takes
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, pure
 //    9 code       the instructions
-//   10 places     the place (file, line, column) of every instruction that can fault or ask, and, for code
-//                 inlined from another function, the chain of calls it came through, innermost first
+//   10 places     the place (file, line, column) of every instruction that can fault or ask
 //   11 resources  named blobs the machine does not read, kept with the program for its host
 //   12 links      for each question key the PDF check found, the boxes its answer goes into
 //
@@ -21,7 +20,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 3;
+export const VERSION = 4;
 
 export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, RESOURCES: 11, LINKS: 12 };
 
@@ -312,9 +311,7 @@ export function load(input) {
         const place = () => ({ file: t(s), line: s.varint(), column: s.varint() });
         p.places = list(() => {
           address += s.varint();
-          const at = place();
-          const inlined = list(() => ({ function: t(s), call: place() }));
-          return { address, ...at, inlined };
+          return { address, ...place() };
         });
         break;
       }
@@ -597,7 +594,7 @@ export function disassemble(p) {
       const at = r.at;
       const place = placeAt(p, at);
       if (place && place !== lastPlace && place.address === at) {
-        out.push(`        ; ${place.file}:${place.line}:${place.column}${place.inlined.length ? ` (inlined from ${place.inlined.map((x) => `${x.function} called at ${x.call.line}:${x.call.column}`).join(", ")})` : ""}`);
+        out.push(`        ; ${place.file}:${place.line}:${place.column}`);
         lastPlace = place;
       }
       const op = r.u8();

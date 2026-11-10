@@ -239,7 +239,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
   }
 
   // Purity (§9.9): a function that has effects, calls an impure native (today, print, fail), or calls a function that
-  // is impure, is impure; only a pure one is worked out before the form opens, removed or moved by the optimiser.
+  // is impure, is impure; only a pure one is worked out before the form opens.
   const nativeCallsIn = (body) => {
     const out = [];
     for (const st of statements(body)) for (const e of expressionsOf(st)) if (e.kind === "call" && e.callee?.kind === "native") out.push(e);

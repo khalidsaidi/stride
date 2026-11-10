@@ -1,4 +1,4 @@
-// Stride's values as the machine, the intermediate form's interpreter, the optimiser and the PDF check all hold
+// Stride's values as the machine, the intermediate form's interpreter and the PDF check all hold
 // them (docs/spec.md §3). One definition, so a program means the same in every engine:
 //
 //   empty            null (every type's empty, §3.2; "" and a list or set with no items are empty too)

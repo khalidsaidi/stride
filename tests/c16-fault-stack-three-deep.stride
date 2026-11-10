@@ -12,7 +12,7 @@ fill "A" = outer(z)
 # run faults
 # answers {"z": "0"}
 # fault F001 at 4:13
-# stack ["inner c16-fault-stack-inlined-twice.stride:4:13", "outer c16-fault-stack-inlined-twice.stride:7:16", "main c16-fault-stack-inlined-twice.stride:10:12"]
+# stack ["inner c16-fault-stack-three-deep.stride:4:13", "outer c16-fault-stack-three-deep.stride:7:16", "main c16-fault-stack-three-deep.stride:10:12"]
 # run gives
 # answers {"z": "4"}
 # boxes {"A": "3"}

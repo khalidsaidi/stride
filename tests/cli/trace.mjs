@@ -23,7 +23,7 @@ xs[1] = counter
 print(result)
 print(xs[1])
 `;
-  const out = compile(source, "cli-trace.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] }, optimise: false });
+  const out = compile(source, "cli-trace.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] } });
   if (!out.bytecode) return out.diagnostics.sorted().map((d) => d.format());
   const dir = mkdtempSync(join(tmpdir(), "stride-trace-"));
   try {

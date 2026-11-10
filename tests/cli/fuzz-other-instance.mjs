@@ -20,7 +20,7 @@ if z == 123457 {
 
 export function test() {
   const header = autoHeader(SOURCE, "fuzz.stride");
-  const out = compile(SOURCE, "fuzz.stride", { header, optimise: true });
+  const out = compile(SOURCE, "fuzz.stride", { header });
   const mistakes = out.diagnostics.sorted().filter((d) => d.severity === "error");
   if (mistakes.length !== 1 || mistakes[0].code !== "S413") return [`expected one S413, got ${mistakes.map((m) => m.code).join(", ")}`];
   const problems = [];

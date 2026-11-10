@@ -125,7 +125,7 @@ export async function newProgram(path, pdfPath = null) {
     if (header.error) return { error: `${pdfPath}: ${header.error}` };
     // What it writes compiles: a starter that does not (words the compiler reads otherwise) gives way to one that
     // only skips; one that still does not is said, and nothing is written.
-    const compiles = ({ source }) => !compile(source, `${name}.stride`, { dir, header, optimise: false }).diagnostics.sorted().some((d) => d.severity === "error");
+    const compiles = ({ source }) => !compile(source, `${name}.stride`, { dir, header }).diagnostics.sorted().some((d) => d.severity === "error");
     let start = starter(name, header);
     if (!compiles(start)) start = starter(name, header, false);
     if (!compiles(start)) return { error: `${pdfPath}: a program for it does not compile: ${compile(start.source, `${name}.stride`, { dir, header }).diagnostics.sorted()[0]?.message}` };

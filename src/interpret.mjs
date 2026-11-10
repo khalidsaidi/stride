@@ -2,9 +2,9 @@
 // bytecode, from the same values (runtime/values.mjs), operators (runtime/ops.mjs) and natives.
 // Two uses:
 //
-//   - the optimiser runs a pure function on known arguments before the form opens, and puts the value it gives
-//     in place of the call (the compile-time evaluation C++ calls constexpr);
-//   - the conformance suite runs every test here and in the machine, optimised and not, and they must agree on
+//   - the debugger and --trace follow a program here, line by line, and the PDF check runs a pure function here
+//     on known arguments;
+//   - the conformance suite runs every test here and in the machine, and they must agree on
 //     every question, box, print and fault (docs/spec.md §19.1): generated code that does not do what the
 //     intermediate form says is a fault in the compiler, caught where it starts.
 import { NATIVES, setToday, setPrinter } from "../runtime/natives.mjs";
@@ -33,7 +33,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
   let count = 0;
   let quiet = false; // working out a loop's head, whose calls the trace does not show
   const calls = []; // { fn, call: place of its call } for each frame, outermost first
-  let place = null; // the place of what runs now: { file, line, column, inlined }
+  let place = null; // the place of what runs now: { file, line, column }
   const recordNames = (type) => (program.records ?? []).find((r) => r.name === type)?.fields ?? null;
   setPrinter((v) => {
     const text = printed(v, recordNames);
@@ -41,20 +41,16 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
     watch?.({ kind: "print", text });
   });
 
-  const placeOf = (node, inline) => (node?.span?.line ? { file: node.file?.name ?? "", line: node.span.line, column: node.span.col, inlined: inline ?? [] } : place);
-  const exprPlace = (x) => (x.at ? { file: x.at.file ?? "", line: x.at.line, column: x.at.column, inlined: x.inline ?? place?.inlined ?? [] } : place);
+  const placeOf = (node) => (node?.span?.line ? { file: node.file?.name ?? "", line: node.span.line, column: node.span.col } : place);
+  const exprPlace = (x) => (x.at ? { file: x.at.file ?? "", line: x.at.line, column: x.at.column } : place);
 
-  // The logical stack at a place: the place's own inlined chain, then each frame's call.
+  // The stack at a place: the place, then each frame's call.
   function trail(at) {
     const out = [];
     let here = at;
     for (let i = calls.length - 1; i >= 0; i--) {
       const f = calls[i];
-      let pos = here ? { file: here.file, line: here.line, column: here.column } : { file: null, line: null, column: null };
-      for (const x of here?.inlined ?? []) {
-        out.push({ function: x.function, ...pos });
-        pos = x.call;
-      }
+      const pos = here ? { file: here.file, line: here.line, column: here.column } : { file: null, line: null, column: null };
       out.push({ function: f.fn.name, ...pos });
       here = f.call;
     }
@@ -92,7 +88,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         const t = block.term;
         // An if's, a match's and a return's line are statements of the program too (§17.7, §17.15).
         if (watch && t?.node && ["if", "match", "return"].includes(t.node.kind)) watch({ kind: "line", fn: f, node: t.node, op: t.op, locals });
-        place = placeOf(t?.node, t?.inline) ?? place;
+        place = placeOf(t?.node) ?? place;
         if (++count > limit) fault("F014", `the workflow ran more than ${limit} instructions`);
         switch (t.op) {
           case "jump":
@@ -175,7 +171,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
   }
 
   function statement(s, locals) {
-    place = placeOf(s.node, s.inline) ?? place;
+    place = placeOf(s.node) ?? place;
     if (++count > limit) fault("F014", `the workflow ran more than ${limit} instructions`);
     switch (s.op) {
       case "set":
@@ -285,16 +281,6 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
   }
 
   function expr(x, locals) {
-    const saved = place;
-    try {
-      if (x.inline) place = { ...(place ?? {}), inlined: x.inline };
-      return expr1(x, locals);
-    } finally {
-      place = saved;
-    }
-  }
-
-  function expr1(x, locals) {
     switch (x.e) {
       case "const":
         return copy(x.v);

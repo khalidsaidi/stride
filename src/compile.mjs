@@ -1,15 +1,16 @@
 // The Stride compiler: a program's source in, its bytecode out, through the phases a compiler goes through.
 //
-//   1 parse      parse.mjs     the syntax tree, from the generated parser
+//   1 parse      parse.mjs     the syntax tree (syntax.mjs: a lexer and parser written by hand)
 //   2 load       load.mjs      the libraries the program uses, and the standard library
 //   3 resolve    resolve.mjs   every name tied to its declaration, through scopes
 //   4 check      check.mjs     every expression's type, and what each statement may do
 //   5 flow       flow.mjs      what depends on order: recursion, effects, what is known before the form opens,
 //                              vars read before they have a value, returns, unused answers
-//   6 lower      lower.mjs     the intermediate form: functions of basic blocks, loops with effects unrolled
-//   7 optimise   optimise.mjs  folding, propagation, inlining, branch and block simplification, dead code
-//   8 pdf        pdf.mjs       the program against its PDF's header
-//   9 generate   codegen.mjs   the bytecode, read back by the machine's own loader before it is given out
+//   6 lower      lower.mjs     the intermediate form: functions of basic blocks
+//   7 pdf        pdf.mjs       the program against its PDF's header
+//   8 generate   codegen.mjs   the bytecode, read back by the machine's own loader before it is given out
+//
+// The program is compiled as it is written: there is no optimiser, so a program has one compiled form.
 //
 // A phase runs only when those before it found no mistake: a mistake in a name would make every type after it
 // wrong, and the person would read a cascade instead of the cause.
@@ -22,7 +23,6 @@ import { resolve } from "./resolve.mjs";
 import { check } from "./check.mjs";
 import { flow } from "./flow.mjs";
 import { lower } from "./lower.mjs";
-import { optimise } from "./optimise.mjs";
 import { checkPdf } from "./pdf.mjs";
 import { generate } from "./codegen.mjs";
 import { load as loadBytecode } from "../runtime/vm.mjs";
@@ -49,17 +49,16 @@ export const stdSource = () => {
 //   resources   named blobs to keep in the bytecode for its host
 //   read        how files are read (the disk, by default)
 //   stdPath     the standard library (lib/std.stride)
-//   until       the last phase to run: "check" stops before lowering
-//   optimise    false to leave the intermediate form as lowered
-// Gives { diagnostics, program (the intermediate form), questions, bytecode, stats, phases }.
+//   until       the last phase to run: "flow" stops before lowering, "lower" before the PDF check
+// Gives { diagnostics, program (the intermediate form), questions, bytecode, phases }.
 // The language's version (spec §21): what a program written for it can count on.
 export const LANGUAGE = "1.0.0";
 
-export function compile(source, name, { dir = ".", header = null, resources = {}, read = diskRead, stdPath = STD_PATH, until = "generate", optimise: doOptimise = true, certain = true, depth = 0, trace = false, libraries = [], session = false } = {}) {
+export function compile(source, name, { dir = ".", header = null, resources = {}, read = diskRead, stdPath = STD_PATH, until = "generate", certain = true, depth = 0, trace = false, libraries = [], session = false } = {}) {
   const diagnostics = new Diagnostics();
   const file = new SourceFile(name, source);
   file.depth = depth;
-  const out = { diagnostics, program: null, questions: [], bytecode: null, stats: null, phases: [], resolved: null };
+  const out = { diagnostics, program: null, questions: [], bytecode: null, phases: [], resolved: null };
   const phase = (n) => out.phases.push(n);
   try {
     return phases(out, file, diagnostics, phase);
@@ -90,14 +89,12 @@ export function compile(source, name, { dir = ".", header = null, resources = {}
   phase("flow");
   if (!diagnostics.empty || until === "flow") return out;
 
-  const program = lower(resolved, diagnostics, { unroll: doOptimise, trace });
+  const program = lower(resolved, diagnostics, { trace });
   out.program = program;
   phase("lower");
-  if (!diagnostics.empty) return out;
+  if (!diagnostics.empty || until === "lower") return out;
 
-  // The PDF check reads the program as lowered, before the optimiser: what it may take as never running is what
-  // §11 says is known before the form opens, never what the optimiser proves besides (a pure function's result),
-  // so a program gets the same mistakes optimised or not. A test file has no form (§4.3): no boxes to check.
+  // A test file has no form (§4.3): no boxes to check.
   let pdf = null;
   // A script has no form either (§4.6): its header is empty, whatever file is beside it.
   if (header || program.test || program.script) {
@@ -110,11 +107,9 @@ export function compile(source, name, { dir = ".", header = null, resources = {}
     if (!diagnostics.empty) return out;
   }
 
-  if (doOptimise) out.stats = optimise(program);
-  phase("optimise");
-  if (until === "optimise" || until === "check" || !pdf) return out;
+  if (!pdf) return out;
 
-  out.bytecode = generate(program, pdf, { resources, stats: out.stats });
+  out.bytecode = generate(program, pdf, { resources });
   // The machine reads it back and verifies it before it goes anywhere.
   loadBytecode(out.bytecode);
   phase("generate");

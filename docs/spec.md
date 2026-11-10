@@ -421,7 +421,7 @@ S311, S380); empty counts as no.
 | empty | yes, no or empty | no (b not worked out) | b read as a condition: yes, no, no |
 
 `yes or b` is yes without working out b. `not yes` is no; `not no` and `not empty` are yes. So with a unanswered,
-`(yes and a) is empty` and `(no or a) is empty` are both no, in every engine, optimised or not. Comparisons,
+`(yes and a) is empty` and `(no or a) is empty` are both no, in every engine. Comparisons,
 `in` and `is empty` likewise always give yes or no.
 
 ## 7. Statements
@@ -521,7 +521,7 @@ not yes.
 `expect e faults "code or words"`: working out e must be a fault. A selector matching F[0-9]{3} exactly matches
 only the fault code. Every other selector matches a case-sensitive substring of the message. There is no message
 fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The expression of `expect … faults` is exempt from S413 (§11.3): a fault it is certain to give is
-what it tests, so the compiler leaves it to run, unoptimised as far as that fault goes, and the test passes only when
+what it tests, so the compiler leaves it to run, and the test passes only when
 both engines give that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
 faults "F013"`): S370 does not apply there.
 
@@ -761,8 +761,7 @@ libraries with the same function is S113.
 
 9.9. A function that asks, writes boxes, collects, calls an impure native (`today`, `print`, `fail`), or calls a
 function that does, has effects; else it is pure. An impure call is never worked out before the form opens, never
-taken as known (§11.1), never removed from reachable code or moved by the
-optimiser (inside an unreachable branch it is removed with the branch, §11.3.3), and runs exactly as often as the program says: a
+taken as known (§11.1), and runs exactly as often as the program says: a
 function wrapping `today()` gives the run's date at each run, not the date it was compiled.
 
 9.10. **Functions are not values.** A function is called, never passed, kept or returned: its name anywhere but
@@ -897,16 +896,15 @@ mistake S413 at the operation,
   MOST > 10` with `MOST = 4`, a `match` arm a known subject never takes), the body of a loop that runs zero times
   with known bounds, and statements after a `return`, `break` or `continue`, never run. They are checked for
   syntax, names, types and flow (S406 for the statements after a return), but not for S413, nor by the PDF check
-  (§10): their boxes are not written and their questions not asked. The optimiser removes them. This is what is
+  (§10): their boxes are not written and their questions not asked. This is what is
   known by §11.1; the PDF check also follows the further facts of §10.4.0 (vars, pure calls), which leave S413 and
   what §11.1 calls known as they are.
   For S413 alone, two more are not checked: the part of an expression a known value decides is never worked out —
   the right of `no and …` and of `yes or …`, the side of `if … then … else` a known condition does not take — and a
   function that no call in code that can run reaches, a call inside the expression of `expect … faults` reaching
   nothing for this (§11.3.4); the same function reached by another call is checked from that call. The exemption
-  for `expect … faults` applies only to S413. Its expression and the functions it calls still execute, retain
-  their fault behavior through optimisation, and are followed by the PDF check under §4.3. Only code known never
-  to execute is excluded from PDF analysis or removed as unreachable. The working out the compiler must do of
+  for `expect … faults` applies only to S413. Its expression and the functions it calls still execute, and are followed by
+  the PDF check under §4.3. Only code known never to execute is excluded from PDF analysis. The working out the compiler must do of
   constants (§5.3, §11.3.5) and of defaults (§9.2) is checked wherever they stand.
 - 11.3.4. Exempt: the expression of `expect … faults` (§7.17).
 - 11.3.5. **Precedence.** S413 belongs to the flow phase, after the type phase (§16.1). A fault the type phase
@@ -1020,7 +1018,7 @@ words given to `print`, and a fault or none.
   `# example: e gives w` (what `stride eval` shows for e), `# example: s prints w`, or `# example: e faults F…`,
   above the function's declaration; the examples may use the declarations `std.stride` writes out with them, and
   today() is 2026-11-09 for them. `stride doc` shows them, and the conformance suite runs every one in the machine
-  and the intermediate form, optimised and not (§19.1): an example that does not do what it says is a bug.
+  and the intermediate form (§19.1): an example that does not do what it says is a bug.
 
 ### 14.1 Words
 
@@ -1131,7 +1129,7 @@ entry says "or a set" (its items are then options).
 
 15.1. **Analysis budgets.** The checks the compiler must make (§10, §11) work within these budgets. A check that
 would pass one stops compilation with S602, naming the check and the budget; no bytecode is produced, and nothing
-is taken as proved. The optimiser may give up an optimisation without a mistake.
+is taken as proved.
 
 | Budget | Counts | |
 |---|---|---|
@@ -1546,7 +1544,7 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
   UTF-16 units (columns of §1.3 are characters); a declaration in another file found at that file's own path;
   the rest as §17.16.
 
-17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program as written, unoptimised, in the
+17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program as written, in the
 intermediate form (which agrees with the machine, §19.1). It prints each statement's file, line and text when it
 starts, a `let` known before the form opens included, and under it the names it gave a value; each turn of a loop,
 at the loop's line, with its counter, or its item and number, as that turn has them; each call of a function with
@@ -1654,7 +1652,7 @@ stdout each file it would change. `stride test --match words` runs only the test
 - `--use` and `--today` are as `eval`'s; the session stands in the folder it is run in (§4.7).
 
 17.15. **The debugger.** `stride debug <file>` runs a program or script as `--trace` does (the intermediate
-form, unoptimised), with its answers taken exactly as `run` takes them (§17.12), and stops before its first
+form), with its answers taken exactly as `run` takes them (§17.12), and stops before its first
 statement. It is driven from stdin, a command a line. Where it stopped and everything it says go to stderr; the
 program's prints go to stdout exactly as `run` prints them; a fault is said exactly as `run` says it (§16.3), with
 its calls; it exits as `run` would.
@@ -1767,20 +1765,18 @@ the stack's height the same where paths meet, never below what an instruction ta
 ## 19. Conformance
 
 19.1. An implementation conforms when every test in `tests` passes in the machine and in the
-intermediate form's interpreter, optimised and not, and they agree on: every question reached, in order, with its
+intermediate form's interpreter, and they agree on: every question reached, in order, with its
 key, printed words, value, default, failed checks' messages in order, and unreadable answer with its reason;
 every box written and its value; every `print`, in order; and every fault: its code, its message, and its whole
-logical stack — the function and place of the faulting operation and of every call that led there, innermost
-first — the same whether or not calls were inlined (§13.4).
+stack — the function and place of the faulting operation and of every call that led there, innermost
+first (§13.4).
 
-19.1.1. **Resource limits are not semantics.** F014 (instructions) and F015 (call depth) depend on how a program
-was compiled: inlining removes frames, folding and removing code remove instructions, and the interpreter counts
-otherwise again. Two engines that agree on every question, box, `print` and fault may still exhaust a limit
+19.1.1. **Resource limits are not semantics.** F014 (instructions) and F015 (call depth) depend on the engine:
+the machine counts instructions and the interpreter counts steps. Two engines that agree on every question, box, `print` and fault may still exhaust a limit
 differently. So:
-- the **reference** is the unoptimised program in the machine;
+- the **reference** is the program in the machine;
 - **semantic comparison** (§19.1) is made only on runs the reference finishes within the limits; on those, every
-  engine must finish and agree. Optimisation must never make a run do more instructions or go deeper than the
-  reference, so an engine stopping where the reference finishes is a conformance failure;
+  engine must finish and agree, so an engine stopping where the reference finishes is a conformance failure;
 - a run the reference exhausts is not compared, whatever the other engines do.
 19.1.2. **Each engine's enforcement is tested on its own.** The machine is tested to stop with F014 at 2,000,000
 instructions and with F015 past 200 frames, counted as it runs the program it was given; the interpreter to stop
@@ -1788,7 +1784,7 @@ at its own count of steps and frames; each test runs one engine on a program bui
 names the engine. No test claims that every engine exhausts on the same run.
 19.1.3. `stride fuzz` drops a generated run that the reference exhausts.
 
-19.2. `stride fuzz` generates valid programs and answers and runs each in both engines, optimised and not, and
+19.2. `stride fuzz` generates valid programs and answers and runs each in both engines, and
 through the PDF check; a disagreement, a crash, or a mistake on a valid program is a bug. It reports apart the
 programs that agreed, those refused with S413, those stopped by a budget (S602), and the runs the reference
 exhausted. An S413 refusal is confirmed by a run that reaches the refused instance, in the same turn of each loop

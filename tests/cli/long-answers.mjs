@@ -7,7 +7,7 @@ import { load, run } from "../../runtime/vm.mjs";
 
 export function test() {
   const source = `form t\npdf ${"0".repeat(64)}\nask w: long-text "W" default "d"\nprint(length(w))\n`;
-  const out = compile(source, "long.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] }, optimise: false });
+  const out = compile(source, "long.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] } });
   if (!out.bytecode) return out.diagnostics.sorted().map((d) => d.format());
   const problems = [];
   const cases = [

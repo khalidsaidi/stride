@@ -1,15 +1,13 @@
-// Phase 9: generate the bytecode (runtime/bytecode.mjs, version 3) from the checked, optimised
-// intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 4) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
-// in the place table, with the chain of calls it was inlined through (§13.4: a fault's stack is the same whether
-// or not a call was inlined).
+// in the place table.
 import { BINARY_OPS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
 import { D, isNumber, isDate, isSet, list } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
-export function generate(program, pdf, { resources = {}, stats = null } = {}) {
+export function generate(program, pdf, { resources = {} } = {}) {
   const texts = [];
   const textIndex = new Map();
   const T = (s) => {
@@ -47,7 +45,6 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
   const code = new Writer();
   const places = [];
   const functions = [];
-  const peephole = { removed: 0 };
 
   for (const fn of program.functions) {
     // Locals numbered parameters first, in the order they are passed.
@@ -62,7 +59,7 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
     // The function's instructions as a list first: { op, args, to (a label, for jumps), line }, with labels as
     // their own entries. The peephole pass works on the list; the assembler then gives each its address.
     const ins = [];
-    let place = null; // the place of the instructions emitted now: { file, line, column, inlined }
+    let place = null; // the place of the instructions emitted now: { file, line, column }
     const emit = (op, ...args) => {
       const i = { op, args, place };
       ins.push(i);
@@ -75,24 +72,20 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
       i.to = l;
     };
     // The place of what follows: a node's start, or an expression's own `at` (an operator's sign, a call's name).
-    let inlined = [];
-    const placeOf = (span, file) => ({ file: file ?? "", line: span.line, column: span.col, inlined });
+    const placeOf = (span, file) => ({ file: file ?? "", line: span.line, column: span.col });
     const at = (node) => {
       if (node?.span?.line) place = placeOf(node.span, node.file?.name);
     };
     const atExpr = (x) => {
-      if (x.at) place = { file: x.at.file ?? "", line: x.at.line, column: x.at.column, inlined };
+      if (x.at) place = { file: x.at.file ?? "", line: x.at.line, column: x.at.column };
     };
 
     function expr(x) {
       const saved = place;
-      const savedInlined = inlined;
-      if (x.inline) inlined = x.inline;
       try {
         return expr1(x);
       } finally {
         place = saved;
-        inlined = savedInlined;
       }
     }
     function expr1(x) {
@@ -296,7 +289,6 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
     }
 
     function statement(s) {
-      inlined = s.inline ?? [];
       at(s.node);
       switch (s.op) {
         case "set":
@@ -389,11 +381,9 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
 
     for (const b of order) {
       placeLabel(labels.get(b));
-      inlined = [];
       if (b.loopHead) labels.get(b).loopHead = true;
       for (const s of b.stmts) statement(s);
       const t = b.term;
-      inlined = t?.inline ?? [];
       at(t?.node);
       switch (t?.op) {
         case "jump":
@@ -423,7 +413,7 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
       }
     }
 
-    peephole.removed += optimiseInstructions(ins);
+    tidy(ins);
 
     // The assembler: each instruction's address (a jump's is always 4 bytes, so one pass gives them all), then
     // the bytes, with every jump to its label's address.
@@ -437,13 +427,12 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
       i.address = address;
       address += size(i);
     }
-    const sameChain = (a, b) => JSON.stringify(a) === JSON.stringify(b);
     for (const i of ins) {
       if (i.op === "label") continue;
       if (i.place) {
         const last = places[places.length - 1];
         const pl = i.place;
-        if (!last || last.line !== pl.line || last.column !== pl.column || last.file !== pl.file || !sameChain(last.inlined, pl.inlined)) places.push({ address: i.address, ...pl });
+        if (!last || last.line !== pl.line || last.column !== pl.column || last.file !== pl.file) places.push({ address: i.address, ...pl });
       }
       code.u8(i.op);
       if (i.to !== undefined) code.u32(i.to.address);
@@ -484,7 +473,7 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
   natives.forEach(T);
   numbers.forEach(T);
   for (const f of functions) (T(f.name), T(f.file), f.localNames.forEach(T));
-  for (const pl of places) (T(pl.file), pl.inlined.forEach((x) => (T(x.function), T(x.call.file))));
+  for (const pl of places) T(pl.file);
   Object.keys(resources).forEach(T);
   const opt = (s, v) => s.varint(v === null || v === undefined ? 0 : T(v) + 1);
 
@@ -549,8 +538,6 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
       s.varint(T(pl.file));
       s.varint(pl.line);
       s.varint(pl.column);
-      s.varint(pl.inlined.length);
-      for (const x of pl.inlined) (s.varint(T(x.function)), s.varint(T(x.call.file)), s.varint(x.call.line), s.varint(x.call.column));
     }
   });
   section(SECTION.RESOURCES, (s) => {
@@ -564,7 +551,6 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
     }
   });
   if (texts.length !== pooled) throw new Error("a text was pooled after the text section was written");
-  if (stats) stats.peephole = peephole.removed;
   return out.done();
 }
 
@@ -582,8 +568,9 @@ const size = (i) => 1 + (i.to !== undefined ? 4 : 0) + i.args.reduce((n, a) => n
 
 const ENDS = new Set([OP.JUMP, OP.LOOP, OP.RETURN, OP.RETURN_NONE, OP.HALT]);
 
-// The peephole pass: short patterns in the instruction list replaced by shorter ones that do the same, until none
-// is left. Gives how many instructions it removed.
+// The instruction list tidied as it is written: short patterns the generator's own way of writing leaves behind,
+// replaced by shorter ones that do the same, until none is left. Every program is written through it: there is
+// one compiled form of a program, not two.
 //   LOAD x, POP                 nothing
 //   NOT, NOT                    TO_BOOL
 //   TRUE, JUMP_IF_FALSE L       nothing          FALSE, JUMP_IF_FALSE L     JUMP L
@@ -591,7 +578,7 @@ const ENDS = new Set([OP.JUMP, OP.LOOP, OP.RETURN, OP.RETURN_NONE, OP.HALT]);
 //   JUMP L, where L returns     the return
 //   JUMP_IF_FALSE L1, JUMP L2, L1:     NOT, JUMP_IF_FALSE L2, L1:
 //   anything after an end, before the next label: never runs, removed
-export function optimiseInstructions(ins) {
+function tidy(ins) {
   let removed = 0;
   const next = (i) => {
     let j = i + 1;

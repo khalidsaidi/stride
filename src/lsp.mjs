@@ -57,7 +57,7 @@ function compileDoc(uri, text, texts = openTexts()) {
   const lib = libraryOf(path, libraries);
   if (lib) {
     const dir = basename(lib.folder) === "lib" ? dirname(lib.folder) : lib.folder;
-    return { out: compile(`use "${lib.name}"\n`, "library-check.stride", { dir, read, optimise: false, libraries: [lib.folder, ...libraries] }), own: `lib/${lib.name}.stride`, path, problem };
+    return { out: compile(`use "${lib.name}"\n`, "library-check.stride", { dir, read, libraries: [lib.folder, ...libraries] }), own: `lib/${lib.name}.stride`, path, problem };
   }
   const base = path.replace(/\.stride$/, "");
   const header = disk(`${base}.boxes.json`);
@@ -68,7 +68,7 @@ function compileDoc(uri, text, texts = openTexts()) {
   } catch (e) {
     problem = `${basename(base)}.boxes.json is not JSON: ${e.message}`;
   }
-  return { out: compile(text, basename(path), { dir: dirname(path), header: parsed, read, optimise: false, libraries }), own: basename(path), path, problem };
+  return { out: compile(text, basename(path), { dir: dirname(path), header: parsed, read, libraries }), own: basename(path), path, problem };
 }
 const openTexts = () => new Map([...docs.values()].filter((d) => d.path).map((d) => [resolve(d.path), d.text]));
 

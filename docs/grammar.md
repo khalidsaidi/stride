@@ -278,9 +278,7 @@ constant never used.
 `src/`, one module per phase: `parse` (the hand-written lexer and recursive-descent parser in
 `syntax.mjs`, which recovers after a mistake and reports up to twenty), `load` (libraries),
 `resolve` (names, scopes), `check` (types), `flow`, `lower` (to the intermediate form: functions of basic
-blocks; question keys, printed words and box names as expressions worked out as the program runs), `optimise` (constant
-folding and propagation, inlining small pure functions, running pure functions whose arguments are known through
-the intermediate form's interpreter, branch folding, block merging, unreachable and dead code removal), `pdf`
+blocks; question keys, printed words and box names as expressions worked out as the program runs), `pdf`
 (the check against the header: an abstract interpretation over every path, answers unknown and everything else
 worked out, paths with the same known live values taken together, functions followed from each call), and
 `codegen` (an instruction list, a peephole pass, then the assembler).

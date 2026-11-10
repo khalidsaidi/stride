@@ -570,8 +570,7 @@ async function main(argv) {
         else if (r.error) err(r.error);
         else if (r.mistakes) report(r.mistakes);
         else {
-          const s = r.out.stats;
-          status(`${errGreen(`${file}: no mistakes`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")}${s ? `; the optimiser folded ${s.folded}, inlined ${s.inlined}, ran ${s.evaluated} calls, removed ${s.branches} branches and ${s.removedBlocks} blocks` : ""})` : ""}`);
+          status(`${errGreen(`${file}: no mistakes`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")})` : ""}`);
         }
       }
       if (json) out(JSON.stringify({ ok: bad === 0, files }));
@@ -635,11 +634,11 @@ async function main(argv) {
           return runOnce(a);
         });
       }
-      // --trace on a source file follows the program as written, unoptimised, line by line (§17.7), on stderr; on
+      // --trace on a source file follows the program as written, line by line (§17.7), on stderr; on
       // bytecode, the machine's instructions.
       let result;
       if (flags.has("--trace") && !file.endsWith(".sbc")) {
-        const plain = fromStdin ? { ...compile(r.out.source ?? "", "stdin.stride", { optimise: false, trace: true }) } : compileFile(file, { optimise: false, trace: true, ...(r.out.header ? {} : { header: { form: null, pdf: "0".repeat(64), boxes: [] } }) });
+        const plain = fromStdin ? { ...compile(r.out.source ?? "", "stdin.stride", { trace: true }) } : compileFile(file, { trace: true, ...(r.out.header ? {} : { header: { form: null, pdf: "0".repeat(64), boxes: [] } }) });
         const watch = sourceTrace();
         result = interpretProgram(plain.program, answers, plain.boxes, { today, watch });
         watch.flush();
@@ -851,7 +850,7 @@ async function main(argv) {
       return 0;
     }
     case "fuzz": {
-      // Programs made at random, through both engines optimised and not and the PDF check (§19.2).
+      // Programs made at random, through both engines and the PDF check (§19.2).
       // --runs a whole number from 1, --seed a whole number from 0 (§17.5).
       const flag = (name, d, least) => {
         if (!values.has(name)) return d;

@@ -7,7 +7,7 @@
 //                                         ending in $ are the message's end: # mistake 4 S201 defined here$)
 //   # label 5:15-5:21 no field nmae      a label some mistake carries (the place's first), with its span and words
 //   # warning 7 W002                      the same for a warning
-//   # engines vm                          only these of vm, vm-opt, ir, ir-opt (resource limits, §19.1.2)
+//   # engines vm                          only these of vm, ir (resource limits, §19.1.2)
 //   # header-pdf <sha256>, # header-form <id>   the header is for this PDF or form, not the program's (S501, S502)
 //   # std <file>                          this standard library (in tests/lib/) instead of lib/std.stride
 //   # box Name text|check|radio:on|choice:a,b near words   the header's boxes; without any, every box the
@@ -33,8 +33,8 @@
 // give exactly these results in order.
 //
 // A test with mistakes expected passes when exactly those mistakes and warnings are reported. A test with none
-// must compile clean, unoptimised and optimised, and every run then goes through each engine mode — the machine
-// and the intermediate form's interpreter, each on the unoptimised and the optimised program — which must give
+// must compile clean, and every run then goes through both engines — the machine and the intermediate form's
+// interpreter — which must give
 // the golden results above and agree with each other on every question, box, print and fault (§19.1).
 import { AnalysisLimit } from "./constant.mjs";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -58,7 +58,7 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 // run.
 export const TESTS = existsSync(join(here, "../tests")) ? join(here, "../tests") : join(process.cwd(), "tests");
 export const SPEC = existsSync(join(here, "../docs/spec.md")) ? join(here, "../docs/spec.md") : join(process.cwd(), "docs/spec.md");
-export const MODES = ["vm", "vm-opt", "ir", "ir-opt"];
+export const MODES = ["vm", "ir"];
 
 // JSON with every number kept as the digits written, as words: what a run's boxes and steps are compared with.
 export const parseExact = (text) => JSON.parse(text, (k, v, context) => (typeof v === "number" ? context.source : v));
@@ -166,7 +166,7 @@ export function expectations(text) {
 // A header made from the program itself: every box it writes (found by the PDF check's analysis, run with no
 // header), each with every question's printed words beside it.
 export function autoHeader(source, name, options = {}) {
-  const first = compile(source, name, { dir: TESTS, until: "optimise", optimise: false, ...options });
+  const first = compile(source, name, { dir: TESTS, until: "lower", ...options });
   if (!first.program) return { form: "test", pdf: PDF, boxes: [] };
   let found;
   try {
@@ -299,10 +299,9 @@ export function runOne(path) {
   const header = want.header.length ? { form: null, pdf: (text.match(/^\s*pdf\s+([0-9a-f]{64})/m) ?? [])[1] ?? PDF, boxes: want.header } : autoHeader(bytes, name);
   if (want.headerPdf) header.pdf = want.headerPdf;
   if (want.headerForm) header.form = want.headerForm;
-  const builds = {};
   const std = want.std ? { stdPath: join(TESTS, "lib", want.std) } : {};
-  for (const optimise of [false, true]) builds[optimise ? "opt" : "plain"] = compile(bytes, name, { dir: TESTS, header, optimise, ...std });
-  const got = builds.opt.diagnostics.sorted();
+  const out = compile(bytes, name, { dir: TESTS, header, ...std });
+  const got = out.diagnostics.sorted();
   problems.push(...formatProblems(text, name));
 
   // Mistakes and warnings: each expected one reported, and nothing else.
@@ -324,24 +323,21 @@ export function runOne(path) {
     if (!labels.some((l) => l.line === w.line && l.column === w.column && l.endLine === w.endLine && l.endColumn === w.endColumn && l.message === w.words)) problems.push(`expected the label ${w.line}:${w.column}-${w.endLine}:${w.endColumn} "${w.words}"; the labels are ${labels.map((l) => `${l.line}:${l.column}-${l.endLine}:${l.endColumn} "${l.message}"`).join(", ")}`);
   }
   if (want.mistakes.length || problems.length) return { name, rules: want.rules, problems };
-  for (const [k, b] of Object.entries(builds)) if (!b.bytecode) problems.push(`no bytecode (${k === "opt" ? "optimised" : "unoptimised"}), and no mistake expected`);
+  if (!out.bytecode) problems.push("no bytecode, and no mistake expected");
   if (problems.length) return { name, rules: want.rules, problems };
 
-  const compiled = {
-    plain: { out: builds.plain, loaded: load(builds.plain.bytecode) },
-    opt: { out: builds.opt, loaded: load(builds.opt.bytecode) },
-  };
+  const compiled = { out, loaded: load(out.bytecode) };
   const modes = want.engines ?? MODES;
   for (const r of want.runs) {
     const results = {};
     for (const mode of modes) {
       try {
-        results[mode] = runMode(mode, mode.endsWith("opt") ? compiled.opt : compiled.plain, r.answers, r.today ?? null);
+        results[mode] = runMode(mode, compiled, r.answers, r.today ?? null);
       } catch (e) {
         problems.push(`${r.name}, ${mode}: the engine broke: ${e.message}`);
         continue;
       }
-      problems.push(...golden({ ...r, results: want.results }, results[mode], compiled.opt.loaded.prefix, mode));
+      problems.push(...golden({ ...r, results: want.results }, results[mode], compiled.loaded.prefix, mode));
     }
     if (!want.engines) problems.push(...agreement(results));
   }

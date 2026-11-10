@@ -22,7 +22,7 @@ import { evaluate } from "./constant.mjs";
 import { textOf, NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
-export function lower(resolved, diagnostics, options = { unroll: true }) {
+export function lower(resolved, diagnostics, options = {}) {
   const err = (code, node, message) => diagnostics.add(KIND.LIMIT, node?.file ?? null, node?.span ?? null, message, [], code);
   const mainResult = resolved.mainResult;
   const tree = mainResult.unit.tree;
@@ -50,7 +50,7 @@ export function lower(resolved, diagnostics, options = { unroll: true }) {
   const child = (ctx, extra = {}) => ({ ...ctx, locals: new Map(ctx.locals), known: new Map(ctx.known), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
 
   function emit(ctx, stmt) {
-    if (ctx.block.term) ctx.block = ctx.fn.block(); // after a return: unreachable, removed by the optimiser
+    if (ctx.block.term) ctx.block = ctx.fn.block(); // after a return: a block nothing reaches, which is not generated
     ctx.block.stmts.push(stmt);
   }
 
@@ -74,7 +74,7 @@ export function lower(resolved, diagnostics, options = { unroll: true }) {
     return textOf(v);
   }
 
-  // Words joined, the known ones folded later by the optimiser.
+  // Words joined.
   const join = (...parts) => IR.concat(parts.flat());
   const suffix = (ctx, from = 0) => ctx.suffixes.slice(from);
 
@@ -342,7 +342,6 @@ export function lower(resolved, diagnostics, options = { unroll: true }) {
   // A counted loop: its head tests the counter, its body runs, the counter goes up, back to the head. A loop
   // with effects gives each turn's questions the turn in their key: other_act[1].
   function lowerFor(s, ctx) {
-    if (!s.unroll && smallLoop(s, ctx)) return unrollFor(s, ctx);
     const counter = ctx.fn.local(s.counter, s.symbol.type);
     counter.counter = true; // known in every turn (§11.1): the PDF check keeps turns apart by it
     // A loop that asks or writes boxes (its counter may name them) with bounds known before the form opens:
@@ -387,44 +386,6 @@ export function lower(resolved, diagnostics, options = { unroll: true }) {
       if (t) work.push(t.to, t.yes, t.no);
     }
     return out;
-  }
-
-  // A loop that only works out values, with bounds known before the form opens and at most 8 turns, is unrolled:
-  // each turn's counter is then a known number the optimiser can work with.
-  function smallLoop(s, ctx) {
-    if (!options.unroll) return false;
-    const from = V.whole(evaluate(s.from, ctx.known)), to = V.whole(evaluate(s.to, ctx.known));
-    return from !== null && to !== null && to - from + 1 <= 8 && !assigns(s.body, s.symbol) && !leaves(s.body);
-  }
-
-  function unrollFor(s, ctx) {
-    const from = V.whole(evaluate(s.from, ctx.known)), to = V.whole(evaluate(s.to, ctx.known));
-    for (let i = from; i <= to; i++) {
-      const turn = child(ctx);
-      turn.known.set(s.symbol, V.num(i));
-      lowerBlock(s.body, turn);
-      ctx.block = turn.block;
-    }
-  }
-
-  // Whether a block holds a break or continue of its own loop (it is not unrolled then).
-  function leaves(body) {
-    for (const t of body) {
-      if (t.kind === "break" || t.kind === "continue") return true;
-      const inner = t.kind === "if" ? [...t.then, ...t.otherwise] : t.kind === "match" ? t.arms.flatMap((a) => a.body) : t.kind === "collect" ? t.body : [];
-      if (leaves(inner)) return true;
-    }
-    return false;
-  }
-
-  // Whether a block gives the counter another value (it cannot be unrolled then).
-  function assigns(body, sym) {
-    for (const t of body) {
-      if (t.kind === "assign" && t.target.kind === "name" && t.target.symbol === sym) return true;
-      const inner = t.kind === "if" ? [...t.then, ...t.otherwise] : t.kind === "match" ? t.arms.flatMap((a) => a.body) : ["for", "for-each", "collect"].includes(t.kind) ? t.body : [];
-      if (assigns(inner, sym)) return true;
-    }
-    return false;
   }
 
   // The key an item of a list has, when the list is a name: reps, or inside an item, reps[2].children.

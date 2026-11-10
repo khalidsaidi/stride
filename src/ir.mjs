@@ -1,4 +1,4 @@
-// The intermediate form: what the checked syntax tree is lowered into, the optimiser rewrites, the PDF check
+// The intermediate form: what the checked syntax tree is lowered into, the PDF check
 // walks and the code generator turns into bytecode. Each function is a graph of basic blocks; a block is a list
 // of statements and one terminator; statements hold expression trees.
 //
@@ -166,39 +166,6 @@ export function children(x) {
   }
 }
 
-// The same expression with each child replaced by f(child).
-export function mapChildren(x, f) {
-  switch (x.e) {
-    case "unary":
-      return { ...x, a: f(x.a) };
-    case "binary":
-      return { ...x, a: f(x.a), b: f(x.b) };
-    case "concat":
-      return { ...x, parts: x.parts.map(f) };
-    case "call":
-    case "native":
-      return { ...x, args: x.args.map(f) };
-    case "field":
-      return { ...x, a: f(x.a) };
-    case "item":
-      return { ...x, a: f(x.a), i: f(x.i) };
-    case "record":
-      return { ...x, fields: x.fields.map(f) };
-    case "cond":
-      return { ...x, cond: f(x.cond), yes: f(x.yes), no: f(x.no) };
-    case "slice":
-      return { ...x, a: f(x.a), from: f(x.from), to: f(x.to) };
-    case "key":
-      return { ...x, a: f(x.a) };
-    case "comp":
-      return { ...x, list: f(x.list), cond: x.cond ? f(x.cond) : null, value: f(x.value) };
-    case "list":
-      return { ...x, items: x.items.map(f) };
-    default:
-      return x;
-  }
-}
-
 // Every expression a statement or terminator holds.
 export function expressionsOf(s) {
   switch (s.op) {
@@ -229,66 +196,6 @@ export function expressionsOf(s) {
     default:
       return [];
   }
-}
-
-export function mapExpressions(s, f) {
-  switch (s.op) {
-    case "set":
-    case "append":
-    case "eval":
-      return { ...s, value: f(s.value) };
-    case "fill":
-      return { ...s, box: f(s.box), value: f(s.value) };
-    case "store":
-      return { ...s, path: s.path.map((p) => (p.index ? { ...p, index: f(p.index) } : p)), value: f(s.value) };
-    case "ask":
-      return { ...s, key: f(s.key), printed: f(s.printed), default: s.default ? f(s.default) : null };
-    case "tick":
-      return { ...s, box: f(s.box), cond: f(s.cond) };
-    case "pick":
-      return { ...s, box: f(s.box), button: f(s.button), cond: f(s.cond) };
-    case "skip":
-      return { ...s, box: f(s.box) };
-    case "check":
-      return { ...s, cond: f(s.cond), message: f(s.message) };
-    case "branch":
-      return { ...s, cond: f(s.cond) };
-    case "return":
-      return s.value ? { ...s, value: f(s.value) } : s;
-    default:
-      return s;
-  }
-}
-
-// Whether an expression may do something besides giving a value: a call to a function with effects, or a
-// native that is not pure (today). An expression with no effect may be removed when its value is not used.
-// Whether working x out can never fault: the optimiser may then drop it or put it elsewhere, since every engine,
-// optimised or not, must give the same faults at the same places (§19.1). Only values, locals, and what is built of
-// them without an operation that can fault.
-export function cannotFault(x) {
-  switch (x.e) {
-    case "const":
-    case "local":
-      return true;
-    case "unary":
-      return x.op === "not" && cannotFault(x.a);
-    case "binary":
-      return ["and", "or", "==", "!="].includes(x.op) && cannotFault(x.a) && cannotFault(x.b);
-    case "cond":
-      return cannotFault(x.cond) && cannotFault(x.yes) && cannotFault(x.no);
-    case "record":
-      return x.fields.every(cannotFault);
-    case "native":
-      return x.name === "is_empty" && x.args.every(cannotFault);
-    default:
-      return false;
-  }
-}
-
-export function hasEffect(x, natives) {
-  if (x.e === "call" && !x.fn.pure) return true;
-  if (x.e === "native" && !natives[x.name]?.pure) return true;
-  return children(x).some((c) => hasEffect(c, natives));
 }
 
 // ----- printing, for `stride asm --ir` and for reading the compiler's work

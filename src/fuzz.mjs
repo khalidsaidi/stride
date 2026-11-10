@@ -1,5 +1,5 @@
 // stride fuzz (docs/spec.md §19.2): programs made at random, valid by construction, each with answers made
-// at random, run in the machine and the intermediate form's interpreter, optimised and not, and through the PDF
+// at random, run in the machine and the intermediate form's interpreter, and through the PDF
 // check. A crash, a disagreement between the four (§19.1), or a mistake on a program the generator meant to be
 // valid is a bug; each is reported with its seed, so `stride fuzz --seed S --runs 1` gives it again.
 //
@@ -11,7 +11,7 @@
 // What a random program may rightly be refused for is not a bug: a fault certain before the form opens (S413:
 // `x / 0` where the 0 is worked out from constants). Such a program is counted and passed over, apart by whether a run
 // reached the instance refused (confirmed) or none did (inconclusive). So is one a check
-// stops at its budget (S602, §15.1), counted apart: neither an agreement nor a refusal. A run the unoptimised
+// stops at its budget (S602, §15.1), counted apart: neither an agreement nor a refusal. A run the
 // machine exhausts (F014, F015) is not compared (§19.1.1).
 import { compile } from "./compile.mjs";
 import { load, run, boxValues } from "../runtime/vm.mjs";
@@ -560,7 +560,7 @@ const view = (x) =>
 // a run reached every refused instance.
 export function checkRefusal(source, mistakes, seed) {
   const header = autoHeader(source, "fuzz.stride", { certain: false });
-  const out = compile(source, "fuzz.stride", { header, optimise: false, certain: false });
+  const out = compile(source, "fuzz.stride", { header, certain: false });
   if (!out.bytecode && out.diagnostics.sorted().some((d) => d.code === "S602")) return { budget: true };
   if (!out.bytecode) return { wrong: `without S413 the program has other mistakes: ${out.diagnostics.sorted().find((d) => d.severity === "error")?.message}` };
   const p = load(out.bytecode);
@@ -607,14 +607,14 @@ export function fuzzOne(seed) {
     return { seed, outcome: "bug", problem: `the generator broke: ${e.stack}` };
   }
   const { source } = made;
-  let header, builds;
+  let header, build;
   try {
     header = autoHeader(source, "fuzz.stride");
-    builds = [false, true].map((optimise) => compile(source, "fuzz.stride", { header, optimise }));
+    build = compile(source, "fuzz.stride", { header });
   } catch (e) {
     return { seed, outcome: "bug", problem: `the compiler crashed: ${e.stack}`, source };
   }
-  const mistakes = builds[1].diagnostics.sorted().filter((d) => d.severity === "error");
+  const mistakes = build.diagnostics.sorted().filter((d) => d.severity === "error");
   if (mistakes.length) {
     // A check stopped at its budget proves nothing either way, whatever it found before it stopped (§15.1).
     if (mistakes.some((m) => m.code === "S602")) return { seed, outcome: "budget", source };
@@ -625,8 +625,6 @@ export function fuzzOne(seed) {
     }
     return { seed, outcome: "bug", problem: `a mistake on a program meant to be valid: ${mistakes.slice(0, 3).map((m) => `${m.line}:${m.column} ${m.code} ${m.message}`).join("; ")}`, source };
   }
-  const plainMistakes = builds[0].diagnostics.sorted().filter((d) => d.severity === "error");
-  if (plainMistakes.length) return { seed, outcome: "bug", problem: `the unoptimised build has mistakes the optimised one has not: ${plainMistakes[0].code} ${plainMistakes[0].message}`, source };
 
   const r = random(seed ^ 0x5eed);
   const today = "2026-11-07";
@@ -636,7 +634,7 @@ export function fuzzOne(seed) {
   for (let round = 0; round < 4; round++) {
     const results = {};
     try {
-      for (const [mode, b] of [["vm", builds[0]], ["vm-opt", builds[1]], ["ir", builds[0]], ["ir-opt", builds[1]]]) {
+      for (const [mode, b] of [["vm", build], ["ir", build]]) {
         if (mode.startsWith("vm")) {
           const p = load(b.bytecode);
           const x = run(p, answers, { today });
