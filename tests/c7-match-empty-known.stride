@@ -1,0 +1,18 @@
+define f() -> number {
+  let s: text = empty
+  match s {
+    "" => {
+      return 1
+    }
+    else => {
+      return 5
+    }
+  }
+}
+var n: number = 0
+for i in 1..f() {
+  n += 1
+}
+print(n)
+# rule 7.10 6.6
+# prints ["1"]

@@ -182,7 +182,7 @@ function statement(s, env) {
       return block(known(s.condition, env) === true ? s.then : s.otherwise, env);
     case "match": {
       const subject = known(s.subject, env);
-      const arm = s.arms.find((a) => !a.values || a.values.some((v) => v.value === subject));
+      const arm = s.arms.find((a) => !a.values || a.values.some((v) => equal(v.value, subject)));
       return arm ? block(arm.body, env) : null;
     }
     case "for": {

@@ -1,0 +1,13 @@
+let s: text = empty
+var x: number
+match s {
+  "" => {
+    print("empty")
+  }
+  else => {
+    x = 1
+  }
+}
+print(x)
+# rule 12.1.1 7.10 S407
+# mistake 11 S407

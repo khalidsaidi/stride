@@ -510,7 +510,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
         case "match": {
           const k = know(s.subject, env);
           if (k !== undefined) {
-            const arm = s.arms.find((a) => a.values?.some((v) => v.value === k)) ?? s.arms.find((a) => !a.values);
+            const arm = s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values);
             const r = arm ? walkFlow(arm.body, new Set(unset), fn, exits, new Map(env)) : { unset: new Set(unset), falls: true };
             for (const a of s.arms) if (a !== arm) for (const x of declaredBy(a.body)) if (!declaredOn.has(x)) r.unset.add(x);
             merge(unset, r);
@@ -749,7 +749,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
         }
         case "match": {
           const k = know(s.subject, env);
-          const taken = k === undefined ? s.arms : [s.arms.find((a) => a.values?.some((v) => v.value === k)) ?? s.arms.find((a) => !a.values)].filter(Boolean);
+          const taken = k === undefined ? s.arms : [s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values)].filter(Boolean);
           for (const a of taken) yield* canRun(a.body, new Map(env));
           break;
         }
@@ -803,7 +803,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
       }
       if (s.kind === "match") {
         const k = know(s.subject, env);
-        const arm = k === undefined ? null : s.arms.find((a) => a.values?.some((v) => v.value === k)) ?? s.arms.find((a) => !a.values);
+        const arm = k === undefined ? null : s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values);
         const out = k !== undefined ? !!arm && leaves(arm.body, new Map(env)) : s.arms.some((a) => !a.values) && s.arms.every((a) => leaves(a.body, new Map(env)));
         if (out) return true;
       }
@@ -1004,7 +1004,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
         }
         case "match": {
           const k = know(s.subject, env);
-          const arm = k === undefined ? null : s.arms.find((a) => a.values?.some((v) => v.value === k)) ?? s.arms.find((a) => !a.values);
+          const arm = k === undefined ? null : s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values);
           for (const a of k === undefined ? s.arms : arm ? [arm] : []) mayLeave(a.body, new Map(env), out);
           break;
         }
@@ -1055,7 +1055,7 @@ export function flow(resolved, diagnostics, { certain = true, session = false } 
             r = maybe(mayLeave([s], new Map(env)));
             break;
           }
-          const arm = s.arms.find((a) => a.values?.some((v) => v.value === k)) ?? s.arms.find((a) => !a.values);
+          const arm = s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values);
           if (arm) r = reduced(arm.body, report, new Map(env));
           break;
         }
