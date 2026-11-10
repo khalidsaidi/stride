@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(a: number = 1, b: number) -> number {
-  return a + b
-}
-fill "A" = f(1, 2)
-# rule 9.2 S392
-# mistake 3 S392

@@ -1,6 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask y: yes-no "Y"
-# mistake 5 S376 without quotes
-tick "A" when y == "yes"
-# rule 6.6 S376

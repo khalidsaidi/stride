@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-# box Name text near Name
-# box Other text near Other
-# mistake 1 S515 the box "Other"
-ask a: text "Name"
-fill "Name" = a
-# rule 10.5 S515

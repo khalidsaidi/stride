@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-# box Name text near Name
-ask a: text "Name"
-fill "Name" = a
-# mistake 7 S512 written twice
-fill "Name" = a
-# rule 10.4 S512

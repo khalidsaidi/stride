@@ -6,6 +6,6 @@ if b {
 } else {
   fill "Ok" = "x"
 }
-# rule 10.4 S513 S509 16.1
+# rule 10.4 S509 16.1
 # box Ok check near Ok
 # mistake 7 S509

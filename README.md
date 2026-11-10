@@ -71,8 +71,6 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
   knows Go, Java, JavaScript or Python.
 - [docs/spec.md](docs/spec.md): the specification, the authority on what every construct means.
 - [docs/grammar.md](docs/grammar.md): the short reference.
-- [docs/history/](docs/history/): the design notes written before 1.0. They describe the language as it was
-  planned, not as it is.
 
 ## Tests
 

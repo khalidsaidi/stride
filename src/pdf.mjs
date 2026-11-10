@@ -421,7 +421,6 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
   const keyOf = (b) => (b.kind === "radio" ? `${b.field}\t${b.on}` : b.field);
   const done = new Set(); // box keys written or skipped somewhere
   const boxes = new Map(); // full field name -> { kind, on } for the machine
-  const writtenWith = new Map(); // full field name -> the first statement met that writes it (S513)
   const discovered = new Map(); // in discover mode: every box the program writes
   const keys = new Map(); // question key -> { q, printed, node }
   const near = new Map(); // question key -> printed words beside the boxes its answer goes into
@@ -852,15 +851,6 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
           for (const x of found) done.add(keyOf(x)); // one mistake, not a second for the box never written
           continue;
         }
-        // One kind of statement per box (S513), among writes of the box's kind: a write of the wrong kind is S509
-        // alone (§16.1). The mistake stands at the write of the second kind, in the order they are written.
-        const was = writtenWith.get(full);
-        if (was && was.op !== s.op) {
-          const later = (was.node?.span?.start ?? 0) > (s.node?.span?.start ?? 0) ? was : s;
-          const earlier = later === s ? was : s;
-          errOnce("S513", `both\t${full}`, later.node, `"${short}" is written with both ${earlier.op} and ${later.op}`);
-        }
-        if (!was) writtenWith.set(full, s);
         let box = first;
         if (s.op === "pick") {
           if (isTop(button)) {

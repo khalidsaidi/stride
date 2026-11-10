@@ -794,7 +794,7 @@ does not restrict its possible words: a failed check does not stop the run. Empt
 allowed.
 
 10.4. Following every path through the program with every answer unknown: a box is written at most once on each
-path (S512), with one kind of statement (S513); a question asked at most once (S507).
+path (S512); a question asked at most once (S507).
 - 10.4.0. **Which paths.** The PDF check tracks current var values and uses pure-call results it can determine
   independently of answers and impure operations. A determined condition follows its selected branch; an
   undetermined condition follows both. These additional facts do not make values known under §11.1 or change S413.
@@ -834,7 +834,7 @@ path (S512), with one kind of statement (S513); a question asked at most once (S
   selects nothing and covers A, and is not S515. A `pick` in code that never runs (§11.3.3) covers nothing.
 - 10.4.3. **Write and skip.** A box (a radio group as one) written and skipped on one path is S512, at the later of
   the two; paths that exclude each other may write it on one and skip it on another. A box skipped again is
-  harmless. `skip` is not a kind of write for S513.
+  harmless.
 
 10.5. Every box of the PDF is written or skipped on some path (S515, S516).
 
@@ -1147,8 +1147,8 @@ is taken as proved. The optimiser may give up an optimisation without a mistake.
 
 16.1. **A mistake** stops the compiler after its phase: syntax, libraries, names, types, flow, the PDF check. A
 phase runs only when those before it found none, so one mistake is not reported again as others. Within a phase,
-a mistake that follows from another is not reported beside it: S509 takes precedence over S513 at the same write,
-and S106 over S232 at the same statement. Independent mistakes in other parts of an expression, and in other calls,
+a mistake that follows from another is not reported beside it: S106 takes precedence over S232 at the same
+statement. Independent mistakes in other parts of an expression, and in other calls,
 are still reported. A phase finds
 and records every mistake it can (the parser stops after 20 syntax mistakes, §15); the command line shows the first
 20 in order of place and says how many more there are; `--json` lists them all.
@@ -1173,7 +1173,7 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
   crosses the limit; it need not be an opening bracket;
 - S401 and S402: the call that closes the circle (in S402, the call in the first function of the circle in the
   order the file declares them); S413 for a `fail` reached through calls: the call, in the program's body, that
-  every run reaches; S513: the write of the second kind; S518: the option's own line in its set or block; S515 and
+  every run reaches; S518: the option's own line in its set or block; S515 and
   S516: the program's first line (the header), with the box named in the message; S501: the `pdf` line; S502:
   the `form` line; S503 and S508: the box name's expression; S511: the button name's expression; S514: the
   entry's value; S517: the question's printed words; S323: the second `default`, the first as related code;
@@ -1439,7 +1439,6 @@ its call: the function's name in the call.
 | S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group. |
 | S511 | a radio button the group lacks | The message lists its buttons. |
 | S512 | a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1) | The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`. |
-| S513 | a box written by two kinds of statement | One kind. |
 | S514 | a list box entry it lacks | The list box's entries. |
 | S515 | a box neither written nor skipped | Write it, or `skip "box" because "…"`. |
 | S516 | more such boxes | Counted after the first 40. |
@@ -1810,65 +1809,9 @@ name the fault's code with `// rule F006`, and are run and counted by `stride se
 19.4. **Tests of the standard library's declarations** (S301, S302) give their own standard library with
 `# std <file>` (a file in `tests/lib/`), since only the standard library declares natives.
 
-## 20. The gap list decided
+## 20. Not used
 
-Every line of `history/gaps.md`, an early list of what Stride lacked, and where this specification settles it.
-
-| Gap | Decided |
-|---|---|
-| 1.1 columns | §1.3 |
-| 1.2 line ends | §1.2 |
-| 1.3 identifiers | §2.1 (ASCII; S012 and S001 say so) |
-| 1.4, 6.1, 6.2, 6.4, 6.5, 5.4 numbers | §3.3, §18.2 |
-| 1.5 exponents, 1.8 multi-line words | out: §2.5, §2.6 |
-| 1.6 leading zero | §2.5, S008 |
-| 1.7 escapes | §2.6 |
-| 1.9, 2.1 nesting | §7.1, S019 |
-| 1.11 other languages' words | §2.4, S020 |
-| 2.2 conditional | §6.13 |
-| 2.3 comprehensions | §6.12 |
-| 2.4 slices | §6.9.3 |
-| 2.5 augmented assignment | §7.5 |
-| 2.6, 6.6 `%` `//` | §6.4 |
-| 2.7 defaults, 3.8 | §9.2 |
-| 2.8 named arguments | §9.4 |
-| 2.9, 3.4 break/continue | §7.12; while out (every loop bounded) |
-| 2.10 functions as values, 3.8 closures | out: functions are declarations; the PDF check follows each call |
-| 9.4 sorting (and records by a field) | §14.4: `sorted`, and `sorted(l, by: "field")` with the field checked by the compiler; empty items last |
-| 2.12, 10.2 eval | §17 `stride eval` |
-| 3.7 limits | §15, S601 |
-| 3.9 spelling | §12.5 |
-| 4.1, 5.3 columns in places | §18.2, §13.4 |
-| 4.2 inlined positions | §13.4: the place is the faulting operation's, the calls those that led there, inlined or not |
-| 4.3 conditions as jumps, 4.8 peephole | implementation; §19.1 (no rule changes meaning) |
-| 5.2, 8.4 local names | §18.2, §17 `--trace` |
-| 5.6 native argument count | §18.3 |
-| 6.7 round, ceil, floor | §14.2 |
-| 6.8 conversion of answers | §8.7 |
-| 7.1 index | §6.9.2, F004 |
-| 7.2 field of non-record | §6.9.1, F006 |
-| 7.3 list changed in its loop | §3.4 (the loop goes through the items as they were) |
-| list bounds through copying, widening and parameters | §3.7 |
-| resource limits across engines | §19.1.1–19.1.2 |
-| floor division and remainder | §6.4.1 |
-| mosts known only at run time | §3.7.7 |
-| answers beyond 34 digits; digits through answers.json | §8.7 |
-| `any` and other words both keywords and names | §2.3.1 |
-| 7.4 record equality, 7.5 list equality | §6.6 |
-| 7.6 word order | §6.7 |
-| 7.7 list + list | §14.4, S395 |
-| 7.8 operator on wrong values | F018 |
-| 7.10 allocation | §15, F012, F009 |
-| 8.1 call stack shown | §16.3 |
-| 8.5 natives given bad values | §14 (F007, F008, F009) |
-| 8.6 fail, 8.7 print | §14.5 |
-| 9.2, 9.3, 9.9–9.14, 9.16, 9.19 library | §14, every signature and its empty rule |
-| 9.15 case-insensitive tests | §14.1 (kept, stated) |
-| 10.1 library tests | §4.3, §7.17 |
-| 10.6 manual | this specification; grammar.md is its short guide; guide.md is how to write programs, its examples run by the conformance suite |
-| 11.1, 11.2 certain faults | §11.3, S413 |
-| 11.3 interpreter's empties | §19.1 |
-| aliasing found writing this (a function's var sharing the caller's list) | §3.4 |
+This number named a list that is no longer part of the specification. It stays so that §21 keeps its number.
 
 ## 21. Versions
 

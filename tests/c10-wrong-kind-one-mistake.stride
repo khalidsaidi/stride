@@ -3,6 +3,6 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask c: yes-no "C"
 fill "C" = "x"
 tick "C" when c
-# rule 16.1 10.3 S509 S513
+# rule 16.1 10.3 S509
 # box C check near C
 # mistake 4 S509

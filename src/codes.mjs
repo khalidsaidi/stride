@@ -833,10 +833,6 @@ export const CODES = {
     "when": "a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1)",
     "explanation": "The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`."
   },
-  "S513": {
-    "when": "a box written by two kinds of statement",
-    "explanation": "One kind."
-  },
   "S514": {
     "when": "a list box entry it lacks",
     "explanation": "The list box's entries."
