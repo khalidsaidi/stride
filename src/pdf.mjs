@@ -1470,12 +1470,6 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
       }
       case "key":
         return known(vals[0]) ? V.encode(vals[0]) : top(vals[0]);
-      case "widen": {
-        const l = vals[0];
-        if (Array.isArray(l) && l.every(known) && V.mostOf(l) <= x.most) return V.list(l.map(copy), x.most);
-        if (l === null) return V.list([], x.most);
-        return top(l);
-      }
       case "slice": {
         const [l, a, b] = vals;
         const from = V.whole(a), to = V.whole(b);

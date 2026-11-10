@@ -11,8 +11,7 @@
 //
 // A program is checked against its form's header (<file>.boxes.json beside it: the PDF's boxes, written by
 // `stride header`), as a C program is against its headers.
-// The words a page shows for each question (<file>.words.json, if there is one) are kept in the bytecode for the
-// page. Only `header`, `new` and `run` in the browser read a PDF, and nothing needs the network. scripts/build.mjs makes
+// Only `header`, `new` and `run` in the browser read a PDF, and nothing needs the network. scripts/build.mjs makes
 // this one executable; scripts/install.sh installs it.
 import { existsSync, readFileSync, writeFileSync, statSync, readSync } from "node:fs";
 import { StringDecoder } from "node:string_decoder";

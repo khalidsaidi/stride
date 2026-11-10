@@ -6,7 +6,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, basename, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { compile, projectOf, STD_PATH, stdSource, wordsProblem } from "./compile.mjs";
+import { compile, projectOf, STD_PATH, stdSource } from "./compile.mjs";
 import { format } from "./format.mjs";
 import { KEYWORDS, OTHER_WORDS } from "./syntax.mjs";
 import { describe } from "./types.mjs";
@@ -61,7 +61,6 @@ function compileDoc(uri, text, texts = openTexts()) {
   }
   const base = path.replace(/\.stride$/, "");
   const header = disk(`${base}.boxes.json`);
-  const words = disk(`${base}.words.json`);
   // A header that is not JSON is said at the top of the file, and the file is checked as if it had none.
   let parsed = null;
   try {
@@ -69,9 +68,7 @@ function compileDoc(uri, text, texts = openTexts()) {
   } catch (e) {
     problem = `${basename(base)}.boxes.json is not JSON: ${e.message}`;
   }
-  const wordsWrong = words !== null && wordsProblem(words);
-  if (wordsWrong) problem ??= `${basename(base)}.words.json: ${wordsWrong}`;
-  return { out: compile(text, basename(path), { dir: dirname(path), header: parsed, resources: words && !wordsWrong ? { words } : {}, read, optimise: false, libraries }), own: basename(path), path, problem };
+  return { out: compile(text, basename(path), { dir: dirname(path), header: parsed, read, optimise: false, libraries }), own: basename(path), path, problem };
 }
 const openTexts = () => new Map([...docs.values()].filter((d) => d.path).map((d) => [resolve(d.path), d.text]));
 

@@ -353,14 +353,6 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
       }
       case "key":
         return encode(expr(x.a, locals), recordNames);
-      case "widen": {
-        const l = expr(x.a, locals);
-        if (Array.isArray(l) && !l.isSet) {
-          if (mostOf(l) > x.most) fault("F017", `a list of most ${mostOf(l)} was placed where at most ${x.most} fit`, exprPlace(x));
-          return list(l.map(copy), x.most);
-        }
-        return l === null ? list([], x.most) : l;
-      }
       case "comp": {
         const l = expr(x.list, locals);
         const items = Array.isArray(l) ? l : [];

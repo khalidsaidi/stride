@@ -130,7 +130,6 @@ export const list = (items, most) => ({ e: "list", items, most });
 export const cond = (c, yes, no) => ({ e: "cond", cond: c, yes, no });
 export const slice = (a, from, to) => ({ e: "slice", a, from, to });
 export const key = (a) => ({ e: "key", a });
-export const widen = (a, most) => ({ e: "widen", a, most });
 
 export const isConst = (x) => x.e === "const";
 
@@ -159,7 +158,6 @@ export function children(x) {
     case "slice":
       return [x.a, x.from, x.to];
     case "key":
-    case "widen":
       return [x.a];
     case "comp":
       return [x.list, ...(x.cond ? [x.cond] : []), x.value];
@@ -191,7 +189,6 @@ export function mapChildren(x, f) {
     case "slice":
       return { ...x, a: f(x.a), from: f(x.from), to: f(x.to) };
     case "key":
-    case "widen":
       return { ...x, a: f(x.a) };
     case "comp":
       return { ...x, list: f(x.list), cond: x.cond ? f(x.cond) : null, value: f(x.value) };
@@ -326,8 +323,6 @@ export function showExpr(x) {
       return `${showExpr(x.a)}[${showExpr(x.from)}..${showExpr(x.to)}]`;
     case "key":
       return `key(${showExpr(x.a)})`;
-    case "widen":
-      return `widen(${showExpr(x.a)}, ${x.most})`;
     case "comp":
       return `[${showExpr(x.value)} for each %${x.index.name}, %${x.item.name} in ${showExpr(x.list)}${x.cond ? ` if ${showExpr(x.cond)}` : ""}]`;
     default:

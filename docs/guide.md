@@ -537,7 +537,6 @@ forms/
   w9/w9.boxes.json     the header: the PDF's sha256 and its boxes   (stride header, stride new)
   w9/w9.pdf            the issuer's PDF, beside its workflow          (stride new copies it)
   w9/w9.tests/*.json   its tests                                     (stride new starts one)
-  w9/w9.words.json     the words the page shows for each question, in each language (optional)
 ```
 
 `stride check`, `stride test` and `stride fmt .` with no file work on the whole project from where you are. A project

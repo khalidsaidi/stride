@@ -81,7 +81,6 @@ export const OP = {
   PICK_AT: 49, // pop a condition, a button's name and a box's name; pick it when yes
   FLOOR_DIV: 50,
   MOD: 51,
-  WIDEN: 52, // v most: a list placed where a list of most N is expected (§3.7.2, §3.7.7): F017 above, else widened
   GET_ITEM_THERE: 53, // pop a position, pop a list, push the item, which must be there (§7.5.1: F004, F020)
   ENSURE_RECORD: 54, // v local, v record type: an empty local becomes an empty record of the type (§7.5.1)
   ENSURE_FIELD: 55, // v field, v record type: an empty field of the record on top becomes an empty record
@@ -101,7 +100,7 @@ export const OPERANDS = {
   [OP.TEXT]: "v", [OP.NUMBER]: "v", [OP.LOAD]: "v", [OP.STORE]: "v", [OP.NEW_RECORD]: "v", [OP.GET_FIELD]: "v",
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
-  [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.WIDEN]: "v", [OP.ENSURE_RECORD]: "vv",
+  [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
   [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v",
 };
 
@@ -387,9 +386,6 @@ export function verify(p) {
         case OP.NEW_LIST:
           check(args[1] <= 1000 && args[0] <= Math.max(args[1], 1), "list most");
           break;
-        case OP.WIDEN:
-          check(args[0] <= 1000, "list most");
-          break;
         case OP.CALL:
           check(args[0] < p.functions.length, "function");
           check(args[1] === p.functions[args[0]].params, "argument count");
@@ -453,7 +449,7 @@ function stackEffect(op, args) {
       return [1, 2];
     case OP.STORE: case OP.POP: case OP.APPEND: case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.CHECK_FAILED: case OP.FILL: case OP.TICK: case OP.PICK: case OP.RETURN:
       return [1, 0];
-    case OP.GET_FIELD: case OP.NEG: case OP.NOT: case OP.WIDEN: case OP.KEY: case OP.TO_BOOL:
+    case OP.GET_FIELD: case OP.NEG: case OP.NOT: case OP.KEY: case OP.TO_BOOL:
       return [1, 1];
     case OP.ENSURE_FIELD:
       return [1, 1];

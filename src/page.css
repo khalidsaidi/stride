@@ -31,7 +31,6 @@ body.asking #viewerContainer { right: 380px; }
 aside.questions .close { position: absolute; right: 8px; top: 6px; width: 32px; height: 32px; border: 0; background: transparent; color: var(--muted); font-size: 24px; cursor: pointer; }
 aside.questions .where { margin: 0 24px 8px 0; color: var(--muted); font-size: 12px; }
 aside.questions h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
-aside.questions .help { margin: 0 0 12px; color: var(--muted); }
 aside.questions .check { margin: 8px 0 0; color: #b42318; font-size: 14px; }
 aside.questions input[type=text], aside.questions input[type=tel], aside.questions input[type=email], aside.questions input[type=date], aside.questions textarea { display: block; width: 100%; margin: 8px 0; padding: 10px 12px; border: 1px solid #c7ccd1; border-radius: 8px; font: inherit; font-size: 16px; }
 aside.questions .options label { display: block; margin: 8px 0; font-size: 15px; cursor: pointer; }

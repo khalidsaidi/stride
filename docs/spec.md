@@ -1733,12 +1733,10 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
   never the program.
 - **Bytecode.** `stride compile <name>.stride` writes `<name>.sbc` (or `-o`): the program and the library code it
   uses, its questions with their keys, words, checks and defaults, the boxes each answer goes into with their kinds
-  and export values, its words in every language (`<name>.words.json`), and the sha256 of its form's PDF:
-  everything a run needs but the PDF. A words file that is not a JSON object is the file's own mistake, said with
-  its name: nothing is compiled or served from it (exit 1), and at a reload the page says it. It needs no answers,
+  and export values, and the sha256 of its form's PDF: everything a run needs but the PDF. It needs no answers,
   runs nothing and opens no browser; it takes source, and bytecode given to it (or to `map`) is a usage mistake.
   `stride run
-  <name>.sbc` serves the same workflow from it alone, with no source, library, header or words file, and its PDF.
+  <name>.sbc` serves the same workflow from it alone, with no source, library or header, and its PDF.
 - **In the terminal.** `--terminal` runs a program in the terminal, saying the questions it asked with their
   answers, what it printed and the boxes it wrote, with answers (§17.12), `--prompt`, `--no-prompt`, `--json`
   (§16.2) and `--trace` (§17.7). A script always runs in the terminal; `--terminal` changes nothing for it.

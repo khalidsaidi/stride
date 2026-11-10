@@ -155,19 +155,7 @@ export function projectOf(path) {
   }
 }
 
-// What is wrong with a words file's text (<form>.words.json), or null: it must be a JSON object.
-export function wordsProblem(text) {
-  let w;
-  try {
-    w = JSON.parse(text);
-  } catch (e) {
-    return `not JSON: ${e.message}`;
-  }
-  return w && typeof w === "object" && !Array.isArray(w) ? null : "the words are a JSON object of question keys";
-}
-
-// Compiles the file at `path`, with its header (<form>.boxes.json) and words (<form>.words.json) beside it, and its
-// project's libraries (§4.7).
+// Compiles the file at `path`, with its header (<form>.boxes.json) beside it, and its project's libraries (§4.7).
 export function compileFile(path, options = {}) {
   const project = projectOf(path);
   if (project) options = { libraries: project.libraries, ...options };
@@ -183,14 +171,5 @@ export function compileFile(path, options = {}) {
       throw Object.assign(new Error(`${headerPath} is not JSON: ${e.message}`), { headerProblem: true });
     }
   }
-  const wordsPath = `${base}.words.json`;
-  const resources = { ...(options.resources ?? {}) };
-  if (!resources.words && existsSync(wordsPath)) resources.words = readFileSync(wordsPath, "utf8");
-  // The words go into the bytecode for the page, which reads them as JSON: words that are not a JSON object are the
-  // file's own mistake, said with its name, and nothing is compiled from them.
-  if (resources.words !== undefined) {
-    const why = wordsProblem(resources.words);
-    if (why) throw Object.assign(new Error(`${wordsPath}: ${why}`), { headerProblem: true });
-  }
-  return { ...compile(source, basename(path), { dir: dirname(path), header, resources, ...options }), headerPath, header };
+  return { ...compile(source, basename(path), { dir: dirname(path), header, ...options }), headerPath, header };
 }

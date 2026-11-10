@@ -102,11 +102,9 @@ export function test() {
     program("faulty", 'ask n: number "Full name" default 0\ndefine tenth(d: number) -> number {\n  return 10 / d\n}\nfill "name" = tenth(n)\nskip "agree" because "unused"\n');
     program("prints", 'ask who: text "Full name"\nfill "name" = who\nprint("seen: {who}")\nskip "agree" because "unused"\n');
     program("moving", 'ask who: text "Full name"\nfill "name" = who\nskip "agree" because "unused"\n');
-    program("words", 'ask who: text "Full name"\nfill "name" = who\nskip "agree" because "unused"\n');
     program("checked", 'ask n: number "Full name" check n >= 18 "Must be at least 18"\nfill "name" = n\nskip "agree" because "unused"\n');
     program("swapped", 'ask who: text "Full name"\nfill "name" = who\nskip "agree" because "unused"\n');
     program("stable", 'ask n: number "Full name"\nprint("same")\nif n == 0 {\n  fail("zero")\n}\nfill "name" = n\nskip "agree" because "unused"\n');
-    writeFileSync(join(dir, "words.words.json"), JSON.stringify({ who: { en: { prompt: "Your full name" } } }));
     for (const n of ["constant", "faulty"]) execFileSync("node", [cli, "compile", `${n}.stride`, "-q"], { cwd: dir });
     // The compiled ones alone with their PDFs.
     mkdirSync(join(dir, "shared"));
@@ -125,7 +123,6 @@ export function test() {
       { name: "default faults, kept then mended", file: "faulty.sbc", dir: "shared", steps: [{ panel: true }, { next: true }, { panel: true }, { back: true }, { text: "4" }, { next: true }, { download: "pdf" }] },
       { name: "prints", file: "prints.stride", steps: [{ text: "Ada" }, { next: true }, { download: "pdf" }] },
       { name: "new edition", file: "moving.stride", steps: [{ write: "moving.pdf", text: edition.toString("base64"), base64: true }, { write: "moving.boxes.json", text: JSON.stringify({ ...editionHeader, form: "moving" }) }, { write: "moving.stride", text: movingSource }, { reload: true }, { text: "Bo" }, { next: true }, { download: "pdf" }, { remove: "moving.pdf" }, { reload: true }, { page: true }] },
-      { name: "words broken at a reload", file: "words.stride", steps: [{ write: "words.words.json", text: "{ broken" }, { reload: true }, { page: true }] },
       { name: "a check", file: "checked.stride", steps: [{ text: "17" }, { panel: true }, { text: "20" }, { panel: true }, { text: "15" }, { panel: true }, { next: true }, { panel: true }, { back: true }, { text: "30" }, { next: true }, { panel: true }] },
       { name: "unreadable", file: "checked.stride", steps: [{ text: "abc" }, { panel: true }, { next: true }, { panel: true }, { download: "pdf" }] },
       { name: "the PDF replaced between the requests", file: "swapped.stride", swapPdf: { file: "swapped.pdf", base64: tinyPdf({ label: "Different name" }).toString("base64") }, steps: [{ page: true }] },
@@ -158,7 +155,6 @@ export function test() {
     const moved = got["new edition"];
     want("the PDF, its header and the source replaced together: served at the reload", moved.pdf?.name === "Bo" && !moved.errors.length, moved);
     want("the PDF taken away: said in the page", moved.seen[0]?.includes("moving.pdf: no such file"), moved.seen);
-    want("words broken at a reload: said in the page", got["words broken at a reload"].seen[0]?.includes("words.words.json: not JSON") && !got["words broken at a reload"].seen[0]?.includes("Loading"), got["words broken at a reload"]);
     const check = got["a check"].seen;
     const says = (t) => t?.includes("Must be at least 18");
     want("17: the check's message, at once", says(check[0]), check);
@@ -177,11 +173,6 @@ export function test() {
     want("the fault, each time it comes, in full", stable.filter((c) => c.startsWith("error fault F013: zero\n  at main, stable.stride:7:")).length === 2, stable);
     const changing = got["a changing print"].console;
     want("a changing print, each time", changing.includes("log seen: Ada") && changing.includes("log seen: Bo"), changing);
-    // Broken words, at the start: compile and run refuse them, naming the file.
-    for (const args of [["compile", "words.stride"], ["run", "words.stride", "--port", "0"]]) {
-      const x = spawnSync("node", [cli, ...args], { cwd: dir, encoding: "utf8", timeout: 30_000, env: { ...process.env, BROWSER: "none" } });
-      want(`${args[0]} with words that are not JSON`, x.status === 1 && x.stderr.includes("words.words.json: not JSON"), [x.status, x.stderr]);
-    }
     // Bytecode where source is needed: a usage mistake, never an internal one.
     for (const c of ["compile", "map"]) {
       const x = stride([c, "shared/constant.sbc"]);

@@ -153,10 +153,6 @@ export function generate(program, pdf, { resources = {}, stats = null } = {}) {
         case "key":
           expr(x.a);
           return emit(OP.KEY);
-        case "widen":
-          expr(x.a);
-          atExpr(x);
-          return emit(OP.WIDEN, x.most);
         case "comp": {
           // An inline loop (§6.12): the list once into a hidden local, the result built item by item.
           const src = local({ name: "comp.list" });

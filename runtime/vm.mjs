@@ -341,14 +341,6 @@ function execute(p, answers, limit, depth, trace, prints) {
           l.push(copy(v));
           break;
         }
-        case OP.WIDEN: {
-          const l = pop();
-          if (Array.isArray(l) && !l.isSet) {
-            if (mostOf(l) > ins.a) fault("F017", `a list of most ${mostOf(l)} was placed where at most ${ins.a} fit`);
-            stack.push(list(l.map(copy), ins.a));
-          } else stack.push(l === null ? list([], ins.a) : l);
-          break;
-        }
         case OP.SLICE: {
           const b = pop();
           const a = pop();
@@ -536,12 +528,6 @@ export function boxValues(p, writes) {
     out[b.name] = w ? w.value : b.kind === "fill" ? "" : "Off";
   });
   return out;
-}
-
-// A program's resource (a blob kept with it for its host), as text.
-export function resource(p, name) {
-  const b = p.resources[name];
-  return b ? new TextDecoder().decode(b) : null;
 }
 
 // A fault as §16.3 shows it: its code and words, where it stands, and the calls that led there.

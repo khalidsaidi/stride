@@ -12,8 +12,6 @@ One program per form, `<form>.stride`, written against one exact PDF. Beside it:
 
 - `<form>.boxes.json`, the header: the PDF's boxes, as the PDF gives them, written by
   `stride header <form>.pdf`; and, where whoever prepared the form added them, the words printed beside each. A program is checked against it, as a C program is against its headers.
-- `<form>.words.json`: the words the page shows for each question, in each language. The compiler keeps them in
-  the bytecode for the page and does not read them.
 - `<form>.tests/*.json`: the program's tests.
 
 Libraries are in `lib/`; the standard library is `lib/std.stride`. A test file `<name>.test.stride`
@@ -318,7 +316,7 @@ box the run does not write is emptied.
 | `TEXT NUMBER TRUE FALSE EMPTY` | push a constant |
 | `LOAD STORE POP DUP` | locals and the stack |
 | `NEW_RECORD GET_FIELD SET_FIELD ENSURE_RECORD ENSURE_FIELD ENSURE_ITEM` | records |
-| `NEW_LIST GET_ITEM GET_ITEM_THERE SET_ITEM CHECK_SLOT APPEND SLICE WIDEN` | lists |
+| `NEW_LIST GET_ITEM GET_ITEM_THERE SET_ITEM CHECK_SLOT APPEND SLICE` | lists |
 | `ADD SUB MUL DIV FLOOR_DIV MOD EQ NE LT LE GT GE IN NOT_IN NEG NOT TO_BOOL CONCAT KEY` | operators |
 | `JUMP JUMP_IF_FALSE JUMP_IF_TRUE LOOP` | jumps (`LOOP` back to a counted loop's head) |
 | `CALL RETURN RETURN_NONE NATIVE HALT` | calls |
