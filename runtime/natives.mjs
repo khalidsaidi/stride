@@ -11,9 +11,7 @@
 import { D, StrideFault, StrideRecord, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isEmpty };
-export const NativeFault = StrideFault;
 export const textOf = words;
-export { dateFrom as dateOf };
 
 const MAX_WORDS = 100_000;
 const chars = (t) => [...(t ?? "")];
@@ -339,5 +337,4 @@ function numberOp(f) {
   }
 }
 
-export const NATIVE_NAMES = Object.keys(NATIVES);
 export { StrideDate, isDate, D };

@@ -143,10 +143,6 @@ export class Writer {
     for (const x of bytes) this.bytes.push(x);
   }
 
-  patch(at, value) {
-    for (let i = 0; i < 4; i++) this.bytes[at + i] = (value >>> (8 * i)) & 0xff;
-  }
-
   get length() {
     return this.bytes.length;
   }
@@ -589,7 +585,6 @@ export function placeAt(p, address) {
   }
   return found;
 }
-export const lineAt = placeAt;
 
 // The program's instructions in readable form: function by function, each instruction with its address, name,
 // operands, what they name, and its place where it changes.

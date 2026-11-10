@@ -166,9 +166,6 @@ export function typeOfAnswer(question, set) {
   return SCALARS[question];
 }
 
-// The text a value of this type is written as in a box, as a description for messages.
-export const boxForm = (type) => (type.t === "date" ? "YYYY-MM-DD, unless formatted" : type.t === "number" ? "its digits" : "its words");
-
 // The join of two types (docs/spec.md §3.9): the one type two values take together, or null when they
 // have none. The same both ways round; never a narrower kind of words; lists by their elements, with the larger
 // most at every level.

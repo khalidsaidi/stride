@@ -88,4 +88,3 @@ export function unary(op, a) {
 }
 
 export { truthy, equal, words };
-export const isEmptyValue = isEmpty;

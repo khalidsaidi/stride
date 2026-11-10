@@ -12,8 +12,6 @@ import { binary, unary, truthy } from "../runtime/ops.mjs";
 import { convert } from "../runtime/vm.mjs";
 import { StrideFault, StrideRecord, isEmpty, words, printed, copy, list, mostOf, set, whole, encode, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
 
-export class InterpretLimit extends Error {}
-
 const DEPTH = 200;
 
 // Runs `fn` with `args`. `answers` is { key: answer } as the machine takes them; `boxes` the PDF check's box map

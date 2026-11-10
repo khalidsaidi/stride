@@ -25,7 +25,6 @@ const kept = (v) => (v !== null && typeof v === "object" && !Array.isArray(v) ? 
 export function workflow(bytes) {
   const p = load(bytes);
   p.words = JSON.parse(resource(p, "words") ?? "{}");
-  p.fieldIndex = new Map(p.boxes.map((b, i) => [b.name, i]));
   return p;
 }
 
@@ -44,15 +43,6 @@ function words(p, key, part) {
 // of a run, or a link of a box: each has the question's key and its printed words.
 export function say(p, at, part) {
   return words(p, at.key, part) ?? (part === "prompt" ? at.printed : "");
-}
-
-// What a box's card says: the question whose answer goes into the box, by the PDF's full field name; one that
-// fills it with the answer as it is comes before one that only decides it. Gives a link: { key, printed, … }.
-export function askOf(p, field) {
-  const i = p.fieldIndex.get(field);
-  if (i === undefined) return null;
-  const here = p.links.filter((l) => l.box === i && !p.questions[l.question].item);
-  return here.find((l) => l.direct) ?? here[0] ?? null;
 }
 
 // box(field, value): puts a value in one of the PDF's boxes (an export value or "Off" for a check box or a radio

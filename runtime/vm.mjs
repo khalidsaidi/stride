@@ -9,12 +9,12 @@
 // Every run ends: jumps go forward but a loop's jump back to its head, no function reaches itself (the compiler
 // refuses it), and the machine stops at 2,000,000 instructions (F014) and 200 frames (F015). The bytecode is
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
-import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, lineAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
+import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter } from "./natives.mjs";
 import { D, StrideFault, StrideRecord, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, encode, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
-export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault, lineAt };
+export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
 export const textOf = words;
 
 const LIMIT = 2_000_000; // instructions in one run (§15)

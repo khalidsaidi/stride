@@ -32,7 +32,6 @@ export class Decimal {
   }
 }
 
-export const isDecimal = (v) => v instanceof Decimal;
 const pow10 = (n) => 10n ** BigInt(n);
 const abs = (n) => (n < 0n ? -n : n);
 const digitCount = (n) => (n === 0n ? 1 : abs(n).toString().length);
@@ -158,7 +157,6 @@ export function compare(a, b) {
 }
 export const equal = (a, b) => a.c === b.c && a.e === b.e;
 export const isWhole = (a) => a.e >= 0;
-export const isZero = (a) => a.c === 0n;
 export const sign = (a) => (a.c < 0n ? -1 : a.c > 0n ? 1 : 0);
 
 // A whole Decimal as a JavaScript number, for positions, counts and the like; null when it is not whole or too big.

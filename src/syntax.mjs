@@ -153,7 +153,7 @@ export function lex(text, cursor = new Cursor(text), until = null) {
           value = h;
         }
       }
-      token = { type: KEYWORDS.has(value) ? "keyword" : HYPHENATED.has(value) ? "name" : "name", value };
+      token = { type: KEYWORDS.has(value) ? "keyword" : "name", value };
     } else if (/[0-9]/.test(c)) {
       let value = "";
       while (/[0-9]/.test(cursor.peek() ?? "")) value += cursor.next();
@@ -700,9 +700,7 @@ class Parser {
   ask() {
     const start = this.take();
     const p = this.token;
-    this.wantName = true;
     const names = [this.name("the answer's name")];
-    this.wantName = false;
     while (this.sym(".")) {
       this.take();
       names.push(this.name("a field's name"));
@@ -743,9 +741,7 @@ class Parser {
   binding() {
     const start = this.take();
     const kind = start.value;
-    this.wantName = true;
     const name = this.name();
-    this.wantName = false;
     let type = null;
     if (this.sym(":")) {
       this.take();
@@ -789,12 +785,7 @@ class Parser {
   }
 
   condition() {
-    this.inCondition = true;
-    try {
-      return this.expr();
-    } finally {
-      this.inCondition = false;
-    }
+    return this.expr();
   }
 
   ifStatement() {
@@ -1202,7 +1193,7 @@ export function parseExpression(text, depth = 0) {
     return { tree: null, mistakes: [e], rest: null };
   }
   // Only whitespace and comments: no expression at all.
-  if (tokens.every((t) => t.type === "end" || t.type === "newline")) return { tree: null, mistakes: [], rest: null, empty: true };
+  if (tokens.every((t) => t.type === "end")) return { tree: null, mistakes: [], rest: null, empty: true };
   const parser = new Parser(tokens, [], depth);
   try {
     const tree = parser.expr();
