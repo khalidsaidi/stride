@@ -49,11 +49,6 @@ declaration (§5.2), where it may be left out; `any` and `another` after a colle
 (§8.5), and `any` as a type in a native's parameters or result (§5.6); `faults` after an `expect` statement's expression
 (§7.17). So `any(answers)` (§14.4) is a call of the function `any`, and a var may be called `option`.
 
-2.4. **Words of other languages.** `true`, `false`, `null`, `none`, `nil`, `while`, `def`, `function`, `fn`,
-`elif`, `elsif`, `switch`, `case`, `class`, `import`, `try`, `catch`, `throw` used where a name or a statement is
-expected is mistake S020, which names what Stride writes instead (`yes`, `no`, `empty`, `for`/`collect`, `define`,
-`else if`, `match`, `record`, `use`; `throw` is `fail`). `try` and `catch` have no equivalent: a fault stops the run.
-
 2.5. **Numbers**: `digits [ "." digits ]`. Digits are `0`–`9`. A number with a leading zero followed by another
 digit (`0755`) is mistake S008 (an id with leading zeros is words in quotes). A number's significant digits run from its first
 digit that is not 0 to its last digit that is not 0 (`0.00120` has 2, `1200` has 2, `1203` has 4). A number with
@@ -1232,7 +1227,6 @@ its call: the function's name in the call.
 | S017 | a PDF sha256 that is not one | The sha256 is 64 hexadecimal digits in small letters, from `stride header`. |
 | S018 | `{…}` in words that must be plain | Option values, `use` paths, `fields` and match values are plain words. |
 | S019 | nesting deeper than 200 | Blocks, brackets and expressions go 200 deep at most; split it into functions or lets. |
-| S020 | a word of another language | Stride writes `yes`/`no` (not true/false), `empty` (not null), `define` (not def/function), `else if` (not elif), `match` (not switch), `for`/`collect` (not while). |
 | S021 | a `\u{…}` out of range | A character is `\u{0}` to `\u{10FFFF}`, not D800–DFFF. |
 | S022 | an option of a question's own without `option` | A question's own options are written `option "value" "printed words"`. |
 | S023 | `==` where a statement is meant | `x == 1` on its own does nothing; to give a value, `x = 1`. |
@@ -1489,8 +1483,7 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
   `--pdf`, a program for that form instead: its header `<name>.boxes.json`, the PDF beside it as `<name>.pdf`, a
   program asking one question for the first text box and skipping every other box, and a test of that question. The
   question's words are the box's description, else the box's own name, to be replaced by the form's own; its name
-  is made from those words as a name (§2.1), never a keyword, a
-  word of §2.4 or a library function's name; the words and every box's name are written in quotes with `\`, `"`,
+  is made from those words as a name (§2.1), never a keyword or a library function's name; the words and every box's name are written in quotes with `\`, `"`,
   `{` and `}` escaped (§2.6), so they are taken as written. When the form has no text box, or the
   program with the question would not compile, the program skips every box and its test gives no answers and
   expects every box empty. What it writes compiles and its test passes; a PDF for which even that cannot be made
@@ -1642,8 +1635,7 @@ it), `exited` and `terminated`.
 - references: every place the name's declaration is named, in the file and, for a name a library declares, in
   every file of the project (§4.7) that uses it;
 - rename: the edits that rename the declaration and every reference to it, in every file references would find.
-  The new name is refused, with why, and no edit given, when it is not a name (§2.1), is a keyword or a word of
-  another language (§2.4), or is a standard library name; and when the project's files, with the edits made,
+  The new name is refused, with why, and no edit given, when it is not a name (§2.1), is a keyword, or is a standard library name; and when the project's files, with the edits made,
   would have a mistake they did not have, or any name in them would refer to another declaration than it did (a
   name captured, or capturing). A standard library name is never renamed.
 

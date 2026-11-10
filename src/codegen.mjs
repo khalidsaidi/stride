@@ -7,7 +7,7 @@ import { D, isNumber, isDate, isSet, list } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
-export function generate(program, pdf, { resources = {} } = {}) {
+export function generate(program, pdf) {
   const texts = [];
   const textIndex = new Map();
   const T = (s) => {
@@ -57,7 +57,7 @@ export function generate(program, pdf, { resources = {} } = {}) {
     };
 
     // The function's instructions as a list first: { op, args, to (a label, for jumps), line }, with labels as
-    // their own entries. The peephole pass works on the list; the assembler then gives each its address.
+    // their own entries. The assembler then gives each its address.
     const ins = [];
     let place = null; // the place of the instructions emitted now: { file, line, column }
     const emit = (op, ...args) => {
@@ -413,8 +413,6 @@ export function generate(program, pdf, { resources = {} } = {}) {
       }
     }
 
-    tidy(ins);
-
     // The assembler: each instruction's address (a jump's is always 4 bytes, so one pass gives them all), then
     // the bytes, with every jump to its label's address.
     const start = code.length;
@@ -474,7 +472,6 @@ export function generate(program, pdf, { resources = {} } = {}) {
   numbers.forEach(T);
   for (const f of functions) (T(f.name), T(f.file), f.localNames.forEach(T));
   for (const pl of places) T(pl.file);
-  Object.keys(resources).forEach(T);
   const opt = (s, v) => s.varint(v === null || v === undefined ? 0 : T(v) + 1);
 
   const pooled = texts.length;
@@ -540,16 +537,6 @@ export function generate(program, pdf, { resources = {} } = {}) {
       s.varint(pl.column);
     }
   });
-  section(SECTION.RESOURCES, (s) => {
-    const entries = Object.entries(resources);
-    s.varint(entries.length);
-    for (const [name, blob] of entries) {
-      const bytes = typeof blob === "string" ? new TextEncoder().encode(blob) : blob;
-      s.varint(T(name));
-      s.varint(bytes.length);
-      s.raw(bytes);
-    }
-  });
   if (texts.length !== pooled) throw new Error("a text was pooled after the text section was written");
   return out.done();
 }
@@ -566,110 +553,3 @@ const varintSize = (n) => {
 };
 const size = (i) => 1 + (i.to !== undefined ? 4 : 0) + i.args.reduce((n, a) => n + varintSize(a), 0);
 
-const ENDS = new Set([OP.JUMP, OP.LOOP, OP.RETURN, OP.RETURN_NONE, OP.HALT]);
-
-// The instruction list tidied as it is written: short patterns the generator's own way of writing leaves behind,
-// replaced by shorter ones that do the same, until none is left. Every program is written through it: there is
-// one compiled form of a program, not two.
-//   LOAD x, POP                 nothing
-//   NOT, NOT                    TO_BOOL
-//   TRUE, JUMP_IF_FALSE L       nothing          FALSE, JUMP_IF_FALSE L     JUMP L
-//   JUMP L, where L is next     nothing
-//   JUMP L, where L returns     the return
-//   JUMP_IF_FALSE L1, JUMP L2, L1:     NOT, JUMP_IF_FALSE L2, L1:
-//   anything after an end, before the next label: never runs, removed
-function tidy(ins) {
-  let removed = 0;
-  const next = (i) => {
-    let j = i + 1;
-    while (j < ins.length && ins[j].op === "label") j++;
-    return j;
-  };
-  const target = (l) => {
-    const at = ins.indexOf(l);
-    return at < 0 ? null : ins[next(at)];
-  };
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (let i = 0; i < ins.length; i++) {
-      const a = ins[i];
-      if (a.op === "label") continue;
-      const j = i + 1;
-      const b = ins[j];
-      const drop = (n) => {
-        ins.splice(i, n);
-        removed += n;
-        changed = true;
-      };
-      if (b && b.op !== "label") {
-        if (a.op === OP.LOAD && b.op === OP.POP) {
-          drop(2);
-          break;
-        }
-        if (a.op === OP.NOT && b.op === OP.NOT) {
-          // not not x is x as yes or no (§6.15.1): never x itself, which may be empty.
-          ins.splice(i, 2, { op: OP.TO_BOOL, args: [], place: a.place });
-          removed++;
-          changed = true;
-          break;
-        }
-        if (a.op === OP.TRUE && b.op === OP.JUMP_IF_FALSE) {
-          drop(2);
-          break;
-        }
-        if (a.op === OP.FALSE && b.op === OP.JUMP_IF_FALSE) {
-          ins.splice(i, 2, { op: OP.JUMP, args: [], to: b.to, place: a.place });
-          removed++;
-          changed = true;
-          break;
-        }
-      }
-      if (a.op === OP.JUMP_IF_FALSE && b?.op === OP.JUMP) {
-        // JUMP_IF_FALSE L1; JUMP L2; L1:  is  NOT; JUMP_IF_FALSE L2; L1:
-        let k = j + 1;
-        let lands = false;
-        while (k < ins.length && ins[k].op === "label") {
-          if (ins[k] === a.to) lands = true;
-          k++;
-        }
-        if (lands) {
-          ins.splice(i, 2, { op: OP.NOT, args: [], place: a.place }, { op: OP.JUMP_IF_FALSE, args: [], to: b.to, place: b.place });
-          changed = true;
-          break;
-        }
-      }
-      if (a.op === OP.JUMP) {
-        // To the instruction right after it, past only labels.
-        let k = i + 1;
-        let toNext = false;
-        while (k < ins.length && ins[k].op === "label") {
-          if (ins[k] === a.to) toNext = true;
-          k++;
-        }
-        if (toNext) {
-          drop(1);
-          break;
-        }
-        const t = target(a.to);
-        if (t && (t.op === OP.RETURN_NONE || t.op === OP.HALT)) {
-          ins[i] = { op: t.op, args: [], place: a.place };
-          changed = true;
-          break;
-        }
-      }
-      if (ENDS.has(a.op) && b && b.op !== "label") {
-        // Never runs: nothing jumps to it, and the instruction before does not go on.
-        let k = j;
-        while (k < ins.length && ins[k].op !== "label") k++;
-        ins.splice(j, k - j);
-        removed += k - j;
-        changed = true;
-        break;
-      }
-    }
-  }
-  // Labels no jump names any more go.
-  const used = new Set(ins.filter((i) => i.to).map((i) => i.to));
-  for (let i = ins.length - 1; i >= 0; i--) if (ins[i].op === "label" && !used.has(ins[i])) ins.splice(i, 1);
-  return removed;
-}

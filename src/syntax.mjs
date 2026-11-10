@@ -58,17 +58,6 @@ export class SyntaxMistake extends Error {
   }
 }
 
-// Words other languages use, with what Stride writes instead (§2.4, S020).
-export const OTHER_WORDS = {
-  true: "yes", false: "no", null: "empty", none: "empty", nil: "empty",
-  while: "for or collect (every loop in Stride is bounded)", def: "define", function: "define", fn: "define",
-  elif: "else if", elsif: "else if", switch: "match", case: "match", class: "record", import: "use",
-  try: "nothing: a fault stops the run; check answers with check", catch: "nothing: a fault stops the run; check answers with check",
-  throw: "fail(message)",
-};
-const otherWord = (value, span) =>
-  new SyntaxMistake(`"${value}" is another language's word; Stride writes ${OTHER_WORDS[value]}`, span, "S020");
-
 // How deep blocks, brackets and expressions may nest (§7.1, §15).
 const MAX_DEPTH = 200;
 
@@ -304,7 +293,6 @@ class Parser {
   mistake(expected) {
     const t = this.token;
     const found = t.type === "end" ? "the end of the file" : t.type === "string" ? "words in quotes" : `"${t.value}"`;
-    if (t.type === "name" && OTHER_WORDS[t.value]) return otherWord(t.value, t.span);
     // An "=" where none is wanted is a comparison written with one sign.
     if (t.type === "punct" && t.value === "=") return new SyntaxMistake(`"=" gives a value; to compare, write "=="`, t.span, "S011");
     if (t.type === "name" && capitalised(t.value)) return new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
@@ -314,7 +302,6 @@ class Parser {
   name(what = "a name (letters, digits and _)") {
     if (this.is("name")) {
       const t = this.token;
-      if (OTHER_WORDS[t.value]) throw otherWord(t.value, t.span);
       if (capitalised(t.value)) throw new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
       return this.take().value;
     }
@@ -675,7 +662,6 @@ class Parser {
           break;
       }
     }
-    if (t.type === "name" && OTHER_WORDS[t.value]) throw otherWord(t.value, t.span);
     if (t.type === "name" || (t.type === "punct" && t.value === "(")) return this.assignOrCall();
     // A value on its own, whatever it starts with, is one statement name resolution refuses (S232).
     const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["yes", "no", "empty", "not", "new"].includes(t.value));
@@ -1103,7 +1089,6 @@ class Parser {
         return this.node("new", start, { type, fields });
       }
     }
-    if (t.type === "name" && OTHER_WORDS[t.value]) throw otherWord(t.value, t.span);
     // A name is never written with a capital and a small letter, where it is used as where it is defined (§2.1).
     if (t.type === "name" && capitalised(t.value)) throw new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
     if (t.type === "name") return (this.take(), { kind: "name", name: t.value, span: t.span });

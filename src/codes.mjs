@@ -157,10 +157,6 @@ export const CODES = {
     "when": "nesting deeper than 200",
     "explanation": "Blocks, brackets and expressions go 200 deep at most; split it into functions or lets."
   },
-  "S020": {
-    "when": "a word of another language",
-    "explanation": "Stride writes `yes`/`no` (not true/false), `empty` (not null), `define` (not def/function), `else if` (not elif), `match` (not switch), `for`/`collect` (not while)."
-  },
   "S021": {
     "when": "a `\\u{…}` out of range",
     "explanation": "A character is `\\u{0}` to `\\u{10FFFF}`, not D800–DFFF."

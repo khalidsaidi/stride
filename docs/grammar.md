@@ -40,8 +40,7 @@ Names are ASCII: a small letter or `_`, then letters, digits and `_`; or wholly 
 (§2.1). Keywords cannot be names (§2.3): `and as ask because break check collect const continue default define
 each else empty export expect fields fill for form if in is let list match most native new no not of options or
 pdf pick record return set skip then tick use var when yes`. `option`, `any`, `another` and `faults` are keywords
-only where the grammar uses them (§2.3.1). `true`, `null`, `while`, `def` and other languages' words are refused
-with what Stride writes instead (§2.4).
+only where the grammar uses them (§2.3.1).
 
 ## Types
 

@@ -8,7 +8,7 @@ import { dirname, basename, isAbsolute, join, relative, resolve } from "node:pat
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { compile, projectOf, STD_PATH, stdSource } from "./compile.mjs";
 import { format } from "./format.mjs";
-import { KEYWORDS, OTHER_WORDS } from "./syntax.mjs";
+import { KEYWORDS } from "./syntax.mjs";
 import { describe } from "./types.mjs";
 import { nameSpan } from "./source.mjs";
 import { LIBRARY } from "./codes.mjs";
@@ -327,14 +327,13 @@ function bindings(ctx) {
 }
 const mistakesOf = (ctx) => (ctx.out?.diagnostics.sorted() ?? []).filter((d) => d.severity === "error");
 
-// A rename, as edits by file, or why it is refused: the new name must be a name (§2.1), not a word of the language
-// or of another language (§2.4), and not the standard library's; and the program, with the edits made, must have no
+// A rename, as edits by file, or why it is refused: the new name must be a name (§2.1), not a word of the language,
+// and not the standard library's; and the program, with the edits made, must have no
 // mistake it did not have and every name in it must refer to what it did. Every file it is checked in is
 // checked so.
 function renameOf(doc, symbol, name) {
   if (symbol.unit?.std || symbol.kind === "native") return { error: `${symbol.name} is the standard library's: it is not renamed` };
   if (!/^([a-z_][A-Za-z0-9_]*|[A-Z][A-Z0-9_]*)$/.test(name) || KEYWORDS.has(name)) return { error: `${name} is not a name Stride takes (§2.1)` };
-  if (Object.hasOwn(OTHER_WORDS, name)) return { error: `${name} is another language's word, which Stride does not take as a name (§2.4)` };
   if (entryOf(name)) return { error: `${name} is the standard library's ${name}: another name keeps both` };
   if (name === symbol.name) return { changes: {} };
   const before = contextsFor(doc, symbol);

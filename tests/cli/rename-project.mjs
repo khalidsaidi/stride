@@ -2,7 +2,7 @@
 // Renaming in a project, as an editor does it: the edits the server gives are made to the files, and the project is
 // checked and run again. A library's function renamed from one caller is renamed in the library and in every file of
 // the project that calls it, the other caller included, and every caller still runs as before; references find every
-// caller. A rename that would break the program is refused before any edit: to a word of another language (§2.4), to
+// caller. A rename that would break the program is refused before any edit: to a word of the language, to
 // a name already declared where it would capture or be captured, to a standard library name. A library in a folder
 // stride.json names is checked as the library it is.
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
@@ -30,7 +30,7 @@ out.vendor = (await open("vendor/greet.stride")).map((d) => d.code + " " + d.mes
 await open("a.stride");
 out.refs = (await ask("textDocument/references", { ...at("a.stride", 1, 9), context: { includeDeclaration: true } })).result.map((r) => r.uri.split("/").pop() + ":" + r.range.start.line).sort();
 out.rename = (await ask("textDocument/rename", { ...at("a.stride", 1, 9), newName: "double" })).result?.changes ?? null;
-out.toWhile = (await ask("textDocument/rename", { ...at("a.stride", 2, 8), newName: "while" })).error?.message;
+out.toWhile = (await ask("textDocument/rename", { ...at("a.stride", 2, 8), newName: "for" })).error?.message;
 out.toY = (await ask("textDocument/rename", { ...at("a.stride", 2, 8), newName: "y" })).error?.message;
 out.toUpper = (await ask("textDocument/rename", { ...at("a.stride", 2, 8), newName: "upper" })).error?.message;
 out.toZ = Object.keys((await ask("textDocument/rename", { ...at("a.stride", 2, 8), newName: "z" })).result?.changes ?? {}).map((u) => u.split("/").pop());
@@ -71,7 +71,7 @@ export function test() {
     same("a.stride after", spawnSync("node", [cli, "run", "a.stride"], { cwd: dir, encoding: "utf8" }).stdout, "4\n5\n");
     same("b.stride after", spawnSync("node", [cli, "run", "b.stride"], { cwd: dir, encoding: "utf8" }).stdout, "10\nHello, Bo\n");
     same("the library after", readFileSync(join(dir, "lib", "maths.stride"), "utf8").startsWith("export define double("), true);
-    same("to a word of another language", out.toWhile, "while is another language's word, which Stride does not take as a name (§2.4)");
+    same("to a word of the language", out.toWhile, "for is not a name Stride takes (§2.1)");
     same("to a name declared there", out.toY?.startsWith("renaming x to y would"), true);
     same("to a standard library name", out.toUpper, "upper is the standard library's upper: another name keeps both");
     same("a local's rename stays in its file", out.toZ, ["a.stride"]);

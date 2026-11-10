@@ -46,7 +46,6 @@ export const stdSource = () => {
 // Options:
 //   header      the form's header ({ form, pdf, boxes }); without it the PDF check is not run, and no bytecode
 //               is written (a program is only ever compiled against its PDF)
-//   resources   named blobs to keep in the bytecode for its host
 //   read        how files are read (the disk, by default)
 //   stdPath     the standard library (lib/std.stride)
 //   until       the last phase to run: "flow" stops before lowering, "lower" before the PDF check
@@ -54,7 +53,7 @@ export const stdSource = () => {
 // The language's version (spec §21): what a program written for it can count on.
 export const LANGUAGE = "1.0.0";
 
-export function compile(source, name, { dir = ".", header = null, resources = {}, read = diskRead, stdPath = STD_PATH, until = "generate", depth = 0, trace = false, libraries = [], session = false } = {}) {
+export function compile(source, name, { dir = ".", header = null, read = diskRead, stdPath = STD_PATH, until = "generate", depth = 0, trace = false, libraries = [], session = false } = {}) {
   const diagnostics = new Diagnostics();
   const file = new SourceFile(name, source);
   file.depth = depth;
@@ -109,7 +108,7 @@ export function compile(source, name, { dir = ".", header = null, resources = {}
 
   if (!pdf) return out;
 
-  out.bytecode = generate(program, pdf, { resources });
+  out.bytecode = generate(program, pdf);
   // The machine reads it back and verifies it before it goes anywhere.
   loadBytecode(out.bytecode);
   phase("generate");

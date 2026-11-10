@@ -55,9 +55,8 @@ function prefixOf(names) {
   return p.slice(0, p.lastIndexOf(".") + 1);
 }
 
-// Words no name may be: Stride's keywords, the words of other languages it refuses (§2.4), and the standard
-// library's functions.
-const TAKEN = new Set([...KEYWORDS, ..."true false null none nil while def function fn elif elsif switch case class import try catch throw".split(" "), ...LIBRARY.flatMap((e) => e.names)]);
+// Words no name may be: Stride's keywords and the standard library's functions.
+const TAKEN = new Set([...KEYWORDS, ...LIBRARY.flatMap((e) => e.names)]);
 
 // A question's name from the words printed beside its box (§2.1): small letters, digits and _, starting with a
 // letter, and not a word Stride keeps for itself.

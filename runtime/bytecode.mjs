@@ -12,8 +12,7 @@
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, pure
 //    9 code       the instructions
 //   10 places     the place (file, line, column) of every instruction that can fault or ask
-//   11 resources  named blobs the machine does not read, kept with the program for its host
-//   12 links      for each question key the PDF check found, the boxes its answer goes into
+//   11 links      for each question key the PDF check found, the boxes its answer goes into
 //
 // Integers are unsigned LEB128 varints; a text is its UTF-8 length, then its bytes; jump addresses are 4 bytes,
 // little-endian, counted from the start of the code.
@@ -22,7 +21,7 @@ import { D } from "./values.mjs";
 export const MAGIC = "STRD";
 export const VERSION = 4;
 
-export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, RESOURCES: 11, LINKS: 12 };
+export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, LINKS: 11 };
 
 export const QUESTION_TYPES = ["text", "long-text", "number", "date", "phone", "email", "yes-no", "one-of", "any-of"];
 export const WRITES = ["fill", "tick", "pick"];
@@ -214,7 +213,7 @@ export function load(input) {
   if (magic !== MAGIC) throw new BytecodeError("this is not a compiled Stride program");
   const version = r.u8();
   if (version !== VERSION) throw new BytecodeError(`this program is Stride bytecode version ${version}; this machine runs version ${VERSION}`);
-  const p = { version, texts: [], numbers: [], form: "", pdf: "", prefix: "", boxes: [], records: [], questions: [], natives: [], functions: [], code: new Uint8Array(0), places: [], resources: {}, links: [] };
+  const p = { version, texts: [], numbers: [], form: "", pdf: "", prefix: "", boxes: [], records: [], questions: [], natives: [], functions: [], code: new Uint8Array(0), places: [], links: [] };
   const t = (s) => {
     const i = s.varint();
     if (i >= p.texts.length) throw new BytecodeError(`a text index ${i} is out of range`);
@@ -315,9 +314,6 @@ export function load(input) {
         });
         break;
       }
-      case SECTION.RESOURCES:
-        for (const [name, blob] of list(() => [t(s), s.slice(s.varint())])) p.resources[name] = blob;
-        break;
       default:
         s.at = s.end; // a later version's section: skipped
     }

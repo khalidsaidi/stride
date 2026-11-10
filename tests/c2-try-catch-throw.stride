@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-let x = try
-let y = catch
-let z = throw
-# rule 2.4 S020
-# mistake 3 S020 nothing
-# mistake 4 S020 nothing
-# mistake 5 S020 fail(message)
