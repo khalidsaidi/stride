@@ -1,7 +1,7 @@
-// stride fuzz (docs/spec.md §19.2): programs made at random, valid by construction, each with answers made
+// node scripts/fuzz.mjs (docs/spec.md §19.2): programs made at random, valid by construction, each with answers made
 // at random, run in the machine and the intermediate form's interpreter, and through the PDF
 // check. A crash, a disagreement between the two (§19.1), or a mistake on a program the generator meant to be
-// valid is a bug; each is reported with its seed, so `stride fuzz --seed S --runs 1` gives it again.
+// valid is a bug; each is reported with its seed, so `node scripts/fuzz.mjs 1 S` gives it again.
 //
 // The generator writes a program as a person would: an option set and a record, a few functions (pure ones that
 // work numbers and words out, and one that asks), then a body of questions, lets, vars and their assignments, ifs,

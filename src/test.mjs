@@ -92,6 +92,12 @@ function crossCheck(p, vm, ir) {
   return out;
 }
 
+// A test file's expectations, in order (§7.17.1): those a fault in a let kept from running are "not run".
+export function expectResults(program, results) {
+  const count = program.main.blocks.reduce((n, b) => n + b.stmts.filter((s) => s.op === "expect").length, 0);
+  return [...results, ...Array.from({ length: Math.max(0, count - results.length) }, () => ({ result: "not run" }))];
+}
+
 // JSON whose numbers are kept as their digits as written (§8.7: answers are never read through a binary float,
 // so 12345678901234567890.25 stays exact). Needs JSON.parse's source text, which Node gives the reviver.
 // A JSON number keeps its token as written, apart from words in quotes (§8.7): `1e5` and `"1e5"` differ.

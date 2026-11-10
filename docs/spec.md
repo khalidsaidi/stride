@@ -1437,8 +1437,6 @@ its call: the function's name in the call.
 | `stride vscode [-o file.vsix]` | §17.16 |
 | `stride asm <file> [--ir]` | the instructions with their places, or the intermediate form |
 | `stride fmt <path …> [--check]` | Stride's one layout, comments kept; folders §17.13 |
-| `stride selftest [name …] [--coverage]` | the conformance tests; `--coverage`, or no names, adds which rules have a test and conform |
-| `stride fuzz [--runs N] [--seed S] [--show]` | generated programs through both engines (§19); `--show` prints each bug's program and answers |
 | `stride help [command]` | the commands; with a command, its options and an example. `--help` or `-h` after a command, or alone, says the same (exit 0) |
 | `stride version` | the tools' version, the language's (§21), the bytecode's (§18.1), the build, the Node inside, the platform (§17.17) |
 
@@ -1470,11 +1468,10 @@ command takes only the options its row shows: an unknown option, an option of an
 value given none, is a usage mistake. So is an argument that names nothing: `stride explain` with a code that is not
 one, `stride test` with a name no test of the program has, `stride eval --use` with a name that is not a library's
 or names no library. A library that holds mistakes is reported as any program's mistakes are, at their places
-(exit 1). A program without tests is said so by `stride test` (exit 1). Expected diagnostics or faults in tests,
-and outcomes classified as non-bugs by §19.2, do not cause exit 1. A command takes the number of arguments its row
+(exit 1). A program without tests is said so by `stride test` (exit 1). Expected diagnostics or faults in tests
+do not cause exit 1. A command takes the number of arguments its row
 shows; more or fewer is a usage mistake, and so is a path to a file that is not there. `stride doc` with a word no
-entry holds is a usage mistake. `stride fuzz --runs` takes a whole number of 1 or more and `--seed` one of 0 or
-more; anything else is a usage mistake.
+entry holds is a usage mistake.
 A usage mistake of a command is three lines on stderr: `stride <command>: <what is wrong>`, the command's usage
 line, `stride help <command> says more.` A word that is not a command is `stride: no command <word>` and the list
 of commands. A file or folder that cannot be read or written is said by its path and why (`out.sbc: cannot be
@@ -1658,8 +1655,7 @@ the open file under `stride dap`). It runs `stride`, or the command the `stride.
 are outside this release's scope. Building or running from the repository requires Node 22 or later and the
 repository's dependencies. `node scripts/build.mjs` makes `dist/stride`, one Linux executable holding the
 tools, the standard library, the guides, the workflow page (§17.18) and the VS Code extension; the installed executable
-needs neither a separate Node installation nor the repository, except for `stride selftest`, whose tests are
-the repository's. Outside a checkout, that command says so (exit 1).
+needs neither a separate Node installation nor the repository.
 
 A build's name is `YYYY-MM-DD.` and twelve hex digits of the sha256 of the bundle as built (everything put in
 the executable) and the Node version; `stride version` gives it.
@@ -1746,16 +1742,16 @@ differently. So:
 instructions and with F015 past 200 frames, counted as it runs the program it was given; the interpreter to stop
 at its own count of steps and frames; each test runs one engine on a program built to exhaust that engine, and
 names the engine. No test claims that every engine exhausts on the same run.
-19.1.3. `stride fuzz` drops a generated run that the reference exhausts.
+19.1.3. `node scripts/fuzz.mjs` drops a generated run that the reference exhausts.
 
-19.2. `stride fuzz` generates valid programs and answers and runs each in both engines, and
+19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs each in both engines, and
 through the PDF check; a disagreement, a crash, or a mistake on a valid program is a bug. It reports apart the
 programs that agreed, those stopped by a budget (S602), and the runs the reference exhausted.
 
 19.3. **Faults no type-correct program reaches.** F006, F016, F018 and F019 guard against a fault in the
 compiler or the machine itself; no program the compiler accepts can reach them. They are tested by the machine's
 own tests (`tests/machine/*.mjs`), which hand the machine bytecode built by hand with exactly that fault,
-name the fault's code with `// rule F006`, and are run and counted by `stride selftest` like every other test.
+name the fault's code with `// rule F006`, and are run and counted by `node scripts/selftest.mjs` like every other test.
 
 19.4. **Tests of the standard library's declarations** (S301, S302) give their own standard library with
 `# std <file>` (a file in `tests/lib/`), since only the standard library declares natives.

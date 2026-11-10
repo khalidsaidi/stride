@@ -21,13 +21,10 @@ import { compile, compileFile, projectOf, LANGUAGE } from "../src/compile.mjs";
 import { find as findInLibrary, setup as exampleSetup, EXAMPLE_TODAY } from "../src/library.mjs";
 import { interpretProgram } from "../src/interpret.mjs";
 import { format } from "../src/format.mjs";
-import { runTests, parseDigits, todayMistake } from "../src/test.mjs";
-import { selftest, coverage, expectResults, testNames, TESTS } from "../src/selftest.mjs";
-import { fuzz } from "../src/fuzz.mjs";
-import { CODES, LIBRARY } from "../src/codes.mjs";
+import { runTests, parseDigits, todayMistake, expectResults } from "../src/test.mjs";
+import { CODES } from "../src/codes.mjs";
 import { SourceFile, Diagnostics, KIND, plural, faultWords } from "../src/source.mjs";
 import { parseExpression } from "../src/syntax.mjs";
-import { codesOf, libraryOf, SPEC_PATH } from "../src/gen-codes.mjs";
 import { showFunction } from "../src/ir.mjs";
 import { VERSION, OP_NAME } from "../runtime/bytecode.mjs";
 import { disassemble, load, run, boxValues, textOf } from "../runtime/vm.mjs";
@@ -72,8 +69,6 @@ const COMMANDS = {
   lsp: ["stride lsp", "The language server, for editors: mistakes as you type, completion, signatures, going to a definition, references, renaming, what a name is.", {}, "stride lsp"],
   dap: ["stride dap", "The debugger for editors (the Debug Adapter Protocol): breakpoints, stepping, the calls and their values.", {}, "stride dap"],
   vscode: ["stride vscode [-o <file.vsix>]", "Writes the VS Code extension, to install with: code --install-extension stride.vsix", { "--output": ["where it goes; else stride-<version>.vsix here", "file.vsix"] }, "stride vscode"],
-  selftest: ["stride selftest [name …]", "The language's own conformance tests.", { "--coverage": ["which rules of the spec have a test and conform", null] }, "stride selftest"],
-  fuzz: ["stride fuzz", "Programs made at random, through every engine and the PDF check.", { "--runs": ["how many programs", "N"], "--seed": ["the first seed", "S"], "--show": ["each bug's program and answers", null] }, "stride fuzz --runs 1000"],
   help: ["stride help [command]", "These commands, or one command's options and an example.", {}, "stride help run"],
   version: ["stride version", "The tools' version, the language's (§21) and the bytecode's, and the build.", {}, "stride version"],
 };
@@ -81,7 +76,7 @@ const COMMANDS = {
 const COMMON = { "--help": ["this command's help", null], "--quiet": ["no warnings and no status lines; never what the command gives, nor its mistakes or faults", null], "--color": ["colour: auto (at a terminal, without NO_COLOR), always or never", "auto|always|never"] };
 const SHORT = { "-h": "--help", "-q": "--quiet", "-o": "--output" };
 // How many arguments each command takes.
-const ARGS = { run: [1, Infinity], check: [0, Infinity], compile: [1, 1], test: [0, Infinity], eval: [1, 1], repl: [0, 0], debug: [1, Infinity], explain: [1, 1], doc: [0, 1], guide: [0, 1], new: [1, 1], init: [0, 1], header: [1, 1], map: [1, 1], asm: [1, 1], fmt: [1, Infinity], lsp: [0, 0], dap: [0, 0], vscode: [0, 0], selftest: [0, Infinity], fuzz: [0, 0], help: [0, 1], version: [0, 0] };
+const ARGS = { run: [1, Infinity], check: [0, Infinity], compile: [1, 1], test: [0, Infinity], eval: [1, 1], repl: [0, 0], debug: [1, Infinity], explain: [1, 1], doc: [0, 1], guide: [0, 1], new: [1, 1], init: [0, 1], header: [1, 1], map: [1, 1], asm: [1, 1], fmt: [1, Infinity], lsp: [0, 0], dap: [0, 0], vscode: [0, 0], help: [0, 1], version: [0, 0] };
 
 const USAGE = `stride ${LANGUAGE}: the Stride tools\n\nusage:\n${Object.values(COMMANDS).map(([u]) => `  ${u}`).join("\n")}\n\nstride help <command> says more; stride guide says how to write Stride.`;
 function helpOf(command) {
@@ -848,58 +843,6 @@ async function main(argv) {
       if (r.mistakes) return report(r.mistakes), 1;
       out(disassemble(r.p));
       return 0;
-    }
-    case "fuzz": {
-      // Programs made at random, through both engines and the PDF check (§19.2).
-      // --runs a whole number from 1, --seed a whole number from 0 (§17.5).
-      const flag = (name, d, least) => {
-        if (!values.has(name)) return d;
-        const w = values.get(name);
-        return /^\d+$/.test(w) && Number.isSafeInteger(Number(w)) && Number(w) >= least ? Number(w) : null;
-      };
-      const runs = flag("--runs", 100, 1), seed = flag("--seed", 1, 0);
-      if (runs === null) return usage("fuzz", `--runs takes a whole number of programs, 1 or more, and was given ${values.get("--runs")}`);
-      if (seed === null) return usage("fuzz", `--seed takes a whole number, 0 or more, and was given ${values.get("--seed")}`);
-      const { counts, bugs, faults, compared } = fuzz({ runs, seed });
-      for (const b of bugs) {
-        out(`${red("BUG")} seed ${b.seed}: ${b.problem}`);
-        if (flags.has("--show")) out(`${b.source}${b.answers ? ` answers: ${JSON.stringify(b.answers)}` : ""}`);
-      }
-      out(`${runs} programs from seed ${seed}: ${counts.agreed} agreed, ${counts.budget} stopped at a compiler budget (S602), ${counts.exhausted} exhausted, ${counts.bug} bugs`);
-      out(`${compared} runs compared; how they ended: ${Object.entries(faults).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ")}`);
-      return bugs.length ? 1 : 0;
-    }
-    case "selftest": {
-      // The conformance suite (tests): every rule of docs/spec.md, in every engine mode.
-      // The tests are the repository's, not built in: the installed stride runs them from a checkout (§17.17).
-      if (!existsSync(TESTS)) return fail("stride selftest runs the conformance tests in tests, which are in the repository and not built into stride: run it in a checkout of the repository");
-      // A name no test's matches names nothing (§17.5): nothing runs.
-      const unmatched = args.filter((a) => !testNames().some((n) => n.includes(a)));
-      if (unmatched.length) return usage("selftest", `no test is named ${unmatched.join(", ")}`);
-      const results = selftest(undefined, args);
-      let failed = 0;
-      for (const r of results) {
-        if (!r.problems.length) continue;
-        failed++;
-        out(`${red("FAIL")} ${r.name}`);
-        for (const p of r.problems) out(`     ${p}`);
-      }
-      out(failed ? red(`${failed} of ${results.length} failed`) : green(`${results.length} passed`));
-      // Every rule and code of the specification is named by a test, or the suite is not complete.
-      const cov = coverage(results);
-      if (flags.has("--coverage") || !args.length) {
-        if (cov.unknown.length) out(red(`tests name rules the spec does not have: ${cov.unknown.join(" ")}`));
-        out(cov.untested.length ? red(`${cov.untested.length} of ${cov.rules.length} rules have no test: ${cov.untested.join(" ")}`) : green(`every one of ${cov.rules.length} rules has a test`));
-        out(cov.passing.length === cov.rules.length ? green(`every one of ${cov.rules.length} rules conforms: all its tests pass`) : red(`${cov.passing.length} of ${cov.rules.length} rules conform (every test naming them passes); ${cov.failing.length} have a failing test`));
-      }
-      // `stride explain` and `stride doc` print the spec's own words (§16.4, §14): codes.mjs is generated from them,
-      // and must be current.
-      const text = existsSync(SPEC_PATH) ? readFileSync(SPEC_PATH, "utf8") : null;
-      const spec = text ? codesOf(text) : null;
-      const stale = spec ? [...new Set([...Object.keys(spec), ...Object.keys(CODES)])].filter((c) => JSON.stringify(spec[c]) !== JSON.stringify(CODES[c])) : [];
-      if (text && JSON.stringify(libraryOf(text)) !== JSON.stringify(LIBRARY)) stale.push("the standard library's entries");
-      if (stale.length) out(red(`stride explain differs from the spec for ${stale.join(" ")}: run node src/gen-codes.mjs`));
-      return failed || stale.length || (!args.length && (cov.untested.length || cov.unknown.length || cov.passing.length < cov.rules.length)) ? 1 : 0;
     }
     case "fmt": {
       // Each file named, and every .stride file in each folder named (§17.3, §17.13).

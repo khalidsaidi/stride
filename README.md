@@ -74,7 +74,7 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
 
 ## Tests
 
-`node bin/stride.mjs selftest` runs the conformance suite in `tests/`: every rule of the specification has a test,
+`node scripts/selftest.mjs` runs the conformance suite in `tests/`: every rule of the specification has a test,
 run in the machine and in the intermediate form. `node scripts/journey.mjs` builds, installs into an empty home
 and walks the whole path above with the installed command, the browser included.
 

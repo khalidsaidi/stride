@@ -342,7 +342,4 @@ machine and standard library bundled with Node inside);
 - `stride explain <code>` explains a mistake's or a fault's code.
 - `stride asm <file> [--ir]` prints the instructions with their source lines, or the intermediate form.
 - `stride fmt <file.stride> … [--check]` puts files in Stride's one layout, comments kept.
-- `stride selftest [name …]` runs the language's own tests (`tests`): each program states the
-  mistakes it must give or the boxes its answers must fill.
-- `stride fuzz [--runs N] [--seed S]` runs generated programs through both engines (§19).
 - `stride version`.

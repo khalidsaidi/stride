@@ -34,10 +34,10 @@ export function test() {
     expect(["run", "-odd name.stride"], 0, "odd\n", "");
     writeFileSync(join(dir, "-q"), 'print("a file named -q")\n');
     expect(["run", "--", "-q"], 2, "", /a Stride program ends in \.stride/);
-    expect(["fuzz", "--runs=1", "--seed=5"], 0, /^1 programs from seed 5/, "");
-    expect(["fuzz", "--runs", "1", "--runs", "2"], 2, "", /--runs is given twice/);
-    expect(["fuzz", "--runs"], 2, "", /--runs needs a value: --runs N/);
-    expect(["fuzz", "--show=yes"], 2, "", /--show takes no value/);
+    expect(["eval", "1", "--color=never"], 0, "1\n", "");
+    expect(["eval", "1", "--use", "a", "--use", "b"], 2, "", /--use is given twice/);
+    expect(["eval", "1", "--use"], 2, "", /--use needs a value: --use name/);
+    expect(["eval", "1", "--quiet=yes"], 2, "", /--quiet takes no value/);
     expect(["run", "x.stride", "-z"], 2, "", /^stride run: there is no option -z\nusage: stride run .*\nstride help run says more\.\n$/s);
     expect(["eval", "-1"], 0, "-1\n", "");
     expect(["eval", "-abs(2)"], 0, "-2\n", "");

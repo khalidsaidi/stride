@@ -1,7 +1,7 @@
 // Writes src/codes.mjs from the specification's tables (docs/spec.md): every mistake and warning
 // code of §16.4 with when it is given and its explanation, every fault code of §13.4, and the standard library's
 // signatures and what each gives (§14), for `stride doc`. `stride explain` reads
-// codes.mjs, so its words are the spec's own; `stride selftest` says when they are not. Run it whenever the spec's
+// codes.mjs, so its words are the spec's own; `node scripts/selftest.mjs` says when they are not. Run it whenever the spec's
 // codes change:
 //
 //   node src/gen-codes.mjs

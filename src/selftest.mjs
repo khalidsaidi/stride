@@ -1,4 +1,4 @@
-// `stride selftest`: Stride's conformance suite, the programs in tests/. Each test names the rules of
+// node scripts/selftest.mjs: Stride's conformance suite, the programs in tests/. Each test names the rules of
 // the specification (docs/spec.md) it tests, and says in its comments what must happen to it:
 //
 //   # rule 6.4.1 S413                     the spec's rules and codes it tests (every test names at least one)
@@ -43,7 +43,7 @@ import { createRequire } from "node:module";
 import { compile } from "./compile.mjs";
 import { load, run, boxValues } from "../runtime/vm.mjs";
 import { interpretProgram } from "./interpret.mjs";
-import { parseDigits } from "./test.mjs";
+import { parseDigits, expectResults } from "./test.mjs";
 import { checkPdf } from "./pdf.mjs";
 import { Diagnostics, SourceFile } from "./source.mjs";
 import { parse } from "./parse.mjs";
@@ -179,12 +179,6 @@ export function autoHeader(source, name, options = {}) {
   for (const fn of first.program.functions) for (const b of fn.blocks) for (const s of b.stmts) if (s.op === "ask") printed.push(...(IR.isConst(s.printed) ? [String(s.printed.v)] : []), ...s.q.options.map((o) => o.printed));
   for (const k of found.keys.values()) printed.push(k.printed);
   return { form: first.program.form, pdf: first.program.pdf, boxes: found.discovered.map((b) => ({ ...b, page: 1, near: printed })) };
-}
-
-// A test file's expectations, in order (§7.17.1): those a fault in a let kept from running are "not run".
-export function expectResults(program, results) {
-  const count = program.main.blocks.reduce((n, b) => n + b.stmts.filter((s) => s.op === "expect").length, 0);
-  return [...results, ...Array.from({ length: Math.max(0, count - results.length) }, () => ({ result: "not run" }))];
 }
 
 // One run in one mode, as the comparisons see it.
@@ -367,7 +361,7 @@ export function runMachine(path) {
   return { name, rules, problems };
 }
 
-// Every test's name, as `stride selftest <name>` matches it: cli/…, machine/… and the programs.
+// Every test's name, as `node scripts/selftest.mjs <name>` matches it: cli/…, machine/… and the programs.
 export function testNames(dir = TESTS) {
   const sub = (d) => (existsSync(join(dir, d)) ? readdirSync(join(dir, d)).filter((f) => f.endsWith(".mjs")).map((f) => `${d}/${f}`) : []);
   return [...sub("cli"), ...sub("machine"), ...readdirSync(dir).filter((f) => f.endsWith(".stride"))];

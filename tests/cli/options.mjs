@@ -23,7 +23,6 @@ export function test() {
   expect(["eval", "1", "--trace"], 2, "stride eval: there is no option --trace");
   expect(["eval", "1", "-o", "x"], 2, "stride eval: there is no option -o");
   expect(["check", "x.stride", "--trace"], 2, "stride check: there is no option --trace");
-  expect(["selftest", "--show"], 2, "stride selftest: there is no option --show");
   expect(["explain", "S999"], 2, "S999 is not a Stride code");
   expect(["explain", "S318", "extra"], 2, "takes 1 argument");
   expect(["version", "extra"], 2, "takes 0 arguments");
@@ -33,9 +32,6 @@ export function test() {
   expect(["--help"], 0, "usage:");
   expect(["help", "nosuch"], 2, "no command nosuch");
   expect(["nosuch"], 2, "no command nosuch");
-  expect(["selftest", "zzzznomatch"], 2, "no test is named zzzznomatch");
-  for (const bad of ["abc", "0", "-3", "1.5"]) expect(["fuzz", "--runs", bad], 2, "--runs takes a whole number");
-  expect(["fuzz", "--seed", "xyz"], 2, "--seed takes a whole number");
   expect(["eval", "1", "--use", "nolib"], 2, "there is no lib/nolib.stride");
   expect(["eval", "--1"], 0, "1");
   expect(["compile", "x.stride", "-o"], 2, "-o needs a value");
