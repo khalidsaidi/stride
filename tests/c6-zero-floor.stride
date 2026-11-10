@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A"
+ask z: number "Z"
+print("{a // z}")
+
+# rule 6.4 F002
+# run
+# answers {"a": 1, "z": 0}
+# fault F002 at 5:11
+# run not zero
+# answers {"a": 1, "z": 4}
+# prints ["0"]

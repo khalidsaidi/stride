@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var n: number
+for i in 1..2 {
+  ask a: number "A{i}"
+  print(a)
+  if i == 1 {
+    continue
+  }
+  n = 7
+}
+print(n)
+define second_turn() -> number {
+  for i in 1..2 {
+    if i == 2 {
+      return i
+    }
+  }
+}
+print(second_turn())
+# rule 12.1.1 11.3.2 9.6
+# answers {"a[1]": "1", "a[2]": "2"}
+# prints ["1", "2", "7", "2"]

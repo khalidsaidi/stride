@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Name"
+ask b: yes-no "Ok"
+tick "Name" when b
+fill "Ok" = a
+# rule 10.3 S509
+# box Name text near Name
+# box Ok check near Ok
+# mistake 5 S509
+# mistake 6 S509

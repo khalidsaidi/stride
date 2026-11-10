@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-label-a" as a
+define twice(t: text, sep: text) -> text {
+  return t + sep + t
+}
+fill "A" = "x".upper()
+fill "B" = "y".twice("-")
+fill "C" = "z".tag()
+# rule 9.8
+# boxes {"A": "X", "B": "y-y", "C": "[z]"}

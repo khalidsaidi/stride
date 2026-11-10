@@ -1,0 +1,2 @@
+# A standard library declaring a native with other parameters than the machine's (S302).
+export native define upper(t: text, times: number) -> text

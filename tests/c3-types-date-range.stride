@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+let d = add_days(date_of(9999, 12, 31), n)
+print(d)
+# rule 3.1 F011
+# run in
+# answers {"n": 0}
+# prints ["9999-12-31"]
+# run past
+# answers {"n": 1}
+# fault F011

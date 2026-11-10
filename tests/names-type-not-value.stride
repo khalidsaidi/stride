@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  a: text
+}
+# mistake 7 S226 a type, not a value
+fill "A" = r
+# rule S226

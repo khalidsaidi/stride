@@ -1,0 +1,7 @@
+expect 1 == 1
+let d = add_days(today(), 4000000)
+expect d is empty
+expect 2 == 2
+
+# rule 7.17.1
+# results ["pass", "not run", "not run"]

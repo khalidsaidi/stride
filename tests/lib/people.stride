@@ -1,0 +1,11 @@
+export record person {
+  first: text
+  last: text
+}
+export const MOST = 2
+export define full(p: person) -> text {
+  return "{p.first} {p.last}"
+}
+define secret() -> text {
+  return "s"
+}

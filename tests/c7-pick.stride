@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "Married"
+pick "Group" "1" when c
+pick "Group" "2" when not c
+
+# rule 7.8
+# run yes
+# answers {"c": true}
+# boxes {"Group": "1"}
+# run no
+# answers {"c": false}
+# boxes {"Group": "2"}
+# box Group radio:1 near Married
+# box Group radio:2 near Married

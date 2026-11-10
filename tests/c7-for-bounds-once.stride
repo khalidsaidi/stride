@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var stop = 1
+var turns = 0
+for i in 1..stop {
+  stop += 1
+  turns += 1
+}
+print("{stop} {turns}")
+
+# rule 7.11
+# run
+# prints ["2 1"]

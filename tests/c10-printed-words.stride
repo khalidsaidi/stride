@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Spouse"
+fill "Name" = a
+# rule 10.6 S517
+# box Name text near Name of the taxpayer
+# mistake 3 S517

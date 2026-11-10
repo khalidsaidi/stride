@@ -1,0 +1,34 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+ask c: yes-no "C"
+ask d: yes-no "D"
+pick "K" "A" when n > 0
+pick "K" "B" when n <= 0
+pick "L" "A" when c and d
+pick "L" "B" when not (c and d)
+if n > 10 {
+  pick "M" "A" when yes
+}
+pick "M" "B" when n < 5
+pick "P" "A" when n > 0 and n < 0.0000001
+pick "P" "B" when n >= 0.0000001
+pick "Q" "A" when n > 0
+pick "Q" "B" when n > 5
+pick "R" "A" when c or d
+pick "R" "B" when not c
+# rule 10.4.1 10.4.2 S512
+# box K radio:A near N
+# box K radio:B near N
+# box L radio:A near C D
+# box L radio:B near C D
+# box M radio:A near N
+# box M radio:B near N
+# box P radio:A near N
+# box P radio:B near N
+# box Q radio:A near N
+# box Q radio:B near N
+# box R radio:A near C D
+# box R radio:B near C D
+# mistake 17 S512 may be picked again in its radio group
+# mistake 19 S512 may be picked again in its radio group

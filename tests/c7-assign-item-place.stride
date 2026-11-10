@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask i: number "I"
+var l: list of text most 3 = ["a", "b"]
+l[i] = "z"
+print(join(l, ","))
+
+# rule 7.5 F005
+# run replace
+# answers {"i": 1}
+# prints ["z,b"]
+# run append
+# answers {"i": 3}
+# prints ["a,b,z"]
+# run zero
+# answers {"i": 0}
+# fault F005 at 5:2
+# run not whole
+# answers {"i": 1.5}
+# fault F005 at 5:2

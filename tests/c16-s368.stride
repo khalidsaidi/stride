@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define g<t>(l: list of t) -> t {
+  return first(l)
+}
+fill "A" = g([])
+# rule S368 16.4 9.5
+# mistake 6 S368

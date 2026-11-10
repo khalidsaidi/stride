@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record row {
+  another: text
+}
+var rows: list of row most 2
+collect r in rows "More?" {
+  ask r.another: text "Another thing"
+}
+fill "A" = rows[1].another
+# rule 8.6.2 2.3.1
+# answers {"rows[1].another": "x", "rows[1]#another": "no"}
+# asked ["rows[1].another", "rows[1]#another"]
+# boxes {"A": "x"}

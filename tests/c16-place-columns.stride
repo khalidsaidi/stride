@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record representative { name: text }
+var r: representative
+  fill "Name" = r.nmae
+# rule 16.2 16.2.1 16.4 S318 1.3
+# mistake 5:17 S318 the record representative has no field nmae; did you mean name?

@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define unused() -> number {
+  return 1
+}
+fill "A" = "x"
+# rule W002 16.4
+# warning 3 W002
+# boxes {"A": "x"}

@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask k: one-of "K" {
+  option "a" "A"
+  option "b" "B"
+}
+# warning 8 W001 nothing happens when k is "b"
+match k {
+  "a" => {
+    fill "A" = k
+  }
+}
+# rule 7.10 W001

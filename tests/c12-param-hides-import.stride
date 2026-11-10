@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-a"
+define f(shared: number) -> number { return shared }
+print(f(2))
+# rule 12.3
+# prints ["2"]

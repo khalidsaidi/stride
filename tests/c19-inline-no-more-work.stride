@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(x: yes-no) -> number {
+  return (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0)
+}
+ask a: number "A"
+ask b: number "B"
+var n = 0
+for k in 1..1000 {
+  for i in 1..20 {
+    n += f(a == b and a == i and b == i and a == n and b == n and a == 1)
+  }
+}
+fill "C" = "{n}"
+# rule 19.1.1 F014
+# answers {"a": "1", "b": "1"}
+# boxes {"C": "0"}

@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define p(t: text) -> number {
+  print(t)
+  return 1
+}
+var xs: list of number most 2 = [0]
+xs[p("place")] = p("value")
+xs[p("again")] += p("plus")
+print("{xs[1]}")
+
+# rule 7.5.1
+# run
+# prints ["place", "value", "again", "plus", "2"]

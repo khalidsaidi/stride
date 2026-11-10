@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record a { f: text }
+record b { f: text }
+define g(x: a) -> text {
+  return x.f
+}
+print(g(new b { f: "v" }))
+# rule 3.6 S367
+# mistake 8 S367

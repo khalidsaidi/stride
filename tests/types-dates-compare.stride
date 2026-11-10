@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+if d < date_of(2000, 1, 1) {
+  fill "A" = "old"
+} else {
+  fill "A" = "new"
+}
+# answers {"d": "1999-12-31"}
+# boxes {"A": "old"}
+# rule 6.7

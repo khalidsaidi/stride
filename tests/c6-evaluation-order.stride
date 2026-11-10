@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define p(t: text) -> number {
+  print(t)
+  return 1
+}
+define two(a: number, b: number) -> number {
+  return a + b
+}
+define y(t: text) -> yes-no {
+  print(t)
+  return yes
+}
+let s = p("left") + p("right")
+let c = two(p("first"), p("second"))
+print("{s + c}")
+let k = no and y("and-right")
+let o = yes or y("or-right")
+print(k or o)
+print(if y("cond") then p("then") else p("else"))
+
+# rule 6.2
+# run
+# prints ["left", "right", "first", "second", "4", "yes", "cond", "then", "1"]

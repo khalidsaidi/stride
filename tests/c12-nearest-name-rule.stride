@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const MAX_ROWS = 3
+const ABCD = 1
+let c = 2
+print(maxrows)
+print(abxy)
+print(x)
+print(max_row + ABCD + c)
+# rule 12.5 S201
+# mistake 6 S201 did you mean MAX_ROWS?$
+# mistake 7 S201 nothing called abxy is defined here$
+# mistake 8 S201 nothing called x is defined here$
+# mistake 9 S201 did you mean MAX_ROWS?$

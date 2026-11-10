@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() {
+  return
+}
+# mistake 7 S370 gives no value
+fill "A" = f()
+# rule 9.6 S370

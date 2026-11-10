@@ -1,0 +1,89 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Name"
+fill "Name" = a
+# rule 10.5 S516 S515
+# box Name text near Name
+# box B00 text near B
+# box B01 text near B
+# box B02 text near B
+# box B03 text near B
+# box B04 text near B
+# box B05 text near B
+# box B06 text near B
+# box B07 text near B
+# box B08 text near B
+# box B09 text near B
+# box B10 text near B
+# box B11 text near B
+# box B12 text near B
+# box B13 text near B
+# box B14 text near B
+# box B15 text near B
+# box B16 text near B
+# box B17 text near B
+# box B18 text near B
+# box B19 text near B
+# box B20 text near B
+# box B21 text near B
+# box B22 text near B
+# box B23 text near B
+# box B24 text near B
+# box B25 text near B
+# box B26 text near B
+# box B27 text near B
+# box B28 text near B
+# box B29 text near B
+# box B30 text near B
+# box B31 text near B
+# box B32 text near B
+# box B33 text near B
+# box B34 text near B
+# box B35 text near B
+# box B36 text near B
+# box B37 text near B
+# box B38 text near B
+# box B39 text near B
+# box B40 text near B
+# box B41 text near B
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S515
+# mistake 1 S516

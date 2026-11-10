@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# warning 4 W002 never called
+define f() -> number {
+  return 1
+}
+fill "A" = "x"
+# boxes {"A": "x"}
+# rule W002

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: yes-no "A"
+ask b: yes-no "B"
+ask c: yes-no "C" default yes
+ask d: yes-no "D" default yes
+ask e: yes-no "E"
+print("{a}|{b}|{c}|{d}|{e}")
+# rule 8.7
+# answers {"a": "Yes", "b": "TRUE", "c": "", "d": null, "e": false}
+# prints ["yes||||no"]
+# steps [{"key": "a", "value": true}, {"key": "b", "unreadable": "not yes or no"}, {"key": "c", "value": null}, {"key": "d", "value": null}, {"key": "e", "value": false}]

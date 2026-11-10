@@ -1,0 +1,7 @@
+use "c-pair"
+let p = new pair { left: "x", right: "y" }
+expect both(p) == "xy"
+expect both(p) != "yx" "joined in order"
+
+# rule 4.3 7.17
+# results ["pass", "pass"]

@@ -1,0 +1,35 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: yes-no "A"
+define t(w: text) -> yes-no {
+  print(w)
+  return yes
+}
+print(yes and a)
+print(a and t("r1"))
+print(no and t("r2"))
+print(yes or t("r3"))
+print(no or a)
+print(a or t("r4"))
+print((yes and a) is empty)
+print((no or a) is empty)
+print(not a)
+print(empty and t("r5"))
+print(empty or yes)
+print(empty or no)
+print(empty or empty)
+print(yes and empty)
+print(yes or empty)
+print(not empty)
+print(not yes)
+print(not no)
+
+# rule 6.15.1 6.2
+# run a yes
+# answers {"a": true}
+# prints ["yes", "r1", "yes", "no", "yes", "yes", "yes", "no", "no", "no", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]
+# run a no
+# answers {"a": false}
+# prints ["no", "no", "no", "yes", "no", "r4", "yes", "no", "no", "yes", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]
+# run a unanswered
+# prints ["no", "no", "no", "yes", "no", "r4", "yes", "no", "no", "yes", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]

@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "people" as p
+var folks: list of p.person most p.MOST
+collect f in folks "Another?" {
+  ask f.first: text "First"
+  ask f.last: text "Last"
+}
+for each n, f in folks {
+  fill "N{n}" = f.full()
+}
+# answers {"folks[1].first": "Ada", "folks[1].last": "L", "folks[1]#another": "no"}
+# boxes {"N1": "Ada L"}
+# rule 4.5 9.8 8.5

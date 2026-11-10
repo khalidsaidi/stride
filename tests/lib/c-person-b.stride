@@ -1,0 +1,7 @@
+export record person {
+  age: number
+  city: text
+}
+export define make_b() -> person {
+  return new person { age: 1, city: "Paris" }
+}

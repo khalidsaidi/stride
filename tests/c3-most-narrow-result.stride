@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define g() -> list of number most 1 {
+  return [1, 2]
+}
+print(count(g()))
+# rule 3.7.2 S342
+# mistake 4 S342

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define say() {
+  print("x")
+}
+let x = say() + 1
+fill "A" = x
+# rule S371 16.4 6.4
+# mistake 6:9 S371
+# label 6:9-6:14 say(…) gives no value

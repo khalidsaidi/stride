@@ -1,0 +1,3 @@
+# A standard library declaring a native the machine does not have (S301).
+export native define upper(t: text) -> text
+export native define shout(t: text) -> text

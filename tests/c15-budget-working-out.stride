@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define slow(m: number) -> number {
+  var s: number = 0
+  for i in 1..m {
+    s = s + 1
+  }
+  return s
+}
+print(slow(200000))
+# rule 15.1 11.3.1 S602
+# mistake 10:7 S602 working out a value

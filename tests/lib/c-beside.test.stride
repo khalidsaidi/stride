@@ -1,0 +1,2 @@
+use "c-a"
+expect shared == shared

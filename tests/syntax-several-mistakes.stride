@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# mistake 4 S010 is not understood here
+ask b: txt "B"
+# mistake 6 S010 is not understood here
+fill "A" = ) (
+# rule 16.1 S010

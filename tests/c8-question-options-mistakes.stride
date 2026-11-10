@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+ask x: one-of s "X" {
+  option "a" "A"
+}
+ask y: one-of "Y"
+ask z: text "Z" {
+  option "a" "A"
+}
+fill "X" = x
+fill "Y" = y
+fill "Z" = z
+# rule 8.2 S223 S224 S225
+# mistake 6 S223
+# mistake 9 S224
+# mistake 10 S225

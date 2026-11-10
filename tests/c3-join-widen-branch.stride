@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+ask n: number "N"
+let xs = if c then [1] else [1, 2]
+print(xs[n])
+# rule 3.9 3.7.2
+# run yes
+# answers {"c": "yes", "n": 2}
+# prints [""]
+# run no
+# answers {"c": "no", "n": 2}
+# prints ["2"]

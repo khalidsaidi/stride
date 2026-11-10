@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+print(n)
+# rule 8.7
+# run plus
+# answers {"n": "+ 5"}
+# prints ["5"]
+# run minus
+# answers {"n": "- 5"}
+# prints ["-5"]

@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Kind radio:ind near Kind of taxpayer: Individual
+# box Kind radio:bus near Kind of taxpayer: Business
+ask k: one-of "Kind" {
+  option "ind" "Individual"
+  option "bus" "Business"
+}
+pick "Kind" "ind" when k == "ind"
+pick "Kind" "bus" when k == "bus"
+# answers {"k": "bus"}
+# boxes {"Kind": "bus"}
+# rule 7.8 10.3

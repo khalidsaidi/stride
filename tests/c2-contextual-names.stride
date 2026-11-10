@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var option = 1
+let another = 2
+let faults = 3
+print(option + another + faults)
+print(any([no, yes]))
+print(all([yes, no]))
+# rule 2.3.1
+# prints ["6", "yes", "no"]

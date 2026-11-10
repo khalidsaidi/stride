@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let n = 1
+define g(a: number = n) -> number {
+  return a
+}
+print(g() + n)
+# rule 12.1 S204
+# mistake 4:22 S204

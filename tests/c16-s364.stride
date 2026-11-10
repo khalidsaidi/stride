@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text, age: number }
+let r = new person { name: 5 }
+fill "A" = r.name
+# rule S364 16.4 6.14
+# mistake 4 S364

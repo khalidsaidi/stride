@@ -1,0 +1,28 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+ask i: number "I"
+var xs: list of person most 2 = [new person { name: "A" }]
+xs[i].name = "Ada"
+print(xs[1].name)
+
+# rule 7.5.1 F004 F020
+# run set
+# answers {"i": 1}
+# prints ["Ada"]
+# run zero is a read
+# answers {"i": 0}
+# fault F004
+# run past the items
+# answers {"i": 2}
+# fault F020
+# run above the most
+# answers {"i": 3}
+# fault F004

@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options kinds {
+  "b" "B"
+  "a" "A"
+}
+ask k: one-of kinds "K"
+ask s: any-of kinds "S"
+fill "K" = k
+fill "S" = join(s, ",")
+# rule 8.2 8.1
+# answers {"k": "a", "s": ["a", "b"]}
+# boxes {"K": "a", "S": "b,a"}

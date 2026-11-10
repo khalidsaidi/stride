@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() -> number {
+  return 1
+  print("x")
+}
+fill "A" = f()
+# rule 11.3.3 7.13 S406
+# mistake 5 S406

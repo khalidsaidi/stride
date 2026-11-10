@@ -1,0 +1,7 @@
+define stopped() {
+  fill "Missing" = "reached"
+  fail("stop")
+}
+expect stopped() faults "F013"
+# rule 4.3 7.17.1 S508
+# mistake 2 S508

@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+if c {
+  ask a: text "A"
+} else {
+  ask a: number "A"
+}
+fill "A" = a
+# rule S315 16.4 12.4
+# mistake 7 S315

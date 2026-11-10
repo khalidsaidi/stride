@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print(date_of(2020, 1, 1) + 1)
+print(date_of(2020, 1, 1) - date_of(2020, 1, 2))
+print(1 + "x")
+print("x" - 1)
+print(date_of(2020, 1, 1) * 2)
+options s { "a" "A" }
+ask o: one-of s "Option"
+print(1 + o)
+print(o + 1)
+# rule 6.4 S373 S375 S372 S374
+# mistake 3 S373
+# mistake 4 S375
+# mistake 5 S372
+# mistake 6 S374
+# mistake 7 S374
+# mistake 10 S372
+# mistake 11 S372

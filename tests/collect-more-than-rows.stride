@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Row1 text near Row
+# box Row2 text near Row
+var l: list of text most 3
+collect x in l "Another?" {
+  ask x: text "Row"
+}
+for each n, x in l {
+# mistake 11 S508 the PDF has no box "Row3"
+  fill "Row{n}" = x
+}
+# rule 8.5 10.3 S508

@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask p: phone "P"
+ask e: email "E"
+let l = [p] + ["x"]
+define mail(m: email) -> text {
+  return m
+}
+print(mail(l[1]) + e)
+
+# rule 6.5.1 3.9
+# run
+# answers {"p": "555", "e": "@"}
+# prints ["555@"]

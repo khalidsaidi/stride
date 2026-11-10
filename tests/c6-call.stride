@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(a: number) -> number {
+  return a * 2
+}
+print("{f(3)}")
+
+# rule 6.9.4
+# run
+# prints ["6"]

@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: any-of "C" {
+  option "x" "X"
+  option "y" "Y"
+}
+print("x" in c)
+print("y" not in c)
+print(2 in [1, 2])
+print("q" in ["a"])
+
+# rule 6.8
+# run
+# answers {"c": ["x"]}
+# prints ["yes", "yes", "yes", "no"]

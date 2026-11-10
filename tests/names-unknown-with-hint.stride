@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask taxpayer_name: text "Name"
+# mistake 5 S201 did you mean taxpayer_name?
+fill "A" = taxpayer_nam
+# rule 12.5 S201

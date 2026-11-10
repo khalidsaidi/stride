@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  option "a" "A"
+  "b" "B"
+}
+ask x: one-of s "X"
+fill "A" = x
+
+# rule 5.2 2.3.1
+# run
+# answers {"x": "b"}
+# boxes {"A": "b"}

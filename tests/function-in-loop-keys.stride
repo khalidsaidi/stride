@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define row(n: number) {
+  ask v: text "V"
+  fill "R{n}" = v
+}
+for i in 1..2 {
+  row(i)
+}
+# answers {"row(n=2)[2].v": "b"}
+# boxes {"R2": "b"}
+# asked ["row(n=1)[1].v", "row(n=2)[2].v"]
+# rule 8.6 8.6.1 8.6.2 7.11

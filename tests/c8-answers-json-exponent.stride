@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+ask m: number "M"
+ask w: text "W"
+ask o: one-of "O" {
+  option "1e5" "x"
+}
+ask big: number "Big"
+print(n)
+print(m)
+print(w)
+print(o)
+print(big)
+# rule 8.7
+# run a JSON number with an exponent is read exactly; words get its token
+# answers {"n": 1e5, "m": -2.50E-1, "w": 1e5, "o": 1e5, "big": 1e34}
+# prints ["100000", "-0.25", "1e5", "1e5", ""]
+# run words in quotes are not a number
+# answers {"n": "1e5", "m": "2.5", "w": "1e5", "o": "1e5", "big": 9.999e33}
+# prints ["", "2.5", "1e5", "1e5", "9999000000000000000000000000000000"]

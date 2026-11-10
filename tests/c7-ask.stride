@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: text "Name"
+print(n)
+
+# rule 7.2
+# run
+# answers {"n": "Ada"}
+# asked ["n"]
+# prints ["Ada"]

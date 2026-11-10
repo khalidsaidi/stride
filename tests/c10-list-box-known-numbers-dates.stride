@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "L" = 1
+fill "M" = date_of(2000, 1, 1)
+fill "N" = 2
+fill "P" = date_of(2001, 2, 3)
+# rule 10.3 3.5 S514
+# box L choice:CA near L
+# box M choice:CA near M
+# box N choice:2,3 near N
+# box P choice:2001-02-03 near P
+# mistake 3:12 S514 the list box "L" has no entry "1"
+# mistake 4:12 S514 the list box "M" has no entry "2000-01-01"

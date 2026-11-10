@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of text most 2 = ["a"]
+collect x in l "Another?" {
+  ask x: text "X"
+}
+fill "A" = join(l, ",")
+# rule 8.5 S336
+# mistake 4 S336

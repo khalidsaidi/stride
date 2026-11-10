@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask o: one-of "Kind" {
+  option "a" "Apple"
+  option "b" "Banana"
+}
+tick "C" when o != "b"
+# rule 10.6 S518
+# box C check near Kind Apple

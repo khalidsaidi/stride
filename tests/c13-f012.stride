@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask w: text "W"
+var s = w
+for i in 1..17 {
+  s = s + s
+}
+fill "A" = length(s)
+# rule F012 6.5 3.1
+# run short
+# answers {"w": ""}
+# boxes {"A": "0"}
+# run too-long
+# answers {"w": "x"}
+# fault F012 at 6:9

@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask stop: yes-no "Stop?"
+print("a")
+if stop {
+  return
+}
+print("b")
+
+# rule 7.13
+# run
+# answers {"stop": true}
+# prints ["a"]
+# run
+# answers {"stop": false}
+# prints ["a", "b"]

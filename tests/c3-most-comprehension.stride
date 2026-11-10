@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var l: list of number most 4 = [1, 2]
+let d = [x * 2 for each x in l]
+print(d[1])
+print(d[n])
+# rule 3.7.5 F004
+# run row
+# answers {"n": 4}
+# prints ["2", ""]
+# run past
+# answers {"n": 5}
+# prints ["2"]
+# fault F004

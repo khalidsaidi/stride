@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+for i in 1..empty {
+  print(i)
+}
+# rule 7.11 3.6 S413
+# mistake 3:13 S413 this faults whenever it runs, before any answer is given: F004

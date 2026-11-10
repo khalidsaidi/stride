@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+print(not c)
+tick "Box" when c
+
+# rule 6.3 6.15
+# run
+# boxes {"Box": "Off"}
+# prints ["yes"]

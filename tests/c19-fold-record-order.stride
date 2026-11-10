@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  a: number
+  b: number
+}
+ask z: number "Z"
+fill "A" = new r { b: 1 // z, a: 1 / z }.a
+# rule 19.1 6.2 F002
+# answers {"z": "0"}
+# fault F002 at 8:25

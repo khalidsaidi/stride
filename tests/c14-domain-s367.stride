@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text }
+define choose<t>(a: t, b: t) -> t {
+  return a
+}
+let people = [new person { name: "Ada" }]
+let a = join(people)
+let b = text_of([1, 2])
+let c = sorted(people)
+let d = choose(1, "a")
+# rule S367 14.4 14.1 9.5.1
+# mistake 8 S367
+# mistake 9 S367
+# mistake 10 S367
+# mistake 11 S367

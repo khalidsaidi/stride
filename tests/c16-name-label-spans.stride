@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const K = 1
+let K = 2
+print(K)
+# rule 16.2.1 S206
+# mistake 4:5 S206
+# label 4:5-4:6 K is a constant (line 3)

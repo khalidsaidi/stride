@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = upper("x")
+# rule 19.4 S301 5.5
+# std c-std-missing-native.stride
+# mistake 3:1 S301 shout

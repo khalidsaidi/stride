@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask ph: phone "Phone"
+ask c: yes-no "C"
+define e(x: email) -> text {
+  return x
+}
+let a = if c then ph else "x"
+let b = if c then "x" else ph
+print(e(a))
+print(e(b))
+# rule 3.9
+# answers {"ph": "555", "c": "yes"}
+# prints ["555", "x"]

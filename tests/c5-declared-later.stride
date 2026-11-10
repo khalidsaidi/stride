@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = twice("a")
+fill "B" = "{later}"
+define twice(t: text) -> text {
+  return t + t
+}
+const later = 4
+
+# rule 5.7
+# run
+# boxes {"A": "aa", "B": "4"}

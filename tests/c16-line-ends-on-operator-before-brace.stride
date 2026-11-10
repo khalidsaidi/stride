@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() -> number {
+  return 1 +
+}
+print(f())
+print(2 *
+)
+# rule 16.2.1 S015
+# mistake 4:12 S015
+# mistake 7:9 S015

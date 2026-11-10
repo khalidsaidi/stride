@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask b: yes-no "Ok"
+if b {
+  fill "Name" = "yes"
+} else {
+  fill "Name" = "no"
+}
+# rule 10.4 10.2
+# box Name text near Name Ok
+# run yes
+# answers {"b": "yes"}
+# boxes {"Name": "yes"}
+# run no
+# answers {"b": "no"}
+# boxes {"Name": "no"}

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { name: text }
+var r = new p { name: "x" }
+var s = r
+s.name = "y"
+print(r.name)
+print(s.name)
+# rule 3.4
+# prints ["x", "y"]

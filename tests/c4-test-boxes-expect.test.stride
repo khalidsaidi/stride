@@ -1,0 +1,18 @@
+use "c-test-boxes"
+define local_write() -> yes-no {
+  fill "Local" = "value"
+  return yes
+}
+expect local_write()
+expect fill_box()
+expect tick_box()
+expect pick_box()
+expect skip_box()
+# rule 4.3 7.17.1 S508 S503
+# mistake 3 S508
+# mistake 2 S508
+# mistake 6 S508
+# mistake 10 S508
+# mistake 14 S503
+# box Local text
+# box Missing text

@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# mistake 4 S002 no closing quote
+fill "A" = "abc
+fill "B" = "ok"
+# rule 2.6 S002

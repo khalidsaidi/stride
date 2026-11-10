@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask t: text "T"
+print(if t then "a" else "b")
+
+# rule 6.13 S310
+# mistake 4:10 S310

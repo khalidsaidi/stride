@@ -1,0 +1,4 @@
+# rule 1.1 S001
+# mistake 4:19 S001 an ill-formed UTF-8 sequence starts at this byte
+let x = 1
+expect x == 1 # abâ‚

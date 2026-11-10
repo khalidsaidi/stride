@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text, age: number }
+ask n: number "N"
+print(n)
+print([n, 2])
+print(new person { name: "Ada", age: n })
+fill "A" = n
+# rule 14.5 13.1
+# answers {"n": 3}
+# prints ["3", "[3, 2]", "person { name: Ada, age: 3 }"]
+# boxes {"A": "3"}

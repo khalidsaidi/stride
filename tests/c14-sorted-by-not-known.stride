@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record kid { name: text, born: number }
+ask f: text "F"
+let ks = [new kid { name: "a", born: 1 }]
+fill "A" = first(sorted(ks, by: f)).name
+# rule S399 14.4
+# mistake 6 S399

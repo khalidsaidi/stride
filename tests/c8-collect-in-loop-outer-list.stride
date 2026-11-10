@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of number most 2
+for i in 1..2 {
+  collect x in l "Another {i}?" {
+    ask x: number "N {i}"
+  }
+}
+print(count(l))
+for j in 1..2 {
+  var m: list of number most 2
+  collect y in m "More {j}?" {
+    ask y: number "M {j}"
+  }
+  print(count(m))
+}
+# rule 8.5 S337
+# mistake 5 S337

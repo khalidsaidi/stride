@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define both(a: list of number, b: list of number) -> number {
+  return count(a + b)
+}
+ask n: number "N"
+var x: list of number most 600 = [n]
+var y: list of number most 600 = [n]
+fill "A" = both(x, y)
+# rule F017 3.7.7 3.7.3
+# answers {"n": 1}
+# fault F017 at 4:18

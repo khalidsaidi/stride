@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A"
+ask b: number "B"
+print("{a + b}")
+print("{a - b}")
+print("{a * b}")
+print("{a / b}")
+print("{a // b}")
+print("{a % b}")
+print("{-a}")
+
+# rule 6.4
+# run whole
+# answers {"a": 7, "b": 2}
+# prints ["9", "5", "14", "3.5", "3", "1", "-7"]
+# run negative
+# answers {"a": -7, "b": 2}
+# prints ["-5", "-9", "-14", "-3.5", "-4", "1", "7"]
+# run negative divisor
+# answers {"a": 7, "b": -2}
+# prints ["5", "9", "-14", "-3.5", "-4", "-1", "-7"]
+# run decimals
+# answers {"a": 7.5, "b": 2}
+# prints ["9.5", "5.5", "15", "3.75", "3", "1.5", "-7.5"]

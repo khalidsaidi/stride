@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Y"
+if y {
+  fill "A" = "stopped"
+  return
+}
+fill "B" = "went on"
+# answers {"y": "yes"}
+# boxes {"A": "stopped"}
+# rule 7.13

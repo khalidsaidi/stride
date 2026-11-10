@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var v = "Kind"
+fill "Box{n}" = "x"
+pick "Group" "{v}" when yes
+# rule 10.7 11.2 S403
+# mistake 5 S403
+# mistake 6 S403

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+# mistake 5:6 S011 to compare, write "=="
+if a = "x" {
+  fill "B" = a
+}
+# rule S011

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D" check d < today() "in the past"
+fill "A" = format(d, "YYYY")
+# today 2026-11-07
+# answers {"d": "2030-01-01"}
+# boxes {"A": "2030"}
+# rule 13.3 14.3 8.4

@@ -1,0 +1,40 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var t: number = 0
+ask a0: yes-no "A0"
+if a0 { t = t + 1 }
+ask a1: yes-no "A1"
+if a1 { t = t + 2 }
+ask a2: yes-no "A2"
+if a2 { t = t + 4 }
+ask a3: yes-no "A3"
+if a3 { t = t + 8 }
+ask a4: yes-no "A4"
+if a4 { t = t + 16 }
+ask a5: yes-no "A5"
+if a5 { t = t + 32 }
+ask a6: yes-no "A6"
+if a6 { t = t + 64 }
+ask a7: yes-no "A7"
+if a7 { t = t + 128 }
+ask a8: yes-no "A8"
+if a8 { t = t + 256 }
+ask a9: yes-no "A9"
+if a9 { t = t + 512 }
+ask a10: yes-no "A10"
+if a10 { t = t + 1024 }
+ask a11: yes-no "A11"
+if a11 { t = t + 2048 }
+ask a12: yes-no "A12"
+if a12 { t = t + 4096 }
+ask a13: yes-no "A13"
+if a13 { t = t + 8192 }
+ask a14: yes-no "A14"
+if a14 { t = t + 16384 }
+ask a15: yes-no "A15"
+if a15 { t = t + 32768 }
+ask a16: yes-no "A16"
+if a16 { t = t + 65536 }
+print(t)
+# rule 15.1 10.4.0 S602
+# mistake 37:10 S602 paths kept apart at one point

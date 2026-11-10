@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var s: number = 0
+for i in 1..100001 {
+  s = s + i
+}
+print(s)
+# rule 15.1 S602
+# mistake 4:1 S602 loop turns

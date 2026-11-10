@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(n: number) -> list of number most 3 {
+  return [1 / n for each x in [1, 2, 3] if x > 1]
+}
+define g(n: number) -> number {
+  var t: number = 0
+  for i in 1..n {
+    t += i
+  }
+  return t
+}
+define h(n: number) -> list of number most 3 {
+  return [x * n for each x in [1, 2, 3]]
+}
+print(count(f(0)))
+print(g(1.5))
+print(count(h(2)))
+# rule 11.3.1 6.12 7.11 S413
+# mistake 16:13 S413 F001
+# mistake 17:7 S413 F004

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(p: number) -> number {
+  p = 2
+  return p
+}
+print("{f(1)}")
+
+# rule 7.5 S345
+# mistake 4:3 S345

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define date() -> number {
+  return 1
+}
+print(date())
+# rule 16.1 S208 S227
+# mistake 3 S208

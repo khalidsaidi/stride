@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define full_name(t: text) -> text {
+  return t
+}
+print(fulname("a"))
+
+# rule S227
+# mistake 6:7 S227 full_name

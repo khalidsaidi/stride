@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask z: number "Z"
+ask n: number "N" default 10 / z
+fill "N" = n
+fill "Z" = z
+# rule 8.4.1
+# run answered
+# answers {"z": "0", "n": "3"}
+# fault F001
+# run fine
+# answers {"z": "2", "n": "3"}
+# steps [{"key": "z", "value": 2}, {"key": "n", "value": 3, "default": 5}]
+# boxes {"N": "3", "Z": "2"}

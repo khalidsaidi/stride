@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  x text
+  y: number
+}
+let q = )
+# rule 16.1 S010
+# mistake 4:5 S010
+# mistake 7:9 S010

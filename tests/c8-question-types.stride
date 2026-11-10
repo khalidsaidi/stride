@@ -1,0 +1,29 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+ask b: long-text "B"
+ask c: number "C"
+ask d: date "D"
+ask e: phone "E"
+ask f: email "F"
+ask g: yes-no "G"
+ask h: one-of "H" {
+  option "x" "X"
+  option "y" "Y"
+}
+ask i: any-of "I" {
+  option "p" "P"
+  option "q" "Q"
+}
+fill "A" = a
+fill "B" = b
+fill "C" = c
+fill "D" = d
+fill "E" = e
+fill "F" = f
+tick "G" when g
+fill "H" = h
+fill "I" = join(i, ", ")
+# rule 8.1 8.3
+# answers {"a": "x", "b": "l1", "c": "12.50", "d": "2024-02-29", "e": "555", "f": "a@b.c", "g": "yes", "h": "y", "i": ["q", "p"]}
+# boxes {"A": "x", "B": "l1", "C": "12.5", "D": "2024-02-29", "E": "555", "F": "a@b.c", "G": "Yes", "H": "y", "I": "p, q"}

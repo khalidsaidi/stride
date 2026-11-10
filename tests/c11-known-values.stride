@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const P = "Row"
+let q = upper("x")
+for i in 1..2 {
+  fill "{P}{i}{q}" = "v"
+}
+var l: list of text most 2
+collect n, x in l "More?" {
+  ask x: text "Item"
+  fill "Item{n}" = x
+}
+# rule 11.1 11.2
+# answers {"l[1]": "a", "l[1]#another": "yes", "l[2]": "b"}
+# boxes {"Row1X": "v", "Row2X": "v", "Item1": "a", "Item2": "b"}

@@ -1,0 +1,56 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+fill "N" = n
+# rule 8.7
+# run grouped
+# answers {"n": "1,234.50"}
+# boxes {"N": "1234.5"}
+# run spaces and sign
+# answers {"n": "  -7 "}
+# boxes {"N": "-7"}
+# run plus
+# answers {"n": "+3"}
+# boxes {"N": "3"}
+# run space groups
+# answers {"n": "1 234"}
+# boxes {"N": "1234"}
+# run apostrophe groups
+# answers {"n": "1'234"}
+# boxes {"N": "1234"}
+# run dollars
+# answers {"n": "$12"}
+# boxes {"N": "12"}
+# run euros
+# answers {"n": "€3.5"}
+# boxes {"N": "3.5"}
+# run pounds
+# answers {"n": "£0.10"}
+# boxes {"N": "0.1"}
+# run hex
+# answers {"n": "0x10"}
+# boxes {"N": ""}
+# run exponent
+# answers {"n": "1e5"}
+# boxes {"N": ""}
+# run letters
+# answers {"n": "12abc"}
+# boxes {"N": ""}
+# run exact digits from json
+# answers {"n": 12345678901234567890.25}
+# steps [{"key": "n", "value": "12345678901234567890.25", "unreadable": null}]
+# boxes {"N": "12345678901234567890.25"}
+# run 34 digits
+# answers {"n": "1234567890123456789012345678901234"}
+# boxes {"N": "1234567890123456789012345678901234"}
+# run 35 digits
+# answers {"n": "12345678901234567890123456789012345"}
+# steps [{"key": "n", "value": null, "unreadable": "more than 34 digits"}]
+# boxes {"N": ""}
+# run too large
+# answers {"n": "10000000000000000000000000000000000"}
+# steps [{"key": "n", "value": null, "unreadable": "too large"}]
+# boxes {"N": ""}
+# run tenth
+# answers {"n": 0.1}
+# boxes {"N": "0.1"}

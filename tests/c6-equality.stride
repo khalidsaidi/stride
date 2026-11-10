@@ -1,0 +1,26 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  a: text
+  b: number
+}
+options s {
+  "x" "X"
+  "y" "Y"
+}
+ask c: any-of s "C"
+ask d: any-of s "D"
+print(new r { a: "q", b: 1 } == new r { a: "q", b: 1.0 })
+print(new r { a: "q" } == new r { a: "q", b: 1 })
+print([1, 2] == [1, 2])
+print([1, 2] == [2, 1])
+print(c == d)
+print(empty == "")
+print([] == empty)
+print(1 != 1.00)
+print("a" == "A")
+
+# rule 6.6
+# run
+# answers {"c": ["x", "y"], "d": ["y", "x"]}
+# prints ["yes", "no", "yes", "no", "yes", "yes", "yes", "no", "no"]

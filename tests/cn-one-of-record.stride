@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: text
+}
+ask x: one-of person "X"
+print(x)
+
+# rule S222
+# mistake 6:8 S222

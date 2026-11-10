@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s1 { "a" "A"  "b" "B" }
+options s2 { "x" "X" }
+ask a: any-of s1 "A"
+ask b: any-of s2 "B"
+fill "A" = join(union(a, b))
+# rule S387 16.4 14.4
+# mistake 7 S387

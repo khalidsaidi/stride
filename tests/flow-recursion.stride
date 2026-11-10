@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(n: number) -> number {
+# mistake 5 S401 calls itself
+  return f(n)
+}
+fill "A" = "{f(1)}"
+# rule 9.7 S401

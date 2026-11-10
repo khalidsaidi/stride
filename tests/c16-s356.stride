@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define say() {
+  print("x")
+}
+tick "A" when say() is empty
+# rule S356 16.4 6.1
+# mistake 6 S356

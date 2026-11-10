@@ -1,0 +1,28 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let x = 1
+let l = [1]
+1
+"a"
+[1]
+yes
+not yes
+1 + 2
+x + 1
+(1)
+x
+l[1]
+-x
+print(x)
+# rule 6.9 S232
+# mistake 5 S232
+# mistake 6 S232
+# mistake 7 S232
+# mistake 8 S232
+# mistake 9 S232
+# mistake 10 S232
+# mistake 11 S232
+# mistake 12 S232
+# mistake 13 S232
+# mistake 14 S232
+# mistake 15 S232

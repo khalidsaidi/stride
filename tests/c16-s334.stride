@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: text
+collect x in l "Another?" {
+  ask x: text "N"
+}
+fill "A" = l
+# rule S334 16.4 8.5
+# mistake 4 S334

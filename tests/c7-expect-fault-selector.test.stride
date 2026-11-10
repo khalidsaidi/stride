@@ -1,0 +1,4 @@
+expect fail("F001 happened") faults "F013"
+expect fail("F001 happened") faults "happened"
+expect fail("Stop now") faults "Stop"
+# rule 7.17

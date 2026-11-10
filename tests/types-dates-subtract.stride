@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: date "A"
+ask b: date "B"
+# mistake 6 S375 days_between
+fill "X" = "{a - b}"
+# rule 6.4 S375

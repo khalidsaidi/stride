@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record representative { name: text }
+let r = new representative { name: "a" }
+fill "Name" = r.nmae
+# rule 16.2 16.2.1 S318
+# mistake 5:15 S318 the record representative has no field nmae; did you mean name?$
+# label 5:15-5:21 no field nmae
+# label 3:8-3:22 representative is declared here

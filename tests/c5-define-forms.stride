@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define plus(a: number, b: number = 1) -> number {
+  return a + b
+}
+define say(t: text) {
+  print(t)
+}
+say("{plus(2)}")
+say("{plus(2, 5)}")
+
+# rule 5.4
+# run
+# prints ["3", "7"]

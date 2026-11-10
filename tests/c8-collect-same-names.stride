@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of number most 2
+collect x, x in l "More?" {
+  ask x: number "N"
+}
+print(count(l))
+# rule 8.5 S231 16.1
+# mistake 4 S231

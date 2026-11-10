@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var names: list of text most 2
+collect x in names "Another?" {
+  ask x: text "Name"
+  print(x)
+  print(count(names))
+  print(names[count(names) + 1] is empty)
+}
+fill "N" = join(names, ",")
+# rule 8.5.1
+# answers {"names[1]": "A", "names[1]#another": "yes", "names[2]": "B"}
+# asked ["names[1]", "names[1]#another", "names[2]"]
+# prints ["A", "0", "yes", "B", "1", "yes"]
+# boxes {"N": "A,B"}

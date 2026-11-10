@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text, age: number }
+const c = 1
+ask n: number "N"
+let l = 2
+n = 3
+l = 4
+c = 5
+for i in 1..2 {
+  i = 3
+}
+define f(p: number) -> number {
+  p = 1
+  return p
+}
+fill "A" = n + l + c + f(1)
+# rule S345 16.4 7.5
+# mistake 7 S345
+# mistake 8 S345
+# mistake 9 S345
+# mistake 11 S345
+# mistake 14 S345

@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A"
+ask b: number "B"
+print("{a}|{b}")
+# rule 8.7
+# answers {"a": "  - 5  ", "b": "5\t"}
+# prints ["-5|"]
+# steps [{"key": "a", "value": "-5"}, {"key": "b", "unreadable": "not a number"}]

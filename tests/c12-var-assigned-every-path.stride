@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+var v: number
+if c {
+  v = 1
+}
+print(v)
+# rule 12.1.1 S407
+# mistake 8 S407

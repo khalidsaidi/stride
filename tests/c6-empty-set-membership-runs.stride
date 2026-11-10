@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask s: any-of "S" {
+  option "a" "A"
+  option "b" "B"
+}
+print("a" in s)
+print("a" not in s)
+# rule 10.4.1 6.8
+# run empty
+# answers {"s": []}
+# prints ["no", "yes"]
+# run a
+# answers {"s": ["a"]}
+# prints ["yes", "no"]

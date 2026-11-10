@@ -1,0 +1,6 @@
+expect line_count("a\n") == 2
+expect line_count("a\u{d}\nb") == 2
+expect line_count("a\u{d}\n") == 2
+expect line_count("") == 0
+expect line_count("a") == 1
+# rule 14.1

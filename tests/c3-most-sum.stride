@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var a: list of number most 2 = [1]
+var b: list of number most 3
+let c = a + b
+print(c[n])
+# rule 3.7.5 6.5.1 F004
+# run row
+# answers {"n": 5}
+# prints [""]
+# run past
+# answers {"n": 6}
+# fault F004

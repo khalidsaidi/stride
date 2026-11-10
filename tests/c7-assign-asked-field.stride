@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+var p: person
+ask p.name: text "Name"
+p.name = "B"
+print(p.name)
+
+# rule 7.5 S348
+# mistake 13:1 S348

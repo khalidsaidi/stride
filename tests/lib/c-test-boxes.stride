@@ -1,0 +1,16 @@
+export define fill_box() -> yes-no {
+  fill "Missing" = "value"
+  return yes
+}
+export define tick_box() -> yes-no {
+  tick "Missing" when yes
+  return yes
+}
+export define pick_box() -> yes-no {
+  pick "Missing" "Yes" when yes
+  return yes
+}
+export define skip_box() -> yes-no {
+  skip "Missing" because "test has no form"
+  return yes
+}

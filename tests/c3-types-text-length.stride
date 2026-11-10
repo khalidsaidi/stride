@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+let a = pad_left("", 1000, "x")
+var t = a
+for i in 1..100 {
+  t = t + a
+}
+print(length(t) + n)
+# rule 3.1 F012
+# answers {"n": 0}
+# fault F012

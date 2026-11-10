@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define sign(n: number) -> text {
+  if n < 0 {
+    return "minus"
+  }
+  return "plus"
+}
+ask n: number "N"
+fill "A" = sign(n)
+# answers {"n": -1}
+# boxes {"A": "minus"}
+# rule 7.13 9.6

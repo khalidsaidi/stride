@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+fill "A" = format(d, "MM/DD/YYYY")
+# answers {"d": "2024-02-31"}
+# boxes {}
+# rule 8.7

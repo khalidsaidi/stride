@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+ask z: number "Z"
+var xs: list of person most 2 = [empty]
+xs[1].age = 1 / z
+print("{xs[1].age}")
+
+# rule 7.5.1
+# run
+# answers {"z": 0}
+# fault F001 at 13:15
+# run value fine
+# answers {"z": 4}
+# prints ["0.25"]

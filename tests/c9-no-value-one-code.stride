@@ -1,0 +1,40 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r { x: number }
+define f() {
+  print(1)
+}
+define g() -> number {
+  return f()
+}
+print("{f()}")
+print(-f())
+print(not f())
+if f() {
+  print(2)
+}
+print(f().x)
+print(f()[1])
+print(if yes then f() else 1)
+print(new r { x: f() })
+for each x in f() {
+  print(x)
+}
+match f() {
+  else => {
+    print(3)
+  }
+}
+print(g())
+# rule 9.6 S370 S352 S371
+# mistake 8:10 S370
+# mistake 10:9 S352
+# mistake 11:8 S371
+# mistake 12:11 S371
+# mistake 13:4 S370
+# mistake 16:7 S370
+# mistake 17:7 S370
+# mistake 18:19 S370
+# mistake 19:18 S370
+# mistake 20:15 S370
+# mistake 23:7 S370

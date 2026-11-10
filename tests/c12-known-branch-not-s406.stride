@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() -> number {
+  if yes {
+    return 1
+  }
+  return 2
+}
+for i in 1..1 {
+  if i == 1 {
+    continue
+  }
+  print("never")
+}
+let l: list of number most 3 = [1]
+print(l[3] is empty)
+print(f())
+# rule 7.13 11.3.3 3.7.2 S406
+# prints ["yes", "1"]

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { age: number }
+var p: person
+ask p.age: number "Age"
+if p.age > 5 {
+  fill "A" = "old"
+}
+fill "A" = "x"
+# rule 10.4 S512
+# box A text near Age
+# mistake 9:1 S512

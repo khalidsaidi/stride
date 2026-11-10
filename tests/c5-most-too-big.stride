@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of text most 1001
+fill "A" = "{count(l)}"
+
+# rule 5.6 S213
+# mistake 3:26 S213

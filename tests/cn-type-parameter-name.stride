@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f<text>(l: list of text) -> number {
+  return count(l)
+}
+print("{f([1])}")
+
+# rule S220
+# mistake 3:10 S220

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+define f(x: s) -> text {
+  return x
+}
+print(f("a"))
+print(f("z"))
+# rule 3.6 S386
+# mistake 10 S386

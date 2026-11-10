@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var names: list of text most 2
+collect x in names "Another?" {
+  ask x: text "Name"
+  continue
+}
+print(join(names, ","))
+
+# rule 7.12 S234
+# mistake 6:3 S234

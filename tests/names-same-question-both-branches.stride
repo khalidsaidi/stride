@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask business: yes-no "Business?"
+if business {
+  ask name: text "Business name"
+} else {
+  ask name: text "Your name"
+}
+fill "A" = name
+# answers {"business": "no", "name": "Ada"}
+# boxes {"A": "Ada"}
+# asked ["business", "name"]
+# rule 12.1 12.4

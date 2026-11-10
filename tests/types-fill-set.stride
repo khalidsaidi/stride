@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options acts {
+  "sign" "Sign"
+}
+ask a: any-of acts "Acts"
+# mistake 8 S308 join(a
+fill "A" = a
+# rule 7.6 S308

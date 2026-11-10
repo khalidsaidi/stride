@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask p: phone "P"
+let l = [p, "x"]
+define mail(m: email) -> text {
+  return m
+}
+print(mail(l[2]))
+print("{count(l)}")
+
+# rule 6.11 3.9
+# run
+# answers {"p": "1"}
+# prints ["x", "2"]

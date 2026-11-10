@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define size(xs: list of number) -> number {
+  return count(xs)
+}
+define turns(xs: list of number) -> number {
+  var k = 0
+  for each x in xs {
+    k = k + 1
+  }
+  return k
+}
+print(size(empty))
+print(turns(empty))
+# rule 3.7.3.1
+# prints ["0", "0"]

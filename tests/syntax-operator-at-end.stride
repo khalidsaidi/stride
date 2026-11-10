@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+# mistake 5:14 S015 at the end of the line needs a value
+fill "C" = a +
+fill "D" = a
+# rule S015

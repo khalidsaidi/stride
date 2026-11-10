@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "b" "B"
+  "a" "A"
+  "c" "C"
+}
+ask m: any-of s "M"
+ask k: any-of s "K"
+print(union(m, k))
+print(intersection(m, k))
+print(difference(m, k))
+# rule 3.8
+# answers {"m": ["c", "a"], "k": ["b", "a"]}
+# prints ["b, a, c", "a", "c"]

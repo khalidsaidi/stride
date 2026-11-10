@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+ask k: any-of s "K"
+print(union(k, ["z"]))
+# rule 3.6 S386
+# mistake 7 S386

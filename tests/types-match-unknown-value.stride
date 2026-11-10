@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask k: one-of "K" {
+  option "a" "A"
+}
+match k {
+# mistake 8 S332 k is never "z"
+  "z" => {
+  }
+  else => {
+    fill "A" = k
+  }
+}
+# rule 7.10 S332

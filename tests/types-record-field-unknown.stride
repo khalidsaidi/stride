@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  name: text
+}
+var x: r
+# mistake 8 S318 did you mean name?
+fill "A" = x.nam
+# rule 6.9.1 S318

@@ -1,0 +1,7 @@
+define stopped() -> yes-no {
+  fail("stop")
+  fill "Missing" = "never reached"
+  return yes
+}
+expect stopped() faults "F013"
+# rule 4.3 7.17.1 13.4

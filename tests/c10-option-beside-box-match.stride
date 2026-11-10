@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options k { "a" "Alpha"  "b" "Beta" }
+ask o: one-of k "Kind"
+match o { "a" => { tick "A" when yes } "b" => { tick "B" when yes } }
+# box A check near Kind Beta
+# box B check near Kind Beta
+# rule 10.6 S518
+# mistake 3:13 S518 the option "a"

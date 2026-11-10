@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+  "b" "B"
+}
+define f(x: set of s) -> number {
+  return count(x)
+}
+print(f(["a", "b"]))
+print(f(["a", "q"]))
+# rule 3.6 S386
+# mistake 11 S386

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define line(who: text, n: number = 2) {
+  ask name: text "Name {who}"
+  fill "Name{n}" = name
+}
+line("spouse")
+line(n: 3, who: "child")
+# rule 8.6.2 8.6.3 9.2 9.4
+# answers {"line(who=\"spouse\";n=2).name": "A", "line(who=\"child\";n=3).name": "B"}
+# asked ["line(who=\"spouse\";n=2).name", "line(who=\"child\";n=3).name"]
+# boxes {"Name2": "A", "Name3": "B"}

@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  a: text
+  b: number
+}
+let x = new r { a: "q" }
+print(x.a)
+print(x.b is empty)
+
+# rule 6.14
+# run
+# prints ["q", "yes"]

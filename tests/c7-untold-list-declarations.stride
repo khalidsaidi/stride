@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let xs = [empty, empty]
+var ys = [[empty]]
+let zs: list of number most 2 = [empty, empty]
+var ws: list of list of text most 1 most 1 = [[empty]]
+print(count(xs) + count(ys) + count(zs) + count(ws))
+# rule 7.4 S328
+# mistake 3 S328
+# mistake 4 S328

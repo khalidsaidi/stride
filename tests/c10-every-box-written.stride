@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Name"
+fill "Name" = a
+# rule 10.5 S515
+# box Name text near Name
+# box Other text near Other
+# mistake 1 S515 Other

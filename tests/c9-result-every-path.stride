@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: yes-no "A"
+define f(a: yes-no) -> number {
+  if a {
+    return 1
+  }
+}
+fill "A" = f(a)
+# rule 9.6 S405
+# mistake 4 S405

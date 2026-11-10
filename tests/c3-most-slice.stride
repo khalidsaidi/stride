@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var l: list of number most 5 = [1, 2, 3]
+let s = l[1..2]
+print(count(s))
+print(s[n])
+# rule 3.7.5 F004
+# run row
+# answers {"n": 5}
+# prints ["2", ""]
+# run past
+# answers {"n": 6}
+# prints ["2"]
+# fault F004

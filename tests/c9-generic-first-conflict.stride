@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define both<t, u>(a: t, b: u, c: u, d: t) -> yes-no {
+  return yes
+}
+print(both(1, 1, "x", "y"))
+# rule 9.5.1 S367
+# mistake 6:18 S367

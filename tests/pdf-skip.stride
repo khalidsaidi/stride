@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Name text near Name
+# box Office text near Office
+ask a: text "Name"
+fill "Name" = a
+skip "Office" because "for the office"
+# answers {"a": "x"}
+# boxes {"Name": "x"}
+# rule 7.9 10.5

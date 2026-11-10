@@ -1,0 +1,8 @@
+define f() -> text {
+  ask v: text "V"
+  return v
+}
+let x = f()
+expect f() == x
+# rule 7.17.1 S507
+# mistake 2 S507

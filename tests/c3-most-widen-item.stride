@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var outer: list of list of number most 3 most 2 = [[1], [2]]
+outer[1] = [5]
+print(outer[1][n])
+# rule 3.7.2
+# answers {"n": 3}
+# prints [""]

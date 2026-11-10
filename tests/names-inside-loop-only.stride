@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+for k in 1..2 {
+  let inside = k
+}
+# mistake 7 S203 known only there
+fill "A" = "{inside}"
+# rule 12.2 S203

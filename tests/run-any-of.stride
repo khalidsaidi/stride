@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options acts {
+  "a" "A"
+  "b" "B"
+}
+ask x: any-of acts "X"
+tick "A" when "a" in x
+tick "B" when "b" in x
+fill "C" = join(x, ",")
+# answers {"x": ["b", "zzz"]}
+# boxes {"B": "Yes", "C": "b"}
+# rule 8.1 8.7 6.8

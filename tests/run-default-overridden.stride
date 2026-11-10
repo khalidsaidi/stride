@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+ask b: text "B" default a
+fill "A" = b
+# answers {"a": "x", "b": "y"}
+# boxes {"A": "y"}
+# rule 8.4 8.4.1

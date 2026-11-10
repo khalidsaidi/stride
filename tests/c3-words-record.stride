@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r { f: text }
+let x = new r { f: "a" }
+fill "A" = x
+# rule 3.5 S309
+# mistake 5 S309

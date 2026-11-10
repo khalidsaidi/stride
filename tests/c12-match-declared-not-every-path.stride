@@ -1,0 +1,37 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask o: one-of "O" {
+  option "a" "A"
+  option "b" "B"
+}
+match o {
+  "a" => {
+    let z = 1
+  }
+  "b" => {
+    let z = 2
+  }
+}
+print(z)
+var v: number
+match o {
+  "a" => {
+    v = 1
+  }
+  "b" => {
+    v = 2
+  }
+}
+print(v)
+match o {
+  "a" => {
+    let w = 1
+  }
+  else => {
+    let w = 2
+  }
+}
+print(w)
+# rule 12.1.1 S407
+# mistake 15 S407
+# mistake 25 S407

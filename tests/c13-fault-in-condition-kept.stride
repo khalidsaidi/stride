@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask q: number "Q"
+for i in 1..2 {
+  fill "L{i}" = i
+  if length(pad_left("x", q)) > 0 {
+    continue
+  }
+}
+# rule 19.1 13.4 F009
+# run unanswered
+# fault F009 at 6:13
+# run answered
+# answers {"q": "3"}
+# boxes {"L1": "1", "L2": "2"}

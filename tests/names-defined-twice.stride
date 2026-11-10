@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+# mistake 5 S205 already a question's answer
+let a = "x"
+fill "A" = a
+# rule 12.3 S205

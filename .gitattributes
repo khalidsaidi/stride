@@ -1,0 +1,2 @@
+# Test programs are kept byte for byte: some test line endings, bytes that are not UTF-8, and the like.
+tests/** -text

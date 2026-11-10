@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+if n < 0 {
+  fill "A" = "neg"
+} else if n == 0 {
+  fill "A" = "zero"
+} else {
+  fill "A" = "pos"
+}
+# answers {"n": 0}
+# boxes {"A": "zero"}
+# rule 7.10

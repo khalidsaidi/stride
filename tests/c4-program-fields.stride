@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fields "Page1."
+fill "Name" = "Ada"
+
+# rule 4.1
+# run
+# boxes {"Name": "Ada"}

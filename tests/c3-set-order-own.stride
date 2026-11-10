@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask m: any-of "M" {
+  option "z" "Z"
+  option "y" "Y"
+}
+print(m)
+# rule 3.8
+# answers {"m": ["y", "z"]}
+# prints ["z, y"]

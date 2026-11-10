@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask s: any-of "S" {
+  option "a" "A"
+}
+fill "L" = s
+# rule 10.3 S308
+# box L choice:a near S A
+# mistake 6:12 S308

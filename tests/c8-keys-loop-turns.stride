@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var kids: list of text most 3 = ["a", "b", "c"]
+define row(n: number) {
+  ask v: text "V"
+  fill "R{n}" = v
+}
+for i in 1..2 {
+  for each n, c in kids {
+    ask age: number "Age"
+    print(age)
+    print(c)
+  }
+}
+for i in 1..2 {
+  row(i)
+}
+# rule 8.6.2 8.6.4
+# asked ["age[1][1]", "age[1][2]", "age[1][3]", "age[2][1]", "age[2][2]", "age[2][3]", "row(n=1)[1].v", "row(n=2)[2].v"]

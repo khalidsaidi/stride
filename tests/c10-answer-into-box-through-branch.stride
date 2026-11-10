@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Married"
+ask z: yes-no "Children"
+if y {
+  tick "T" when yes
+}
+if not z {
+} else {
+  tick "U" when yes
+}
+ask w: yes-no "Joint"
+if w {
+  tick "V" when yes
+}
+# rule 10.6 S517
+# box T check near Single
+# box U check near Children
+# box V check near Spouse
+# mistake 3:15 S517 "Married" is not printed beside the boxes y goes into (beside them: "Single")
+# mistake 12:15 S517 "Joint"
+ask k: yes-no "Kind"
+if k {
+  print("k")
+}
+tick "W" when yes
+# box W check near Other

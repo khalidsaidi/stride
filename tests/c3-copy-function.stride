@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define change(l: list of number) -> number {
+  var m = l
+  m[1] = 7
+  return m[1]
+}
+var a: list of number most 3 = [1, 2]
+print(change(a))
+print(a[1])
+# rule 3.4
+# prints ["7", "1"]

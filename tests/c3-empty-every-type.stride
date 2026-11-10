@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+record r { f: text }
+ask t: text "T"
+ask n: number "N"
+ask d: date "D"
+ask y: yes-no "Y"
+ask o: one-of s "O"
+ask m: any-of s "M"
+var v: r
+var l: list of number most 2
+print(t is empty)
+print(n is empty)
+print(d is empty)
+print(y is empty)
+print(o is empty)
+print(m is empty)
+print(v is empty)
+print(l is empty)
+# rule 3.2
+# prints ["yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"]

@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+for i in 1..2 {
+  let inner = i
+  print(inner)
+}
+print(inner)
+# rule 12.2 12.1 S203
+# mistake 7 S203

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define idle(m: number) -> number {
+  for i in 1..m {
+  }
+  return m
+}
+print(idle(200000))
+# rule 15.1 11.3.1 S602
+# mistake 8:7 S602 working out a value

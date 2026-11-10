@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let m = 3
+var l: list of number most m
+print(count(l))
+# rule 5.6 S411

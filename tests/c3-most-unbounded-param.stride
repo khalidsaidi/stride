@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+define at(l: list of number, i: number) -> number {
+  return l[i]
+}
+var v: list of number most 3 = [1]
+print(at(v, n))
+print(at([1], n))
+# rule 3.7.3 3.7.6 F004
+# answers {"n": 2}
+# prints [""]
+# fault F004

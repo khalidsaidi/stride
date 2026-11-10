@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() -> text {
+  return "a"
+}
+var x: f
+fill "A" = f()
+
+# rule 5.6 S209
+# mistake 6:8 S209

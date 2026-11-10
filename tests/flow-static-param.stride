@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define write(n: number, v: text) {
+  fill "Box{n}" = v
+}
+ask a: text "A"
+ask k: number "K"
+write(1, a)
+# mistake 10 S404 names a box or a question
+write(k, a)
+# rule 11.2 S404

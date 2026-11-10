@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let n = 4
+print("n is {n}, next {n + 1}")
+print("{"in" + "ner"}")
+# rule 2.6 6.10
+# prints ["n is 4, next 5", "inner"]

@@ -1,0 +1,8 @@
+export record pair {
+  left: text
+  right: text
+}
+export define both(p: pair) -> text {
+  return "{p.left}{p.right}"
+}
+const hidden = 3

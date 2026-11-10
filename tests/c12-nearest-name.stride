@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let full_name = "x"
+let total = 1
+fill "A" = fullname
+fill "B" = "{totl}"
+# rule 12.5 S201
+# mistake 5 S201 full_name
+# mistake 6 S201 total

@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print(if empty then 1 else 2)
+if empty {
+  print("yes")
+} else {
+  print("no")
+}
+print(count([x for each x in [1, 2] if empty]))
+print(count([x for each x in empty]))
+print(1 in empty)
+print(1 not in empty)
+for each y in empty {
+  print(y)
+}
+# rule 3.6 6.15 S311 S314 S385
+# prints ["2", "no", "0", "0", "no", "yes"]

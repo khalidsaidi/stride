@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let l = [1]
+let d = [n for each n in l]
+print("{n}{count(d)}")
+
+# rule 6.12 S201
+# mistake 5:9 S201

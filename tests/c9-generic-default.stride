@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define d<t>(a: t, b: t = 5) -> t {
+  return b
+}
+print(d(1))
+print(d(2, 3))
+print(d("a"))
+# rule 9.5.1 S367
+# mistake 8:7 S367

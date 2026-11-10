@@ -1,0 +1,26 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(k: number) -> number {
+  if k > 100 {
+    return 1 / 0
+  }
+  return k
+}
+print(f(1))
+print(f(2))
+print(f(3))
+print(f(4))
+print(f(5))
+print(f(6))
+print(f(7))
+print(f(8))
+print(f(9))
+print(f(10))
+print(f(11))
+print(f(12))
+print(f(13))
+print(f(14))
+print(f(15))
+print(f(16))
+print(f(17))
+# rule 11.3.3

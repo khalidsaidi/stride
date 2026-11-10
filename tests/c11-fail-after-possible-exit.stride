@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+ask w: text "W"
+define g(c: yes-no) {
+  if c {
+    return
+  }
+  fail("in g")
+}
+g(c)
+for i in 1..2 {
+  if c {
+    break
+  }
+  fail("in the loop")
+}
+match w {
+  "a" => {
+    return
+  }
+}
+fail("at the end")
+# rule 11.3.2 S413
+# answers {"c": "yes", "w": "a"}

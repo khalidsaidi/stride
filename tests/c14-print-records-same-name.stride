@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-person-a" as a
+use "c-person-b" as b
+record person {
+  zip: text
+  x: text
+  y: text
+}
+print(a.make_a())
+print(b.make_b())
+print(new person { zip: "3", y: "q" })
+# rule 14.5 19.1 4.5
+# prints ["person { name: Ada }", "person { age: 1, city: Paris }", "person { zip: 3, x: , y: q }"]

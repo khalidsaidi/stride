@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+if c {
+  fill "A" = "x"
+}
+# rule 13.2
+# run written
+# answers {"c": true}
+# boxes {"A": "x"}
+# run not-written
+# answers {"c": false}
+# boxes {"A": ""}

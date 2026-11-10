@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  first: text
+  last: text
+}
+let p = new person { first: "Ada", last: "Lovelace" }
+fill "A" = "{p.last}, {p.first}"
+# boxes {"A": "Lovelace, Ada"}
+# rule 5.1 6.14 6.9.1

@@ -1,0 +1,4 @@
+print("x")
+fill "A" = "x"
+# rule 4.6 S508
+# mistake 2:6 S508 a script has no form

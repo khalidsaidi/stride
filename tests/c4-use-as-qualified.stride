@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-a" as a
+use "c-b" as b
+fill "A" = "{a.shared}{b.shared}"
+fill "B" = a.label("x")
+
+# rule 4.5
+# run
+# boxes {"A": "12", "B": "ax"}

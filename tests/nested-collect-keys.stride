@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record child {
+  name: text
+}
+record parent {
+  name: text
+  children: list of child most 2
+}
+var parents: list of parent most 2
+collect p in parents "Another parent?" {
+  ask p.name: text "Parent"
+}
+for each i, p in parents {
+  fill "P{i}" = p.name
+}
+# answers {"parents[1].name": "Ann", "parents[1]#another": "yes", "parents[2].name": "Bo"}
+# boxes {"P1": "Ann", "P2": "Bo"}
+# rule 8.5 8.6.2 5.1

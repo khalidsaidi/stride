@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+let b = a
+# mistake 6 S232 this is a value on its own
+(b)
+fill "X" = b
+# rule 6.9 S232

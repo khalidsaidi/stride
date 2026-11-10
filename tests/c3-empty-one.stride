@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print(empty == "")
+print(empty == [])
+print("" is empty)
+print([] is empty)
+ask a: text "A"
+print(a is empty)
+print(a is not empty)
+# rule 3.2
+# run unanswered
+# prints ["yes", "yes", "yes", "yes", "yes", "no"]
+# run answered
+# answers {"a": "x"}
+# prints ["yes", "yes", "yes", "yes", "no", "yes"]

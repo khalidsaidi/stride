@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(w: text, n: number = 2) {
+  fill "A{w}" = text_of(n)
+}
+ask z: number "Z"
+f(n: z, w: "a")
+f(n: 3, w: "{z}")
+# rule 11.2 9.4 S404
+# box Aa text near Z
+# mistake 8:12 S404

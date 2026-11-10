@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fields "top[0]."
+ask a: text "Name"
+fill "Name" = a
+# rule 10.1 4.1
+# box top[0].Name text near Name
+# answers {"a": "Ada"}
+# boxes {"Name": "Ada"}

@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print(first(empty))
+print(last(empty))
+print(reversed(empty))
+print(sorted(empty))
+print(filled(empty))
+print(smallest(empty))
+print(largest(empty))
+print(either(empty, empty))
+print("{either(empty, 1)} {count(without(empty, 1))} {index_of(empty, 1)} {count(empty)}")
+# rule 9.5 9.5.1 S368
+# mistake 3:7 S368
+# mistake 4:7 S368
+# mistake 5:7 S368
+# mistake 6:7 S368
+# mistake 7:7 S368
+# mistake 8:7 S368
+# mistake 9:7 S368
+# mistake 10:7 S368

@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask o: one-of "Kind" {
+  option "a" "A"
+  option "b" "B"
+}
+ask c: yes-no "Married"
+pick "K" "1" when o == "a"
+pick "K" "2" when o == "b"
+pick "M" "Yes" when c
+pick "M" "No" when not c
+pick "N" "1" when yes
+pick "N" "2" when c
+pick "P" "1" when no
+pick "P" "2" when yes
+# rule 10.3 10.4 10.4.1 10.4.2 S512
+# box K radio:1 near Kind A
+# box K radio:2 near Kind B
+# box M radio:Yes near Married
+# box M radio:No near Married
+# box N radio:1 near Married
+# box N radio:2 near Married
+# box P radio:1 near Married
+# box P radio:2 near Married
+# mistake 13 S512 may be picked again in its radio group

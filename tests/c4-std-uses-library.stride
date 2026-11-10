@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = "x"
+
+# rule 4.4 S105
+# mistake 1:1 S105
+# std c-std-with-use.stride

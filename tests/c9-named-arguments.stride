@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(alpha: number, beta: number = 2) -> number {
+  return alpha * 10 + beta
+}
+fill "A" = f(1)
+fill "B" = f(1, beta: 3)
+fill "C" = f(beta: 5, alpha: 2)
+# rule 9.2 9.4 9.4.1
+# boxes {"A": "12", "B": "13", "C": "25"}

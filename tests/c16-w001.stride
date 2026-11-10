@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask k: one-of "K" {
+  option "a" "A"
+  option "b" "B"
+}
+match k {
+  "a" => {
+    fill "A" = "x"
+  }
+}
+# rule W001 7.10
+# warning 7 W001
+# answers {"k": "a"}
+# boxes {"A": "x"}

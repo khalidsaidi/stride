@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let a = "x # y"   # a comment
+print(a)   # print it
+# a whole line
+print(  a  +	"!"  )
+# rule 1.4
+# prints ["x # y", "x # y!"]

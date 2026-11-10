@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var t = 0
+for i in 1..n {
+  t = t + i
+}
+fill "A" = t
+# rule F004 7.11
+# run whole
+# answers {"n": 3}
+# boxes {"A": "6"}
+# run not-whole
+# answers {"n": 2.5}
+# fault F004
+# run empty-is-not-zero
+# answers {}
+# fault F004

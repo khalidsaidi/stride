@@ -1,0 +1,14 @@
+define n_of(xs: list of number) -> number {
+  return count([x for each x in xs])
+}
+define again(xs: list of number) -> number {
+  let ys = [x * 2 for each x in xs if x > 1]
+  return count(ys + ys)
+}
+let big: list of number most 600 = [1, 2]
+expect n_of([1]) == 1
+expect n_of([1, 2, 3]) == 3
+expect n_of(empty) == 0
+expect again([1, 2, 3]) == 4
+expect again(big) faults "F017"
+# rule 3.7.3 3.7.5 3.7.7 6.12 F017

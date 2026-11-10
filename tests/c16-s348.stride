@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text, age: number }
+var r: person
+ask r.name: text "N"
+r.name = "x"
+fill "A" = r.name
+# rule S348 16.4 7.5
+# mistake 6 S348

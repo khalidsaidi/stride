@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask ph: phone "Phone"
+ask em: email "Email"
+ask lt: long-text "Long"
+define t(x: text) -> text {
+  return x
+}
+define e(x: email) -> email {
+  return x
+}
+print(t(ph))
+print(t(em))
+print(t(lt))
+print(e("a@b.c"))
+# rule 3.6
+# answers {"ph": "555", "em": "x@y.z", "lt": "long"}
+# prints ["555", "x@y.z", "long", "a@b.c"]

@@ -1,0 +1,6 @@
+define f<t>(a: t, b: list of t) -> t {
+  return a
+}
+expect f(1, ["a"]) == 1
+# rule 9.5.1 S367
+# mistake 4:13 S367

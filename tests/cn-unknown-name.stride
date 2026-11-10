@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let full_name = "x"
+print(fullname)
+
+# rule 12.5 S201
+# mistake 4:7 S201 full_name

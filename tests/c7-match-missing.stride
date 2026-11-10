@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask k: one-of "K" {
+  option "a" "A"
+  option "b" "B"
+}
+match k {
+  "a" => {
+    print("x")
+  }
+}
+
+# rule 7.10 W001
+# warning 7:1 W001
+# run
+# answers {"k": "b"}
+# prints []

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var x = 0
+for i in 1..n {
+  x = x + 1
+}
+fill "A" = "{x}"
+# engines vm
+# answers {"n": 100000000}
+# fault F014
+# rule 19.1.2 F014

@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-people" as p
+define address(who: text) {
+  ask city: text "Home city of the {who}"
+  fill "Home {who}" = city
+}
+address("spouse")
+p.address("spouse")
+# rule 8.6.2 8.6.4
+# answers {"address(who=\"spouse\").city": "Paris", "c-people:address(who=\"spouse\").city": "Rome"}
+# asked ["address(who=\"spouse\").city", "c-people:address(who=\"spouse\").city"]
+# boxes {"Home spouse": "Paris", "City spouse": "Rome"}

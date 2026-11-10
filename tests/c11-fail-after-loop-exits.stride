@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+for i in 1..2 {
+  if c {
+    break
+  }
+  if c {
+    continue
+  }
+}
+if no {
+  return
+}
+fail("stop")
+# rule 11.3.2 11.3.3 S413
+# mistake 15 S413

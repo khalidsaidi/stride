@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s { "a" "A" "b" "B" }
+ask o: one-of s "O"
+let l = [o]
+print("z" in l)
+print(index_of(l, "z"))
+print("a" in l)
+# rule 3.6 6.8 S386
+# mistake 6:7 S386
+# mistake 7:19 S386

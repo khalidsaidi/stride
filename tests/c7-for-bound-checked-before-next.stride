@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+ask m: number "M"
+define a(x: number) -> number {
+  print("a")
+  return x
+}
+for i in a(n)..a(m) {
+  print("t{i}")
+}
+# rule 7.11
+# run the first bound empty faults before the second is worked out
+# answers {"m": 2}
+# prints ["a"]
+# fault F004
+# run the second bound not whole faults after both are worked out
+# answers {"n": 1, "m": 2.5}
+# prints ["a", "a"]
+# fault F004

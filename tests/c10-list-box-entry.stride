@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "State" = "TX"
+# rule 10.3 S514
+# box State choice:NY,CA near State
+# mistake 3 S514

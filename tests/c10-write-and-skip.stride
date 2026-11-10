@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+ask w: text "C"
+fill "A" = w
+skip "A" because "not needed"
+skip "B" because "not needed"
+skip "B" because "still not needed"
+if c {
+  fill "D" = w
+} else {
+  skip "D" because "not married"
+}
+skip "E" because "first"
+tick "E" when c
+# rule 10.4 10.4.3 S512
+# box A text near C
+# box B text near C
+# box D text near C
+# box E check near C
+# mistake 6 S512 skipped after it is written
+# mistake 15 S512 written after it is skipped

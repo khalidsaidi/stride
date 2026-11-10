@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print("a\"b")
+print("a\\b")
+print("\{x\}")
+print("a\nb")
+print("a\tb")
+print("\u{41}\u{e9}")
+print("\u{1F600}")
+print("\u{10FFFF}")
+# rule 2.6
+# prints ["a\"b", "a\\b", "{x}", "a\nb", "a\tb", "Aé", "😀", "\udbff\udfff"]

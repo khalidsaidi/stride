@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask stop: yes-no "Stop?"
+print("a")
+if stop {
+  fail("stop")
+}
+print("b")
+
+# rule 5.5
+# run stops
+# answers {"stop": true}
+# prints ["a"]
+# fault F013 at 6:3
+# run goes on
+# answers {"stop": false}
+# prints ["a", "b"]

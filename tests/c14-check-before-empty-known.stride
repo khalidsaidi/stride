@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = grouped(empty, 2.5)
+fill "B" = format(empty, "invalid")
+# rule 14.0.3.1 S413
+# mistake 3 S413
+# mistake 4 S413

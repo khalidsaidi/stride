@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define q(l: list of number, b: text) {
+  ask name: text "Name {join(l)}"
+  fill "{b}" = name
+}
+q([], "A")
+q(empty, "B")
+# rule 8.6.3 3.7.3.1
+# asked ["q(l=[];b=\"A\").name", "q(l=[];b=\"B\").name"]

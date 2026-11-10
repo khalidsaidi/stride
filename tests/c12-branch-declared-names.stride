@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+if c {
+  let x = 7
+} else {
+  let x = 8
+}
+print(x)
+if yes {
+  let z = 1
+}
+print(z)
+if c {
+  ask a: text "A"
+}
+print(a)
+# rule 12.1 12.1.1 12.4
+# run yes
+# answers {"c": "yes", "a": "hi"}
+# prints ["7", "1", "hi"]
+# run no
+# answers {"c": "no"}
+# asked ["c"]
+# prints ["8", "1", ""]

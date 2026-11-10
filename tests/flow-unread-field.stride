@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r {
+  a: text
+  b: text
+}
+var l: list of r most 2
+collect x in l "Another?" {
+  ask x.a: text "A"
+# mistake 11 S409 no r's b is ever read
+  ask x.b: text "B"
+}
+for each n, x in l {
+  fill "A{n}" = x.a
+}
+# rule S409

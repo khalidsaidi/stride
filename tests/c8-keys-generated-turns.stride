@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+for i in 1..2 {
+  var names: list of text most 2
+  collect x in names any "Any?" "Another?" {
+    ask x: text "Name"
+  }
+  fill "Name{i}" = first(names)
+}
+# rule 8.6.2 8.6.1 8.5.1
+# answers {"names#any[1]": "yes", "names[1][1]": "Ada", "names[1]#another[1]": "no", "names#any[2]": "yes", "names[1][2]": "Bo", "names[1]#another[2]": "no"}
+# asked ["names#any[1]", "names[1][1]", "names[1]#another[1]", "names#any[2]", "names[1][2]", "names[1]#another[2]"]
+# boxes {"Name1": "Ada", "Name2": "Bo"}

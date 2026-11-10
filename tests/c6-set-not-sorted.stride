@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s { "b" "B" "a" "A" }
+ask x: any-of s "X"
+print(sorted(x))
+# rule 14.4 S369
+# mistake 5:14 S369

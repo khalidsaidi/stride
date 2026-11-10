@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { age: number }
+var r: person
+r.age = 40
+ask r.age: number "Age" default r.age
+print(r.age)
+# rule 8.4.1
+# run the field's value is the default
+# prints ["40"]

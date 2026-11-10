@@ -1,0 +1,6 @@
+export record person {
+  name: text
+}
+export define make_a() -> person {
+  return new person { name: "Ada" }
+}

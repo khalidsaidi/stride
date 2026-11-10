@@ -1,0 +1,114 @@
+{
+  "name": "stride",
+  "displayName": "Stride",
+  "description": "The Stride workflow language: highlighting; mistakes, completion, signatures, definitions, references, renaming, hover and layout from `stride lsp`; debugging with `stride dap`.",
+  "version": "1.0.0",
+  "publisher": "khalidsaidi",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:stride",
+    "onDebugResolve:stride"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "stride",
+        "aliases": [
+          "Stride"
+        ],
+        "extensions": [
+          ".stride"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "stride",
+        "scopeName": "source.stride",
+        "path": "./syntaxes/stride.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Stride",
+      "properties": {
+        "stride.command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "stride"
+          ],
+          "description": "The command that runs stride, with its first words: [\"stride\"], or [\"node\", \"/path/to/bin/stride.mjs\"]."
+        }
+      }
+    },
+    "breakpoints": [
+      {
+        "language": "stride"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "stride",
+        "label": "Stride",
+        "languages": [
+          "stride"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "The .stride file to run.",
+                "default": "${file}"
+              },
+              "answers": {
+                "type": "object",
+                "description": "The answers, question key to answer.",
+                "default": {}
+              },
+              "today": {
+                "type": "string",
+                "description": "The date today() gives, YYYY-MM-DD."
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Stop before the first line.",
+                "default": false
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "stride",
+            "request": "launch",
+            "name": "Run this Stride file",
+            "program": "${file}",
+            "answers": {}
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Stride: run a file",
+            "body": {
+              "type": "stride",
+              "request": "launch",
+              "name": "Run this Stride file",
+              "program": "^\"\\${file}\"",
+              "answers": {}
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

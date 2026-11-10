@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask z: number "Z"
+print(no and 1 / z > 0)
+print(yes or 1 / z > 0)
+print(yes and 1 / z > 0)
+
+# rule 6.15.1 6.2
+# run
+# answers {"z": 0}
+# prints ["no", "yes"]
+# fault F001 at 6:17

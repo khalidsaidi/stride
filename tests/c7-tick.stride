@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "Check"
+tick "Box" when c
+
+# rule 7.7
+# run yes
+# answers {"c": true}
+# boxes {"Box": "Yes"}
+# run no
+# answers {"c": false}
+# boxes {"Box": "Off"}
+# box Box check near Check

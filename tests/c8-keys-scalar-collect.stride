@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var names: list of text most 3
+collect x in names "Another?" {
+  ask x: text "Name"
+}
+fill "All" = join(names, ";")
+# rule 8.6.2 8.6.4
+# answers {"names[1]": "A", "names[1]#another": "yes", "names[2]": "B", "names[2]#another": "no"}
+# asked ["names[1]", "names[1]#another", "names[2]", "names[2]#another"]
+# boxes {"All": "A;B"}

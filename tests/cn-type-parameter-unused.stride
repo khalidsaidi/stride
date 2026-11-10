@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f<t>(n: number) -> number {
+  return n
+}
+print("{f(1)}")
+
+# rule S221
+# mistake 3:10 S221

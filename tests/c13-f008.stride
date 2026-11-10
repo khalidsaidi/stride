@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask p: number "P"
+fill "A" = round(2.345, p)
+# rule F008 14.2
+# run two
+# answers {"p": 2}
+# boxes {"A": "2.35"}
+# run not-whole
+# answers {"p": 2.5}
+# fault F008 at 4:12
+# run eleven
+# answers {"p": 11}
+# fault F008 at 4:12
+# run negative
+# answers {"p": -1}
+# fault F008 at 4:12

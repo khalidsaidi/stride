@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask o: one-of "O" {
+  option "a" "A"
+  option "a,b" "AB"
+}
+ask p: one-of "P" {
+  option "a" "A"
+}
+ask x: any-of "X" {
+  option "b" "B"
+}
+ask y: any-of "Y" {
+  option "b" "B"
+}
+print("{o}|{p}|{count(x)}|{count(y)}")
+# rule 8.7
+# answers {"o": ["a", "b"], "p": "a", "x": "b", "y": ["b"]}
+# prints ["|a|0|1"]
+# steps [{"key": "o", "unreadable": "not one of the options"}, {"key": "p", "value": "a"}, {"key": "x", "unreadable": "not among the options"}, {"key": "y", "value": ["b"]}]

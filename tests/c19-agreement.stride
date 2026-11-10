@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define label(n: number) -> text {
+  return "item {n}"
+}
+ask n: number "N" default 2 check n > 0 "must be more than none"
+ask s: text "S" default label(n)
+print(s)
+fill "A" = s
+# rule 19.1 19.2
+# run defaults
+# answers {}
+# steps [{"key": "n", "value": 2, "default": 2, "failed": []}, {"key": "s", "value": "item 2", "default": "item 2"}]
+# prints ["item 2"]
+# boxes {"A": "item 2"}
+# run checks
+# answers {"n": -1, "s": "x"}
+# steps [{"key": "n", "value": -1, "failed": ["must be more than none"]}, {"key": "s", "value": "x", "default": "item -1"}]
+# prints ["x"]
+# boxes {"A": "x"}

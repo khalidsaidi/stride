@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+print(-0)
+print(0 * -1)
+print(-n)
+print(n - n)
+print("{-n}")
+# rule 3.3.4
+# answers {"n": 0}
+# prints ["0", "0", "0", "0", "0"]

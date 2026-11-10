@@ -1,0 +1,29 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+var kids: list of text most 2
+collect x in kids any "Any kids?" "More?" {
+  ask x: text "Kid"
+}
+if c {
+  fail("asked to stop")
+}
+for i in 1..0 {
+  fail("never")
+}
+for each k in kids {
+  fail("a kid")
+}
+if no {
+  fail("no")
+}
+# rule 11.3.2 11.3.3 F013
+# run no fault
+# answers {"c": "no", "kids#any": "no"}
+# prints []
+# run asked to stop
+# answers {"c": "yes"}
+# fault F013 asked to stop
+# run a kid
+# answers {"c": "no", "kids#any": "yes", "kids[1]": "a", "kids[1]#another": "no"}
+# fault F013 a kid

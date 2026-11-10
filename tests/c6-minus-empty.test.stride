@@ -1,0 +1,4 @@
+expect (-empty) is empty
+expect (-(empty * 2)) is empty
+expect -3 + 1 == -2
+# rule 6.3

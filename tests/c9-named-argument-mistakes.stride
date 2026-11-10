@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(alpha: number, beta: number = 2) -> number {
+  return alpha * 10 + beta
+}
+fill "B" = f(beta: 3, 1)
+fill "C" = f(1, betta: 3)
+fill "D" = f(1, alpha: 2)
+fill "E" = f(beta: 4)
+# rule 9.4 S390 S388 S389 S365
+# mistake 6 S390
+# mistake 7 S388 beta
+# mistake 8 S389
+# mistake 9 S365

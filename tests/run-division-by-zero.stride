@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+fill "A" = "{divide(1, n)}"
+# answers {"n": 0}
+# fault F001 division by zero
+# rule 6.4 13.4 F001

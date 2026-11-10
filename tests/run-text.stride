@@ -1,0 +1,5 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = upper("ab") + lower("CD") + trim("  e  f ")
+# boxes {"A": "ABcde f"}
+# rule 14.1

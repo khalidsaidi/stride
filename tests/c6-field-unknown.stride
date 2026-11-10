@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: text
+}
+let p = new person { name: "A" }
+print(p.nmae)
+
+# rule 6.9.1 S318
+# mistake 7:7 S318 name

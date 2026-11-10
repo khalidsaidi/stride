@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(n: number) -> number {
+  return g(n)
+}
+define g(n: number) -> number {
+  return f(n)
+}
+fill "A" = f(1)
+# rule 9.7 S402
+# mistake 4 S402

@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+fill "A" = add_days(d, 1)
+# rule F011 14.3
+# run leap
+# answers {"d": "2024-02-28"}
+# boxes {"A": "2024-02-29"}
+# run past-9999
+# answers {"d": "9999-12-31"}
+# fault F011 at 4:12

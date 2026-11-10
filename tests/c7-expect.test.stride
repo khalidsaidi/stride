@@ -1,0 +1,14 @@
+define half(n: number) -> number {
+  return n / 2
+}
+expect half(4) == 2
+expect half(4) == 3 "half of four is two"
+expect half(0) / 0 == 1 faults "F001"
+expect fail("stop") faults "F013"
+expect 1 / 0 faults "division"
+expect half(2) == 1 faults "F001"
+expect 1 / 0 faults "F002"
+expect days_between(today(), today()) / 0 == 1
+
+# rule 7.17 7.17.1 F013
+# results ["pass", "fail", "pass", "pass", "pass", "fail", "fail", "fail"]

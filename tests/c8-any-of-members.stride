@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask x: any-of "X" {
+  option "a" "A"
+  option "b" "B"
+}
+ask y: any-of "Y" {
+  option "a" "A"
+  option "b" "B"
+}
+print("{join(x)}|{join(y)}")
+# rule 8.7
+# answers {"x": ["a", null, ""], "y": ["b", {"z": 1}, "a"]}
+# prints ["a|a, b"]
+# steps [{"key": "x", "value": ["a"]}, {"key": "y", "unreadable": "not among the options"}]

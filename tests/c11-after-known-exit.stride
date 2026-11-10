@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define g() {
+  if yes {
+    return
+  }
+  print(1 / 0)
+}
+g()
+for i in 1..2 {
+  if yes {
+    continue
+  }
+  print(2 / 0)
+}
+if yes {
+  return
+}
+print(3 / 0)
+# rule 11.3.2 11.3.3 S413

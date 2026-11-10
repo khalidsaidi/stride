@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: text
+}
+let p = person
+print("x")
+
+# rule S226
+# mistake 6:9 S226

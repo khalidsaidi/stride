@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var a: list of number most 600
+var b: list of number most 600
+let c = a + b
+fill "A" = count(c)
+# rule S395 16.4 6.5.1
+# mistake 5 S395

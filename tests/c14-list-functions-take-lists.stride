@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+print(count(n))
+print(join(n))
+print(reversed(n))
+print(index_of([1, 2], "a"))
+print(without([1], "a"))
+# rule 14.4 S369 S367
+# mistake 4 S369
+# mistake 5 S369
+# mistake 6 S369
+# mistake 7 S367
+# mistake 8 S367

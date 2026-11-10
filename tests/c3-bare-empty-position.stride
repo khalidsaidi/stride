@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+print([1, 2][empty])
+print(count([1, 2, 3][empty..2]))
+# rule 3.6 S358 S396 S413
+# mistake 3:13 S413 an empty position is not a whole number
+# mistake 4:22 S413 a slice's bounds are whole numbers

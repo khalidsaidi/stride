@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = upper("x", 2)
+# rule 19.4 S302 5.5
+# std c-std-wrong-arity.stride
+# mistake 2:1 S302 upper

@@ -1,0 +1,11 @@
+expect contains("ſ", "s")
+expect contains("ς", "σ")
+expect contains("ΣΑΣ", "σας")
+expect find("İa", "a") == 2
+expect not contains("İ", "i")
+expect not contains("ı", "I")
+expect not contains("ß", "ss")
+expect contains("K", "k")
+expect starts_with("Ꭰx", "ꭰ")
+expect occurrences("ſSs", "s") == 3
+# rule 14.1

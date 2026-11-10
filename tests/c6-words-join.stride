@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask p: phone "Phone"
+ask k: one-of "Kind" {
+  option "a" "A"
+}
+let w = p + " / " + k
+print(w)
+print(upper(w))
+
+# rule 6.5
+# run
+# answers {"p": "555", "k": "a"}
+# prints ["555 / a", "555 / A"]

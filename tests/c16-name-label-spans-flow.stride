@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define never_used() {
+  print(1)
+}
+let unused = 3
+# rule 16.2.1 S411 W002
+# mistake 6:5 S411
+# warning 3:8 W002
+# label 6:5-6:11 unused is never used
+# label 3:8-3:18 never_used is defined, and never called

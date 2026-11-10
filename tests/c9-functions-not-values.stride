@@ -1,0 +1,7 @@
+define double(n: number) -> number {
+  return n * 2
+}
+let f = double
+print([double(x) for each x in [1, 2]])
+# rule 9.10 S353
+# mistake 4:9 S353

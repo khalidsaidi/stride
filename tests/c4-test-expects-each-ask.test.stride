@@ -1,0 +1,7 @@
+define f() -> text {
+  ask v: text "V"
+  return v
+}
+expect f() is empty
+expect f() is empty
+# rule 7.17.1

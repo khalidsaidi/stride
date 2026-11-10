@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { name: text, t: text }
+let l = [new p { name: "b", t: "x" }, new p { name: "a", t: "y" }]
+print(count(sorted(l, by: "name", descending: yes, by: "t")))
+# rule 9.4 S389
+# mistake 5:52 S389

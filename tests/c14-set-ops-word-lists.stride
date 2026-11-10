@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+  "b" "B"
+  "c" "C"
+}
+ask k: any-of s "K"
+print(join(union(k, ["c"]), ","))
+print(join(intersection(["c", "a"], k), ","))
+print(join(difference(k, ["a"]), ","))
+# rule 3.6 14.4
+# answers {"k": ["a", "b"]}
+# prints ["a,b,c", "a", "b"]

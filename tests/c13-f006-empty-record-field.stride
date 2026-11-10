@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text }
+var p: person
+fill "A" = p.name
+# rule F006 6.9.1
+# boxes {"A": ""}

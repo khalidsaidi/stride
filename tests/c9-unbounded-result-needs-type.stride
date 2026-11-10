@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define keep(xs: list of number) {
+  return xs
+}
+fill "A" = count(keep([1, 2]))
+# rule 9.5.2 S211
+# mistake 4 S211

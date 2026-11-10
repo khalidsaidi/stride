@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+var p: person
+var l: list of text most 2
+var n: number
+n = 3
+print(p.name is empty)
+print("{count(l)}")
+print("{n}")
+
+# rule 7.4
+# run
+# prints ["yes", "0", "3"]

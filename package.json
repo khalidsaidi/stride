@@ -1,0 +1,30 @@
+{
+  "name": "@khalidsaidi/stride",
+  "version": "1.0.0",
+  "description": "Stride: a small, bounded programming language for a fillable PDF form's workflow, with its compiler, virtual machine and tools",
+  "license": "MIT",
+  "type": "module",
+  "repository": { "type": "git", "url": "git+https://github.com/khalidsaidi/stride.git" },
+  "engines": { "node": ">=22" },
+  "bin": { "stride": "bin/stride.mjs" },
+  "exports": {
+    "./compile": "./src/compile.mjs",
+    "./vm": "./runtime/vm.mjs",
+    "./runner": "./runtime/runner.js",
+    "./pdf-boxes": "./src/pdf-boxes.mjs",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "selftest": "node bin/stride.mjs selftest",
+    "build": "node scripts/build.mjs",
+    "journey": "node scripts/journey.mjs"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "pdfjs-dist": "5.7.284"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1",
+    "postject": "^1.0.0-alpha.6"
+  }
+}

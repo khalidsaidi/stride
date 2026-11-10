@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define row(n: number) {
+  ask name: text "Name"
+  fill "Name{n}" = name
+}
+row(1)
+row(2)
+# answers {"row(n=2).name": "b"}
+# boxes {"Name2": "b"}
+# asked ["row(n=1).name", "row(n=2).name"]
+# rule 8.6.2 9.9

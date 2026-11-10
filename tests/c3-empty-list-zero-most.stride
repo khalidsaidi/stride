@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+define at(xs: list of number, i: number) -> number {
+  return xs[i]
+}
+print(at(empty, n))
+# rule 3.7.3.1 F004
+# answers {"n": 1}
+# fault F004

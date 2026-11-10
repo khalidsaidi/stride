@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask s: any-of "S" {
+  option "a" "A"
+  option "b" "B"
+}
+if s == ["a"] {
+  fill "X" = "1"
+}
+if s == ["b"] {
+  fill "X" = "2"
+}
+if "b" in s {
+  fill "Y" = "b"
+}
+if s == ["a", "b"] {
+  fill "Y" = "ab"
+}
+# rule 10.4.1 10.4.3 6.6 S512
+# box X text near S A B
+# box Y text near S A B
+# mistake 17:3 S512
+# run a
+# answers {"s": ["a"]}
+# boxes {"X": "1"}

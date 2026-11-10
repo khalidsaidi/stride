@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+var a: list of number most 1
+let e = either(a, [n, n])
+var v: list of number most 2 = e
+print(count(v))
+print(either([1], [1, 2])[2] is empty)
+print(either(empty, "x"))
+# rule 14.5 3.9 9.5.1
+# answers {"n": "3"}
+# prints ["2", "yes", "x"]

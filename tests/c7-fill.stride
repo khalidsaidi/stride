@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+ask n: number "N"
+ask k: one-of "K" {
+  option "a" "A"
+}
+fill "Date" = d
+fill "Num" = n
+fill "Kind" = k
+
+# rule 7.6 3.5
+# run
+# answers {"d": "2026-01-02", "n": "1.50", "k": "a"}
+# boxes {"Date": "2026-01-02", "Num": "1.5", "Kind": "a"}

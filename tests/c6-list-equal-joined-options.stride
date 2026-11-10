@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options sa { "a" "A" }
+options sb { "a" "A" }
+ask a: one-of sa "A"
+ask b: one-of sb "B"
+print([a] == [b])
+print([[a]] != [[b]])
+# rule 6.6 3.9
+# answers {"a": "a", "b": "a"}
+# prints ["yes", "no"]

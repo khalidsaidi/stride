@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define first() {
+  ask name: text "Name"
+  fill "First" = name
+}
+define second() {
+  ask name: text "Name"
+  fill "Second" = name
+}
+first()
+second()
+# rule 8.6 8.6.1 8.6.2 8.6.4
+# answers {"first().name": "A", "second().name": "B"}
+# asked ["first().name", "second().name"]
+# boxes {"First": "A", "Second": "B"}

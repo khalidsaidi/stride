@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define square(n: number) -> number {
+  return n * n
+}
+ask n: number "N"
+fill "A" = "{square(n)} {square(4)}"
+# answers {"n": 3}
+# boxes {"A": "9 16"}
+# rule 9.6 9.9

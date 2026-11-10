@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let a = "a{b"
+# rule 2.6 S005
+# mistake 3 S005
+# label 3:11-3:12 this { has no closing }

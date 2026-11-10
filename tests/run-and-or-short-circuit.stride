@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+tick "A" when n != 0 and divide(10, n) > 1
+tick "B" when n == 0 or divide(10, n) > 100
+# answers {"n": 0}
+# boxes {"B": "Yes"}
+# rule 6.2 6.15.1

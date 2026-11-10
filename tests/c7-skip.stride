@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = "x"
+skip "B" because "the issuer fills it"
+
+# rule 7.9
+# run
+# boxes {"A": "x"}
+# box A text near A
+# box B text near B

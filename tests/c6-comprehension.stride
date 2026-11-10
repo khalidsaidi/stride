@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let l = [1, 2, 3]
+let d = [n * 10 for each n in l if n > 1]
+print(join(d, ","))
+let e = [i * n for each i, n in l]
+print(join(e, ","))
+
+# rule 6.12
+# run
+# prints ["20,30", "1,4,9"]

@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  age: number
+}
+var r = new person { age: 40 }
+ask r.age: number "Age" default r.age
+fill "Age" = r.age
+# rule 8.4.1
+# run absent
+# answers {}
+# steps [{"key": "r.age", "value": 40, "default": 40}]
+# boxes {"Age": "40"}
+# run given
+# answers {"r.age": "41"}
+# steps [{"key": "r.age", "value": 41, "default": 40}]
+# boxes {"Age": "41"}

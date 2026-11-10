@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask s: any-of "S" {
+  option "a" "A"
+  option "b" "B"
+}
+pick "K" "1" when s == empty
+pick "K" "2" when "a" not in s
+fill "T" = if "a" in s then "in" else "out"
+# rule 10.4.1 6.8 S512
+# box K radio:1 near S A B
+# box K radio:2 near S A B
+# box T text near S
+# mistake 8:1 S512

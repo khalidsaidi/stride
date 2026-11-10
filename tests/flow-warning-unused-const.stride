@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# warning 4 W003 never used
+const UNUSED = 3
+fill "A" = "x"
+# rule W003

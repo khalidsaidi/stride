@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask z: number "Z"
+ask w: yes-no "W"
+if w {
+  fill "A" = 7 // z
+} else {
+  fill "A" = 7 % z
+}
+# rule F002 6.4 6.4.1
+# run floor
+# answers {"z": -2, "w": true}
+# boxes {"A": "-4"}
+# run remainder
+# answers {"z": -2, "w": false}
+# boxes {"A": "-1"}
+# run floor-zero
+# answers {"z": 0, "w": true}
+# fault F002 at 6:16
+# run remainder-zero
+# answers {"z": 0, "w": false}
+# fault F002 at 8:16

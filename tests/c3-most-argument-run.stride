@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+define one(x: list of number most 2) -> number {
+  return count(x)
+}
+define pass(x: list of number) -> number {
+  return one(x)
+}
+var b: list of number most 3 = [n]
+print(pass([n]))
+print(pass(b))
+# rule 3.7.7 F017
+# answers {"n": 1}
+# prints ["1"]
+# fault F017

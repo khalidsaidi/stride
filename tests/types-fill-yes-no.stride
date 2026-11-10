@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Y"
+# mistake 5 S307 tick "box" when
+fill "A" = y
+# rule 7.6 S307

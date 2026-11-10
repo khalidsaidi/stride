@@ -1,0 +1,36 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask p1: yes-no "P1"
+ask p2: yes-no "P2"
+ask p3: yes-no "P3"
+ask p4: yes-no "P4"
+ask p5: yes-no "P5"
+ask p6: yes-no "P6"
+ask p7: yes-no "P7"
+ask p8: yes-no "P8"
+ask p9: yes-no "P9"
+ask p10: yes-no "P10"
+ask p11: yes-no "P11"
+ask p12: yes-no "P12"
+ask p13: yes-no "P13"
+ask p14: yes-no "P14"
+let x1 = p1
+let x2 = (x1 and not p2) or (not x1 and p2)
+let x3 = (x2 and not p3) or (not x2 and p3)
+let x4 = (x3 and not p4) or (not x3 and p4)
+let x5 = (x4 and not p5) or (not x4 and p5)
+let x6 = (x5 and not p6) or (not x5 and p6)
+let x7 = (x6 and not p7) or (not x6 and p7)
+let x8 = (x7 and not p8) or (not x7 and p8)
+let x9 = (x8 and not p9) or (not x8 and p9)
+let x10 = (x9 and not p10) or (not x9 and p10)
+let x11 = (x10 and not p11) or (not x10 and p11)
+let x12 = (x11 and not p12) or (not x11 and p12)
+let x13 = (x12 and not p13) or (not x12 and p13)
+let x14 = (x13 and not p14) or (not x13 and p14)
+pick "R" "A" when x14
+pick "R" "B" when not x14
+# rule 15.1 10.4.2 S602
+# box R radio:A near P1
+# box R radio:B near P1
+# mistake 32:1 S602 proving conditions exclude each other

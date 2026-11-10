@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A"
+ask b: number "B"
+ask c: number "C"
+ask d: number "D"
+ask e: number "E"
+ask f: number "F"
+print("{a}|{b}|{c}|{d}|{e}|{f}")
+# rule 8.7
+# answers {"a": "12,345", "b": "1 234'567.5", "c": "1234,567", "d": "1,23", "e": "1.234,5", "f": "1234567"}
+# prints ["12345|1234567.5||||1234567"]
+# steps [{"key": "a", "value": "12345"}, {"key": "b", "value": "1234567.5"}, {"key": "c", "unreadable": "not a number"}, {"key": "d", "unreadable": "not a number"}, {"key": "e", "unreadable": "not a number"}, {"key": "f", "value": "1234567"}]

@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: yes-no "A"
+var t: number = 0
+if a {
+  fill "X" = "1"
+} else {
+  t = 0
+}
+if not a {
+  fill "X" = "2"
+}
+print(t)
+# rule 10.4.0 10.4.3
+# box X text near A
+# run yes
+# answers {"a": "yes"}
+# boxes {"X": "1"}
+# run no
+# answers {"a": "no"}
+# boxes {"X": "2"}

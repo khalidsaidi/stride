@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask k: one-of "K" {
+  option "a" "A"
+  option "b" "B"
+  option "c" "C"
+}
+match k {
+  "a", "b" => {
+    print("ab")
+  }
+  else => {
+    print("other")
+  }
+}
+
+# rule 7.10
+# run
+# answers {"k": "b"}
+# prints ["ab"]
+# run
+# answers {"k": "c"}
+# prints ["other"]
+# run empty
+# prints ["other"]

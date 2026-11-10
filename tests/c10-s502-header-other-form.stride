@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+fill "A" = "x"
+# rule 10.2 S502
+# header-form other
+# box A text near x
+# mistake 1 S502 the header for other

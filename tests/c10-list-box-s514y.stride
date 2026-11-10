@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Y"
+fill "L" = "{y}"
+fill "M" = if y then "yes" else "no"
+# rule 10.3
+# box L choice:yes,no near Y
+# box M choice:yes,no near Y

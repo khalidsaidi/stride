@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Owner’s name — first"
+fill "A" = a
+ask b: text "A-B number"
+fill "B" = b
+ask c: text "“Quoted” words"
+fill "C" = c
+# rule 10.6 S517
+# box A text near 1. OWNER'S   NAME - first (print)
+# box B text near A B number
+# box C text near "quoted" words.
+# mistake 5:13 S517

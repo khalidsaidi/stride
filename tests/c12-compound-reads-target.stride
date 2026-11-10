@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var x: number
+x += 1
+var t: text
+t += "a"
+var y: number
+y = 2
+y += 1
+print(x)
+print(t)
+print(y)
+# rule 7.5 12.1.1 S407
+# mistake 4 S407
+# mistake 6 S407

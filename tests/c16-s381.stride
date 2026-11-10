@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s1 { "a" "A"  "b" "B" }
+options s2 { "x" "X" }
+ask a: one-of s1 "A"
+ask b: any-of s2 "B"
+tick "A" when a in b
+# rule S381 16.4 6.8
+# mistake 7 S381

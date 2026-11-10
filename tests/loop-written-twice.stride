@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Name1 text near Name
+# box Name2 text near Name
+for i in 1..2 {
+  ask name: text "Name"
+# mistake 8 S512 written twice
+  fill "Name1" = name
+}
+fill "Name2" = "x"
+# rule 10.4 S512

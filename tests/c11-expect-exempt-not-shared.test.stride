@@ -1,0 +1,13 @@
+define g(n: number) -> number {
+  print("g {n}")
+  return 1 / 0
+}
+define h(n: number) -> number {
+  print("h {n}")
+  return 2 / 0
+}
+expect g(1) faults "F001"
+expect h(1) faults "F001"
+expect h(2) == 1
+# rule 11.3.4 11.3.1 S413
+# mistake 7:12 S413

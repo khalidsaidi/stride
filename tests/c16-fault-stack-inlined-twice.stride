@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define inner(n: number) -> number {
+  return 10 / n
+}
+define outer(n: number) -> number {
+  return round(inner(n))
+}
+ask z: number "Z"
+fill "A" = outer(z)
+# rule 13.4 16.3.1 19.1 F001
+# run faults
+# answers {"z": "0"}
+# fault F001 at 4:13
+# stack ["inner c16-fault-stack-inlined-twice.stride:4:13", "outer c16-fault-stack-inlined-twice.stride:7:16", "main c16-fault-stack-inlined-twice.stride:10:12"]
+# run gives
+# answers {"z": "4"}
+# boxes {"A": "3"}

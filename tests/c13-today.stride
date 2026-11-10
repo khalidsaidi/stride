@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define day() -> date {
+  return today()
+}
+fill "A" = day()
+fill "B" = format(today(), "DD.MM.YYYY")
+# rule 13.3 14.0.5 9.9
+# run one
+# today 2026-11-07
+# boxes {"A": "2026-11-07", "B": "07.11.2026"}
+# run two
+# today 2027-01-02
+# boxes {"A": "2027-01-02", "B": "02.01.2027"}

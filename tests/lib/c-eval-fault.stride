@@ -1,0 +1,4 @@
+export define loud(x: number) -> number {
+  print("loud")
+  return 1 / x
+}

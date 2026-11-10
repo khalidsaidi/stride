@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Name1 text near Name
+# box Name2 text near Name
+for i in 1..3 {
+  ask name: text "Name"
+# mistake 8 S508 the PDF has no box "Name3"
+  fill "Name{i}" = name
+}
+# rule 7.11 10.3 S508

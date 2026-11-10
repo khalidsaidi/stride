@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define maybe(x: number) {
+  if x > 1 {
+    fail("x")
+  }
+}
+ask n: number "N"
+maybe(1)
+maybe(n)
+# rule 11.3.2 11.1
+# answers {"n": "0"}
+# asked ["n"]

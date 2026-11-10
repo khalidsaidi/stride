@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+fill "A" = "{n} and {n + 1} and {upper("x")}"
+# answers {"n": 4}
+# boxes {"A": "4 and 5 and X"}
+# rule 6.10 3.5

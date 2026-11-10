@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "b" "B"
+  "a" "A"
+  "c" "C"
+}
+ask m: any-of s "M"
+print(m)
+for each x in m {
+  print(x)
+}
+print(first(m))
+print(last(m))
+print(join(m, "/"))
+print(count(m))
+print("a" in m)
+print([x for each x in m])
+print(m == ["a", "b"])
+# rule 3.8 3.5
+# answers {"m": ["a", "b"]}
+# prints ["b, a", "b", "a", "b", "a", "b/a", "2", "yes", "[b, a]", "yes"]

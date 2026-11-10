@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A" default 1 default 2
+ask b: number "B" default "x"
+fill "A" = a
+fill "B" = b
+# rule 8.4 S323 S322
+# mistake 3 S323
+# mistake 4 S322

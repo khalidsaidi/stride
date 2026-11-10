@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define g(c: yes-no) {
+  if c {
+    print(1 / 0)
+  }
+}
+define h(c: yes-no) {
+  if c {
+    print(2 / 0)
+  }
+}
+ask a: yes-no "A"
+g(no)
+h(a)
+# rule 11.1 11.3.3 S413
+# mistake 10:13 S413

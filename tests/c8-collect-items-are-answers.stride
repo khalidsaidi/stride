@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var names: list of text most 2
+collect x in names "Another?" {
+  ask x: text "Name"
+}
+names[1] = "changed"
+fill "A" = join(names, ",")
+# rule 8.5 S346
+# mistake 7 S346

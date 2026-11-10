@@ -1,0 +1,9 @@
+ask name: text "Your name"
+define greet(who: text) -> text {
+  return "hello {who}"
+}
+print(greet(name))
+# rule 4.6
+# run ada
+# answers {"name": "Ada"}
+# prints ["hello Ada"]

@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options o {
+  "b" "B"
+  "a" "A"
+}
+define items(parts: list of text) {
+  ask amount: number "Items: {count(parts)}"
+  print(amount)
+}
+define pick_set(s: set of o) {
+  ask w: text "W {join(s, ",")}"
+  print(w)
+}
+define enc(n: number, y: yes-no, t: text) {
+  ask w: text "W {n} {y} {t}"
+  print(w)
+}
+items(split("a,b", ","))
+items(["a,b"])
+items([])
+pick_set(["a", "b"])
+enc(1.50, yes, empty)
+# rule 8.6.3 8.6.4 11.1
+# asked ["items(parts=[\"a\",\"b\"]).amount", "items(parts=[\"a,b\"]).amount", "items(parts=[]).amount", "pick_set(s={\"b\",\"a\"}).w", "enc(n=1.5;y=yes;t=empty).w"]

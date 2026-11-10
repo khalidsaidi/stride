@@ -1,0 +1,12 @@
+define f(xs: list of list of number most 1, c: yes-no) -> number {
+  let ys = if c then xs else [[1, 2]]
+  return ys[1][2]
+}
+define g(xs: list of list of number most 1, c: yes-no) -> number {
+  let ys = if c then xs else [[1, 2]]
+  return ys[2][1]
+}
+expect f([[1]], yes) is empty
+expect f([[1]], no) == 2
+expect g([[1], [3]], yes) == 3
+# rule 3.9

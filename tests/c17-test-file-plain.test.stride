@@ -1,0 +1,3 @@
+let x = 1
+expect x == 1
+# rule 4.3

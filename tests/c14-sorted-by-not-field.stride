@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record kid { name: text, born: number, ok: yes-no }
+let ks = [new kid { name: "a", born: 1, ok: yes }]
+let a = sorted(ks, by: "bron")
+let b = sorted(ks, by: "ok")
+# rule S399 14.4
+# mistake 5 S399
+# mistake 6 S399

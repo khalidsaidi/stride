@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record kid { name: text, born: number }
+var kids: list of kid most 4
+collect k in kids "Another child?" {
+  ask k.name: text "Name"
+  ask k.born: number "Born"
+}
+fill "A" = join([k.name for each k in sorted(kids, by: "born")], ",")
+# rule 14.4
+# answers {"kids[1].name": "A", "kids[1].born": 2, "kids[1]#another": true, "kids[2].name": "B", "kids[2]#another": true, "kids[3].name": "C", "kids[3].born": 1, "kids[3]#another": false}
+# boxes {"A": "C,A,B"}

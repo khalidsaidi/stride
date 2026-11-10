@@ -1,0 +1,5 @@
+let y = 1
+y
+expect y == 1
+# rule 4.3 16.1 S106 S232
+# mistake 2 S106

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+if a is empty {
+# mistake 6:12 S010 is not understood here
+  fill "B" a
+  fill "C" = a
+}
+# mistake 10 S013 a word of the language
+let if = 3
+fill "E" = a
+# rule 16.1 S010 S013

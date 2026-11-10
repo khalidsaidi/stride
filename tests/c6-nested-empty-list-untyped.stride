@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let x = [[]]
+var y = [[empty]]
+define f() {
+  return [[]]
+}
+print(count(x) + count(y))
+f()
+# rule 6.11 7.4 S328 S344
+# mistake 3 S328
+# mistake 4 S328
+# mistake 5 S344

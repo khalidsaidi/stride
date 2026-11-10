@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const w = "w"
+const n = 2.5
+const y = yes
+const d = date_of(2026, 1, 2)
+fill "A" = "{w}{n}{d}"
+tick "B" when y
+
+# rule 5.3
+# run
+# boxes {"A": "w2.52026-01-02", "B": "Yes"}

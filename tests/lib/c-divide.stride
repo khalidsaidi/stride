@@ -1,0 +1,3 @@
+export define split_by(x: number, y: number) -> number {
+  return x / y
+}

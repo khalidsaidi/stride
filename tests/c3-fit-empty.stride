@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r { f: text }
+define f(x: number, l: list of text most 2, v: r) -> number {
+  return count(l)
+}
+print(f(empty, empty, empty))
+# rule 3.6 3.7.3.1
+# prints ["0"]

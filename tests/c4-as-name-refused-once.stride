@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-a" as a
+let a = 1
+print(a)
+define f() -> number {
+  return a
+}
+print(f())
+# rule 4.5 16.1 S110 S111
+# mistake 4 S110
+# mistake 7:10 S111

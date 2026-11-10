@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let a = true
+let b = false
+let c = null
+let d = none
+let e = nil
+# rule 2.4 S020
+# mistake 3:9 S020 yes
+# mistake 4:9 S020 no
+# mistake 5:9 S020 empty
+# mistake 6:9 S020 empty
+# mistake 7:9 S020 empty

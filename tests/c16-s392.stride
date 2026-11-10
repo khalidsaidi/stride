@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f(a: number = 1, b: number) -> number {
+  return a + b
+}
+fill "A" = f(1, 2)
+# rule S392 16.4 9.2
+# mistake 3 S392

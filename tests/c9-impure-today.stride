@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define now() -> date {
+  return today()
+}
+define p() -> number {
+  print("p")
+  return 1
+}
+fill "Y" = year(now())
+for i in 1..3 {
+  p()
+}
+if no {
+  print("never")
+}
+# rule 9.9 11.3.3
+# run one day
+# today 2026-11-07
+# boxes {"Y": "2026"}
+# prints ["p", "p", "p"]
+# run another day
+# today 2030-01-01
+# boxes {"Y": "2030"}
+# prints ["p", "p", "p"]

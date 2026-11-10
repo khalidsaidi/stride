@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+ask e: date "E"
+ask n: number "N"
+ask m: number "M"
+print("{d}|{e}|{n}|{m}")
+# rule 8.7
+# answers {"d": " 2024-02-05", "e": "2024-02-05", "n": "\t5 ", "m": "  - 5  "}
+# prints ["|2024-02-05||-5"]
+# steps [{"key": "d", "unreadable": "not a date"}, {"key": "e", "value": "2024-02-05"}, {"key": "n", "unreadable": "not a number"}, {"key": "m", "value": "-5"}]

@@ -1,0 +1,7 @@
+define f(x: number) -> number {
+  expect x == 1
+  return x
+}
+expect f(1) == 1
+# rule 7.17 S236
+# mistake 2 S236

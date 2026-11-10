@@ -1,0 +1,31 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask name: text "Name" default "Ada"
+ask s: any-of "S" {
+  option "a" "A"
+  option "b" "B"
+} default ["a"]
+ask n: number "N" default 5
+fill "Name" = name
+fill "S" = join(s, ",")
+fill "N" = n
+# rule 8.4.1 8.4 8.7
+# run absent
+# answers {}
+# steps [{"key": "name", "value": "Ada", "default": "Ada", "unreadable": null}, {"key": "s", "value": ["a"], "default": ["a"]}, {"key": "n", "value": 5, "default": 5, "unreadable": null}]
+# boxes {"Name": "Ada", "S": "a", "N": "5"}
+# run cleared
+# answers {"name": "", "s": [], "n": ""}
+# steps [{"key": "name", "value": null, "default": "Ada", "unreadable": null}, {"key": "s", "value": [], "default": ["a"], "unreadable": null}, {"key": "n", "value": null, "default": 5, "unreadable": null}]
+# boxes {"Name": "", "S": "", "N": ""}
+# run too many digits
+# answers {"n": "12345678901234567890123456789012345"}
+# steps [{"key": "name", "value": "Ada"}, {"key": "s", "value": ["a"]}, {"key": "n", "value": null, "default": 5, "unreadable": "more than 34 digits"}]
+# boxes {"Name": "Ada", "S": "a", "N": ""}
+# run too large
+# answers {"n": "10000000000000000000000000000000000"}
+# steps [{"key": "name", "value": "Ada"}, {"key": "s", "value": ["a"]}, {"key": "n", "value": null, "default": 5, "unreadable": "too large"}]
+# boxes {"Name": "Ada", "S": "a", "N": ""}
+# run not a number
+# answers {"n": "12abc"}
+# boxes {"Name": "Ada", "S": "a", "N": ""}

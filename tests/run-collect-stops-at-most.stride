@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of text most 2
+collect x in l "Another?" {
+  ask x: text "X"
+}
+fill "C" = "{count(l)}"
+# answers {"l[1]": "a", "l[1]#another": "yes", "l[2]": "b"}
+# boxes {"C": "2"}
+# asked ["l[1]", "l[1]#another", "l[2]"]
+# rule 8.5 8.5.1

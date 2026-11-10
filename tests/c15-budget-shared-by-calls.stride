@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define part(m: number) -> number {
+  var s: number = 0
+  for i in 1..m {
+    s = s + i
+  }
+  return s
+}
+define whole(m: number) -> number {
+  return part(m) + part(m) + part(m)
+}
+print(part(12000))
+print(whole(12000))
+# rule 15.1 11.3.1 S602
+# mistake 14:7 S602 working out a value

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Agree check near Agree
+ask a: yes-no "Agree"
+tick "Agree" when a
+# answers {"a": "yes"}
+# boxes {"Agree": "Yes"}
+# rule 7.7

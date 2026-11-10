@@ -1,0 +1,26 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask z: number "Z"
+ask n: number "N" check n > 0 "positive" check n < 10 "below ten" check n != 20 "not twenty {10 / z}"
+ask m: number "M" default -1 check m > 0 "m positive"
+ask k: number "K" check k > 0 "k positive" default -1
+fill "Z" = z
+fill "N" = n
+fill "M" = m
+fill "K" = k
+# rule 8.4.1 8.4
+# run two fail in order
+# answers {"z": "2", "n": "20", "m": "1", "k": "1"}
+# steps [{"key": "z", "failed": []}, {"key": "n", "failed": ["below ten", "not twenty 5"]}, {"key": "m", "failed": []}, {"key": "k", "failed": []}]
+# run passing message not worked out
+# answers {"z": "0", "n": "15", "m": "1", "k": "1"}
+# steps [{"key": "z", "failed": []}, {"key": "n", "failed": ["below ten"]}, {"key": "m", "failed": []}, {"key": "k", "failed": []}]
+# run failing message faults
+# answers {"z": "0", "n": "20", "m": "1", "k": "1"}
+# fault F001
+# run one fails
+# answers {"z": "2", "n": "-5", "m": "1", "k": "1"}
+# steps [{"key": "z", "failed": []}, {"key": "n", "failed": ["positive"]}, {"key": "m", "failed": []}, {"key": "k", "failed": []}]
+# run empty is not checked, defaults are
+# answers {"z": "2", "n": ""}
+# steps [{"key": "z", "failed": []}, {"key": "n", "value": null, "failed": []}, {"key": "m", "value": -1, "failed": ["m positive"]}, {"key": "k", "value": -1, "failed": ["k positive"]}]

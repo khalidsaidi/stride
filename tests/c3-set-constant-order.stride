@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options letters { "b" "B"  "a" "A"  "c" "C" }
+let S: set of letters = ["a", "b"]
+print(join(union(S, S), ","))
+print(join(S, ","))
+# rule 3.8 14.4
+# prints ["b,a", "b,a"]

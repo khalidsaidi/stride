@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask d: date "D"
+fill "A" = format(d, "MM/DD/YYYY")
+fill "B" = "{year(d)}-{month(d)}"
+fill "C" = format(add_days(d, 1), "YYYY-MM-DD")
+# answers {"d": "2024-02-28"}
+# boxes {"A": "02/28/2024", "B": "2024-2", "C": "2024-02-29"}
+# rule 14.3

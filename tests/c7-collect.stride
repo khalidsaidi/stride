@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var names: list of text most 2
+collect x in names "Another?" {
+  ask x: text "Name"
+}
+print(join(names, ","))
+
+# rule 7.15 7.16
+# run
+# answers {"names[1]": "Ada", "names[1]#another": true, "names[2]": "Bob"}
+# asked ["names[1]", "names[1]#another", "names[2]"]
+# prints ["Ada,Bob"]

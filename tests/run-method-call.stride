@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define shout(t: text) -> text {
+  return upper(t) + "!"
+}
+ask a: text "A"
+fill "A" = a.shout()
+# answers {"a": "hi"}
+# boxes {"A": "HI!"}
+# rule 9.8

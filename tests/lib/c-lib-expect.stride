@@ -1,0 +1,2 @@
+export const ONE = 1
+expect ONE == 1

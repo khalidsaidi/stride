@@ -1,0 +1,6 @@
+define d<t>(a: t, b: t = 5) -> t {
+  return b
+}
+expect d(1) == 5
+expect d(2, 3) == 3
+# rule 9.5.1 9.2

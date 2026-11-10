@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of list of text most 2 most 2
+collect x in l "Another?" {
+  ask x: text "X"
+}
+fill "A" = count(l)
+# rule 8.5 S335
+# mistake 4 S335

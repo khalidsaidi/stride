@@ -1,0 +1,28 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask t: text "T"
+pick "K" "A" when today() > date_of(2020, 1, 1)
+pick "K" "B" when not (today() > date_of(2020, 1, 1))
+var s = t
+pick "L" "A" when contains(s, "x")
+s = "{s}y"
+pick "L" "B" when not contains(s, "x")
+pick "M" "A" when contains(t, "x")
+pick "M" "B" when not contains(t, "x")
+let late = today() > date_of(2020, 1, 1)
+if late {
+  pick "N" "A" when yes
+} else {
+  pick "N" "B" when yes
+}
+# rule 10.4.1 10.4.2 S512
+# box K radio:A near T
+# box K radio:B near T
+# box L radio:A near T
+# box L radio:B near T
+# box M radio:A near T
+# box M radio:B near T
+# box N radio:A near T
+# box N radio:B near T
+# mistake 5:1 S512
+# mistake 9:1 S512

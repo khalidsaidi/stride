@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+ask t: text "T"
+print("{5 + n}")
+print("a" + t)
+print((5 - n) is empty)
+print((5 * n) is empty)
+print((5 / n) is empty)
+print((5 // n) is empty)
+print((5 % n) is empty)
+print((-n) is empty)
+print(n < 3)
+print(n >= 3)
+print(not n == 1)
+
+# rule 6.3
+# run
+# prints ["5", "a", "yes", "yes", "yes", "yes", "yes", "yes", "no", "no", "yes"]

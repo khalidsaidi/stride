@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+define f() -> text {
+  return a
+}
+fill "A" = f()
+# rule 9.1 S204
+# mistake 5 S204

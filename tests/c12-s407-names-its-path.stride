@@ -1,0 +1,34 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask b: yes-no "B"
+ask n: number "N"
+var u: number
+if b {
+  u = 1
+}
+print(u)
+var w: number
+print(w)
+var k: number
+for i in 1..n {
+  k = i
+}
+print(k)
+if b {
+  let v = 1
+  print(v)
+}
+var m: number
+match "{n}" {
+  "1" => {
+    m = 2
+  }
+}
+print(m)
+# rule 16.2.1 12.1.1 S407
+# mistake 9:7 S407 u may have no value here: the if on line 6 has a way through that gives it none
+# label 6:1-6:3 a way through here leaves it unset
+# mistake 11:7 S407 w has no value here: it is declared without one on line 10, and nothing before this gives it one
+# label 10:1-10:4 declared without a value
+# mistake 16:7 S407 k may have no value here: the loop on line 13 may run no turns
+# mistake 27:7 S407 m may have no value here: the match on line 22

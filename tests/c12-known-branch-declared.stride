@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+if no {
+  let y = [1]
+}
+print(y[1])
+if yes {
+  let w = 1
+} else {
+  let w = 2
+}
+print(w)
+match "b" {
+  "a" => {
+    let z = 1
+  }
+  else => {
+  }
+}
+print(z)
+# rule 12.1.1 S407
+# mistake 6 S407
+# mistake 20 S407

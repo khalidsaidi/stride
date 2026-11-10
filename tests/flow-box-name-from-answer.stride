@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: text "N"
+# mistake 5 S403 must be known before the form opens
+fill "A{n}" = n
+# rule 11.2 10.7 S403

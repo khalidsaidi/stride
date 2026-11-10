@@ -1,0 +1,5 @@
+options s { "a" "A" "b" "B" }
+const O: s = "a"
+expect O == "a"
+expect O != "b"
+# rule 3.6 S305

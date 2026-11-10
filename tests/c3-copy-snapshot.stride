@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of number most 4 = [1, 2]
+var n = 0
+for each x in l {
+  l[3] = x
+  n = n + 1
+}
+print(n)
+print(count(l))
+# rule 3.4
+# prints ["2", "3"]

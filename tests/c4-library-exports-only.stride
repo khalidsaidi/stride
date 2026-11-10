@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-pair"
+let p = new pair { left: "a", right: "b" }
+fill "A" = both(p)
+fill "B" = "{hidden}"
+
+# rule 4.2 S201
+# mistake 6:14 S201

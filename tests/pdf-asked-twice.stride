@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box A text near A
+# box B text near A
+define both() -> text {
+  ask a: text "A"
+  return a
+}
+fill "A" = both()
+# mistake 6 S507 asked twice
+fill "B" = both()
+# rule 10.4 8.6 S507

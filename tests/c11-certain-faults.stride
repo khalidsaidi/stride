@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask c: yes-no "C"
+if c {
+  fill "A" = 1 / 0
+}
+fill "B" = 7 // 0
+fill "C" = round(1.25, 2.5)
+fill "D" = pad_left("a", 2000)
+# rule 11.3 11.3.1 S413
+# mistake 5 S413
+# mistake 7 S413
+# mistake 8 S413
+# mistake 9 S413

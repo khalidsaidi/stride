@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define get() -> text {
+  ask v: text "V"
+  return v
+}
+fill "A" = get()
+fill "B" = get()
+# rule 8.6 10.4 S507
+# mistake 4 S507

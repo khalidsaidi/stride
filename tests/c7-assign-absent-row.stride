@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+ask go: yes-no "Go?"
+var xs: list of person most 2 = [empty]
+if go {
+  xs[2].name = "Ada"
+}
+print("{count(xs)}")
+
+# rule 7.5.1 F020
+# run
+# answers {"go": true}
+# fault F020 at 14:5
+# run not taken
+# answers {"go": false}
+# prints ["1"]

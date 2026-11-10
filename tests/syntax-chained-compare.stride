@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+# mistake 5 S014 do not chain
+tick "A" when 1 < n < 3
+# rule 6.1 S014

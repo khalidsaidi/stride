@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask w: number "W"
+ask c: text "C"
+fill "A" = pad_left("7", w, "0")
+fill "B" = pad_left("7", 2, c)
+# rule F009 14.1
+# run fine
+# answers {"w": 3, "c": "x"}
+# boxes {"A": "007", "B": "x7"}
+# run width
+# answers {"w": 1001, "c": "x"}
+# fault F009 at 5:12
+# run padding
+# answers {"w": 3, "c": "ab"}
+# fault F009 at 6:12
+# run no-padding
+# answers {"w": 3, "c": ""}
+# fault F009 at 6:12

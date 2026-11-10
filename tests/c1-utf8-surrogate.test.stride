@@ -1,0 +1,4 @@
+# rule 1.1 S001
+# mistake 4:17 S001
+let x = 1
+expect x == 1 # í €

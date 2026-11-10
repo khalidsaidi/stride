@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var a: list of number most 2 = [1]
+var b: list of number most 3
+print("{(a + b)[6]}")
+
+# rule 6.5.1 S360
+# mistake 5:17 S360

@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: number "A"
+ask b: number "B"
+for i in a..b {
+  print("{i}")
+}
+print("end")
+
+# rule 7.11
+# run
+# answers {"a": 2, "b": 4}
+# prints ["2", "3", "4", "end"]
+# run none
+# answers {"a": 3, "b": 2}
+# prints ["end"]
+# run not whole
+# answers {"a": 1, "b": 2.5}
+# fault F004 at 5:13

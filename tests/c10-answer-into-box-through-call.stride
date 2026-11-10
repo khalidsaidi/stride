@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Married"
+define mark() {
+  tick "T" when yes
+}
+if y {
+  mark()
+}
+tick "U" when y
+# rule 10.6 S517
+# box T check near Married
+# box U check near Other

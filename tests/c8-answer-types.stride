@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+ask b: text "B"
+ask c: text "C"
+ask d: number "D"
+ask e: number "E"
+ask f: number "F" default 9
+ask g: number "G"
+ask h: number "H"
+ask i: number "I"
+ask j: text "J" default "x"
+print("{a}|{b}|{c}|{d}|{e}|{f}|{g}|{h}|{i}|{j}")
+# rule 8.7 8.4.1
+# answers {"a": 1.50, "b": {"x": 1}, "c": ["a", "b"], "d": "12", "e": ["12"], "f": null, "g": "$", "h": "   ", "i": "-", "j": true}
+# prints ["1.50|||12||||||"]
+# steps [{"key": "a", "value": "1.50"}, {"key": "b", "unreadable": "not words"}, {"key": "c", "unreadable": "not words"}, {"key": "d", "value": "12"}, {"key": "e", "unreadable": "not a number"}, {"key": "f", "value": null, "default": "9"}, {"key": "g", "value": null}, {"key": "h", "value": null}, {"key": "i", "unreadable": "not a number"}, {"key": "j", "unreadable": "not words", "default": "x"}]

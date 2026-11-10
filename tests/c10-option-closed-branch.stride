@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options k { "a" "Alpha"  "b" "Beta" }
+ask o: one-of k "Kind"
+if o == "a" {
+  print("a")
+}
+tick "B" when yes
+if o == "b" {
+  tick "A" when yes
+}
+# rule 10.6 S518
+# box A check near Kind Beta
+# box B check near Other

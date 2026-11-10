@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask o: one-of "O" {
+  option "a" "Apple"
+}
+tick "C" when o == "a"
+# rule 10.6 S517 S518
+# box C check
+# mistake 3 S517 nothing is printed beside them
+# mistake 4 S518 nothing is printed beside it

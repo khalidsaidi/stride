@@ -1,0 +1,5 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# mistake 4 S365 upper takes 1 value
+fill "A" = upper("a", "b")
+# rule 9.4 S365

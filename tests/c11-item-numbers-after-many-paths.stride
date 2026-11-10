@@ -1,0 +1,37 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record item {
+  label: text
+}
+var a: list of text most 2
+collect x in a any "Any a?" "Another a?" {
+  ask x: text "A"
+}
+var b: list of text most 2
+collect y in b any "Any b?" "Another b?" {
+  ask y: text "B"
+}
+var c: list of text most 3
+collect z in c "Another c?" {
+  ask z: text "C"
+}
+if count(a) > count(b) {
+  print("more a")
+}
+var rows: list of item most 2
+collect row in rows "Another row?" {
+  ask row.label: text "Label"
+}
+for each n, r in rows {
+  fill "Row_{n}" = r.label
+}
+for each n, r in sorted(rows, by: "label", descending: yes) {
+  fill "Sorted_{n}" = r.label
+}
+print(a)
+print(b)
+print(c)
+# rule 11.1 10.2 8.5
+# answers {"a#any": "yes", "a[1]": "p", "a[1]#another": "no", "b#any": "no", "c[1]": "q", "c[1]#another": "no", "rows[1].label": "First", "rows[1]#another": "yes", "rows[2].label": "Second"}
+# boxes {"Row_1": "First", "Row_2": "Second", "Sorted_1": "Second", "Sorted_2": "First"}
+# prints ["more a", "[p]", "[]", "[q]"]

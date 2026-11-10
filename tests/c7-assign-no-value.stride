@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() {
+  print("x")
+}
+var n: number
+n = f()
+print("{n}")
+
+# rule 7.5 S350
+# mistake 7:5 S350

@@ -1,0 +1,6 @@
+define half(x: number) -> number {
+  return x / 0
+}
+expect half(1) faults "F001"
+expect 1 / 0 faults "F001"
+# rule 11.3.4 7.17

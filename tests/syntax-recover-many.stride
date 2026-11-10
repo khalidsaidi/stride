@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+# mistake 5:8 S010 expected
+ask b: txt "B"
+# mistake 7:17 S011 to compare, write "=="
+tick "X" when a = "x"
+# mistake 9:14 S015 needs a value after it
+fill "C" = a +
+fill "D" = a
+# rule 16.1 S010 S011 S015

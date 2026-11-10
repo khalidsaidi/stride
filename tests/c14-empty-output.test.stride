@@ -1,0 +1,7 @@
+expect either(empty, 2) == 2
+expect either(1, 2) == 1
+expect otherwise("", "x") == "x"
+expect otherwise("a", "x") == "a"
+expect fail("stop") faults "F013"
+expect fail("stop") faults "stop"
+# rule 14.5 F013 7.17

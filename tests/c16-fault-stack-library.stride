@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "c-divide"
+ask z: number "Z"
+fill "E" = split_by(3, z)
+# rule 16.3.1 19.1 F001
+# run faults
+# answers {"z": 0}
+# fault F001 at 2:12 division by zero
+# stack ["split_by lib/c-divide.stride:2:12", "main c16-fault-stack-library.stride:5:12"]

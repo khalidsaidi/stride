@@ -1,0 +1,8 @@
+expect word_count("\u{a0}") == 1
+expect word("\u{a0}x", 1) == "\u{a0}x"
+expect word("x\u{a0}", 1) == "x\u{a0}"
+expect word("\na b", 1) == "\na"
+expect word_count(" a \t b ") == 2
+expect title("a\tb") == "A\tb"
+expect title("o'neil smith-jones") == "O'Neil Smith-Jones"
+# rule 14.1

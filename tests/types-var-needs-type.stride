@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# mistake 4 S326 needs a type or a value
+var x
+fill "A" = x
+# rule 7.4 S326

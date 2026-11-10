@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask i: number "I"
+var a: list of number most 2 = [1, 2]
+let c = a + empty
+print("{count(c)}")
+print("{c[i]}")
+
+# rule 6.5.1 3.7.3.1
+# run
+# answers {"i": 2}
+# prints ["2", "2"]
+# run past
+# answers {"i": 3}
+# prints ["2"]
+# fault F004 at 7:10

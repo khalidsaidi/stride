@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+ask x: any-of s "X"
+tick "E" when x == empty
+tick "F" when x is empty
+# boxes {"E": "Yes", "F": "Yes"}
+# rule 3.2 6.6

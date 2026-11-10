@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+fill "A" = character("abc", n)
+# rule F007 14.0.4
+# run inside
+# answers {"n": 2}
+# boxes {"A": "b"}
+# run past-the-end
+# answers {"n": 4}
+# boxes {"A": ""}
+# run zero
+# answers {"n": 0}
+# fault F007 at 4:12
+# run not-whole
+# answers {"n": 1.5}
+# fault F007 at 4:12
+# run empty
+# answers {}
+# fault F007 at 4:12

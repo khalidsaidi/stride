@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+# mistake 5 S372 to put a number into words
+fill "A" = "x" + n
+# rule 6.5 S372

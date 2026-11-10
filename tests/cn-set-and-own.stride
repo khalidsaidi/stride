@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+ask x: one-of s "X" {
+  option "b" "B"
+}
+print(x)
+
+# rule S223
+# mistake 6:1 S223

@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+if n > 10 {
+  print("big")
+} else if n > 5 {
+  print("middle")
+} else {
+  print("small")
+}
+
+# rule 7.10
+# run
+# answers {"n": 11}
+# prints ["big"]
+# run
+# answers {"n": 6}
+# prints ["middle"]
+# run
+# answers {"n": 1}
+# prints ["small"]

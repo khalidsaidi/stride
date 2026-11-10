@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var x: number
+ask y: yes-no "Y"
+if y {
+  x = 1
+}
+# mistake 9 S407 may have no value here
+fill "A" = "{x}"
+# rule 7.4 12.1.1 S407

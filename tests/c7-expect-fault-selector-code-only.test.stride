@@ -1,0 +1,3 @@
+expect fail("F001 happened") faults "F001"
+# rule 7.17
+# results ["fail"]

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask ph: phone "Phone"
+ask em: email "Email"
+define t(l: list of text most 2) -> text {
+  return join(l, " ")
+}
+let l = [ph, em]
+print(t(l))
+# rule 3.9
+# answers {"ph": "555", "em": "a@b"}
+# prints ["555 a@b"]

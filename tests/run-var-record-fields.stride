@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  first: text
+}
+var p: person
+ask p.first: text "First"
+fill "A" = p.first
+# answers {"p.first": "Ada"}
+# boxes {"A": "Ada"}
+# rule 7.2 7.5.1 8.6.2

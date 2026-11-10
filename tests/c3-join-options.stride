@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s {
+  "a" "A"
+}
+options u {
+  "b" "B"
+}
+ask x: one-of s "X"
+ask y: one-of u "Y"
+let l = [x, y]
+print(join(l, "+"))
+# rule 3.9
+# answers {"x": "a", "y": "b"}
+# prints ["a+b"]

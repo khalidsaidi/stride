@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define off() -> yes-no {
+  return no
+}
+var c = no
+if c {
+  fill "NOPE" = "x"
+}
+if off() {
+  fill "NOPE" = "y"
+}
+if today() > date_of(2000, 1, 1) {
+  fill "A" = "z"
+}
+# rule 10.4.0 S508
+# box A text near z

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "Name"
+fill "Nmae" = a
+skip "Name" because "kept for the test"
+# rule 10.3 S508
+# box Name text near Name
+# mistake 4 S508 Name

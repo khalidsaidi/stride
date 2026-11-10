@@ -1,0 +1,13 @@
+define by_for() -> number {
+  for i in 1..1 {
+    return 1
+  }
+}
+define by_each() -> number {
+  for each x in [1] {
+    return x + 1
+  }
+}
+expect by_for() == 1
+expect by_each() == 2
+# rule 9.6 11.3.2 S405

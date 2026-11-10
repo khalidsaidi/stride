@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define h(n: number) -> number {
+  return g(n) + k(n)
+}
+define k(n: number) -> number {
+  return n
+}
+define g(n: number) -> number {
+  return f(n)
+}
+define f(n: number) -> number {
+  if n > 1 {
+    return f(n - 1)
+  }
+  return h(n)
+}
+fill "A" = "{h(1)}"
+# rule 9.7 16.2.1 S401 S402
+# mistake 4:10 S402 functions cannot call each other in a circle (h calls g calls f calls h): a program must end
+# mistake 14:12 S401 f calls itself

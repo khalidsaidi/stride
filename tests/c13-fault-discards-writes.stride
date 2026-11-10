@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask z: number "Z"
+fill "A" = "written first"
+fill "B" = 1 / z
+# rule 13.4 F001
+# answers {"z": 0}
+# fault F001 at 5:14
+# boxes {}
