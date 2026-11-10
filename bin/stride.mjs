@@ -9,8 +9,8 @@
 // the trace and what a command did (status) to stderr (§17.11); --quiet drops warnings and status, --json makes
 // stdout one JSON document.
 //
-// A program is checked against its form's header (<file>.boxes.json beside it: the PDF's boxes and the words
-// printed beside them, written by `stride header`), as a C program is against its headers.
+// A program is checked against its form's header (<file>.boxes.json beside it: the PDF's boxes, written by
+// `stride header`), as a C program is against its headers.
 // The words a page shows for each question (<file>.words.json, if there is one) are kept in the bytecode for the
 // page. Only `header`, `new` and `run` in the browser read a PDF, and nothing needs the network. scripts/build.mjs makes
 // this one executable; scripts/install.sh installs it.
@@ -66,7 +66,7 @@ const COMMANDS = {
   guide: ["stride guide [topic]", "How to write Stride: the guide, built in. With a topic, the part whose heading holds it; `stride guide coming-from` for someone who knows Go, Java, JavaScript or Python; `stride guide topics` lists them.", {}, "stride guide coming-from"],
   new: ["stride new <name> [--pdf <file.pdf>]", "A new program to start from: <name>.stride, a test in <name>.tests/, and, with --pdf, the form's header <name>.boxes.json read from the PDF.", { "--pdf": ["the form's PDF, whose boxes the program fills", "file.pdf"] }, "stride new w9 --pdf fw9.pdf"],
   init: ["stride init [folder]", "Makes a folder a project: stride.json, saying the Stride it needs, and lib/ for the libraries its programs share.", {}, "stride init"],
-  header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256, each box with its kind, export value, longest length and the words printed beside it.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
+  header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256 and each box as the PDF gives it: its kind, export value, longest length and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
   map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, and those only skipped.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
   asm: ["stride asm <file.stride|file.sbc>", "The instructions, with their source lines.", { "--ir": ["the intermediate form instead", null] }, "stride asm w9.stride"],
   fmt: ["stride fmt <path …>", "Puts the files in Stride's one layout, comments kept; a folder, every .stride file in it.", { "--check": ["only says which files are not in it", null] }, "stride fmt ."],

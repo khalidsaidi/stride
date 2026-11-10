@@ -64,15 +64,17 @@ stride> twice(21)
 ## 2. A first form
 
 A program that fills a form starts with the form's id and the sha256 of its PDF, and is checked against the form's
-*header*: every box of the PDF, its kind and the words printed beside it. `stride new` makes all of it from the
-PDF:
+*header*: every box of the PDF and its kind, as the PDF itself gives them. `stride new` makes it from the PDF:
 
 ```
 stride new consent --pdf consent.pdf
 ```
 
-writes `consent.boxes.json` (the header), `consent.stride` and a test in `consent.tests/`. For a PDF with a box
-"name" beside the words "Full name" and a check box "agree" beside "I agree to the terms", the program is:
+writes `consent.boxes.json` (the header), `consent.stride` and a test in `consent.tests/`. The program it writes
+asks one question for the first text box, named after the box, and skips every other box. A PDF does not say which
+printed words stand beside which box: you read the form and write them. For a PDF with a box "name" beside the
+words "Full name" and a check box "agree" beside "I agree to the terms", the program, with the form's words put in,
+is:
 
 ```stride form
 form consent
@@ -99,8 +101,8 @@ tick "agree" when agrees
 
 Then the one path from here to a workflow someone fills:
 
-1. **The form's header**, which `stride new` wrote from the PDF (`consent.boxes.json`): every box and the words
-   printed beside it. The program is checked against it.
+1. **The form's header**, which `stride new` wrote from the PDF (`consent.boxes.json`): every box and its kind. The
+   program is checked against it.
 2. **The source**, `consent.stride`, edited as above.
 3. **The workflow in your browser**: `stride run consent.stride` checks and compiles the program, opens the
    workflow beside its PDF, and asks its questions one at a time, each answer going into its boxes; the filled PDF
@@ -561,8 +563,10 @@ write the same boxes.
 - **Every box once on every way through.** The compiler follows every way the answers can take the program and
   proves each box is written at most once on each, and every box is written or skipped somewhere (§10). A box
   written twice when some answers are given is a mistake, found before anyone fills the form.
-- **The question beside its box.** A question's printed words are the form's own, printed beside a box its answer
-  goes into (S517), so a person meets the same words on the page and on the form.
+- **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
+  on the page and on the form. Stride does not read them off the PDF: you do. When a header lists the words beside
+  a box (its `"near"`: you may add them, or a tool that prepares forms may), a question whose answer goes into that
+  box must use words among them (S517), which catches an answer sent to the wrong box.
 - **Conditional questions** are questions inside an `if`: asked only when the condition holds.
 - **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", up to the list's
   most; a `for each` then fills one row of boxes per item, `"Name{n}"`.

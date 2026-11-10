@@ -7,7 +7,7 @@ ask o: one-of "O" {
 }
 tick "C" when o == "a"
 # rule 10.6 S517 S518
+# A's header lists no words beside it: nothing is checked of the question that fills it. C's lists some: they are.
 # box A text
 # box C check near O
-# mistake 3 S517 nothing is printed beside them
 # mistake 6 S518

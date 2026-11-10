@@ -1,17 +1,14 @@
-// A fillable PDF as a workflow sees it, for its header (stride header, §17.6): every box the PDF has (its
-// own field, by name) and the printed words beside it. The words come from the form's printed paragraphs
-// (src/paragraphs.mjs), so a program is checked against the form the way a person reads it. `layer`,
-// optional, gives layout blocks for the paragraphs (src/paragraphs.mjs).
+// A fillable PDF's boxes, for the form's header (stride header, §17.6): what the PDF itself says of each box, and
+// nothing worked out. Which printed words belong to a box is not in a PDF: whoever writes the program reads the
+// form and says (§10.6).
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
-import { paragraphs } from "./paragraphs.mjs";
-import { beside } from "./beside.mjs";
 
-// Boxes: { field, kind: text|check|radio|choice, on, options, page, x1, y1, x2, y2, max, multiline,
-// tooltip, printed }, positions in page points from the top left. A check box or radio button is one box
-// per export value (`on`); a choice list carries its options. Read-only boxes and buttons are not boxes.
-export async function pageBoxes(bytes, layer) {
+// Boxes: { field, kind: text|check|radio|choice, on, options, page, x1, y1, x2, y2, max, multiline, tooltip },
+// positions in page points from the top left. A check box or radio button is one box per export value (`on`); a
+// choice list carries its options; `tooltip` is the description the PDF's maker gave the box, when there is one.
+// Read-only boxes, buttons and signatures are not boxes.
+export async function pageBoxes(bytes) {
   const pdf = await pdfjs.getDocument({ data: new Uint8Array(bytes), verbosity: 0 }).promise;
-  const paras = layer?.paragraphs ?? (await paragraphs(pdf));
   const boxes = [];
   for (let n = 1; n <= pdf.numPages; n++) {
     const page = await pdf.getPage(n);
@@ -27,8 +24,6 @@ export async function pageBoxes(bytes, layer) {
       if (a.maxLen) box.max = a.maxLen;
       if (a.multiLine) box.multiline = true;
       if (a.alternativeText?.trim()) box.tooltip = a.alternativeText.replace(/\s+/g, " ").trim();
-      box.near = beside(box, paras.filter((p) => p.page === n)).map((p) => p.en);
-      box.printed = box.near[0] ?? "";
       boxes.push(box);
     }
   }

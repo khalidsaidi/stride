@@ -63,7 +63,7 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
 | `@khalidsaidi/stride/compile` | `compile(source, name, options)`, `compileFile(path)`: mistakes and bytecode |
 | `@khalidsaidi/stride/vm` | `load(bytes)`, `run(program, answers)`: the questions reached, the boxes written, the prints, a fault |
 | `@khalidsaidi/stride/runner` | the workflow beside its PDF in a page: `workflow(bytes)`, `questions(p, host)`, `speak({ lang, t })` |
-| `@khalidsaidi/stride/pdf-boxes` | `pageBoxes(bytes)`: a fillable PDF's boxes and the words printed beside each |
+| `@khalidsaidi/stride/pdf-boxes` | `pageBoxes(bytes)`: a fillable PDF's boxes, as the PDF gives them |
 
 ## The language
 
@@ -71,6 +71,8 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
   knows Go, Java, JavaScript or Python.
 - [docs/spec.md](docs/spec.md): the specification, the authority on what every construct means.
 - [docs/grammar.md](docs/grammar.md): the short reference.
+- [tools/labels/](tools/labels/): not part of Stride. A guess at the printed words beside each box of a PDF, for
+  whoever prepares a form's header; Stride itself works nothing out about a form.
 - [docs/history/](docs/history/): the design notes written before 1.0. They describe the language as it was
   planned, not as it is.
 

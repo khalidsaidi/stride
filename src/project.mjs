@@ -1,10 +1,11 @@
 // `stride header` and `stride new` (§17.6): a form's header read from its PDF, and a new program to start from.
 //
-// The header is what the compiler checks a program against (§10): the PDF's sha256 and its boxes, each with its kind,
-// export value, longest length and the words printed beside it, read by Stride's rule for the words beside a box (src/beside.mjs)
-// (src/pdf-boxes.mjs). A new program is the shortest one that compiles against its form: one question filling the
-// first text box with printed words beside it, and a skip of every other box, each to be replaced with what fills
-// it; with a test of it. Without a PDF it is a script (§4.6).
+// The header is what the compiler checks a program against (§10): the PDF's sha256 and its boxes, each with what the
+// PDF says of it: its kind, export value, longest length and its maker's description (src/pdf-boxes.mjs). Which
+// printed words stand beside a box is not in a PDF; whoever writes the program may add them to the header as each
+// box's "near" (§10.6). A new program is the shortest one that compiles against its form: one question filling the
+// first text box, and a skip of every other box, each to be replaced with what fills it; with a test of it. Without
+// a PDF it is a script (§4.6).
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -36,7 +37,7 @@ const FORM_ID = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 export async function headerOf(bytes, form) {
   let boxes;
   try {
-    boxes = await (await pdfReader())(bytes, null);
+    boxes = await (await pdfReader())(bytes);
   } catch (e) {
     return { error: `not a PDF this tool can read: ${e.message}` };
   }
@@ -84,12 +85,15 @@ function starter(name, header, withQuestion = true) {
   const fields = [...new Set(header.boxes.map((b) => b.field))];
   const prefix = prefixOf(fields);
   const short = (f) => f.slice(prefix.length);
-  const first = withQuestion ? header.boxes.find((b) => b.kind === "text" && b.printed) : null;
-  const question = first ? nameOf(first.printed) : null;
+  // The first text box's question says what the PDF's maker called the box, else the box's own name: words to be
+  // replaced by the form's own, as the person writing the program reads them.
+  const first = withQuestion ? header.boxes.find((b) => b.kind === "text") : null;
+  const says = first ? first.tooltip ?? short(first.field).replace(/\[\d+\]/g, "").split(".").pop() : null;
+  const question = first ? nameOf(says) : null;
   const lines = [`form ${name}`, `pdf ${header.pdf}`];
   if (prefix) lines.push(`fields ${quote(prefix)}`);
-  lines.push("", "# Every box of the form is written or skipped once on every way through (stride explain S516). Replace", "# each skip with the question and the write that fill its box; stride check says what is still wrong.", "");
-  if (first) lines.push(`ask ${question}: text ${quote(first.printed)}`, `fill ${quote(short(first.field))} = ${question}`, "");
+  lines.push("", "# Every box of the form is written or skipped once on every way through (stride explain S516). Replace", "# each skip with the question and the write that fill its box; stride check says what is still wrong.", "# A question's words are the form's own: write them as the form prints them.", "");
+  if (first) lines.push(`ask ${question}: text ${quote(says)}`, `fill ${quote(short(first.field))} = ${question}`, "");
   for (const f of fields) if (!first || f !== first.field) lines.push(`skip ${quote(short(f))} because "not filled yet"`);
   const test = first ? { answers: { [question]: "Ada Lovelace" }, boxes: { [short(first.field)]: "Ada Lovelace" } } : { answers: {}, boxes: {} };
   return { source: `${lines.join("\n")}\n`, test };

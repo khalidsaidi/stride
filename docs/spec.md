@@ -775,8 +775,9 @@ So every call the program can make is written in it, and the compiler follows ea
 
 10.1. A box's name is the PDF field's full name, after the program's `fields` prefix.
 
-10.2. The program is checked against the form's header (the PDF's boxes and the words printed beside each). The
-header's PDF and form must be the program's (S501, S502).
+10.2. The program is checked against the form's header: the PDF's boxes and, for the boxes it lists them for, the
+words printed beside each. The header is input: the check takes what it says and works nothing out about the form.
+The header's PDF and form must be the program's (S501, S502).
 
 10.3. Every box written exists (S508, with the nearest name), and is written by the statement of its kind: `fill`
 a text or list box, `tick` a check box, `pick` a radio group (S509); a button the group has (S511); a list box's
@@ -837,9 +838,11 @@ path (S512), with one kind of statement (S513); a question asked at most once (S
 
 10.5. Every box of the PDF is written or skipped on some path (S515, S516).
 
-10.6. A question's printed words are printed beside at least one of the boxes its answer goes into, within one
-normalised string of the words near that box; when none matches, it is S517. An option's printed words are beside
-the box its own button ticks or picks (S518). "Printed beside" is decided on normalised words, for both: each
+10.6. A question's printed words are the form's own. Which printed words stand beside a box is not in a PDF: the
+header lists them (a box's `near`) when whoever prepared it gave them. Where it does, a question's printed words
+are printed beside at least one of the boxes its answer goes into, within one normalised string of the words near
+that box; when none matches, it is S517. An option's printed words are beside the box its own button ticks or picks
+(S518). Boxes the header lists no words for are not checked: of them the program's word is taken. "Printed beside" is decided on normalised words, for both: each
 text is lowercased; `‐ ‑ ‒ – — ― −` become `-`, `“ ” « »` become `"`, and `‘ ’` become `'`; every run of
 characters other than Unicode letters, numbers and `( ) ' " $ % / & -` becomes one space; the ends are trimmed.
 The normalised printed words must occur within one normalised string of the words near the box. So `A-B` does not
@@ -1440,8 +1443,8 @@ its call: the function's name in the call.
 | S514 | a list box entry it lacks | The list box's entries. |
 | S515 | a box neither written nor skipped | Write it, or `skip "box" because "…"`. |
 | S516 | more such boxes | Counted after the first 40. |
-| S517 | printed words not beside the boxes of their answer | The question's words are the form's own. |
-| S518 | an option's printed words not beside its box | The same. |
+| S517 | printed words not beside the boxes of their answer | The question's words are the form's own: they must be among the words the header lists beside a box the answer goes into. If the form does print them there, add them to that box's `near` in the header; if not, the answer is going into the wrong box. |
+| S518 | an option's printed words not beside its box | The same, for an option and the box it ticks or picks. |
 | S601 | more than 255 arguments or parameters | Use a record. |
 | S602 | compiler analysis limit exceeded (§15.1) | The message names the check and the budget. Split the work: fewer turns, fewer vars that differ between paths, a smaller working out. |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
@@ -1519,16 +1522,18 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
 
 17.6. **Starting and editing.**
 - `stride header <file.pdf>` writes the form's header (§10) from its PDF: its sha256, and each box (a check box or
-  radio button one per export value) with its kind, export value, longest length and the words printed beside it,
-  by Stride's rule for the words beside a box (`src/beside.mjs`). It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
+  radio button one per export value) as the PDF gives it: its kind, export value, longest length, place on its page
+  and its maker's description, when it has one. It works nothing out: the words printed beside a box (§10.6) are
+  not in a PDF, and are added to the header by whoever knows them. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
   file name gives the form's id. A file that is not a PDF, or a PDF with no box a person fills, writes nothing
   (exit 1).
 - `stride new <name>` writes a script `<name>.stride` (§4.6) and a test of it `<name>.tests/first.json`; with
   `--pdf`, a program for that form instead: its header `<name>.boxes.json`, the PDF beside it as `<name>.pdf`, a
-  program asking one question for the first text box that has printed words beside it and skipping every other box,
-  and a test of that question. The question's name is made from those words as a name (§2.1), never a keyword, a
+  program asking one question for the first text box and skipping every other box, and a test of that question. The
+  question's words are the box's description, else the box's own name, to be replaced by the form's own; its name
+  is made from those words as a name (§2.1), never a keyword, a
   word of §2.4 or a library function's name; the words and every box's name are written in quotes with `\`, `"`,
-  `{` and `}` escaped (§2.6), so they are taken as written. When no text box has printed words beside it, or the
+  `{` and `}` escaped (§2.6), so they are taken as written. When the form has no text box, or the
   program with the question would not compile, the program skips every box and its test gives no answers and
   expects every box empty. What it writes compiles and its test passes; a PDF for which even that cannot be made
   is said, and nothing is written (exit 1). It writes over nothing: when any file it would write is there already

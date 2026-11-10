@@ -5,6 +5,9 @@ ask o: one-of "O" {
 }
 tick "C" when o == "a"
 # rule 10.6 S517 S518
+# A header that lists no words beside a box says nothing of them: neither the question's words nor the option's
+# are checked there.
 # box C check
-# mistake 3 S517 nothing is printed beside them
-# mistake 4 S518 nothing is printed beside it
+# run
+# answers {"o": "a"}
+# boxes {"C": "Yes"}

@@ -10,8 +10,8 @@ here names its section (§x.y).
 
 One program per form, `<form>.stride`, written against one exact PDF. Beside it:
 
-- `<form>.boxes.json`, the header: the PDF's boxes and the words printed beside each, written by
-  `stride header <form>.pdf`. A program is checked against it, as a C program is against its headers.
+- `<form>.boxes.json`, the header: the PDF's boxes, as the PDF gives them, written by
+  `stride header <form>.pdf`; and, where whoever prepared the form added them, the words printed beside each. A program is checked against it, as a C program is against its headers.
 - `<form>.words.json`: the words the page shows for each question, in each language. The compiler keeps them in
   the bytecode for the page and does not read them.
 - `<form>.tests/*.json`: the program's tests.
@@ -265,8 +265,8 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
   and never read anywhere; a fault certain before the form opens, such as `1 / 0` (§11.3).
 - **The PDF** (against the header): a box the PDF does not have (with the nearest one); a statement of the wrong
   kind for its box; a button a radio group does not have; a box written twice, or a question asked twice, on one
-  path through the program; a box neither written nor skipped; a question's printed words not printed beside the
-  boxes its answer goes into; an option's words not printed beside the box it ticks or picks; a list box filled
+  path through the program; a box neither written nor skipped; a question's printed words not among those
+  the header lists beside the boxes its answer goes into; an option's not among those beside the box it ticks or picks; a list box filled
   with an entry it does not have; a program written for another PDF.
 
 Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's most 1000, 1 to 1000 options in a set,

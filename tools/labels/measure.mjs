@@ -1,9 +1,9 @@
-// How well `stride header` reads the words beside a box (src/beside.mjs, src/paragraphs.mjs), measured on real
-// forms: for each box of each form, the label Stride reads against the label that box was given by hand.
+// How well the guess of the words beside a box (beside.mjs, paragraphs.mjs) does, measured on real forms: for each
+// box of each form, the label guessed against the label that box was given by hand. Not part of Stride: see README.md.
 //
-//   node scripts/measure-labels.mjs            both sets of forms
-//   node scripts/measure-labels.mjs --why      and, for the boxes read wrongly, where the right label stood
-//   node scripts/measure-labels.mjs --forms    and each form's own score
+//   node tools/labels/measure.mjs            both sets of forms
+//   node tools/labels/measure.mjs --why      and, for the boxes guessed wrongly, where the right label stood
+//   node tools/labels/measure.mjs --forms    and each form's own score
 //
 // The forms and their labels come from a catalogue in BigQuery: a table of PDFs (sha256, form_id, flat, lang,
 // original_pdf: a gs:// address, fields_named) and a table of their fields (sha256, field_name, on_value, item_label,
@@ -79,15 +79,14 @@ async function geometry(bytes) {
     console.log = console.warn = () => {};
     try {
       globalThis.pdfjsWorker ??= await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
-      reader = { pdfjs: await import("pdfjs-dist/legacy/build/pdf.mjs"), ...(await import("../src/paragraphs.mjs")), ...(await import("../src/pdf-boxes.mjs")) };
+      reader = { pdfjs: await import("pdfjs-dist/legacy/build/pdf.mjs"), ...(await import("./paragraphs.mjs")), ...(await import("../../src/pdf-boxes.mjs")) };
     } finally {
       [console.log, console.warn] = [log, warn];
     }
   }
   const pdf = await reader.pdfjs.getDocument({ data: new Uint8Array(bytes), verbosity: 0 }).promise;
   const paras = await reader.paragraphs(pdf);
-  // The boxes without the labels read for them: those are read below, by the rule as it stands now.
-  const boxes = (await reader.pageBoxes(bytes, { paragraphs: paras })).map(({ near, printed, ...b }) => b);
+  const boxes = await reader.pageBoxes(bytes);
   return { boxes, paras };
 }
 
@@ -135,7 +134,7 @@ function where(box, p) {
   return "across its edge";
 }
 
-const { beside } = await import("../src/beside.mjs");
+const { beside } = await import("./beside.mjs");
 mkdirSync(DIR, { recursive: true });
 const sets = { tuned: { forms: 0, boxes: 0, first: 0, among: 0, kinds: {}, why: {}, each: [] }, judged: { forms: 0, boxes: 0, first: 0, among: 0, kinds: {}, why: {}, each: [] } };
 for (const form of await forms()) {

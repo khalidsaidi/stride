@@ -1,5 +1,5 @@
 // A form's printed paragraphs, each with its place on its page, for the words beside its boxes
-// (src/beside.mjs). One rule: the PDF's own text lines, which never run across a gap, joined into
+// (beside.mjs). One rule: the PDF's own text lines, which never run across a gap, joined into
 // paragraphs when they sit one under the other, overlapping, the same size, with no more than a line's
 // height between them, never across a box people tick or type in, and inside one block when blocks are
 // given. Blocks, when a caller has them, are layout blocks found for this PDF by other means. Positions are

@@ -1,6 +1,6 @@
-// The printed words beside a form's box, from the form's paragraphs (src/paragraphs.mjs): what a
-// person reads as the box's label, for the header a program is checked against (src/pdf-boxes.mjs). Boxes
-// and paragraphs in page points from the top left.
+// A guess at the printed words beside a form's box, from the form's paragraphs (paragraphs.mjs): what a person
+// would likely read as the box's label. A guess, so not part of Stride (README.md): a suggestion for whoever
+// writes a form's header. Boxes and paragraphs in page points from the top left.
 
 // The printed words a person may read as the box's label, nearest first (at most six): on its row to
 // either side (a check box's label more often to its right, any other box's to its left), printed inside

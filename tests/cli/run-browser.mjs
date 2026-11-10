@@ -92,11 +92,11 @@ export function test() {
     if (bad.exit !== 1 || !/mistake S\d{3}/.test(bad.stderr)) problems.push(`a program with mistakes is not served: ${JSON.stringify(bad)}`);
     // The terminal, and the usage mistakes of the other place.
     const cmd = (args) => spawnSync("node", [cli, "run", ...args], { cwd: dir, encoding: "utf8", timeout: 30_000, env: { ...process.env, BROWSER: "none" } });
-    let r = cmd(["consent.stride", "--terminal", "full_name=Ada"]);
+    let r = cmd(["consent.stride", "--terminal", "name=Ada"]);
     if (r.status !== 0 || !r.stdout.includes('name') || !r.stdout.includes('"Ada"')) problems.push(`--terminal: ${r.status} ${r.stdout} ${r.stderr}`);
     r = cmd(["hello.stride", "name=Bo"]);
     if (r.status !== 0 || r.stdout !== "Hello, Bo\n") problems.push(`a script in the terminal: ${r.status} ${JSON.stringify(r.stdout)} ${r.stderr}`);
-    for (const [args, says] of [[["consent.stride", "full_name=Ada"], "are for a run in the terminal"], [["consent.stride", "--json"], "--json is for a run in the terminal"], [["consent.stride", "--trace"], "--trace is for a run in the terminal"], [["consent.stride", "--prompt"], "--prompt is for a run in the terminal"], [["consent.stride", "--terminal", "--pdf", "consent.pdf"], "--pdf is for a run in the browser"], [["consent.stride", "--terminal", "--port", "1"], "--port is for a run in the browser"], [["hello.stride", "--port", "1"], "is a script, which runs in the terminal"]]) {
+    for (const [args, says] of [[["consent.stride", "name=Ada"], "are for a run in the terminal"], [["consent.stride", "--json"], "--json is for a run in the terminal"], [["consent.stride", "--trace"], "--trace is for a run in the terminal"], [["consent.stride", "--prompt"], "--prompt is for a run in the terminal"], [["consent.stride", "--terminal", "--pdf", "consent.pdf"], "--pdf is for a run in the browser"], [["consent.stride", "--terminal", "--port", "1"], "--port is for a run in the browser"], [["hello.stride", "--port", "1"], "is a script, which runs in the terminal"]]) {
       r = cmd(args);
       if (r.status !== 2 || !r.stderr.includes(says) || !r.stderr.includes("usage: stride run")) problems.push(`run ${args.join(" ")}: ${r.status} ${r.stderr.slice(0, 300)}`);
     }

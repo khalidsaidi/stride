@@ -30,14 +30,15 @@ export function test() {
     expect(["new", "consent", "--pdf", "consent.pdf"], 0, "consent.boxes.json");
     expect(["check", "consent.stride"], 0, "no mistakes (1 question, 1 box;");
     expect(["test", "consent.stride"], 0, "1 test passed");
-    expect(["map", "consent.stride"], 0, "full_name                            = name");
+    expect(["map", "consent.stride"], 0, "name                                 = name");
     expect(["map", "consent.stride"], 0, "only skipped\n  agree");
     expect(["map", "hello.stride"], 1, "is a script");
     const header = JSON.parse(readFileSync(join(dir, "consent.boxes.json"), "utf8"));
     const name = header.boxes.find((b) => b.field === "name"), agree = header.boxes.find((b) => b.field === "agree");
     if (header.form !== "consent" || !/^[0-9a-f]{64}$/.test(header.pdf)) problems.push(`the header's form and pdf: ${header.form} ${header.pdf}`);
-    if (name?.kind !== "text" || name.printed !== "Full name" || name.max !== 40) problems.push(`the text box: ${JSON.stringify(name)}`);
-    if (agree?.kind !== "check" || agree.on !== "Yes" || agree.printed !== "I agree to the terms") problems.push(`the check box: ${JSON.stringify(agree)}`);
+    // What the PDF says of each box, and no words worked out from where they stand on the page (§17.6).
+    if (name?.kind !== "text" || name.max !== 40 || "near" in name || "printed" in name) problems.push(`the text box: ${JSON.stringify(name)}`);
+    if (agree?.kind !== "check" || agree.on !== "Yes" || "near" in agree) problems.push(`the check box: ${JSON.stringify(agree)}`);
     expect(["header", "consent.pdf", "-o", "again.boxes.json"], 0, "2 boxes of consent.pdf");
     if (!existsSync(join(dir, "again.boxes.json"))) problems.push("stride header wrote no again.boxes.json");
     expect(["header", "flat.pdf"], 1, "not a PDF");
@@ -48,9 +49,10 @@ export function test() {
     if (existsSync(join(dir, "target.stride"))) problems.push("stride new wrote target.stride when it refused");
     writeFileSync(join(dir, "same.pdf"), tinyPdf());
     expect(["new", "same", "--pdf", "same.pdf"], 0, "made same.stride");
-    // Printed words that are a keyword, or hold braces, quotes and a backslash, still give a program that compiles.
-    for (const [form, label] of [["kw", "For"], ["braces", "Name {n}"], ["marks", 'Say "hi" \\ {x} }']]) {
-      writeFileSync(join(dir, `${form}-src.pdf`), tinyPdf({ label }));
+    // A box's description that is a keyword, or holds braces, quotes and a backslash, still gives a program that
+    // compiles, with those words as its question's.
+    for (const [form, described] of [["kw", "For"], ["braces", "Name {n}"], ["marks", 'Say "hi" \\ {x} }']]) {
+      writeFileSync(join(dir, `${form}-src.pdf`), tinyPdf({ described }));
       expect(["new", form, "--pdf", `${form}-src.pdf`], 0, `made ${form}.stride`);
       expect(["check", `${form}.stride`], 0, "no mistakes (1 question");
       expect(["test", `${form}.stride`], 0, "1 test passed");

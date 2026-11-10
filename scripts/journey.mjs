@@ -145,7 +145,7 @@ try {
   };
   let b = await inBrowser("forms/consent.stride", work, join(work, "filled.pdf"));
   b.value === "Ada Lovelace" && !b.errors.length ? ok("stride run: the workflow in a browser, answered there, the filled PDF downloaded") : stop(`stride run in the browser: the downloaded PDF holds ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
-  expect("the same program in the terminal", stride(["run", "forms/consent.stride", "--terminal", "full_name=Ada Lovelace"]), (x) => x.status === 0 && x.stdout.includes('"Ada Lovelace"'));
+  expect("the same program in the terminal", stride(["run", "forms/consent.stride", "--terminal", "name=Ada Lovelace"]), (x) => x.status === 0 && x.stdout.includes('"Ada Lovelace"'));
   expect("compile the workflow", stride(["compile", "forms/consent.stride", "-o", "consent.sbc", "-q"]), (x) => x.status === 0 && existsSync(join(work, "consent.sbc")));
   // The compiled workflow in a folder holding nothing but it and its PDF.
   const alone = join(home, "only-the-pdf");

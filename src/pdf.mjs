@@ -1,6 +1,7 @@
-// Phase 8: check the program against its PDF, through the form's header (<form>.boxes.json, written by
+// Phase 8: check the program against its PDF, through the form's header (<form>.boxes.json, started by
 // `stride header`): the PDF's sha256 and its boxes, each with its kind (text, check, radio, choice), its
-// export value (`on`), the most characters it takes (`max`) and the words printed beside it (`near`).
+// export value (`on`), the most characters it takes (`max`) and, when whoever made the header gave them, the words
+// printed beside it (`near`). The header is input: the check takes what it says.
 //
 // The check is an abstract interpretation of the lowered program: it runs it the way the machine will, on every
 // path at once, with every answer unknown. What does not depend on an answer (a loop's counter, a list's length
@@ -11,8 +12,9 @@
 //
 // On every path it proves: every box name names a box of the PDF, of the kind its statement writes (fill a text
 // or choice box, tick a check box, pick a button a radio group has); no box is written twice and no question asked
-// twice; and at the end, that every box is written or skipped somewhere, that a question's printed words are
-// printed beside a box its answer goes into, and an option's beside the box it ticks or picks.
+// twice; and at the end, that every box is written or skipped somewhere and, for the boxes whose words the header
+// lists, that a question's printed words are among those of a box its answer goes into, and an option's among those
+// of the box it ticks or picks.
 //
 // It also gives the machine what the PDF says: each check box's export value; and to the page, for each question
 // key, the boxes its answer goes into (and which take it as it is) and their most length.
@@ -1540,7 +1542,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
 
   // Every box written or skipped somewhere.
   const missing = header.boxes.filter((b) => !done.has(keyOf(b)));
-  for (const b of missing.slice(0, 40)) err("S515", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}${b.printed ? `, beside "${b.printed.slice(0, 60)}"` : ""}) is neither written nor skipped`);
+  for (const b of missing.slice(0, 40)) err("S515", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}${b.near?.[0] ? `, beside "${b.near[0].slice(0, 60)}"` : ""}) is neither written nor skipped`);
   if (missing.length > 40) err("S516", program.formNode ?? null, `and ${plural(missing.length - 40, "more box", "more boxes")} neither written nor skipped`);
 
   // Printed words beside the boxes each question's answers go into; each option's beside its box. A question
@@ -1549,18 +1551,19 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
   for (const [key, k] of keys) {
     if (k.q.item) continue;
     const words = near.get(key);
-    // An answer that goes into boxes: its words beside at least one, none printed beside them included (§10.6).
-    if (words && !said(k.printed, words) && !reported.has(k.q)) {
+    // An answer that goes into boxes whose header lists the words beside them: its words among them (§10.6). A
+    // header that lists none for those boxes says nothing of them, and nothing is checked.
+    if (words?.length && !said(k.printed, words) && !reported.has(k.q)) {
       reported.add(k.q);
       const shown = [...new Set(words)].slice(0, 3).map((p) => `"${p.slice(0, 60)}"`).join(", ");
-      err("S517", k.q.node.printed ?? k.node, `"${k.printed}" is not printed beside the boxes ${key} goes into (${shown ? `beside them: ${shown}` : "nothing is printed beside them"})`);
+      err("S517", k.q.node.printed ?? k.node, `"${k.printed}" is not printed beside the boxes ${key} goes into (beside them: ${shown}); those are the words the header lists: if the form prints these beside the box, add them to its "near" there`);
     }
     for (const o of k.q.options) {
       const w = optionNear.get(`${key}\t${o.value}`);
-      if (w && !said(o.printed, w) && !reported.has(`${k.q.name}\t${o.value}`)) {
+      if (w?.length && !said(o.printed, w) && !reported.has(`${k.q.name}\t${o.value}`)) {
         reported.add(`${k.q.name}\t${o.value}`);
         const shown = [...new Set(w)].slice(0, 2).map((p) => `"${p.slice(0, 60)}"`).join(", ");
-        err("S518", o.node ?? k.node, `the option "${o.value}": "${o.printed}" is not printed beside its box (${shown ? `beside it: ${shown}` : "nothing is printed beside it"})`);
+        err("S518", o.node ?? k.node, `the option "${o.value}": "${o.printed}" is not printed beside its box (beside it: ${shown}); those are the words the header lists: if the form prints these beside the box, add them to its "near" there`);
       }
     }
   }

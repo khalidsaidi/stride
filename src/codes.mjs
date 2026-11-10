@@ -851,11 +851,11 @@ export const CODES = {
   },
   "S517": {
     "when": "printed words not beside the boxes of their answer",
-    "explanation": "The question's words are the form's own."
+    "explanation": "The question's words are the form's own: they must be among the words the header lists beside a box the answer goes into. If the form does print them there, add them to that box's `near` in the header; if not, the answer is going into the wrong box."
   },
   "S518": {
     "when": "an option's printed words not beside its box",
-    "explanation": "The same."
+    "explanation": "The same, for an option and the box it ticks or picks."
   },
   "S601": {
     "when": "more than 255 arguments or parameters",
