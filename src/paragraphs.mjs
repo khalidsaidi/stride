@@ -27,7 +27,12 @@ async function lines(pdf, blocks) {
   for (let n = 1; n <= pdf.numPages; n++) {
     const page = await pdf.getPage(n);
     const [, , , top] = page.view;
-    const items = (await page.getTextContent()).items.filter((i) => i.str?.trim());
+    const all = (await page.getTextContent()).items.filter((i) => i.str?.trim());
+    // Words printed sideways in a margin ("See instructions on page 3", up the page's edge) are not beside any
+    // box: only the words that run the way most of the page's words run are read.
+    const sideways = (i) => Math.abs(i.transform[1]) > Math.abs(i.transform[0]);
+    const turned = all.filter(sideways).length > all.length / 2;
+    const items = all.filter((i) => sideways(i) === turned);
     const pieces = items.map((i) => ({ text: i.str, x: i.transform[4], y: top - i.transform[5], w: i.width, h: i.height || Math.abs(i.transform[3]) }));
     // Without blocks, a wider gap between words on a line is taken as a new cell.
     for (const { line, text } of joinLines(pieces, blocks.length ? 0.8 : 0.4)) {

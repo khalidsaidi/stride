@@ -1,8 +1,8 @@
 // A small fillable PDF for the tests of `stride header`, `stride new` and `stride run` in the browser: one page, a text box
 // "name" with "Full name" printed beside it, and a check box "agree" (export value Yes) beside "I agree to the
 // terms". Written object by object, with its cross-reference table, so no tool is needed to make it. `label` puts
-// other words beside the text box.
-export function tinyPdf({ label = "Full name" } = {}) {
+// other words beside the text box; `margin` prints words sideways, up the page, close under that box.
+export function tinyPdf({ label = "Full name", margin = null } = {}) {
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R 5 0 R] /NeedAppearances true /DA (/F1 10 Tf 0 g) /DR << /Font << /F1 7 0 R >> >> >> >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
@@ -15,7 +15,8 @@ export function tinyPdf({ label = "Full name" } = {}) {
     "<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 0 >>\nstream\n\nendstream",
   ];
   const pdfText = (t) => t.replace(/[\\()]/g, (c) => `\\${c}`);
-  const text = `BT /F1 10 Tf 20 146 Td (${pdfText(label)}) Tj ET\nBT /F1 10 Tf 20 100 Td (I agree to the terms) Tj ET\n`;
+  const sideways = margin === null ? "" : `BT /F1 10 Tf 0 1 -1 0 150 112 Tm (${pdfText(margin)}) Tj ET\n`;
+  const text = `BT /F1 10 Tf 20 146 Td (${pdfText(label)}) Tj ET\nBT /F1 10 Tf 20 100 Td (I agree to the terms) Tj ET\n${sideways}`;
   objects[5] = `<< /Length ${text.length} >>\nstream\n${text}endstream`;
   let out = "%PDF-1.4\n";
   const at = [];
