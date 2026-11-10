@@ -59,18 +59,18 @@ select.lang { position: absolute; top: 8px; right: 12px; font: inherit; font-siz
 .page .words { position: absolute; inset: 0; pointer-events: none; }
 .page .words > div { position: absolute; overflow: hidden; line-height: 1.12; color: #000; font-family: Arial, Helvetica, sans-serif; }
 
-/* The interview: one question at a time beside the form; the box it fills is outlined. */
-aside.interview { position: fixed; top: var(--bar); right: 0; bottom: 0; width: 380px; padding: 20px; overflow: auto; background: #fff; border-left: 1px solid #dadce0; z-index: 9; }
+/* The questions: one question at a time beside the form; the box it fills is outlined. */
+aside.questions { position: fixed; top: var(--bar); right: 0; bottom: 0; width: 380px; padding: 20px; overflow: auto; background: #fff; border-left: 1px solid #dadce0; z-index: 9; }
 body.asking #viewerContainer { right: 380px; }
-aside.interview .close { position: absolute; right: 8px; top: 6px; width: 32px; height: 32px; border: 0; background: transparent; color: var(--muted); font-size: 24px; cursor: pointer; }
-aside.interview .where { margin: 0 24px 8px 0; color: var(--muted); font-size: 12px; }
-aside.interview h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
-aside.interview .help { margin: 0 0 12px; color: var(--muted); }
-aside.interview .check { margin: 8px 0 0; color: #b42318; font-size: 14px; }
-aside.interview input[type=text], aside.interview input[type=tel], aside.interview input[type=email], aside.interview input[type=date], aside.interview textarea { display: block; width: 100%; margin: 8px 0; padding: 10px 12px; border: 1px solid #c7ccd1; border-radius: 8px; font: inherit; font-size: 16px; }
-aside.interview .options label { display: block; margin: 8px 0; font-size: 15px; cursor: pointer; }
-aside.interview .nav { display: flex; justify-content: space-between; margin-top: 16px; }
-aside.interview .next { padding: 8px 18px; font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 6px; cursor: pointer; }
+aside.questions .close { position: absolute; right: 8px; top: 6px; width: 32px; height: 32px; border: 0; background: transparent; color: var(--muted); font-size: 24px; cursor: pointer; }
+aside.questions .where { margin: 0 24px 8px 0; color: var(--muted); font-size: 12px; }
+aside.questions h2 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
+aside.questions .help { margin: 0 0 12px; color: var(--muted); }
+aside.questions .check { margin: 8px 0 0; color: #b42318; font-size: 14px; }
+aside.questions input[type=text], aside.questions input[type=tel], aside.questions input[type=email], aside.questions input[type=date], aside.questions textarea { display: block; width: 100%; margin: 8px 0; padding: 10px 12px; border: 1px solid #c7ccd1; border-radius: 8px; font: inherit; font-size: 16px; }
+aside.questions .options label { display: block; margin: 8px 0; font-size: 15px; cursor: pointer; }
+aside.questions .nav { display: flex; justify-content: space-between; margin-top: 16px; }
+aside.questions .next { padding: 8px 18px; font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 6px; cursor: pointer; }
 .annotationLayer .asked, .annotationLayer .asked input, .annotationLayer .asked textarea { outline: 3px solid #f2a900 !important; outline-offset: 1px; }
 
 /* The header takes the room its words need: the title whole, a two-line explanation, the facts in small
@@ -90,7 +90,7 @@ button.primary { padding: 7px 16px; font: inherit; font-weight: 600; color: #fff
 @media (max-width: 1100px) {
   header { grid-template-columns: 1fr; }
   .actions { grid-row: auto; grid-column: 1; justify-content: flex-start; }
-  aside.interview { width: 340px; }
+  aside.questions { width: 340px; }
   body.asking #viewerContainer { right: 340px; }
 }
 
@@ -106,14 +106,14 @@ header { padding: 6px 16px; min-height: 0; }
 .page .words > div { padding: 0 1px; box-sizing: border-box; }
 /* A narrower window: the questions under the form, the form keeping the whole width. */
 @media (max-width: 1100px) {
-  aside.interview { top: auto; left: 0; width: auto; height: 38vh; border-left: 0; border-top: 1px solid #dadce0; box-shadow: 0 -4px 16px rgb(0 0 0 / 8%); }
+  aside.questions { top: auto; left: 0; width: auto; height: 38vh; border-left: 0; border-top: 1px solid #dadce0; box-shadow: 0 -4px 16px rgb(0 0 0 / 8%); }
   body.asking #viewerContainer { right: 0; bottom: 38vh; }
 }
 @media (max-width: 1100px) {
-  aside.interview { height: 30vh; padding: 12px 20px; }
-  aside.interview h2 { font-size: 16px; }
-  aside.interview .where { margin-bottom: 4px; }
-  aside.interview .nav { margin-top: 8px; }
+  aside.questions { height: 30vh; padding: 12px 20px; }
+  aside.questions h2 { font-size: 16px; }
+  aside.questions .where { margin-bottom: 4px; }
+  aside.questions .nav { margin-top: 8px; }
   body.asking #viewerContainer { bottom: 30vh; }
 }
 
@@ -126,13 +126,13 @@ body.translated .textLayer { display: none; }
 .about-more { border: 0; background: none; padding: 0; margin-left: 4px; font: inherit; font-size: 13px; color: var(--accent); text-decoration: underline; cursor: pointer; }
 .annotationLayer :is(input, textarea).crossed { background-color: transparent !important; }
 /* The questions: the question scrolls in its own area, Back and Next always in sight under it. */
-aside.interview { display: flex; flex-direction: column; padding: 0; }
-aside.interview[hidden] { display: none; }
-aside.interview .body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px 20px 8px; }
-aside.interview .nav { flex: none; margin: 0; padding: 10px 20px; background: #fff; border-top: 1px solid #eef0f2; }
+aside.questions { display: flex; flex-direction: column; padding: 0; }
+aside.questions[hidden] { display: none; }
+aside.questions .body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px 20px 8px; }
+aside.questions .nav { flex: none; margin: 0; padding: 10px 20px; background: #fff; border-top: 1px solid #eef0f2; }
 @media (max-width: 1100px) {
-  aside.interview { height: max(30vh, 220px); padding: 0; }
+  aside.questions { height: max(30vh, 220px); padding: 0; }
   body.asking #viewerContainer { bottom: max(30vh, 220px); }
-  aside.interview .body { padding: 12px 20px 6px; }
-  aside.interview .nav { margin: 0; padding: 8px 20px; }
+  aside.questions .body { padding: 12px 20px 6px; }
+  aside.questions .nav { margin: 0; padding: 8px 20px; }
 }

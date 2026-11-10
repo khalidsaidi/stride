@@ -62,7 +62,7 @@ echo 'print("hello")' > hello.stride && stride run hello.stride
 |---|---|
 | `@khalidsaidi/stride/compile` | `compile(source, name, options)`, `compileFile(path)`: mistakes and bytecode |
 | `@khalidsaidi/stride/vm` | `load(bytes)`, `run(program, answers)`: the questions reached, the boxes written, the prints, a fault |
-| `@khalidsaidi/stride/runner` | the workflow beside its PDF in a page: `workflow(bytes)`, `interview(p, host)`, `speak({ lang, t })` |
+| `@khalidsaidi/stride/runner` | the workflow beside its PDF in a page: `workflow(bytes)`, `questions(p, host)`, `speak({ lang, t })` |
 | `@khalidsaidi/stride/pdf-boxes` | `pageBoxes(bytes)`: a fillable PDF's boxes and the words printed beside each |
 
 ## The language

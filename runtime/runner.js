@@ -59,7 +59,7 @@ export function askOf(p, field) {
 // group); read(field): what the box holds now; show(field): brings the box into view and outlines it; unshow():
 // no box outlined (a question that writes none, such as "another?"). onRun(result), when given, is told of each run
 // that fills the boxes: its prints and its fault.
-export function interview(p, { box, read, show, unshow, saved = {}, onChange, onToggle, onRun, today = null }) {
+export function questions(p, { box, read, show, unshow, saved = {}, onChange, onToggle, onRun, today = null }) {
   const answers = { ...saved };
   // A question the person has not answered here starts from what its box already holds, when the box takes the
   // answer as it is.
@@ -83,7 +83,7 @@ export function interview(p, { box, read, show, unshow, saved = {}, onChange, on
   // answer is filled then.
   let opened = false;
 
-  const panel = Object.assign(document.createElement("aside"), { className: "interview", hidden: true });
+  const panel = Object.assign(document.createElement("aside"), { className: "questions", hidden: true });
   let at = 0;
   const el = (tag, props = {}) => Object.assign(document.createElement(tag), props);
   // What the page says about an answer (§8.4, §8.7): that it could not be read, and the message of every check it

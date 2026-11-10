@@ -51,10 +51,10 @@ for (const sc of JSON.parse(scenarios)) {
     if (st.write) { fs.writeFileSync(cwd + "/" + st.write, st.base64 ? Buffer.from(st.text, "base64") : st.text); continue; }
     if (st.remove) { fs.renameSync(cwd + "/" + st.remove, cwd + "/" + st.remove + ".gone"); continue; }
     if (st.reload) { await page.reload(); await page.waitForTimeout(800); continue; }
-    if (st.text !== undefined) { await page.waitForSelector("aside.interview .body input", { timeout: 20000 }); await page.fill("aside.interview .body input", st.text); continue; }
-    if (st.next) { await page.click("aside.interview .nav .next"); await page.waitForTimeout(200); continue; }
-    if (st.back) { await page.click("aside.interview .nav button.quiet"); await page.waitForTimeout(200); continue; }
-    if (st.panel) { await page.waitForTimeout(300); out.seen.push(await page.textContent("aside.interview")); continue; }
+    if (st.text !== undefined) { await page.waitForSelector("aside.questions .body input", { timeout: 20000 }); await page.fill("aside.questions .body input", st.text); continue; }
+    if (st.next) { await page.click("aside.questions .nav .next"); await page.waitForTimeout(200); continue; }
+    if (st.back) { await page.click("aside.questions .nav button.quiet"); await page.waitForTimeout(200); continue; }
+    if (st.panel) { await page.waitForTimeout(300); out.seen.push(await page.textContent("aside.questions")); continue; }
     if (st.page) { await page.waitForTimeout(300); out.seen.push(await page.textContent("body")); continue; }
     if (st.download) {
       await page.waitForTimeout(300);

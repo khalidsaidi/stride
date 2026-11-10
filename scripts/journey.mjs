@@ -110,8 +110,8 @@ try {
       const errors = [];
       page.on("pageerror", (e) => errors.push(e.message));
       await page.goto(url);
-      await page.waitForSelector("aside.interview input", { timeout: 20_000 });
-      await page.fill("aside.interview input", "Ada Lovelace");
+      await page.waitForSelector("aside.questions input", { timeout: 20_000 });
+      await page.fill("aside.questions input", "Ada Lovelace");
       await page.waitForTimeout(300);
       const [download] = await Promise.all([page.waitForEvent("download"), page.click("#download")]);
       await download.saveAs(saveTo);

@@ -29,10 +29,10 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(url);
 for (const a of JSON.parse(answers)) {
-  await page.waitForSelector("aside.interview .nav .next", { timeout: 20000 });
-  if (a.text !== undefined) await page.fill("aside.interview .body input", a.text);
-  else await page.check('aside.interview .body input[value="' + a.choose + '"]');
-  await page.click("aside.interview .nav .next");
+  await page.waitForSelector("aside.questions .nav .next", { timeout: 20000 });
+  if (a.text !== undefined) await page.fill("aside.questions .body input", a.text);
+  else await page.check('aside.questions .body input[value="' + a.choose + '"]');
+  await page.click("aside.questions .nav .next");
 }
 await page.waitForTimeout(300);
 const [download] = await Promise.all([page.waitForEvent("download"), page.click("#download")]);

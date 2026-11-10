@@ -6,7 +6,7 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { EventBus, PDFLinkService, PDFViewer } from "pdfjs-dist/legacy/web/pdf_viewer.mjs";
 import "./page.css";
-import { interview, workflow } from "../runtime/runner.js";
+import { questions, workflow } from "../runtime/runner.js";
 import { faultWords } from "../runtime/vm.mjs";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";
@@ -95,7 +95,7 @@ try {
       if (said) console.error(said);
     }
   };
-  const run = interview(p, { box, read, show, unshow, today, onRun, onToggle: () => requestAnimationFrame(fit) });
+  const run = questions(p, { box, read, show, unshow, today, onRun, onToggle: () => requestAnimationFrame(fit) });
   document.body.append(run.panel);
   run.toggle(true);
   const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
