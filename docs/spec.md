@@ -35,7 +35,7 @@ one column, a tab is one column, a character outside the Basic Multilingual Plan
 2.1. **Names**: a letter `a`–`z`, `A`–`Z` or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`,
 `W2`). A name holding a character outside ASCII is S001, with the rule stated.
 
-2.2. **Hyphenated words**: `long-text`, `yes-no`, `one-of`, `any-of` are each one token, a type name.
+2.2. **Hyphenated words**: `long-text`, `yes-no`, `one-of`, `any-of` are each one token: `yes-no` a type, the others ways of asking (§8.1).
 
 2.3. **Keywords** cannot be names: `and as ask break check collect const continue default define else empty
 expect export fill for form if in is let match native new no not options or pdf pick record return tick use var
@@ -85,7 +85,6 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 | Type | Values | Written |
 |---|---|---|
 | `text` | words: a sequence of Unicode code points, at most 100,000 | `"words"` |
-| `long-text`, `phone`, `email` | words, with the shape of their question; they fit wherever `text` does (§3.6) | from answers |
 | `number` | an exact decimal (§3.3) | `12`, `1.5` |
 | `date` | a day of the Gregorian calendar, 0001-01-01 to 9999-12-31 | from answers, `date_of(…)`, `today()` |
 | `yes-no` | `yes`, `no` | `yes`, `no` |
@@ -128,8 +127,7 @@ joined by `, `; empty as no words. A list or a record has no words (mistake S309
 3.6. **Fitting.** A value of type A may stand where type B is expected when:
 - A and B are the same type: scalars by name, option sets and records by their declaration, sets by their option
   set; two list types are the same only when their element types are the same and their mosts are equal;
-- B is `text` and A is `long-text`, `phone`, `email` or an option of any set;
-- B is `long-text`, `phone` or `email` and A is `text`;
+- B is `text` and A is an option of any set;
 - A is empty;
 - A is `list of X most M`, B is `list of Y most N`, X fits Y and M ≤ N (a parameter's list without `most` has N
   infinite, §9.3);
@@ -161,18 +159,14 @@ out (§9.6), the arms of `either` — it is their join, chosen by these rules in
 1. the same type: that type;
 2. one of them the type of the bare word `empty`: the other. This rule is for `empty` itself only; a list is never
    dropped by it, whatever its items hold;
-3. both words of different kinds — any two of `text`, `long-text`, `phone`, `email`, or an option and words, or
-   options of different sets — `text`, which every one of them fits; so `list of text` + `list of phone` is `list
-   of text`, and `list of phone` + `list of email` is `list of text` too;
+3. an option and words, or options of different sets: `text`, which each of them fits;
 4. two lists: a list whose element type is the join of their element types, by these same rules applied to the
    elements (so a list of empty items, `list of empty most 3`, and `list of number most 1` give `list of number`),
    and a list keeps its items: `if c then [empty, empty, empty] else [1]` is a `list of number`;
 5. anything else has no join: S361, S394, S373, S343 at the second value.
 The value of an expression whose type is a join is placed into that type (§3.7.2): `if c then [1] else [1, 2]`
 gives a list of most 2 whichever branch runs, and an item of a list literal is widened to the literal's element
-type. The join never depends on which value comes first, and never picks a narrower kind of words: a `phone` result
-is chosen only when both are `phone`. When two different kinds of words join (rule 3), the joined value is `text`:
-it fits a `text` or an `email` parameter (text fits email, §3.6), but its kind is no longer phone.
+type. The join never depends on which value comes first.
 
 ## 4. Files
 
@@ -241,7 +235,7 @@ a function (§9.6), a native without `-> type` gives no value, and its call is a
 text)`, `native define print(v: any)`. A native's parameters may have defaults (§9.2). The machine must have the
 native with as many parameters (S301, S302).
 
-5.6. **Types written**: `text long-text phone email number date yes-no`, an option set's name, `set of` an option
+5.6. **Types written**: `text number date yes-no`, an option set's name, `set of` an option
 set's name, a record's name, `list of T`, `list of T most N` (N a whole number 1–1000 the compiler works out: S212, S213), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
 markers `any` and `element` (S214 elsewhere). A name that is not a type is S209. Unless §14 specifies otherwise,
 an `any` result has the first argument's type after binding and conversion; an `element` result has its list-item
@@ -312,7 +306,7 @@ and, for r, rounded.
   a − 1, the sum to a − 1 again, and it is no; for a = 10^34 − 1, b = 1.7 (r = 0.4) `b * q` rounds to a, the sum to
   a again, and it is yes.
 
-6.5. **Words.** `a + b` with both words (any of text, long-text, phone, email, an option) joins them; the result is
+6.5. **Words.** `a + b` with both words (text, or an option) joins them; the result is
 `text`. A number and words is S372 (write `"…{n}…"`). The result longer than 100,000 characters is F012.
 
 6.5.1. **Lists.** `l + m`, with l and m lists whose item types have a join (§3.9; S373 otherwise), is a new list:
@@ -358,7 +352,7 @@ one item). An option set declares at most 1000 options (S235), so this most is a
 A comprehension may not ask, write boxes or collect (S398, at the call in it that does).
 
 6.13. **Conditional** `if c then a else b`: c yes-no (S310); its type is the join (§3.9) of a's and b's (S394 when
-they have none): `if c then "x" else phone` is text; `if c then [empty, empty] else [1]` is `list of number most 2`.
+they have none): `if c then "x" else an_option` is text; `if c then [empty, empty] else [1]` is `list of number most 2`.
 
 6.14. **new R { f: e, … }**: a record with the given fields, the others empty. Unknown field S363, twice S362,
 type S364.
@@ -501,8 +495,10 @@ after it are reported as not run. Every expectation's result is reported, in ord
 
 ## 8. Questions
 
-8.1. Question types: `text long-text number date phone email yes-no one-of any-of`. The answer's type: the same
-scalar type; an option of the set for `one-of`; `set of` the set for `any-of`.
+8.1. Question types: `text long-text number date phone email yes-no one-of any-of`. The answer's type: `text`
+for `text`, `long-text`, `phone` and `email`, which differ only in how the page asks (a line, several lines, a
+phone's keys, an address); `number`, `date`, `yes-no` for those; an option of the set for `one-of`; `set of` the
+set for `any-of`.
 
 8.2. `one-of S` / `any-of S` take S's options; or the question has its own block (8.3); both is S223, neither
 S224; options on another type S225.
@@ -660,8 +656,8 @@ is the join (§3.9) of all the candidates, whatever order the arguments are writ
 The candidates are taken from the arguments in the order they are written, then from the defaults of the
 parameters not given, in the parameters' order; a join that succeeds does not depend on that order, and S367 names
 the first written argument that brings a conflict: in `choose(b: "x", a: 1)` it is `1`.
-With `define choose<t>(a: t, b: t) -> t`, `choose(phone_answer, "x")` and `choose("x", phone_answer)` both bind t
-to text, so either result fits an `email` parameter. When the candidates have no join (a number and words), the
+With `define choose<t>(a: t, b: t) -> t`, `choose(an_option, "x")` and `choose("x", an_option)` both bind t
+to text. When the candidates have no join (a number and words), the
 call is S367 at the first argument whose candidate does not join the ones before it. Once t is bound, every
 argument is checked against its parameter with t replaced (§3.6).
 
@@ -815,7 +811,7 @@ words given to `print`, and a fault or none.
 14.0. **Conventions for every function below.**
 - 14.0.1. Each is written with its parameters' names and types and its result type. The names are the ones named
   arguments use (§9.4): `round(n, places: 2)`. A parameter shown `= v` has that default.
-- 14.0.2. **Text parameters** (`text`) take any words: `long-text`, `phone`, `email`, an option (§3.6). A result
+- 14.0.2. **Text parameters** (`text`) take any words: text, or an option (§3.6). A result
   `text` is `text`.
 - 14.0.3. **Empty.** Unless the entry says otherwise: an empty text argument is treated as no characters; a function
   whose result is a number or a date, given an empty number or date, gives empty; one whose result is text gives
@@ -864,9 +860,9 @@ words given to `print`, and a fault or none.
 | `find(t: text, part: text) -> number` | the position of the first part in t, case ignored; 0 when it is not there or part is empty |
 | `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping, case ignored; 0 when part is empty |
 | `split(t: text, separator: text) -> list of text most 1000` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017 |
-| `line(t: long-text, n: number) -> text` | line n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
-| `line_count(t: long-text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |
-| `rest_lines(t: long-text) -> long-text` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
+| `line(t: text, n: number) -> text` | line n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
+| `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |
+| `rest_lines(t: text) -> text` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
 | `word(t: text, n: number) -> text` | word n of t, words split on runs of spaces and tabs |
 | `word_count(t: text) -> number` | how many words; empty: 0 |
 | `pad_left(t: text, width: number, padding: text = " ") -> text` | padding put before t until it is width characters; t at least width long: t. width a whole number 0–1000 and padding exactly one character, else F009 |

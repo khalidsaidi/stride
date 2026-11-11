@@ -135,7 +135,6 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | Type | Values | Written |
 |---|---|---|
 | `text` | words, up to 100,000 characters | `"words"`, `"Line {n}"` |
-| `long-text`, `phone`, `email` | words from answers of that kind; they go wherever `text` does | |
 | `number` | an exact decimal: `0.1 + 0.2` is `0.3` | `12`, `1.5` |
 | `date` | a day, 0001-01-01 to 9999-12-31 | `date_of(2026, 7, 4)`, `today()` |
 | `yes-no` | `yes`, `no` | |

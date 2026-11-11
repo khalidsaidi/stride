@@ -75,11 +75,11 @@ export native define occurrences(t: text, part: text) -> number
 # example: split("a,b,,c", ",") gives [a, b, , c]
 export native define split(t: text, separator: text) -> list of text most 1000
 # example: line("one\n  two  ", 2) gives two
-export native define line(t: long-text, n: number) -> text
+export native define line(t: text, n: number) -> text
 # example: line_count("a\n") gives 2
-export native define line_count(t: long-text) -> number
+export native define line_count(t: text) -> number
 # example: replace(rest_lines("Name\n 12 Main St\nTown "), "\n", " / ") gives 12 Main St / Town
-export native define rest_lines(t: long-text) -> long-text
+export native define rest_lines(t: text) -> text
 # example: word("John  Q Public", 2) gives Q
 export native define word(t: text, n: number) -> text
 # example: word_count(" a  b c ") gives 3

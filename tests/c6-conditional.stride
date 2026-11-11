@@ -4,7 +4,7 @@ ask c: yes-no "C"
 ask z: number "Z"
 ask p: phone "P"
 let w = if c then "x" else p
-define mail(m: email) -> text {
+define mail(m: text) -> text {
   return m
 }
 print(mail(w))

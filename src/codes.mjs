@@ -1043,7 +1043,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "line(t: long-text, n: number) -> text"
+      "line(t: text, n: number) -> text"
     ],
     "names": [
       "line"
@@ -1053,7 +1053,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "line_count(t: long-text) -> number"
+      "line_count(t: text) -> number"
     ],
     "names": [
       "line_count"
@@ -1063,7 +1063,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "rest_lines(t: long-text) -> long-text"
+      "rest_lines(t: text) -> text"
     ],
     "names": [
       "rest_lines"

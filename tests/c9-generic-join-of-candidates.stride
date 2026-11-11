@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 define choose<t>(a: t, b: t) -> t {
   return a
 }
-define mail(e: email) -> text {
+define mail(e: text) -> text {
   return e
 }
 ask p: phone "P"

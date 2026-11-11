@@ -46,7 +46,7 @@ and `faults` are words of the language only where the grammar uses them, and nam
 
 | Type | Values |
 |---|---|
-| `text`, `long-text`, `phone`, `email` | words; the last three are text with a shape, and fit wherever text does |
+| `text` | words (a `long-text`, `phone` or `email` question's answer is text too) |
 | `number` | an exact decimal: at most 34 significant digits, below 10^34, a multiple of 10^-6176 (§3.3) |
 | `date` | a day, 0001-01-01 to 9999-12-31 |
 | `yes-no` | `yes` or `no` |

@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask lt: long-text "Long"
-define p(x: phone) -> phone {
-  return x
-}
-print(p(lt))
-# rule 3.6 S367
-# mistake 7 S367

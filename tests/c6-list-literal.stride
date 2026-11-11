@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask p: phone "P"
 let l = [p, "x"]
-define mail(m: email) -> text {
+define mail(m: text) -> text {
   return m
 }
 print(mail(l[2]))

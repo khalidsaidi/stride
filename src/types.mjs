@@ -1,6 +1,6 @@
 // Stride's types, as the compiler sees them. A type is a plain object { t, … }:
 //
-//   text, long-text, phone, email    words; the last three are text with a shape, and fit wherever text does
+//   text                             words (a long-text, phone or email question's answer is text too)
 //   number, date, yes-no             a number, a day, yes or no
 //   option(set)                      one option of an option set
 //   options(set)                     several options of one set (an any-of answer)
@@ -15,9 +15,6 @@
 // Every value of every type may also be empty (an answer not given yet); `is empty` tells.
 
 export const TEXT = { t: "text" };
-export const LONG_TEXT = { t: "long-text" };
-export const PHONE = { t: "phone" };
-export const EMAIL = { t: "email" };
 export const NUMBER = { t: "number" };
 export const DATE = { t: "date" };
 export const YES_NO = { t: "yes-no" };
@@ -28,7 +25,7 @@ export const ELEMENT = { t: "element" };
 export const NONE = { t: "none" };
 export const ERROR = { t: "error" };
 
-export const SCALARS = { text: TEXT, "long-text": LONG_TEXT, phone: PHONE, email: EMAIL, number: NUMBER, date: DATE, "yes-no": YES_NO };
+export const SCALARS = { text: TEXT, number: NUMBER, date: DATE, "yes-no": YES_NO };
 
 export const option = (set) => ({ t: "option", set });
 export const options = (set) => ({ t: "options", set });
@@ -39,8 +36,7 @@ export const fn = (params, result) => ({ t: "function", params, result });
 // A type parameter of a generic function: whatever type each call gives it.
 export const typevar = (sym) => ({ t: "typevar", sym });
 
-const TEXT_LIKE = new Set(["text", "long-text", "phone", "email"]);
-export const isTextLike = (type) => TEXT_LIKE.has(type.t);
+export const isTextLike = (type) => type.t === "text";
 export const isError = (type) => type.t === "error";
 
 // The question types an `ask` can have, and the type of its answer.
@@ -103,7 +99,6 @@ export function fits(value, wanted) {
   if (wanted.t === "any") return value.t !== "none";
   if (value.t === "empty") return wanted.t !== "none";
   if (wanted.t === "text") return isTextLike(value) || value.t === "option";
-  if (TEXT_LIKE.has(wanted.t)) return value.t === wanted.t || value.t === "text";
   if (wanted.t === "list" && value.t === "list") {
     // A list fits a list of the same element type. How many it holds is checked where it is placed, as the
     // program runs (§3.7.7, F017).
@@ -170,7 +165,8 @@ export function describe(type) {
 export function typeOfAnswer(question, set) {
   if (question === "one-of") return option(set);
   if (question === "any-of") return options(set);
-  return SCALARS[question];
+  // long-text, phone and email are ways of asking: the answer is text.
+  return SCALARS[question] ?? TEXT;
 }
 
 // The join of two types (docs/spec.md §3.9): the one type two values take together, or null when they
