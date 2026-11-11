@@ -9,7 +9,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 
 | You know | In Stride |
 |---|---|
-| `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is known before the form opens |
+| `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is worked out by the compiler |
 | `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`, `either(x, 0)` |
 | `true`, `false` | `yes`, `no` |
 | `list[0]` | `list[1]`: positions count from 1, as on a form |
@@ -123,8 +123,7 @@ yes
 
 ## No function values: comprehensions and sorting by a field
 
-A function cannot be passed, kept or returned (§9.10). Every call a program can make is written in it, so the
-compiler can follow each one when it proves the form is filled correctly. What you would do with a callback:
+A function cannot be passed, kept or returned (§9.10). What you would do with a callback:
 
 ```stride
 record person {
@@ -149,8 +148,8 @@ Anything else a callback would do is a function that takes the list and has its 
 
 ## Errors: guard, or stop
 
-There is no `try` and no `catch`. Mistakes the compiler can see (a misspelt name, a wrong type, a box written twice,
-`1 / 0` with numbers it knows) are found before anything runs. At run time a fault stops the run and says where; a
+There is no `try` and no `catch`. Mistakes the compiler can see (a misspelt name, a wrong type, a box the form
+does not have) are found before anything runs. At run time a fault stops the run and says where; a
 program avoids faults by checking first, and stops itself with `fail` when it must:
 
 ```stride answers={"n":"0"}

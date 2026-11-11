@@ -370,7 +370,7 @@ export const CODES = {
     "explanation": "A constant's value cannot need itself."
   },
   "S304": {
-    "when": "a constant not known before the form opens",
+    "when": "a constant the compiler cannot work out",
     "explanation": "Constants are made of words, numbers and other constants."
   },
   "S305": {
@@ -714,7 +714,7 @@ export const CODES = {
     "explanation": "Defaults come last."
   },
   "S393": {
-    "when": "a default not known before the form opens",
+    "when": "a default the compiler cannot work out",
     "explanation": "Defaults are made of known values."
   },
   "S394": {
@@ -730,7 +730,7 @@ export const CODES = {
     "explanation": "A comprehension makes a value; use for each."
   },
   "S399": {
-    "when": "`sorted(l, by: \"f\")` with f not a field of l's records, not known before the form opens, or not a number, date or words",
+    "when": "`sorted(l, by: \"f\")` with f not a field of l's records, not written out, or not a number, date or words",
     "explanation": "`by` names a field of the list's record type, in plain words, whose values can be ordered."
   },
   "S405": {
@@ -746,7 +746,7 @@ export const CODES = {
     "explanation": "Declare it, or give it a value, on every path before the read (§12.1.1)."
   },
   "S412": {
-    "when": "an option's printed words, or the words after `faults`, not known before the form opens",
+    "when": "an option's printed words, or the words after `faults`, that the compiler cannot work out",
     "explanation": "They are written out, or made of constants."
   },
   "S413": {

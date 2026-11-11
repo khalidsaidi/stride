@@ -142,7 +142,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | an option set | one of its options | `"red"` where one is expected |
 | `set of` an option set | some of its options | `["red", "blue"]` where one is expected |
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
-| `list of T most N` | up to N items, N at most 1000 | `[1, 2, 3]` |
+| `list of T` | any number of items up to 1000; `list of T most N` holds at most N | `[1, 2, 3]` |
 
 Every type also has **empty**: the value of a question not answered, a field not set, an item past the end of a
 list. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
@@ -284,8 +284,8 @@ call (§9.5). A value given to a function is a copy, so a function never changes
 
 ## 7. Lists, records and sets
 
-Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 or above the list's
-`most` is a fault (§6.9.2). Lists and records are values: `var b = a` copies, and `==` compares items:
+Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`), up to
+1000 items, or to the `most` its type states. Lists and records are values: `var b = a` copies, and `==` compares items:
 
 ```stride
 options colour {
@@ -415,7 +415,6 @@ fault F001: division by zero
 | a fault | as it runs, on some answers | the run stops; nothing it wrote counts; the page says so and keeps the answers |
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
 | an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |
-| a check that needs too much work (S602) | when compiling | a mistake: split the work |
 
 There is no try and catch. A program guards against faults before they happen (`if n != 0`, `either`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
 faults`, below).
@@ -568,9 +567,7 @@ write the same boxes.
 - **No stricter than the form.** A box written out that the PDF does not have is a mistake, as a misspelt name
   is. A box the program never mentions stays empty, and a box written twice keeps the later write (§10).
 - **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
-  on the page and on the form. Stride does not read them off the PDF: you do. When a header lists the words beside
-  a box (its `"near"`: you may add them, or a tool that prepares forms may), a question whose answer goes into that
-  box must use words among them (S517), which catches an answer sent to the wrong box.
+  on the page and on the form. Stride does not read them off the PDF: you do.
 - **Conditional questions** are questions inside an `if`: asked only when the condition holds.
 - **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", up to the list's
   most; a `for each` then fills one row of boxes per item, `"Name{n}"`.
@@ -604,8 +601,8 @@ if agrees {
 tick "agree" when agrees
 ```
 
-- A box's name, a question's key and its printed words are known before the form opens (§11), so the check knows
-  every box a program can write; `stride map` lists them.
+- A box's name and a question's printed words are ordinary expressions, worked out as the program runs (§11.2):
+  `fill "Row{n}" = v`. `stride map` lists the boxes a program names outright.
 - A program never changes the PDF: it only fills its boxes, and nothing a person types leaves their browser.
 
 ## 21. Sharing a program
@@ -652,5 +649,4 @@ Linux. Other platforms are outside this release's scope.
 | the PDF | never changed; only its boxes are filled |
 | a run | at most 2,000,000 instructions (F014) and calls 200 deep (F015) |
 | values | lists at most 1000 items, words at most 100,000 characters, numbers below 10^34 with 34 digits |
-| the compiler | each of its checks works within a budget (§15.1); past it, S602 |
 | errors | at most 20 mistakes shown; the rest are counted |

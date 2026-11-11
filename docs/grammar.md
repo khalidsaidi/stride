@@ -53,7 +53,7 @@ only where the grammar uses them (§2.3.1).
 | an option set's name | one of its options |
 | `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
-| `list of T most N` | up to N values of type T; N a whole number 1–1000 known before the form opens (a parameter may leave out `most N`: any length) |
+| `list of T`, `list of T most N` | values of type T, up to 1000, or up to N when a most is stated |
 
 Numbers are exact: `0.1 + 0.2 == 0.3` is yes; `+ - *` round to 34 digits only past them, and `/` rounds its
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;
@@ -82,7 +82,7 @@ options changes {                  # an option set: values, each with the words 
   "fax" "Fax No."
 }
 
-const MOST = 4                     # known before the form opens: words, a number, a date, yes or no
+const MOST = 4                     # worked out by the compiler: words, a number, a date, yes or no, a list of them
 
 define line_2(n: number, r: representative) {        # a function; `-> type` after the parameters
   fill "Page1[0].RepresentativesName{n}[0]" = r.name  # when it gives a value
@@ -209,7 +209,7 @@ Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `==
 
 ## Known before the form opens
 
-A box's name, a button's name, a question's printed words, a skip's reason and a loop's bounds are ordinary
+A box's name, a button's name, a question's printed words and a loop's bounds are ordinary
 expressions, worked out as the program runs (§11.2). The compiler works out only a constant's value, a parameter's
 default and an option's printed words.
 
@@ -217,10 +217,6 @@ Loops, collects, for eaches and calls run in the machine as they are written. A 
 as it runs, from where it is asked (§8.6): its name, with the turn of each loop it is in (`other_act[1]`), on the
 item of a list it answers (`representatives[2].name`), or after the call it is in (`line_2(n=2).name`, the
 call's key holding, by name, the parameters that name boxes or questions).
-
-The PDF check follows the program on every path with every answer unknown, working out exactly what does not
-depend on an answer (a counter, a list's length in each turn, a call's arguments), so it knows each box name and
-question key where it is used.
 
 ## The standard library
 
@@ -252,7 +248,7 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
   with the wrong number or types of arguments; a function giving a value of the wrong type, or none where it
   must; an answer, a let, a constant, a parameter or a counter given a new value; a list collected twice, or not
   into a var; a box filled with yes-no, a set, a list or a record.
-- **Flow:** a function that reaches itself; something that must be known before the form opens and is not; a let
+- **Flow:** a let
   or var read where not every path has given it a value; a function with a result that does not return one on
   every path; a statement after a return, break or continue; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
 - **The PDF** (against the header): a box the PDF does not have (with the nearest one); a statement of the wrong
@@ -265,28 +261,25 @@ Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's most 1000
 words of 100,000 characters, numbers of 34 significant digits.
 
 Warnings do not stop the compiler: a match with no else that misses options; a function, a constant, an answer,
-a let or a var never used; a field asked and never read; a box written twice on one path; a box the program
-neither writes nor skips. Stride is no stricter than the form (§10.4).
+a let or a var never used; a field asked and never read. Stride is no stricter than the form (§10.4).
 
 ## The compiler
 
 `src/`, one module per phase: `parse` (the hand-written lexer and recursive-descent parser in
 `syntax.mjs`, which recovers after a mistake and reports up to twenty), `load` (libraries),
 `resolve` (names, scopes), `check` (types), `flow`, `lower` (to the intermediate form: functions of basic
-blocks; question keys, printed words and box names as expressions worked out as the program runs), `pdf`
-(the check against the header: an abstract interpretation over every path, answers unknown and everything else
-worked out, paths with the same known live values taken together, functions followed from each call), and
-`codegen` (an instruction list, a peephole pass, then the assembler).
+blocks; question keys, printed words and box names as expressions worked out as the program runs), `form`
+(the boxes a program names, looked up in the form's header), and `codegen` (an instruction list, then the
+assembler).
 
 ## Bytecode
 
-Version 3 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 4 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),
 natives, functions (name, parameters, locals' names, code range, pure), code, places (the line and column of
-each instruction that can fault or ask), resources (named blobs kept for the host: the page's words), links (for
-each question key the PDF check found: the boxes its answer goes into). Integers are LEB128 varints; jump
+each instruction that can fault or ask), links (for each question whose key is written out: the boxes its answer goes into). Integers are LEB128 varints; jump
 addresses 4 bytes.
 
 Loading verifies a program before it runs: every instruction known and complete, every operand in range (a

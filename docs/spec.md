@@ -39,7 +39,7 @@ one column, a tab is one column, a character outside the Basic Multilingual Plan
 
 2.3. **Keywords** cannot be names: `and as ask because break check collect const continue default define each
 else empty export expect fields fill for form if in is let list match most native new no not of options or pdf
-pick record return set skip then tick use var when yes`.
+pick record return set then tick use var when while yes`.
 
 2.3.1. **Contextual words** are keywords only in the one place the grammar uses them, and names everywhere else:
 `option` at the start of an entry of a question's own options (§8.3), where it is required, and of an option set's
@@ -164,13 +164,7 @@ out (§9.6), the arms of `either` — it is their join, chosen by these rules in
    of text`, and `list of phone` + `list of email` is `list of text` too;
 4. two lists: a list whose element type is the join of their element types, by these same rules applied to the
    elements (so a list of empty items, `list of empty most 3`, and `list of number most 1` give `list of number`),
-   and whose most is the larger of the two mosts, at every level: a join never adds mosts. A list never narrows its
-   most through a join, and keeps its items: `if c then [empty, empty, empty] else [1]` is `list of number most 3`. Only `l + m`
-   (§6.5.1) sums, and only the two operands' own mosts: the element type of the result is the join of the element
-   types, by this rule. With `a: list of list of number most 2 most 1` and `b: list of list of number most 3 most
-   1`, `a + b` is `list of list of number most 3 most 2`: outer most 1 + 1, inner most the larger of 2 and 3.
-   If either most is unknown before the form opens, the joined most is unknown at that level and each value keeps
-   its carried most there; known joined mosts at other levels are still widened normally;
+   and a list keeps its items: `if c then [empty, empty, empty] else [1]` is a `list of number`;
 5. anything else has no join: S361, S394, S373, S343 at the second value.
 The value of an expression whose type is a join is placed into that type (§3.7.2): `if c then [1] else [1, 2]`
 gives a list of most 2 whichever branch runs, and an item of a list literal is widened to the literal's element
@@ -190,8 +184,7 @@ is S106). `export` makes a declaration visible to files that use the library; in
 and `expect` statements (§7.17); any other statement is S106; `export` is S107, nothing using a test file. Run by
 `stride test` (§17).
 A test file has no form: its header has no boxes (§10). A reachable `fill`, `tick` or `pick` in its own functions
-or through a library's is S508; a reachable `skip` is S503. This includes calls from both `let` and `expect`;
-unreachable code follows §11.3.3. Box-writing workflows are tested as programs with their PDF fixtures (§17).
+or through a library's is S508. This includes calls from both `let` and `expect`. Box-writing workflows are tested as programs with their PDF fixtures (§17).
 
 4.4. **The standard library** `lib/std.stride` is used by every file without a `use`; `use "std"` is S101; it uses
 no other library (S105). Only it declares natives (S108).
@@ -206,8 +199,7 @@ nothing else (S110, S111, S112). Libraries using each other in a circle is S103.
 
 4.6. **A script**: `script = item*;` a file given to the compiler, not a test file, whose first item is not
 `form`. It is a program without a form: everything a program may hold, run by `stride run` and tested by `stride
-test` like one, with an empty header (§10): a reachable `fill`, `tick` or `pick` is S508 and a reachable `skip` is
-S503, as in a test file. `print("hello")` alone is a whole script. `use` finds libraries in `lib/` beside it, as a
+test` like one, with an empty header (§10): a `fill`, `tick` or `pick` is S508, as in a test file. `print("hello")` alone is a whole script. `use` finds libraries in `lib/` beside it, as a
 program's.
 
 4.7. **A project** is a folder holding `stride.json`: `{"stride": "MAJOR.MINOR", "libraries": [folder, …]}`.
@@ -233,10 +225,10 @@ is there).
 hold itself through its fields, directly or through other records (S217); through a list it may not either.
 
 5.2. **options**: `"options" name "{" (["option"] plain string)* "}"`. Values unique (S215), not empty (S216); at
-least 1 and at most 1000 options (S235), the same bound as a list's most. A question's own options obey the same. The
-printed words are the words beside the box on the PDF (§10.6).
+least 1 and at most 1000 options (S235), the same bound as a list's. A question's own options obey the same. The
+printed words are the form's own, as its writer reads them.
 
-5.3. **const**: `"const" name [":" type] "=" expr`. Its value is known before the form opens (§11): words, a
+5.3. **const**: `"const" name [":" type] "=" expr`. Its value is worked out by the compiler (§11): words, a
 number, a date, yes or no, a set, or a list of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
 
 5.4. **define**: `"define" name ["<" name ("," name)* ">"] "(" [param ("," param)*] ")" ["->" type] block`.
@@ -248,8 +240,7 @@ text)`, `native define print(v: any)`. A native's parameters may have defaults (
 native with as many parameters (S301, S302).
 
 5.6. **Types written**: `text long-text phone email number date yes-no`, an option set's name, `set of` an option
-set's name, a record's name, `list of T most N` (N a whole number 1–1000 known before the form opens: S212, S213;
-`most` may be left out only in a parameter: S211), a type parameter's name inside its function, and the native-only
+set's name, a record's name, `list of T`, `list of T most N` (N a whole number 1–1000 the compiler works out: S212, S213), a type parameter's name inside its function, and the native-only
 markers `any` and `element` (S214 elsewhere). A name that is not a type is S209. Unless §14 specifies otherwise,
 an `any` result has the first argument's type after binding and conversion; an `element` result has its list-item
 type, or its option type for a set. `either` returns the join of both argument types (§3.9, §14.5).
@@ -322,13 +313,8 @@ and, for r, rounded.
 6.5. **Words.** `a + b` with both words (any of text, long-text, phone, email, an option) joins them; the result is
 `text`. A number and words is S372 (write `"…{n}…"`). The result longer than 100,000 characters is F012.
 
-6.5.1. **Lists.** `l + m` with l a `list of X most M` and m a `list of Y most N`, X and Y with a join (§3.9; S373 otherwise), is a new list: l's items, then m's, of type `list
-of` the join of X and Y `most M + N` (S395 when M + N > 1000 and both are known; F017 at run time otherwise, §3.7.7).
-The most is the sum whether or not either list holds items: an empty list contributes its most and no items. The
-word `empty` standing alone as an operand of a list `+` is the empty list of the other's type with most 0
-(§3.7.3.1), so `l + empty` has l's items and most. Example: `var a: list of number most 2 = [1]`, `var b: list of number most 3`; `a
-+ b` holds `[1]` with most 5, so `(a + b)[4]` is empty; with `ask i: number "Item"` answered 6, `(a + b)[i]` is
-F004 (a known 6 would be S360, §11.3.5).
+6.5.1. **Lists.** `l + m`, with l and m lists whose item types have a join (§3.9; S373 otherwise), is a new list:
+l's items, then m's. A list of more than 1000 items is F017 (§3.7.2). `l += m` is `l = l + m`.
 
 6.6. **Equality** `==`, `!=`: of two values of one type, or words with words, or an option with words (the words
 checked against the set's values: S386), or two options of different sets (their words compared); else S378 (yes-no with words S376; a set with `==` against words S377).
@@ -350,8 +336,8 @@ S384 (`contains(t, part)`).
 6.9. **Postfix.** A line break before `[` or `(` ends the expression before it: the bracket starts a new one.
 - 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357; no such field S318 (with a hint).
   `r.f` of an empty record (an absent list item) is empty.
-- 6.9.2. `l[i]`: i a number (S358), l a list (S359). i not whole, or below 1, or above l's most, is F004 (and
-  S360 when i is known before the form opens). i above the number of items is empty (a form's empty row).
+- 6.9.2. `l[i]`: i a number (S358), l a list (S359). i not whole, or below 1, is F004 (S360 when i is
+  written out). i above the number of items is empty (a form's empty row).
 - 6.9.3. `l[a..b]`: the items a to b, a list of l's element type and most. a, b whole (F004); a < 1 counts from 1;
   b beyond the items stops at the last; a > b gives an empty list.
 - 6.9.4. `f(args)`: a call (§9).
@@ -395,7 +381,7 @@ S311, S380); empty counts as no.
 
 ## 7. Statements
 
-7.1. `statement = ask | let | var | fill | tick | pick | skip | if | match | for | foreach | collect | break |
+7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
 continue | return | assign | call | expect;` A block is `{ statement* }`. Nested blocks, brackets and expressions
 deeper than 200 levels are S019, at the place. Each operator in an expression chain adds one level of nesting,
 including unary operators and postfix field access, indexing, slicing and calls.
@@ -462,9 +448,8 @@ unticked.
 
 7.8. **pick** `pick "group" "button" when c`: picks that button when c is yes.
 
-7.9. **Words, or an expression that gives them.** Where a statement takes words that must be known before the
-form opens (§11.2) — a box's name and a button's, a question's printed words, a check's message, a skip's reason,
-a collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
+7.9. **Words, or an expression that gives them.** Where a statement takes words — a box's name and a button's, a question's printed words, a check's message, a
+collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
 a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box; with
 `const QUESTIONS = ["First?", "Second?"]`, `ask ok: yes-no QUESTIONS[i]` asks each in its turn of a loop.
 
@@ -496,17 +481,16 @@ line. Statements after a `return`, `break` or `continue` in the same block never
 7.17. **expect** (at the top level of a test file only; in a program, in a library, or inside any function, a
 test file's included, it is S236): `expect e ["words"]`: e yes-no; the expectation fails with the words when e is
 not yes.
-`expect e faults "code or words"`: working out e must be a fault. The words are known before the form opens (S412). A selector matching F[0-9]{3} exactly matches
+`expect e faults "code or words"`: working out e must be a fault. The words are worked out by the compiler (S412). A selector matching F[0-9]{3} exactly matches
 only the fault code. Every other selector matches a case-sensitive substring of the message. There is no message
 fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The test passes only when
-both engines give that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
+the run gives that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
 faults "F013"`): S370 does not apply there.
 
 7.17.1. **Running a test file.** Its statements run in order, with no answers given (every question asked takes
 its default or is empty). Each `expect` is its own sub-run: what its expression does — questions reached, words
 printed — is dropped when it ends; box operations are refused by §4.3. The `let`s run on the file's one path,
-and each expectation starts from the state the lets before it left: a question a `let` already asked, asked again
-in an `expect`, is S507; separate expectations may each ask it. Nothing it did changes
+and each expectation starts from the state the lets before it left. Nothing it did changes
 the test file's names (a function changes only its copies, §3.4). An `expect … faults` catches the fault at its boundary: when it
 matches, the expectation passes and the file goes on with the next statement; when the expression finishes
 without a fault, or with another fault, the expectation fails and the file goes on. A plain `expect e` whose e
@@ -564,7 +548,7 @@ N items, the collect ends without asking "Another…?"; otherwise it asks it, an
 no answer yet) ends the collect.
 
 8.6. **Keys.** Each question a run reaches has a key: a string worked out as the program runs, by this
-construction, the same in every engine. Two questions reached on one path with the same key are S507.
+construction. A question reached again with a key already asked in the run has the same answer.
 
 8.6.1. **Grammar of a key.**
 ```
@@ -583,12 +567,13 @@ turns    = ("[" whole "]")*;                   # loop turns, outermost first
 8.6.2. **Construction.** The key of a question is built from the run's position, outermost first:
 - each call, on the path from the program's start to the question, of a function that can reach a question (it
   asks or collects, or calls a function that can) adds the segment `function(args)`, with an empty argument list
-  when the function has no known-only parameters: `first().name` and `second().name` are two questions. A call of
+  when the function has no naming parameters: `first().name` and `second().name` are two questions. A call of
   a function that cannot reach a question adds nothing, since no key is built inside it;
 - the function is written by its name, after its library's use path and `:` when it is declared in a library
   (`people:line_2(…)`), so two libraries' functions of one name never share a key; the program's own functions
   and the standard library's are written by their names alone;
-- args are the function's known-only parameters (§11.2), every one, in the order the function declares them, each
+- args are the function's naming parameters — those a box's name or a question's printed words in it are made
+  of, and those it passes on to such a parameter of another function — every one, in the order the function declares them, each
   `name=value`, whether the call gave it by position, by name or by its default (§9.2): the key depends on the
   values, never on how the call was written;
 - each collect item the question is in adds the segment `list[n]`;
@@ -615,7 +600,7 @@ turns    = ("[" whole "]")*;                   # loop turns, outermost first
   questions are `names#any[1]`, `names[1][1]`, `names#any[2]`, `names[1][2]`. A record field called `another` or `any` is an ordinary tail, `rows[1].another`, and can never
   meet them.
 
-8.6.3. **Values in a key.** Every type a known value can have (§11.1) has one encoding. A number by its words
+8.6.3. **Values in a key.** Every type a naming parameter's value can have has one encoding. A number by its words
 (§3.3.5); a date `YYYY-MM-DD`; `yes`, `no`; empty by its type: an empty list `[]`, an empty set `{}`, and empty of
 every other type (words, a number, a date, yes-no, an option, a record) `empty`, so each value has one encoding; a
 list as `[` its items' encodings
@@ -681,7 +666,7 @@ is empty (never a fault):
 
 9.1. A function sees its parameters, its own names and its file's declarations; not the program's answers (S204).
 
-9.2. **Parameters** with a default `name: type = e`: e known before the form opens (S393), of the parameter's type;
+9.2. **Parameters** with a default `name: type = e`: e worked out by the compiler (S393), of the parameter's type;
 a required parameter after one with a default is S392.
 
 9.3. A parameter's `list of T` without `most` takes a list of any most.
@@ -715,14 +700,7 @@ the first written argument that brings a conflict: in `choose(b: "x", a: 1)` it 
 With `define choose<t>(a: t, b: t) -> t`, `choose(phone_answer, "x")` and `choose("x", phone_answer)` both bind t
 to text, so either result fits an `email` parameter. When the candidates have no join (a number and words), the
 call is S367 at the first argument whose candidate does not join the ones before it. Once t is bound, every
-argument is checked against its parameter with t replaced (§3.6), mosts included: a parameter `list of t most 3`
-still takes no list of most 4.
-
-9.5.2. **A worked-out result through a list without a most.** A function without `-> type` whose return gives a
-list whose most is not known before the form opens (a parameter `list of t` without most, or something made from
-it) is S211 at that return: its result type must be written, `-> list of number most 10`; the returned list is
-then checked against it as the program runs (F017, §3.7.7). `define keep(xs: list of number) { return xs }` is
-S211; `define keep(xs: list of number) -> list of number most 10 { return xs }` is allowed.
+argument is checked against its parameter with t replaced (§3.6).
 
 9.6. **Result**: `-> type`, or worked out from the returns when not written (S343, S344). A function with a result
 returns one on every path (S405). One without `-> type` has its result worked out from its returns, so a value
@@ -737,8 +715,7 @@ is worked out) gives no value: its call is a statement, and used as a value it i
 libraries with the same function is S113.
 
 9.9. A function that asks, writes boxes, collects, calls an impure native (`today`, `print`, `fail`), or calls a
-function that does, has effects; else it is pure. An impure call is never worked out before the form opens, never
-taken as known (§11.1), and runs exactly as often as the program says: a
+function that does, has effects; else it is pure. A call runs exactly as often as the program says: a
 function wrapping `today()` gives the run's date at each run, not the date it was compiled.
 
 9.10. **Functions are not values.** A function is called, never passed, kept or returned: its name anywhere but
@@ -767,43 +744,29 @@ program may write a box more than once: the later write is the one that stays. A
 out as the program runs are not looked up beforehand (§11.2): a box the form does not have stops the run with
 F016, and anything else goes in as it is.
 
-## 11. Known before the form opens
+## 11. What the compiler works out
 
-11.1. Known: words, numbers, `yes`, `no`, `empty`; constants; lets made of known values; the counters of loops
-that ask or write boxes; the numbers of a collect's or for each's items; the items of a `for each` over a known
-list, when it asks or writes boxes (`for each b in ["Race", "Age"] { tick b when b in why }`); pure natives of known values; list
-literals of known values; parameters every call gives a known value. An item of a known list at a known position is known
-(`QUESTIONS[i]`, with QUESTIONS a constant list and i such a loop's counter). Not known: answers, vars, a
-collect's items, fields, records made with `new`, calls of Stride functions. The one exception is a box's or a button's name: there a
-call of a pure Stride function (§9.9) on known values is known too, so a function can build a row's box names
-(`fill "Make{suffix(n)}" = v.make`). A known value is therefore a scalar, an option, a set, or
-a list of known values (§8.6.3 encodes each).
+11.1. The compiler works out, before the program runs: a constant's value (§5.3), a parameter's default (§9.2), a
+list type's most, an option's printed words and the words after `faults`. Such a value is made of words, numbers,
+dates, `yes`, `no`, `empty`, other constants, lists of them, an item of a constant list, and pure natives of
+them. One that is not is S304 (a constant), S393 (a default), S212 (a most) or S412 (an option's words, the
+words after `faults`).
 
-11.2. **Worked out as the program runs.** A box's name and a button's, a question's printed words, a check's
-message, a collect's questions and a loop's bounds are ordinary expressions: they may be made of
+11.2. **Everything else is worked out as the program runs.** A box's name and a button's, a question's printed
+words, a check's message, a collect's questions and a loop's bounds are ordinary expressions: they may be made of
 answers, vars and calls, and are worked out when the statement runs (`fill "Row{n}" = v`, with n an answer). A
 box's name written out that the form does not have is mistake S508; one worked out as the program runs that the
-form does not have stops the run with F016. The compiler itself works out only a constant's value (S304), a
-parameter's default (S393), an option's printed words and the words after `faults` (S412).
+form does not have stops the run with F016.
 
-11.3. **A fault in what the compiler works out.** The compiler works out a constant's value (§5.3) and a
-parameter's default (§9.2). One whose working out faults (`const X = 1 / 0`) is mistake S413 at the operation,
-wherever it stands. Every other operation that faults does so when it runs (§13): `print(1 / 0)` compiles, and
-is F001 when it runs. The compiler does not predict a run's faults.
-- 11.3.3. **Unreachable code.** A branch whose condition is known before the form opens to be no (`if no`, `if
-  MOST > 10` with `MOST = 4`, a `match` arm a known subject never takes), the body of a loop that runs zero times
-  with known bounds, and statements after a `return`, `break` or `continue`, never run. They are checked for
-  syntax, names, types and flow (S406 for the statements after a return), but not by the PDF check (§10): their
-  boxes are not written and their questions not asked. This is what is known by §11.1; the PDF check also follows
-  the further facts of §10.4.0 (vars, pure calls), which leave what §11.1 calls known as it is.
+11.3. **A fault in what the compiler works out.** A constant's value or a default whose working out faults
+(`const X = 1 / 0`) is mistake S413 at the operation. Every other operation that faults does so when it runs
+(§13): `print(1 / 0)` compiles, and is F001 when it runs. The compiler does not predict a run's faults.
+- 11.3.3. **A condition written out.** `if no { … }` and `if yes { … } else { … }` take the branch their
+  condition names when the compiler decides which names have a value (S405, S407); a loop may run no turns.
+  Code that never runs is still checked for syntax, names and types.
 - 11.3.5. **Precedence.** S413 belongs to the flow phase, after the type phase (§16.1). A fault the type phase
-  already reports keeps that code and is not reported again: a known list position outside 1 to the list's most is
-  S360, not S413; a known number literal or constant out of range is S009.
-- 11.3.6. **Loop facts.** To decide what code can run (S405, S407), the compiler follows a `for` with known bounds turn by turn, its counter known in each turn, and a
-  `for each` over a list of known items (a literal) item by item, its item and its number known in each turn: in
-  every loop, whether or not it asks or writes boxes. These additional loop facts do not enlarge what §11.1 calls
-  known. A value already known under §11.1 remains usable wherever §11.2 requires a known value. A value known
-  only from this loop reduction does not satisfy that requirement.
+  already reports keeps that code and is not reported again: a list position written out that is not a whole
+  number of 1 or more is S360, not S413; a number literal or constant out of range is S009.
 
 ## 12. Names and scopes
 
@@ -826,7 +789,7 @@ if c { let y = 7 }
 print(y)            # S407: when c is no, y is never declared
 ```
 
-The flow check reduces branches and loops whose conditions are known (§11.3.3, §11.3.6) before it decides.
+A branch whose condition is written out (`if yes`) is taken as written (§11.3.3); a loop may run no turns.
 
 12.2. A name is known from the statement that defines it on (S202 says where it is). A name defined inside a loop
 is known only there (S203).
@@ -905,7 +868,7 @@ words given to `print`, and a fault or none.
   `# example: e gives w` (what `stride eval` shows for e), `# example: s prints w`, or `# example: e faults F…`,
   above the function's declaration; the examples may use the declarations `std.stride` writes out with them, and
   today() is 2026-11-09 for them. `stride doc` shows them, and the conformance suite runs every one in the machine
-  and the intermediate form (§19.1): an example that does not do what it says is a bug.
+  (§19.1): an example that does not do what it says is a bug.
 
 ### 14.1 Words
 
@@ -1017,7 +980,7 @@ entry says "or a set" (its items are then options).
 
 ## 16. Mistakes, warnings and how they are shown
 
-16.1. **A mistake** stops the compiler after its phase: syntax, libraries, names, types, flow, the PDF check. A
+16.1. **A mistake** stops the compiler after its phase: syntax, libraries, names, types, flow, the form's boxes. A
 phase runs only when those before it found none, so one mistake is not reported again as others. Within a phase,
 a mistake that follows from another is not reported beside it: S106 takes precedence over S232 at the same
 statement. Independent mistakes in other parts of an expression, and in other calls,
@@ -1044,11 +1007,10 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
   token met beyond the 200th level, with what surrounds it — an inner value after brackets, or the operator that
   crosses the limit; it need not be an opening bracket;
 - S501: the `pdf` line; S502:
-  the `form` line; S503 and S508: the box name's expression; S511: the button name's expression; S514: the
-  entry's value; S517: the question's printed words; S323: the second `default`, the first as related code;
-  S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the operation that faults; S602: the loop whose turns passed the budget, the call whose working out did, the statement where the
-  PDF check kept one path too many, the statement whose proof that conditions exclude each other did, or the write
-  whose answer values did; S407: the read,
+  the `form` line; S508: the box name's expression; S511: the button name's expression; S514: the
+  entry's value; S323: the second `default`, the first as related code;
+  S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the
+  operation that faults; S407: the read,
   with a label on a path that leaves the name without a value — the branch that skips it, a loop that may run no
   turns, or the declaration when nothing gives it a value (no branch is named where there is none);
 - any other mistake: the first character of the smallest construct the "When" column names — the name, the
@@ -1190,7 +1152,7 @@ its call: the function's name in the call.
 | S301 | a native the machine does not have | The standard library declares only what the machine provides. |
 | S302 | a native declared with other parameters | As many as the machine's. |
 | S303 | a constant made of itself | A constant's value cannot need itself. |
-| S304 | a constant not known before the form opens | Constants are made of words, numbers and other constants. |
+| S304 | a constant the compiler cannot work out | Constants are made of words, numbers and other constants. |
 | S305 | a constant's value not of its type | Fix the type or the value. |
 | S306 | a constant that is a record | Constants are words, numbers, dates, yes or no, sets, and lists of them. |
 | S307 | `fill` with yes-no | A yes-no goes into a check box: `tick "box" when c`. |
@@ -1276,15 +1238,15 @@ its call: the function's name in the call.
 | S389 | a parameter given twice | Once, positionally or by name. |
 | S390 | a positional argument after a named one | Positional first. |
 | S392 | a required parameter after one with a default | Defaults come last. |
-| S393 | a default not known before the form opens | Defaults are made of known values. |
+| S393 | a default the compiler cannot work out | Defaults are made of known values. |
 | S394 | a conditional whose two values' types have no join | `if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none. |
 | S396 | a slice bound that is not a number | `l[a..b]`, numbers. |
 | S398 | a comprehension that asks, writes boxes or collects | A comprehension makes a value; use for each. |
-| S399 | `sorted(l, by: "f")` with f not a field of l's records, not known before the form opens, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
+| S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
 | S406 | a statement after return, break or continue | It never runs; remove it. |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
-| S412 | an option's printed words, or the words after `faults`, not known before the form opens | They are written out, or made of constants. |
+| S412 | an option's printed words, or the words after `faults`, that the compiler cannot work out | They are written out, or made of constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
@@ -1320,7 +1282,7 @@ its call: the function's name in the call.
 | `stride new <name> [--pdf <file.pdf>]` | §17.6 |
 | `stride init [folder]` | §4.7 |
 | `stride header <file.pdf> [-o file.boxes.json]` | §17.6 |
-| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given (§10.6); the boxes written from no answer; the boxes not written |
+| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes not written |
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
 | `stride vscode [-o file.vsix]` | §17.16 |
@@ -1370,8 +1332,7 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
 17.6. **Starting and editing.**
 - `stride header <file.pdf>` writes the form's header (§10) from its PDF: its sha256, and each box (a check box or
   radio button one per export value) as the PDF gives it: its kind, export value, longest length, place on its page
-  and its maker's description, when it has one. It works nothing out: the words printed beside a box (§10.6) are
-  not in a PDF, and are added to the header by whoever knows them. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
+  and its maker's description, when it has one. It works nothing out. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
   file name gives the form's id. A file that is not a PDF, or a PDF with no box a person fills, writes nothing
   (exit 1).
 - `stride new <name>` writes a script `<name>.stride` (§4.6) and a test of it `<name>.tests/first.json`; with
@@ -1395,7 +1356,7 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
 
 17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program as written, in the
 intermediate form (which agrees with the machine, §19.1). It prints each statement's file, line and text when it
-starts, a `let` known before the form opens included, and under it the names it gave a value; each turn of a loop,
+starts, and under it the names it gave a value; each turn of a loop,
 at the loop's line, with its counter, or its item and number, as that turn has them; each call of a function with
 its arguments, and what it gives back; each call of a standard library function with its arguments and what it
 gives. All of it is indented by how deep the calls go. A loop's own work (its counter going up, its item taken, the
@@ -1409,8 +1370,7 @@ key to answer, as the page holds them; none: `{}`); `boxes` (box name, as the pr
 after the run; none: `{}`; a box not listed must be empty unless `loose` is yes); `asked` (keys that must be asked,
 in that order, others allowed before, between and after them); `unasked` (keys that must not be asked); `today`;
 `prints` (exactly every line the run prints, in order); and `fault` (the code the run stops with; without it, a run
-that stops fails the test). Each test runs in the machine and in the intermediate form, and any difference §19.1
-names between the two fails it as a fault in the compiler, whatever the test expects.
+that stops fails the test).
 
 17.9. **Help, versions and the library.** `stride help` lists every command; `stride help <command>`, or the
 command with `--help` or `-h`, gives its options and an example; `--help` or `-h` alone is `stride help`; each exits
@@ -1631,9 +1591,7 @@ at its own count of steps and frames; each test runs one engine on a program bui
 names the engine. No test claims that every engine exhausts on the same run.
 19.1.3. `node scripts/fuzz.mjs` drops a generated run that the reference exhausts.
 
-19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs each in both engines, and
-through the PDF check; a disagreement, a crash, or a mistake on a valid program is a bug. It reports apart the
-programs that agreed, those stopped by a budget (S602), and the runs the reference exhausted.
+19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs each in both engines; a disagreement, a crash, or a mistake on a valid program is a bug.
 
 19.3. **Faults no type-correct program reaches.** F006, F016, F018 and F019 guard against a fault in the
 compiler or the machine itself; no program the compiler accepts can reach them. They are tested by the machine's
