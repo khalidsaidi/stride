@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record node {
+  value: number
+  kids: list of node
+  next: node
+}
+define total(n: node) -> number {
+  var t = n.value
+  for each k in n.kids {
+    t += total(k)
+  }
+  if n.next is not empty {
+    t += total(n.next)
+  }
+  return t
+}
+var root = new node { value: 1 }
+root.kids += [new node { value: 2, kids: [new node { value: 3 }] }]
+root.next.value = 10
+root.next.next.value = 100
+print(total(root))
+# rule 5.1
+# prints ["116"]

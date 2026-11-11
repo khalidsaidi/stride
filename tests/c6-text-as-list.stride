@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let s = "hello"
+print(s[2])
+print(s[2..4])
+print("ell" in s)
+print("z" in s)
+for each c in "ab" {
+  print(c)
+}
+print([upper(c) for each c in "ab"])
+print(length(s) + count(s) + length([1, 2]) + length({"a": 1}))
+print("a" in {"a": 1})
+print(s[9] is empty)
+# rule 6.8 6.9.2 6.9.3
+# prints ["e", "ell", "yes", "no", "a", "b", "[A, B]", "13", "yes", "yes"]

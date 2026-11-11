@@ -1,7 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-record r {
-  a: list of r most 2
-}
-# rule 5.1 S217
-# mistake 3 S217 through a list either

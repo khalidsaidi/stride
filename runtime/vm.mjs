@@ -324,7 +324,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const n = readPosition(l, i);
-          stack.push(l[n - 1] ?? null);
+          stack.push((typeof l === "string" ? [...l][n - 1] : l?.[n - 1]) ?? null);
           break;
         }
         case OP.GET_ITEM_THERE: {
@@ -417,6 +417,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const x = whole(a), y = whole(b);
           if (x === null || y === null) fault("F004", "a slice's bounds are whole numbers");
           const from = Math.max(1, x);
+          if (typeof l === "string") {
+            stack.push([...l].slice(from - 1, Math.max(from - 1, y)).join("") || null);
+            break;
+          }
           const to = Math.min(Array.isArray(l) ? l.length : 0, y);
           stack.push(list(from > to ? [] : l.slice(from - 1, to).map(copy), mostOf(l)));
           break;

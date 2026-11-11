@@ -125,7 +125,8 @@ export const NATIVES = {
   trim_end: { pure: true, fn: (t) => result(text(t).replace(/[ \t]+$/, "")) },
   remove_prefix: { pure: true, fn: (t, p) => result(text(p) && text(t).startsWith(text(p)) ? text(t).slice(text(p).length) : text(t)) },
   remove_suffix: { pure: true, fn: (t, s) => result(text(s) && text(t).endsWith(text(s)) ? text(t).slice(0, text(t).length - text(s).length) : text(t)) },
-  length: { pure: true, fn: (t) => num(chars(text(t)).length) },
+  length: { pure: true, fn: (t) => num(Array.isArray(t) ? t.length : t instanceof StrideMap ? t.entries.size : chars(text(t)).length) },
+  each_character: { pure: true, internal: true, fn: (t) => list(chars(text(t)), NO_MOST) },
   chars: {
     pure: true,
     control: [1, 2],
@@ -293,7 +294,7 @@ export const NATIVES = {
   },
 
   // ----- lists and sets (§14.4)
-  count: { pure: true, fn: (l) => num(l instanceof StrideMap ? l.entries.size : asList(l).length) },
+  count: { pure: true, fn: (l) => num(l instanceof StrideMap ? l.entries.size : typeof l === "string" ? chars(l).length : asList(l).length) },
   // Maps (§14.4.1). A map given is not changed: remove gives a new one.
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
   map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, copy(v)), m) }, // a map being written out: its next key

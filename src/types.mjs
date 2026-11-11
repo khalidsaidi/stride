@@ -86,6 +86,7 @@ export function unify(param, value, bindings) {
     return false;
   }
   if (param.t === "list" && value.t === "list") return value.element.t === "empty" || unify(param.element, value.element, bindings);
+  if (param.t === "function" && value.t === "function") return param.params.length === value.params.length && param.params.every((p, i) => unify(p, value.params[i], bindings)) && (param.result.t === "none" ? value.result.t === "none" : unify(param.result, value.result, bindings));
   if (param.t === "map" && value.t === "map") return (value.key.t === "empty" || unify(param.key, value.key, bindings)) && (value.value.t === "empty" || unify(param.value, value.value, bindings));
   return fits(value, substitute(param, bindings));
 }
@@ -95,11 +96,12 @@ export function substitute(type, bindings) {
   if (type.t === "typevar") return bindings.get(type.sym) ?? type;
   if (type.t === "list") return list(substitute(type.element, bindings), type.most);
   if (type.t === "map") return map(substitute(type.key, bindings), substitute(type.value, bindings));
+  if (type.t === "function") return fn(type.params.map((p) => substitute(p, bindings)), substitute(type.result, bindings));
   return type;
 }
 
-export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element)) || (type.t === "map" && (hasTypevar(type.key) || hasTypevar(type.value)));
-export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "map" ? typevarIn(type.key, sym) || typevarIn(type.value, sym) : type.t === "list" && typevarIn(type.element, sym));
+export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element)) || (type.t === "map" && (hasTypevar(type.key) || hasTypevar(type.value))) || (type.t === "function" && (type.params.some(hasTypevar) || hasTypevar(type.result)));
+export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "map" ? typevarIn(type.key, sym) || typevarIn(type.value, sym) : type.t === "function" ? type.params.some((p) => typevarIn(p, sym)) || typevarIn(type.result, sym) : type.t === "list" && typevarIn(type.element, sym));
 
 // Whether a value of type `value` can stand where `wanted` is wanted.
 export function fits(value, wanted) {

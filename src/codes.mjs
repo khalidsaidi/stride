@@ -273,10 +273,6 @@ export const CODES = {
     "when": "an empty option value",
     "explanation": "An option's value is words."
   },
-  "S217": {
-    "when": "a record holding itself",
-    "explanation": "A record that holds itself could never be made; a list of it would also not end."
-  },
   "S218": {
     "when": "a record field twice",
     "explanation": "Field names are unique."
@@ -672,10 +668,6 @@ export const CODES = {
   "S383": {
     "when": "`in` a list with another type",
     "explanation": "Of the list's element type."
-  },
-  "S384": {
-    "when": "`in` words",
-    "explanation": "`contains(t, part)`."
   },
   "S385": {
     "when": "`in` something else",

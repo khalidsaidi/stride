@@ -2,7 +2,7 @@
 // runs them on answers, and the compiler on a constant's value: one definition.
 // An operator given values it does not take is
 // F018: the checker refuses such a program, so reaching it is a compiler fault, never silently empty.
-import { D, StrideFault, equal, order, truthy, isEmpty, isNumber, words, list, mostOf } from "./values.mjs";
+import { D, StrideFault, equal, order, truthy, StrideMap, isEmpty, isNumber, words, list, mostOf } from "./values.mjs";
 
 
 function numberOp(f) {
@@ -64,6 +64,8 @@ export function binary(op, a, b) {
     case "or":
       return truthy(a) || truthy(b);
     case "in":
+      if (typeof b === "string") return b.includes(words(a));
+      if (b instanceof StrideMap) return b.has(a);
       return Array.isArray(b) ? b.some((x) => equal(x, a)) : false;
     case "not in":
       return !binary("in", a, b);

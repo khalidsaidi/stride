@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define mapf<t, r>(l: list of t, f: function(t) -> r) -> list of r {
+  var out: list of r = []
+  for each x in l {
+    out += [f(x)]
+  }
+  return out
+}
+define keep<t>(l: list of t, f: function(t) -> yes-no) -> list of t {
+  return [x for each x in l if f(x)]
+}
+define fold<t, a>(l: list of t, start: a, f: function(a, t) -> a) -> a {
+  var acc = start
+  for each x in l {
+    acc = f(acc, x)
+  }
+  return acc
+}
+print(mapf([1, 2, 3], function(n: number) -> text { return "#{n}" }))
+print(keep([1, 2, 3, 4], function(n: number) -> yes-no { return n % 2 == 0 }))
+print(fold([1, 2, 3], 0, function(a: number, n: number) -> number { return a + n }))
+# rule 9.5
+# prints ["[#1, #2, #3]", "[2, 4]", "6"]

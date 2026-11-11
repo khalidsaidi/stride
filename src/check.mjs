@@ -251,6 +251,7 @@ export function check(resolved, diagnostics) {
       case "for-each": {
         const type = expr(s.list, ctx);
         if (type.t === "list") s.itemSymbol.type = type.element;
+        else if (T.isTextLike(type)) s.itemSymbol.type = T.TEXT; // each character
         else if (type.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it (§7.11).
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
@@ -689,6 +690,8 @@ export function check(resolved, diagnostics) {
         }
         if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 1), not ${T.describe(i)}`);
         if (T.isError(t)) return T.ERROR;
+        // Words are indexed as a list is: one character (§6.9.2).
+        if (T.isTextLike(t)) return T.TEXT;
         if (t.t !== "list") {
           err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; character(words, position) takes one character of words" : ""}`);
           return T.ERROR;
@@ -747,8 +750,9 @@ export function check(resolved, diagnostics) {
           if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S396", x, `a slice's bounds are numbers, not ${T.describe(i)}`);
         }
         if (T.isError(t)) return T.ERROR;
+        if (T.isTextLike(t)) return T.TEXT; // part of words, as part of a list
         if (t.t !== "list") {
-          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; slice(words, from, to) takes part of words" : ""}`);
+          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list`);
           return T.ERROR;
         }
         return t;
@@ -756,7 +760,11 @@ export function check(resolved, diagnostics) {
       case "comprehension": {
         const l = expr(e.list, ctx);
         let most = 1;
-        if (l.t === "list") {
+        if (T.isTextLike(l)) {
+          e.itemSymbol.type = T.TEXT; // each character
+          e.overText = true;
+          most = T.NO_MOST;
+        } else if (l.t === "list") {
           e.itemSymbol.type = l.element;
           most = T.NO_MOST;
         } else if (l.t === "options") {
@@ -888,6 +896,7 @@ export function check(resolved, diagnostics) {
         }
       } else if (want.t === "list" && got.t === "list") collect(want.element, got.element, from);
       else if (want.t === "map" && got.t === "map") (collect(want.key, got.key, from), collect(want.value, got.value, from));
+      else if (want.t === "function" && got.t === "function") (want.params.forEach((p, i) => got.params[i] && collect(p, got.params[i], from)), collect(want.result, got.result, from));
     };
     // In the order the arguments are written, then the defaults of those not given, in the parameters' order
     // (§9.5.1): a join does not depend on it, but S367 stands at the first written argument that conflicts.
@@ -975,7 +984,7 @@ export function check(resolved, diagnostics) {
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
-    if (sym.name === "count" && l.t === "map") return;
+    if (sym.name === "count" && (l.t === "map" || T.isTextLike(l))) return;
     if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "empty") {
       err("S369", bound[0], `${sym.name} takes a list${SET_FUNCTIONS.includes(sym.name) ? " or a set of options" : ""}, and this is ${T.describe(l)}`);
       return;
@@ -1103,6 +1112,12 @@ export function check(resolved, diagnostics) {
           return T.YES_NO;
         }
         if (b.t === "empty") return T.YES_NO; // nothing is in empty (§3.6)
+        // Words within words, and a key among a map's.
+        if (T.isTextLike(b) && (T.isTextLike(a) || a.t === "option" || a.t === "empty")) return T.YES_NO;
+        if (b.t === "map") {
+          if (!T.fits(a, b.key)) return err2("S383", `${describeExpr(e.b)}'s keys are ${T.describe(b.key)}, and this is ${T.describe(a)}`);
+          return T.YES_NO;
+        }
         if (T.isTextLike(b)) return err2("S384", `${e.op} asks about a set of options or a list; for words within words, contains(${describeExpr(e.b)}, ${describeExpr(e.a)})`);
         return err2("S385", `${e.op} asks about a set of options or a list; ${describeExpr(e.b)} is ${T.describe(b)}`);
       default:

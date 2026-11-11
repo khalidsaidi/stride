@@ -446,7 +446,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key, most: 2147483647 } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
-    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : expr(s.list, ctx), node: s });
+    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [expr(s.list, ctx)]) : expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -648,7 +648,7 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.indexSymbol) inner.locals.set(e.indexSymbol, pairs ? key : index);
         return {
           e: "comp",
-          list: e.overMap && !pairs ? IR.native("keys", [expr(e.list, ctx)]) : expr(e.list, ctx),
+          list: e.overMap && !pairs ? IR.native("keys", [expr(e.list, ctx)]) : e.overText ? IR.native("each_character", [expr(e.list, ctx)]) : expr(e.list, ctx),
           key,
           item,
           index,

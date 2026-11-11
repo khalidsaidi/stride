@@ -240,7 +240,6 @@ export function resolve(loaded, diagnostics) {
       for (const tv of sym.typeParams) if (!tv.reported && !sym.params.some((p) => T.typevarIn(p.type, tv))) err("S221", unit.file, tv.node.span, `${tv.name} is in none of ${sym.name}'s parameters, so no call could tell what it is`);
       sym.type = { t: "function", params: sym.params.map((p) => p.type), result: sym.result };
     }
-    checkRecordCycles(result.records, unit);
 
     // Bodies: the program's own statements in order, then each function's (which may read the program's names).
     const statements = unit.tree.items.filter((i) => !DECLARATION_KINDS.has(i.kind) && i.kind !== "use");
@@ -356,27 +355,6 @@ export function resolve(loaded, diagnostics) {
   }
 
   // A record that holds itself (directly or through other records) could never be made.
-  function checkRecordCycles(records, unit) {
-    const state = new Map();
-    const visit = (decl, path) => {
-      if (state.get(decl) === "done") return;
-      if (state.get(decl) === "visiting") {
-        const names = [...path.slice(path.indexOf(decl)), decl].map((d) => d.name);
-        err("S217", unit.file, decl.node.span, `the record ${decl.name} holds itself (${names.join(" holds ")}); a record may not hold itself, through a list either: give the inner one a record of its own`);
-        return;
-      }
-      state.set(decl, "visiting");
-      // Directly, or through a list of it (§5.1).
-      for (const f of decl.fields) {
-        let t = f.type;
-        while (t.t === "list") t = t.element;
-        if (t.t === "record") visit(t.decl, [...path, decl]);
-      }
-      state.set(decl, "done");
-    };
-    for (const r of records) if (r.decl) visit(r.decl, []);
-  }
-
   // ----- statements
 
   // The names a block defines, with their lines, including those inside its ifs and matches (which are not

@@ -44,7 +44,7 @@ export native define remove_prefix(t: text, prefix: text) -> text
 # example: remove_suffix("report.pdf", ".pdf") gives report
 export native define remove_suffix(t: text, suffix: text) -> text
 # example: length("héllo") gives 5
-export native define length(t: text) -> number
+export native define length(t: any) -> number
 # example: chars("123-45-6789", 4, 5) gives 45
 export native define chars(t: text, from: number, to: number) -> text
 # example: character("A1-B2", 3) gives B

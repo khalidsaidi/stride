@@ -222,8 +222,9 @@ is there).
 
 ## 5. Declarations
 
-5.1. **record**: `"record" name "{" (name ":" type [","])* "}"`. Field names are unique (S218). A record may not
-hold itself through its fields, directly or through other records (S217); through a list it may not either.
+5.1. **record**: `"record" name "{" (name ":" type [","])* "}"`. Field names are unique (S218). A record may
+hold its own type, directly or through a list, a map or other records (a tree, a chain): such a field starts
+empty, such a list with no items.
 
 5.2. **options**: `"options" name "{" (["option"] plain string)* "}"`. Values unique (S215), not empty (S216); at
 least 1 option (S235). A question's own options obey the same. The
@@ -331,15 +332,15 @@ among them) by Unicode code points from the first, a shorter word before its lon
 order (`sorted`, `smallest`, `largest`); a set keeps its declaration order (§3.8) and is not sorted (S369).
 
 6.8. **Membership** `x in s`, `x not in s`: `s` a set of options and `x` an option of the same set or words (S381,
-S382, S386); or `s` a list and `x` of its element type (S383): yes when an item is equal (§6.6). On words it is
-S384 (`contains(t, part)`).
+S382, S386); or `s` a list and `x` of its element type (S383): yes when an item is equal (§6.6). With `s` words and `x` words: yes when
+x is within s. With `s` a map: yes when x is one of its keys.
 
 6.9. **Postfix.** A line break before `[` or `(` ends the expression before it: the bracket starts a new one.
 - 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357; no such field S318 (with a hint).
   `r.f` of an empty record (an absent list item) is empty.
-- 6.9.2. `l[i]`: i a number (S358), l a list (S359). i not whole, or below 1, is F004 (S360 when i is
+- 6.9.2. `l[i]`: i a number (S358), l a list, or words (their i-th character; S359 otherwise). i not whole, or below 1, is F004 (S360 when i is
   written out). i above the number of items is empty (a form's empty row).
-- 6.9.3. `l[a..b]`: the items a to b, a list of l's element type and most. a, b whole (F004); a < 1 counts from 1;
+- 6.9.3. `l[a..b]`: the items a to b (of words: the characters a to b), a list of l's element type and most. a, b whole (F004); a < 1 counts from 1;
   b beyond the items stops at the last; a > b gives an empty list.
 - 6.9.4. `f(args)`: a call (§9).
 
@@ -1130,7 +1131,6 @@ its call: the function's name in the call.
 | S214 | `any` or `element` outside the natives | Write the type. |
 | S215 | an option value twice | Values in a set are unique. |
 | S216 | an empty option value | An option's value is words. |
-| S217 | a record holding itself | A record that holds itself could never be made; a list of it would also not end. |
 | S218 | a record field twice | Field names are unique. |
 | S219 | two parameters of one name | Rename one. |
 | S220 | a type parameter's name that cannot be one | Use a name that is not a type or another parameter. |
@@ -1230,7 +1230,6 @@ its call: the function's name in the call.
 | S381 | an option of one set in a set of another | Of the same set. |
 | S382 | `in` a set with something not an option | `"value" in s`. |
 | S383 | `in` a list with another type | Of the list's element type. |
-| S384 | `in` words | `contains(t, part)`. |
 | S385 | `in` something else | A set of options or a list. |
 | S386 | words that are not one of the set's values | The message lists the values. |
 | S387 | set operations on two option sets | Both sets of one option set. |
