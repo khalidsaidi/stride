@@ -30,7 +30,7 @@ function parts() {
 // whose heading holds the words. null when nothing does.
 export function guide(topic) {
   if (topic === null) return GUIDES.guide;
-  if (GUIDES[topic]) return GUIDES[topic];
+  if (Object.hasOwn(GUIDES, topic)) return GUIDES[topic];
   if (topic === "topics") return parts().map((p) => `${p.guide.padEnd(12)} ${p.heading}`).join("\n");
   const w = topic.toLowerCase();
   const found = parts().filter((p) => p.heading.toLowerCase().includes(w));

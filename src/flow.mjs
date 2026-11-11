@@ -278,6 +278,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
           need(s.another, "the question that asks for another item");
           if (s.any) need(s.any, "the question that asks whether there are any");
           break;
+        case "expect":
+          need(s.fault, "the fault a test expects");
+          break;
         case "for":
           if (s.unroll) (need(s.from, "the bounds of a loop that asks or writes boxes"), need(s.to, "the bounds of a loop that asks or writes boxes"));
           break;

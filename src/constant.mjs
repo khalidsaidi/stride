@@ -156,6 +156,9 @@ function value(e, env, visiting) {
       if (e.op === "or" && a === true) return true;
       const b = value(e.b, env, visiting);
       if (a === undefined || b === undefined) return undefined;
+      // A set and a list of its option values: the list as a set, as the engines take it (§3.6, §6.6).
+      if (e.a.type?.t === "options" && e.b.type?.t === "list") return faultOf(e, () => binary(e.op, a, placed(b, e.a.type)));
+      if (e.b.type?.t === "options" && e.a.type?.t === "list") return faultOf(e, () => binary(e.op, placed(a, e.b.type), b));
       // l + m is placed into its joined type, as the engines place it (§3.9 rule 4, §6.5.1).
       return faultOf(e, () => (e.op === "+" && e.type?.t === "list" ? placed(binary(e.op, a, b), e.type) : binary(e.op, a, b)));
     }

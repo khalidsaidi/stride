@@ -301,7 +301,7 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // expect e / expect e faults "…" (§7.17): the test runner runs each as its own sub-run.
   function lowerExpect(s, ctx) {
-    emit(ctx, { op: "expect", value: expr(s.value, ctx), fault: s.fault ? expr(s.fault, ctx) : null, message: s.message ? expr(s.message, ctx) : null, node: s });
+    emit(ctx, { op: "expect", value: expr(s.value, ctx), fault: s.fault ? IR.constant(knownText(ctx, s.fault, "the fault a test expects")) : null, message: s.message ? expr(s.message, ctx) : null, node: s });
   }
 
 

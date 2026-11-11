@@ -91,6 +91,7 @@ export function substitute(type, bindings) {
 }
 
 export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element));
+export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "list" && typevarIn(type.element, sym));
 
 // Whether a value of type `value` can stand where `wanted` is wanted.
 export function fits(value, wanted) {

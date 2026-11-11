@@ -32,6 +32,13 @@ for (const run of steps) {
   const got = [];
   for (const s of run.asks) {
     if (s.write) fs.writeFileSync(cwd + "/" + s.write, s.text.replace("{sha}", "1".repeat(64)));
+    if (s.host) {
+      // Asked under another site's name: http, since fetch does not let the Host be set.
+      const http = await import("node:http");
+      const status = await new Promise((ok) => http.get(url + s.ask.slice(1), { headers: { host: s.host } }, (r) => (r.resume(), ok(r.statusCode))));
+      got.push([s.ask, status, null, 0, ""]);
+      continue;
+    }
     const r = await fetch(url + s.ask.slice(1));
     const body = Buffer.from(await r.arrayBuffer());
     got.push([s.ask, r.status, r.headers.get("content-type"), body.length, body.toString("utf8").slice(0, 300)]);
@@ -69,7 +76,7 @@ export function test() {
         { ask: "/workflow.sbc", write: "consent.stride", text: source },
       ] },
       { name: "compiled, alone", args: ["consent.sbc", "--port", "0"], asks: [{ ask: "/workflow.sbc" }, { ask: "/form.pdf" }] },
-      { name: "today", args: ["consent.stride", "--port", "0", "--today", "2026-02-03"], asks: [{ ask: "/" }] },
+      { name: "today", args: ["consent.stride", "--port", "0", "--today", "2026-02-03"], asks: [{ ask: "/" }, { ask: "/workflow.sbc", host: "other.example" }] },
       { name: "another PDF", args: ["consent.stride", "--port", "0", "--pdf", "other.pdf"], asks: [] },
       { name: "compiled, another PDF", args: ["consent.sbc", "--port", "0", "--pdf", "../other.pdf"], asks: [] },
       { name: "mistakes", args: ["bad.stride", "--port", "0"], asks: [] },
@@ -86,6 +93,7 @@ export function test() {
     if (pdfChanged?.[1] !== 422 || !pdfChanged[4].includes("mistake S501")) problems.push(`a program for another PDF, at the reload: ${JSON.stringify(pdfChanged)}`);
     if (back?.[1] !== 200) problems.push(`put back, at the reload: ${JSON.stringify(back)}`);
     if (sbc.got?.[0]?.[1] !== 200 || sbc.got[0][3] !== readFileSync(join(dir, "consent.sbc")).length || sbc.got?.[1]?.[1] !== 200) problems.push(`the compiled program, with only its PDF: ${JSON.stringify(sbc)}`);
+    if (today.got?.[1]?.[1] !== 403) problems.push(`asked under another site's name, it must refuse: ${JSON.stringify(today.got?.[1])}`);
     if (!today.got?.[0]?.[4].includes('<meta name="stride-today" content="2026-02-03">')) problems.push(`--today in the page: ${JSON.stringify(today.got)}`);
     if (other.exit !== 1 || !other.stderr.includes("is not the PDF")) problems.push(`another PDF: ${JSON.stringify(other)}`);
     if (sbcOther.exit !== 1 || !sbcOther.stderr.includes("is not the PDF consent.sbc was compiled for")) problems.push(`the compiled program with another PDF: ${JSON.stringify(sbcOther)}`);

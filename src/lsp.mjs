@@ -470,6 +470,12 @@ export function serve() {
       const end = buffer.indexOf("\r\n\r\n");
       if (end < 0) return;
       const length = Number(/Content-Length: (\d+)/i.exec(buffer.slice(0, end).toString())?.[1]);
+      // A header with no Content-Length says nothing of what follows: it is dropped, and reading goes on.
+      if (!Number.isFinite(length)) {
+        buffer = buffer.slice(end + 4);
+        send({ id: null, error: { code: -32700, message: "a message without Content-Length" } });
+        continue;
+      }
       if (buffer.length < end + 4 + length) return;
       const raw = buffer.slice(end + 4, end + 4 + length).toString("utf8");
       buffer = buffer.slice(end + 4 + length);

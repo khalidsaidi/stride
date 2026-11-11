@@ -1,0 +1,4 @@
+const CODE = "F001"
+expect 1 / 0 faults "{CODE}"
+expect 1 / 0 faults "division {"by"} zero"
+# rule 7.17

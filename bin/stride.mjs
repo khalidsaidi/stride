@@ -50,6 +50,7 @@ const BUILD = typeof STRIDE_BUILD === "string" ? STRIDE_BUILD : "source";
 
 // An option: [what it is, the name of its value, or null when it takes none].
 const COMMANDS = {
+  __proto__: null,
   run: ["stride run <file.stride|file.sbc> [--pdf <file.pdf>] [--port N]  |  stride run <file.stride|file.sbc|-> --terminal [answers.json|-] [key=value …]", "Runs a program in the browser: its workflow beside its PDF, the questions one at a time, the filled PDF to download. A source program is checked and compiled first, and again at each reload, so saving and reloading shows a change; a compiled one needs only its PDF. With --terminal, or for a script, it runs in the terminal: answers come from a JSON file, from stdin (-), as key=value arguments, or, at a terminal with none of those, are asked there one at a time; a script prints what it prints, a program also says the questions it asked and the boxes it wrote. `-` as the file reads a script from stdin.", { "--terminal": ["run a program in the terminal, not the browser", null], "--pdf": ["in the browser: the form's PDF; else <file>.pdf beside the program", "file.pdf"], "--port": ["in the browser: the port to serve on, 0 for any free one; else 8080", "N"], "--trace": ["in the terminal: each statement as it runs, with its line and the values it changes, on stderr", null], "--today": ["the date today() gives", "YYYY-MM-DD"], "--prompt": ["in the terminal: ask the questions one at a time, reading the answers from stdin, terminal or not", null], "--no-prompt": ["in the terminal: never ask: questions without an answer stay unanswered", null], "--json": ["in the terminal: one JSON document: questions, prints, boxes, fault", null] }, "stride run consent.stride"],
   check: ["stride check [path …]", "Every check the compiler makes, writing nothing: a program against its form's header, a script, a test file; a folder, every one in it. No path: the folder you are in. run and compile make these checks first, so check is never needed before them.", { "--json": ["one JSON document: each file and its mistakes and warnings", null] }, "stride check w9.stride"],
   compile: ["stride compile <file.stride> [-o <file.sbc>]", "Compiles to bytecode, beside the source or to -o: the program, the library code it uses, its questions, the boxes each answer goes into, its words and its form's PDF fingerprint; everything a run needs but the PDF. It needs no answers and opens nothing. Share the .sbc with its PDF: stride run file.sbc.", { "--output": ["where the bytecode goes", "file.sbc"], "--json": ["one JSON document: the bytecode written, or the mistakes", null] }, "stride compile w9.stride -o w9.sbc"],
@@ -579,7 +580,8 @@ async function main(argv) {
       const file = args[0];
       const fromStdin = file === "-" && command === "run";
       const warnings = json ? [] : null;
-      const r = fromStdin ? program("stdin.stride", { warnings, source: readAllBytes() }) : program(file, { warnings });
+      const stdinSource = fromStdin ? readAllBytes() : null;
+      const r = fromStdin ? program("stdin.stride", { warnings, source: stdinSource }) : program(file, { warnings });
       if (r.error) return fileError(r);
       // Where it runs (§17.18): a program in the browser, unless --terminal; a script in the terminal. An option of
       // the other place is a usage mistake.
@@ -633,7 +635,7 @@ async function main(argv) {
       // bytecode, the machine's instructions.
       let result;
       if (flags.has("--trace") && !file.endsWith(".sbc")) {
-        const plain = fromStdin ? { ...compile(r.out.source ?? "", "stdin.stride", { trace: true }) } : compileFile(file, { trace: true, ...(r.out.header ? {} : { header: { form: null, pdf: "0".repeat(64), boxes: [] } }) });
+        const plain = fromStdin ? { ...compile(stdinSource, "stdin.stride", { trace: true }) } : compileFile(file, { trace: true, ...(r.out.header ? {} : { header: { form: null, pdf: "0".repeat(64), boxes: [] } }) });
         const watch = sourceTrace();
         result = interpretProgram(plain.program, answers, plain.boxes, { today, watch });
         watch.flush();

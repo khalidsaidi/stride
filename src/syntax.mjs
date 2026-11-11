@@ -1195,18 +1195,21 @@ export function parseExpression(text, depth = 0) {
 export function parseSource(text, start = "Program", depth = 0) {
   const mistakes = [];
   let tokens;
-  try {
-    tokens = lex(text);
-  } catch (e) {
-    if (!(e instanceof SyntaxMistake)) throw e;
-    // A mistake in a token: report it, set that line aside, and read the rest.
-    mistakes.push(e);
-    const lines = text.split("\n");
-    // A byte-order mark is the one mistake of its line: the rest is read (a space keeps the columns).
-    if (e.span.start === 0 && text[0] === "\uFEFF") lines[0] = ` ${lines[0].slice(1)}`;
-    else lines[e.span.line - 1] = "";
-    const rest = parseSource(lines.join("\n"), start, depth);
-    return { tree: null, mistakes: [...mistakes, ...rest.mistakes].slice(0, 20) };
+  for (;;) {
+    try {
+      tokens = lex(text);
+      break;
+    } catch (e) {
+      if (!(e instanceof SyntaxMistake)) throw e;
+      // A mistake in a token: report it, set that line aside, and read the rest. Twenty are enough (§16.1).
+      mistakes.push(e);
+      if (mistakes.length >= 20) return { tree: null, mistakes };
+      const lines = text.split("\n");
+      // A byte-order mark is the one mistake of its line: the rest is read (a space keeps the columns).
+      if (e.span.start === 0 && text[0] === "\uFEFF") lines[0] = ` ${lines[0].slice(1)}`;
+      else lines[e.span.line - 1] = "";
+      text = lines.join("\n");
+    }
   }
   const parser = new Parser(tokens, mistakes, depth);
   let tree = null;
@@ -1219,5 +1222,5 @@ export function parseSource(text, start = "Program", depth = 0) {
     if (!(e instanceof SyntaxMistake)) throw e;
     if (!mistakes.includes(e)) mistakes.push(e);
   }
-  return { tree: mistakes.length ? null : tree, mistakes };
+  return { tree: mistakes.length ? null : tree, mistakes: mistakes.slice(0, 20) };
 }

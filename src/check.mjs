@@ -945,8 +945,9 @@ export function check(resolved, diagnostics) {
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";
         if (wordy(a) && wordy(b) && (a.t !== "empty" || b.t !== "empty")) return T.TEXT;
-        if (a.t === "empty") return b;
-        if (b.t === "empty") return a;
+        // Empty beside a number adds as a number; two empties stay empty (§6.5).
+        if (a.t === "empty" && (b.t === "number" || b.t === "empty")) return b;
+        if (b.t === "empty" && a.t === "number") return a;
         if ((wordy(a) && b.t === "number") || (a.t === "number" && wordy(b))) return err2("S372", `+ adds two numbers or joins two words; to put a number into words, write "…{${describeExpr(a.t === "number" ? e.a : e.b)}}…"`);
         return err2("S373", `+ adds numbers or joins words, not ${T.describe(a)} and ${T.describe(b)}`);
       case "-":

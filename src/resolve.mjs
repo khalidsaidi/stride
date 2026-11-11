@@ -239,7 +239,7 @@ export function resolve(loaded, diagnostics) {
         sym.inferResult = true;
         sym.result = null;
       }
-      for (const tv of sym.typeParams) if (!tv.reported && !sym.params.some((p) => T.hasTypevar(p.type))) err("S221", unit.file, tv.node.span, `${tv.name} is in none of ${sym.name}'s parameters, so no call could tell what it is`);
+      for (const tv of sym.typeParams) if (!tv.reported && !sym.params.some((p) => T.typevarIn(p.type, tv))) err("S221", unit.file, tv.node.span, `${tv.name} is in none of ${sym.name}'s parameters, so no call could tell what it is`);
       sym.type = { t: "function", params: sym.params.map((p) => p.type), result: sym.result };
     }
     checkRecordCycles(result.records, unit);

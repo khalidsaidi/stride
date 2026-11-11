@@ -510,7 +510,7 @@ line. Statements after a `return`, `break` or `continue` in the same block never
 7.17. **expect** (at the top level of a test file only; in a program, in a library, or inside any function, a
 test file's included, it is S236): `expect e ["words"]`: e yes-no; the expectation fails with the words when e is
 not yes.
-`expect e faults "code or words"`: working out e must be a fault. A selector matching F[0-9]{3} exactly matches
+`expect e faults "code or words"`: working out e must be a fault. The words are known before the form opens (§11.2, S403). A selector matching F[0-9]{3} exactly matches
 only the fault code. Every other selector matches a case-sensitive substring of the message. There is no message
 fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The test passes only when
 both engines give that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
@@ -857,7 +857,7 @@ items, records made with `new`, calls of Stride functions. A known value is ther
 a list of known values (§8.6.3 encodes each).
 
 11.2. Must be known: a box's and a button's name, a question's printed words and an option's, the questions of a
-collect, a skip's reason, a list's most, a constant's value, a parameter's default, and the bounds of a loop that
+collect, a skip's reason, the words after `faults` in a test, a list's most, a constant's value, a parameter's default, and the bounds of a loop that
 asks or writes boxes (S403). A parameter used where a known value is needed becomes known-only; every call gives it
 a known value (S404). Such a value must be the same in every turn of a loop that does not count it (S412).
 

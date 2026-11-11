@@ -18,11 +18,12 @@ const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const BUILT_IN = typeof STRIDE_PAGE !== "undefined" ? STRIDE_PAGE : null;
 const pdfjsDir = () => dirname(createRequire(import.meta.url).resolve("pdfjs-dist/package.json"));
 
+const escaped = (t) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 const PAGE = (name, today) => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${name}: workflow</title><link rel="stylesheet" href="/app.css">${today ? `<meta name="stride-today" content="${today}">` : ""}</head>
+<title>${escaped(name)}: workflow</title><link rel="stylesheet" href="/app.css">${today ? `<meta name="stride-today" content="${today}">` : ""}</head>
 <body>
-<header><h1><span class="code">${name}</span> workflow</h1>
+<header><h1><span class="code">${escaped(name)}</span> workflow</h1>
 <p class="line"><span class="status">Loading…</span></p>
 <div class="actions"><button type="button" class="quiet" id="questions">Questions</button><button type="button" id="download" hidden>Download the filled PDF</button></div></header>
 <div id="viewerContainer"><div id="viewer" class="pdfViewer"></div></div>
@@ -96,6 +97,10 @@ export async function serve(programPath, { pdfPath = null, port = 8080, today = 
     }
   });
   function answer(req, res) {
+    // Only a page opened at this computer's own address is answered: another site's page, pointed here by a name
+    // of its own, is not given the program or the PDF.
+    const host = (req.headers.host ?? "").replace(/:\d+$/, "");
+    if (!["127.0.0.1", "localhost", "[::1]"].includes(host)) return send(res, "text/plain", "not here", 403);
     const path = new URL(req.url, "http://localhost").pathname;
     if (path === "/") return send(res, "text/html; charset=utf-8", PAGE(name, today));
     if (path === "/app.js") return send(res, "text/javascript", js);

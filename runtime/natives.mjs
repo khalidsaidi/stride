@@ -168,7 +168,16 @@ export const NATIVES = {
   letters: { pure: true, fn: (t) => result(text(t).replace(/[^\p{L}]/gu, "")) },
   is_digits: { pure: true, fn: (t) => text(t) !== "" && /^[0-9]+$/.test(text(t)) },
   is_letters: { pure: true, fn: (t) => text(t) !== "" && /^\p{L}+$/u.test(text(t)) },
-  replace: { pure: true, fn: (t, part, w) => result(text(part) === "" ? text(t) : text(t).split(text(part)).join(text(w))) },
+  replace: {
+    pure: true,
+    fn: (t, part, w) => {
+      if (text(part) === "") return result(text(t));
+      // Too long is said before the words are built: each part found grows them by a known amount.
+      const pieces = text(t).split(text(part));
+      if (text(t).length + (pieces.length - 1) * (text(w).length - text(part).length) > MAX_WORDS * 2) throw new StrideFault("F012", `the words would be more than ${MAX_WORDS} characters`);
+      return result(pieces.join(text(w)));
+    },
+  },
   contains: { pure: true, fn: (t, part) => fold(text(t)).includes(fold(text(part))) },
   starts_with: { pure: true, fn: (t, part) => fold(text(t)).startsWith(fold(text(part))) },
   ends_with: { pure: true, fn: (t, part) => fold(text(t)).endsWith(fold(text(part))) },
