@@ -474,7 +474,8 @@ items reads as empty); then e is evaluated (step 2); then the operation is appli
 (§6.3–§6.5, which may fault); then steps 3 and 4. The place is never worked out twice: in `xs[next()] += 1` the
 call runs once.
 
-7.6. **fill** `fill "box" = e`: writes e's words (§3.5) into a text box or a list box. e yes-no is S307, a set
+7.6. **fill** `fill "box" = e`: writes e's words (§3.5) into a text box or a list box. Words the compiler knows are not one of a
+list box's entries are S514; words it cannot tell beforehand go in as they are. e yes-no is S307, a set
 S308, a list or record S309.
 
 7.7. **tick** `tick "box" when c`: ticks the check box (with its own export value) when c is yes, else leaves it
@@ -775,12 +776,11 @@ The header's PDF and form must be the program's (S501, S502).
 
 10.3. Every box written exists (S508, with the nearest name), and is written by the statement of its kind: `fill`
 a text or list box, `tick` a check box, `pick` a radio group (S509); a button the group has (S511); a list box's
-entry it has (S514). A choice box accepts empty, or a value whose possible words on that path the PDF check proves
-are all entries of the box. Otherwise it is S514. A one-of answer is checked for every option still allowed on the
-path, and for empty; expressions derived from it are evaluated for each value. For other answers, candidate values
-must be proved to cover everything allowed by the question's type and the path's conditions. Merely mentioning a
-value does not establish that restriction. If the check cannot prove every resulting nonempty word is an entry, it
-reports S514. A value chosen by `if … then … else` is proved arm by arm: each arm's words are those its condition
+entry it has (S514). A choice box accepts empty, or one of its entries. Words the PDF check can work
+out for a path and that are not an entry are S514: a one-of answer is tried for every option still allowed on the
+path, and for empty, and expressions made from it are worked out for each. Words it cannot work out beforehand
+(made from words a person types, or from a date) are not a mistake: they go into the box as they are. Stride is
+no stricter than the form. A value chosen by `if … then … else` is proved arm by arm: each arm's words are those its condition
 allows, for an answer of any type, as a branch's condition restricts the code it guards (`fill "L" = if n > 5 then
 "high" else "low"` puts "high" or "low", never both). A set placed straight in a choice box is S308; words made
 from a set (`join(s, ", ")`) are proved like any others, each set its options allow. A question's `check`

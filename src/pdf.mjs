@@ -879,7 +879,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
           else if (sk) twice(s, target, full, sk, "written after it is skipped");
           else st.written = st.written.with(target, [{ node: s.node, stmt: s, facts: st.facts }]);
         }
-        boxes.set(full, { kind: s.op, on: s.op === "tick" ? box.on ?? "Yes" : null });
+        boxes.set(full, { kind: s.op, on: s.op === "tick" ? box.on ?? "Yes" : null});
         // What the box says about the questions whose answers go into it.
         const words = found.flatMap((x) => x.near ?? []);
         // The answers that go into it: those its value or condition is made of and, for a tick or pick whose
@@ -900,11 +900,10 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
         if (s.op === "fill" && first.kind === "choice" && entryWords !== "" && first.options && !first.options.includes(entryWords)) errOnce("S514", `choice\t${full}\t${entryWords}`, s.node?.value ?? s.node, `the list box "${short}" has no entry "${entryWords}"`);
         // A choice box takes empty, or words the check proves are all its entries on this path (§10.3): each
         // answer the value is made of takes each value it can have here (a one-of's options and empty; any other
-        // answer only what the path's conditions name), and the value is worked out for each. Words it cannot
-        // prove are entries are S514.
+        // answer only what the path's conditions name), and the value is worked out for each. Words it knows are
+        // not entries are S514; words it cannot tell beforehand go in as they are.
         if (s.op === "fill" && first.kind === "choice" && first.options && isTop(value)) {
           const proof = possibleWords(fn, valueExpr, st, value);
-          if (proof.unknown) errOnce("S514", `choice\t${full}\t?`, s.node?.value ?? s.node, `the list box "${short}" may be given words that are not its entries: ${proof.unknown}; fill it from a one-of answer, or inside a branch that names the entry`);
           for (const [w, why] of proof.words) if (!first.options.includes(w)) errOnce("S514", `choice\t${full}\t${w}`, s.node?.value ?? s.node, `the list box "${short}" has no entry "${w}", which it gets when ${why}`);
         }
       }

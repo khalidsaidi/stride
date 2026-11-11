@@ -6,6 +6,8 @@ for i in 1..n {
   x = "NY"
 }
 fill "ST" = x
-# rule 10.4.0 10.3 S514
+# rule 10.4.0 10.3
 # box ST choice:CA,NY near N
-# mistake 8:13 S514
+# run two
+# answers {"n": "2"}
+# boxes {"ST": "NY"}

@@ -29,5 +29,3 @@ fill "Q" = t
 # box N choice:NY,CA near Other B
 # box P choice:NY,CA near Pick New York California
 # box Q choice:NY,CA near Text
-# mistake 20:14 S514 the list box "N" may be given words that are not its entries: v can be any words here
-# mistake 25:12 S514 the list box "Q" may be given words that are not its entries: t can be any words here

@@ -21,5 +21,4 @@ if n == 3 {
 # box L choice:2 near N
 # box M choice:3 near N Y
 # box P choice:2 near N
-# mistake 11:14 S514 the list box "M" may be given words that are not its entries: n can be any number here
 # mistake 16:14 S514 the list box "P" has no entry "3", which it gets when n is "3"
