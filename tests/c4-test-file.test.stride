@@ -1,4 +1,4 @@
-use "c-pair"
+import "c-pair"
 let p = new pair { left: "x", right: "y" }
 expect both(p) == "xy"
 expect both(p) != "yx" "joined in order"

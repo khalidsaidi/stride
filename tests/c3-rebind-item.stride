@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let rows = [[1], [2]]
-for each row in rows {
+for row in rows {
   row = [0]
 }
 print(rows)

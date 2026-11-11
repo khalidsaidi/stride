@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask business: yes-no "Business?"
+ask business: bool "Business?"
 if business {
-  ask name: text "Business name"
+  ask name: string "Business name"
 } else {
-  ask name: text "Your name"
+  ask name: string "Your name"
 }
 fill "A" = name
 # answers {"business": "no", "name": "Ada"}

@@ -3,6 +3,6 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 let l = ["a"]
 # mistake 5 S333 collect fills a var
 collect x in l "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
 # rule 8.5 S333

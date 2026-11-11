@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define row(n: number) {
-  ask v: text "V"
+function row(n: number) {
+  ask v: string "V"
   fill "R{n}" = v
 }
 for i in 1..2 {

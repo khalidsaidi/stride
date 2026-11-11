@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-a" as a
+import "c-a" as a
 let a = 1
 print(a)
-define f() -> number {
+function f() -> number {
   return a
 }
 print(f())

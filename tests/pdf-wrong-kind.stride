@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Name text near Name
 # box Agree check near Agree
-ask a: yes-no "Agree"
+ask a: bool "Agree"
 # mistake 7 S509 tick cannot write it
 tick "Name" when a
 tick "Agree" when a

@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f<t, u>(l: list of t) -> u {
-  return empty
+function f<t, u>(l: list<t>) -> u {
+  return null
 }
 print(count(f([1])))
 
 # rule S221
-# mistake 3:13 S221
+# mistake 3:15 S221

@@ -1,7 +1,7 @@
-define d(x: number) -> number {
+function d(x: number) -> number {
   return 1 / x
 }
-define z() -> number {
+function z() -> number {
   var v = 0
   return v
 }

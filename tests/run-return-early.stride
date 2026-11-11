@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define sign(n: number) -> text {
+function sign(n: number) -> string {
   if n < 0 {
     return "minus"
   }

@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-ask o: one-of s "O"
-define t(x: text) -> text {
+ask o: one_of s "O"
+function t(x: string) -> string {
   return upper(x)
 }
 print(t(o))

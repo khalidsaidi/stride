@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record kid { name: text, born: number }
-ask f: text "F"
+record kid { name: string, born: number }
+ask f: string "F"
 let ks = [new kid { name: "a", born: 1 }]
 fill "A" = first(sorted(ks, by: f)).name
 # rule S399 14.4

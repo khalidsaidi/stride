@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-ask b: text "B"
-ask c: text "C"
+ask a: string "A"
+ask b: string "B"
+ask c: string "C"
 ask d: number "D"
 ask e: number "E"
 ask f: number "F" default 9
 ask g: number "G"
 ask h: number "H"
 ask i: number "I"
-ask j: text "J" default "x"
+ask j: string "J" default "x"
 print("{a}|{b}|{c}|{d}|{e}|{f}|{g}|{h}|{i}|{j}")
 # rule 8.7 8.4.1
 # answers {"a": 1.50, "b": {"x": 1}, "c": ["a", "b"], "d": "12", "e": ["12"], "f": null, "g": "$", "h": "   ", "i": "-", "j": true}

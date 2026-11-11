@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record a { f: text }
-record b { f: text }
-define g(x: a) -> text {
+record a { f: string }
+record b { f: string }
+function g(x: a) -> string {
   return x.f
 }
 print(g(new b { f: "v" }))

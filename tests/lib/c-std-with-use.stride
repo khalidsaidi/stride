@@ -1,2 +1,2 @@
-use "c-a"
-export native define upper(t: text) -> text
+import "c-a"
+export native function upper(t: string) -> string

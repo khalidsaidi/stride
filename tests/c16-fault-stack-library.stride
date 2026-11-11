@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-divide"
+import "c-divide"
 ask z: number "Z"
 fill "E" = split_by(3, z)
 # rule 16.3.1 19.1 F001

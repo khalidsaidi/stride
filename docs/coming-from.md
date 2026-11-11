@@ -12,28 +12,27 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` is given other values; `let x = 1` keeps its value (a list's items may still change); `const X = 1` is worked out by the compiler |
 | `xs.append(x)`, `xs.push(x)`, `xs.insert(i, x)`, `xs.pop(i)`, `xs.clear()` | `append(xs, x)`, `insert(xs, i, x)`, `remove_at(xs, i)`, `clear(xs)`: each changes xs itself |
 | `copy.deepcopy(xs)`, `structuredClone(xs)` | `copy(xs)` |
-| `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
-| `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is empty; `""`, `0` and `[]` are not empty |
-| `if x:`, `if (x)` on a value that may be null | `if x { }` for a yes-no: empty counts as no; `if x is not empty { }` for anything else |
-| `true`, `false` | `yes`, `no` |
+| `None`, `nil`, `undefined`, a `NullPointerException` | `null`: every type has it; `x == null` tests it; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
+| `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is null; `""`, `0` and `[]` are not null |
+| `if x:`, `if (x)` on a value that may be null | `if x { }` for a bool: null counts as false; `if x != null { }` for anything else |
 | `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
 | `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
 | `"Hello " + name`, f-strings | `"Hello {name}"`; `+` joins words too |
 | `for i := 0; i < n; i++`, `for i in range(n)` | `for i in 0..<n { }`; `for i in 1..n { }` includes n |
-| `for x in xs`, `xs.forEach`, `enumerate(xs)` | `for each x in xs { }`, `for each i, x in xs { }` (i from 0) |
+| `xs.forEach`, `for i, x := range xs`, `enumerate(xs)` | `for x in xs { }`, `for i, x in xs { }` (i from 0) |
 | `xs.indexOf(x)`, `s.find(part)` | `index_of(xs, x)`, `find(s, part)`: the position, or -1 |
 | `while`, recursion | `while c { }`; a function may call itself |
-| `dict`, `map[K]V`, `Map` | `map of text to number`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for each k, v in m { }` |
+| `dict`, `map[K]V`, `Map` | `map<string, number>`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for k, v in m { }` |
 | `lambda`, `func(x) { }`, `x => …` | `function(x: number) -> number { return x * 2 }` |
-| `def f(a, b=2):`, `func f(a int) int` | `define f(a: number, b: number = 2) -> number { }` |
-| `xs.map(f)`, `filter`, list comprehensions | `[f(x) for each x in xs if x > 0]` |
+| `def f(a, b=2):`, `func f(a int) int` | `function f(a: number, b: number = 2) -> number { }` |
+| `xs.map(f)`, `filter`, list comprehensions | `[f(x) for x in xs if x > 0]` |
 | `sorted(xs, key=...)` | `sorted(xs)`, `sorted(people, by: "age")` |
-| `class`, `struct` | `record person { name: text }`; `new person { name: "Ada" }`; `p.f(x)` calls `f(p, x)` |
-| `enum` | `options colour { "red" "Red" … }` |
-| `import x`, `require` | `use "x"`, `use "x" as m` (a file in `lib/`); `export define …` |
+| `class`, `struct` | `record person { name: string }`; `new person { name: "Ada" }`; `p.f(x)` calls `f(p, x)` |
+| `enum` | `enum colour { "red" "Red" … }`: each option its value and the words a person reads |
+| `import x`, `require` | `import "x"`, `import "x" as m` (a file in `lib/`); `export function …` |
 | `try`/`catch`, exceptions | `try { } catch problem { }`; `fail("why")` raises a fault; one not caught stops the run |
 | `print`, `console.log`, `fmt.Println` | `print(x)` |
-| `input()`, `args`, `stdin` | `ask name: text "Your name"`; answered at the terminal, as `name=Ada`, or from JSON |
+| `input()`, `args`, `stdin` | `ask name: string "Your name"`; answered at the terminal, as `name=Ada`, or from JSON |
 | `# comment`, `// comment` | `# comment` |
 
 ## Lists, records and maps are shared
@@ -44,12 +43,12 @@ same items, copied all the way down. A `let`, like JavaScript's `const` and Kotl
 items may still change (§3.4).
 
 ```stride
-var a: list of number = [1, 2]
+var a: list<number> = [1, 2]
 let b = a
 b[2] = 3
 print(a)
 let c = copy(a)
-define add_one(xs: list of number) {
+function add_one(xs: list<number>) {
   xs[0] = xs[0] + 1
   append(xs, 0)
 }
@@ -65,27 +64,27 @@ print(c)
 [1, 2, 3]
 ```
 
-`==` compares values, items and fields included, the way Python's `==` does on lists: `[1, 2] == [1, 2]` is `yes`.
+`==` compares values, items and fields included, the way Python's `==` does on lists: `[1, 2] == [1, 2]` is `true`.
 
-## Empty is null
+## Null
 
-`empty` is what `None`, `null`, `nil` and `undefined` are: no value. Every type has it: an unanswered question, a
+`null` is no value, what `None`, `nil` and `undefined` are elsewhere. Every type has it: an unanswered question, a
 field never set, a key a map does not have. It is apart from the values that hold nothing: `""` is words, `[]` a
-list, and neither is empty. As in Python, Java and Swift, computing with it stops the run (fault F023, the
-`TypeError` or `NullPointerException` of Stride): arithmetic, `<`, a field, an item, `for each`, a library function
-all need a value. What takes it: `==`, `is empty`, a condition (empty counts as `no`, as `None` is falsy), words
+list, and neither is null. As in Python, Java and Swift, computing with it stops the run (fault F023, the
+`TypeError` or `NullPointerException` of Stride): arithmetic, `<`, a field, an item, `for`, a library function
+all need a value. What takes it: `==` and `!=`, a condition (null counts as `false`, as `None` is falsy), words
 with values (`"{x}"` puts in nothing, as C# does) and `fill`. `x ?? y` gives a value in its place, as in JavaScript,
-C# and Swift; there is no `?.`: write `if r is not empty`.
+C# and Swift; there is no `?.`: write `if r != null`.
 
 ```stride
-let price: number = empty
-print(price is empty)
+let price: number = null
+print(price == null)
 print(price ?? 0)
 print((price ?? 0) + 5)
-print("" == empty)
+print("" == null)
 print(count([]))
-let ages: map of text to number = {"Ada": 36}
-print(ages["Bo"] is empty)
+let ages: map<string, number> = {"Ada": 36}
+print(ages["Bo"] == null)
 print(ages["Bo"] ?? 0)
 try {
   print(price + 5)
@@ -94,14 +93,14 @@ try {
 }
 ```
 ```output
-yes
+true
 0
 5
-no
+false
 0
-yes
+true
 0
-empty where a number is needed: the left side of +
+null where a number is needed: the left side of +
 ```
 
 ## Positions count from 0
@@ -112,7 +111,7 @@ the end. A range `a..b` includes both ends, and `a..<b` stops before b, in a sli
 `count(xs)` adds an item.
 
 ```stride
-var xs: list of text = ["a", "b", "c"]
+var xs: list<string> = ["a", "b", "c"]
 print(xs[0])
 print(count(xs))
 print(xs[0..1])
@@ -156,7 +155,7 @@ print(-7 // 2)
 print(-7 % 2)
 ```
 ```output
-yes
+true
 0.3333333333333333333333333333333333
 0.9999999999999999999999999999999999
 1
@@ -166,22 +165,22 @@ yes
 
 ## Functions as values, comprehensions and sorting by a field
 
-A function can be passed, kept and returned (§9.10): `define apply(f: function(number) -> number, n: number)`.
+A function can be passed, kept and returned (§9.10): `function apply(f: function(number) -> number, n: number)`.
 A function with no name is written in place; it reads the names around it and shares their vars (§9.11):
 `function(n: number) -> number { return n + k }`.
 For the common cases a comprehension or `sorted` is shorter:
 
 ```stride
 record person {
-  name: text
+  name: string
   age: number
 }
-let people: list of person = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }, new person { name: "Cy", age: 17 }]
-let adults = [p.name for each p in people if p.age >= 18]
+let people: list<person> = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }, new person { name: "Cy", age: 17 }]
+let adults = [p.name for p in people if p.age >= 18]
 print(adults)
-print([upper(n) for each n in adults])
-print([p.name for each p in sorted(people, by: "age")])
-print(sorted([3, 1, 2], descending: yes))
+print([upper(n) for n in adults])
+print([p.name for p in sorted(people, by: "age")])
+print(sorted([3, 1, 2], descending: true))
 ```
 ```output
 [Bo, Al]
@@ -199,7 +198,7 @@ stops itself with `fail` when it must:
 
 ```stride answers={"n":"0"}
 ask n: number "How many people"
-if n is empty or n == 0 {
+if n == null or n == 0 {
   print("nobody to share with")
 } else {
   print(100 / n)
@@ -210,7 +209,7 @@ nobody to share with
 ```
 
 ```stride answers={"born":"2030-01-01"}
-define age_on(born: date, day: date) -> number {
+function age_on(born: date, day: date) -> number {
   if born > day {
     fail("born after the day")
   }
@@ -233,12 +232,12 @@ A test can say a fault is what it expects: `expect age_on(...) faults "F013"` (`
 
 ## Loops and recursion
 
-`for i in a..b`, `for each x in list`, `while c`, and functions that call themselves, as you know them. A `for`
-loop's bounds are worked out once, when it starts; `for each` goes through the items the list held then. A run
+`for i in a..b`, `for x in list`, `while c`, and functions that call themselves, as you know them. A `for`
+loop's bounds are worked out once, when it starts; `for x in list` goes through the items the list held then. A run
 that never ends runs until its host stops it; calls deeper than 10,000 stop the run (F015).
 
 ```stride
-define digits_of(n: number) -> number {
+function digits_of(n: number) -> number {
   var left = n
   var count = 0
   while left >= 1 {
@@ -261,13 +260,13 @@ answers them: a person on the form's page, you at the terminal, or a file of ans
 only input, so the same answers always give the same run.
 
 ```stride answers={"name":"Ada","likes":["red","blue"]}
-options colour {
+enum colour {
   "red" "Red"
   "green" "Green"
   "blue" "Blue"
 }
-ask name: text "Your name"
-ask likes: any-of colour "Colours you like"
+ask name: string "Your name"
+ask likes: any_of colour "Colours you like"
 print("{name} likes {count(likes)} colours: {join(likes)}")
 ```
 ```output
@@ -283,10 +282,10 @@ like a method:
 
 ```stride
 record person {
-  name: text
+  name: string
   born: date
 }
-define greeting(p: person) -> text {
+function greeting(p: person) -> string {
   return "Hello, {p.name}"
 }
 let ada = new person { name: "Ada", born: date_of(1815, 12, 10) }

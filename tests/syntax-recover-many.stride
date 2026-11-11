@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
+ask a: string "A"
 # mistake 5:8 S010 expected
 ask b: txt "B"
 # mistake 7:17 S011 to compare, write "=="

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
+ask a: string "A"
 let b = a
 # mistake 6 S232 this is a value on its own
 (b)

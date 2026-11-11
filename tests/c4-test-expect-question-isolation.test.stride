@@ -1,7 +1,7 @@
-define answer() -> yes-no {
-  ask flag: yes-no "Flag"
+function answer() -> bool {
+  ask flag: bool "Flag"
   return flag
 }
-expect answer() is empty
-expect answer() is empty
+expect answer() == null
+expect answer() == null
 # rule 4.3 7.17.1

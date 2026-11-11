@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(y: yes-no) {
+function f(y: bool) {
   if y {
     return 1
   }
-# mistake 8 S343 gives number on one path and text here
+# mistake 8 S343 gives number on one path and string here
   return "x"
 }
-fill "A" = "{f(yes)}"
+fill "A" = "{f(true)}"
 # rule 9.6 S343

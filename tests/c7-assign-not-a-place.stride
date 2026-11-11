@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(n: number) -> number {
+function f(n: number) -> number {
   return n
 }
 f(1) = 2

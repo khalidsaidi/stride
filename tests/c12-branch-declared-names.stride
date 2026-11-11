@@ -1,18 +1,18 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
+ask c: bool "C"
 if c {
   let x = 7
 } else {
   let x = 8
 }
 print(x)
-if yes {
+if true {
   let z = 1
 }
 print(z)
 if c {
-  ask a: text "A"
+  ask a: string "A"
 }
 print(a)
 # rule 12.1 12.1.1 12.4

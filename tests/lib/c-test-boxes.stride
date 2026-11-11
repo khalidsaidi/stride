@@ -1,15 +1,15 @@
-export define fill_box() -> yes-no {
+export function fill_box() -> bool {
   fill "Missing" = "value"
-  return yes
+  return true
 }
-export define tick_box() -> yes-no {
-  tick "Missing" when yes
-  return yes
+export function tick_box() -> bool {
+  tick "Missing" when true
+  return true
 }
-export define pick_box() -> yes-no {
-  pick "Missing" "Yes" when yes
-  return yes
+export function pick_box() -> bool {
+  pick "Missing" "Yes" when true
+  return true
 }
-export define skip_box() -> yes-no {
-  return yes
+export function skip_box() -> bool {
+  return true
 }

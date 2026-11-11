@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define row(n: number) {
-  ask name: text "Name"
+function row(n: number) {
+  ask name: string "Name"
   fill "Name{n}" = name
 }
 row(1)

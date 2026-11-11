@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "a" "A" "b" "B" }
-ask o: one-of s "O"
+enum s { "a" "A" "b" "B" }
+ask o: one_of s "O"
 let l = [o]
 print("z" in l)
 print(index_of(l, "z"))

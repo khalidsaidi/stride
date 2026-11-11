@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: yes-no "A"
+ask a: bool "A"
 var t: number = 0
 if a {
   fill "X" = "1"

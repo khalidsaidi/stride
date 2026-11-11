@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f() -> number {
-  if yes {
+function f() -> number {
+  if true {
     return 1
   }
   return 2
@@ -12,8 +12,8 @@ for i in 1..1 {
   }
   print("never")
 }
-let l: list of number = [1]
-print(l[0] is empty)
+let l: list<number> = [1]
+print(l[0] == null)
 print(f())
 # rule 7.13 11.3.3 S406
-# prints ["no", "1"]
+# prints ["false","1"]

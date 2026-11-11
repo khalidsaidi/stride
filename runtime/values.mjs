@@ -1,11 +1,11 @@
 // Stride's values as the machine and the intermediate form's interpreter hold
 // them (docs/spec.md §3). One definition, so a program means the same in every engine:
 //
-//   empty            null: no value (§3.2); "" and a list, set or map that holds nothing are values, not empty
-//   words            a string (text, long-text, phone, email, an option's value)
+//   null             null: no value (§3.2); "" and a list, set or map that holds nothing are values, not null
+//   words            a string (a string, long_text, phone or email answer, an option's value)
 //   number           a Decimal (runtime/decimal.mjs): exact, 34 significant digits
 //   date             a StrideDate: its day, written YYYY-MM-DD
-//   yes-no           true, false
+//   bool             true, false
 //   a set            an array of option values, always in the option set's declaration order (§3.8), marked as
 //                    a set (`isSet`), the option set's values in `order`
 //   a list           an array of its items
@@ -73,18 +73,18 @@ export class StrideRecord {
   }
 }
 
-// A record made where a place on the way to a field holds empty (§7.5.1), as `new R { }` makes it (§6.14): every
-// field empty, but a list field a list with no items and a map field a map with no keys. `starts` tells, for each
+// A record made where a place on the way to a field holds null (§7.5.1), as `new R { }` makes it (§6.14): every
+// field null, but a list field a list with no items and a map field a map with no keys. `starts` tells, for each
 // field, which: "list", "map" or null.
 export const emptyRecord = (name, starts, names) => new StrideRecord(name, starts.map((k) => (k === "list" ? [] : k === "map" ? new StrideMap() : null)), names);
 
-export const isEmpty = (v) => v === null || v === undefined;
+export const isNull = (v) => v === null || v === undefined;
 
-// The fault of empty standing where a value is needed (§6.3): the kind of value needed, and what was empty.
+// The fault of null standing where a value is needed (§6.3): the kind of value needed, and what was null.
 export function needed(kind, what) {
-  throw new StrideFault("F023", `empty where ${kind} needed: ${what}`);
+  throw new StrideFault("F023", `null where ${kind} needed: ${what}`);
 }
-// The kind of value an operation needs, told by the value beside the empty one.
+// The kind of value an operation needs, told by the value beside the null one.
 export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) ? "a set is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
 export const isNumber = (v) => v instanceof D.Decimal;
 
@@ -96,13 +96,13 @@ export class StrideMap {
     for (const [k, v] of pairs) this.set(k, v);
   }
   get(k) {
-    return isEmpty(k) ? null : this.entries.get(words(k))?.[1] ?? null;
+    return isNull(k) ? null : this.entries.get(words(k))?.[1] ?? null;
   }
   has(k) {
-    return !isEmpty(k) && this.entries.has(words(k));
+    return !isNull(k) && this.entries.has(words(k));
   }
   set(k, v) {
-    if (isEmpty(k)) needed("a key is", "the key a value is put under");
+    if (isNull(k)) needed("a key is", "the key a value is put under");
     const w = words(k);
     const was = this.entries.get(w);
     if (was) was[1] = v;
@@ -111,7 +111,7 @@ export class StrideMap {
     }
   }
   remove(k) {
-    if (!isEmpty(k)) this.entries.delete(words(k));
+    if (!isNull(k)) this.entries.delete(words(k));
   }
   get pairs() {
     return [...this.entries.values()];
@@ -210,7 +210,7 @@ export function words(v) {
   if (typeof v === "string") return v;
   if (isNumber(v)) return D.words(v);
   if (isDate(v)) return v.iso;
-  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (typeof v === "boolean") return v ? "true" : "false";
   if (Array.isArray(v)) return v.map(words).join(", ");
   if (v instanceof StrideRecord) return inside(v, () => v.fields.map(words).filter(Boolean).join(", "));
   if (v instanceof StrideFunction) return `function ${v.name}`;
@@ -230,10 +230,10 @@ export function printed(v, recordNames = () => null) {
   return words(v);
 }
 
-// Equality (§6.6): both empty, or neither and the same value; records field by field, lists item by item, sets as
+// Equality (§6.6): both null, or neither and the same value; records field by field, lists item by item, sets as
 // the same options.
 export function equal(a, b) {
-  if (isEmpty(a) || isEmpty(b)) return isEmpty(a) && isEmpty(b);
+  if (isNull(a) || isNull(b)) return isNull(a) && isNull(b);
   if (a === b) return true;
   if (isNumber(a) && isNumber(b)) return D.equal(a, b);
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
@@ -261,7 +261,7 @@ export function order(a, b) {
   throw new StrideFault("F018", "an order was asked of values that have none");
 }
 
-// A condition (§6.15): yes is yes; no and empty are no.
+// A condition (§6.15): true is true; false and null are false.
 export const truthy = (v) => v === true;
 
 // A whole number from a value, for positions and bounds; null when it is not a whole number.
@@ -273,8 +273,8 @@ export const sliced = (items, from, to) => items.slice(Math.max(0, from), Math.m
 
 // A slice's bounds (§6.9.3), both whole (F004), of a list or words that are there (F023).
 export function sliceBounds(l, a, b) {
-  if (isEmpty(l)) needed("a list is", "what [ .. ] takes items of");
-  if (isEmpty(a) || isEmpty(b)) needed("a number is", "a bound of [ .. ]");
+  if (isNull(l)) needed("a list is", "what [ .. ] takes items of");
+  if (isNull(a) || isNull(b)) needed("a number is", "a bound of [ .. ]");
   const x = whole(a), y = whole(b);
   if (x === null || y === null) throw new StrideFault("F004", "a slice's bounds are whole numbers");
   return [x, y];
@@ -282,8 +282,8 @@ export function sliceBounds(l, a, b) {
 
 // A position read (§6.9.2): of a list or words that are there (F023), a whole number of 0 or more (F004).
 export function readPosition(l, i) {
-  if (isEmpty(l)) needed("a list is", "what [ ] takes an item of");
-  if (isEmpty(i)) needed("a number is", "the position in [ ]");
+  if (isNull(l)) needed("a list is", "what [ ] takes an item of");
+  if (isNull(i)) needed("a number is", "the position in [ ]");
   const n = whole(i);
   if (n === null || n < 0) throw new StrideFault("F004", `position ${words(i)} is not a whole number of 0 or more`);
   return n;
@@ -298,7 +298,7 @@ export const num = (n) => D.fromInt(n);
 export function expectation(faults, value, message, fault) {
   if (faults === null) {
     if (fault) return { result: "fail", why: `it faulted: ${fault.code} ${fault.message}` };
-    return truthy(value) ? { result: "pass" } : { result: "fail", why: words(message) || "it is not yes" };
+    return truthy(value) ? { result: "pass" } : { result: "fail", why: words(message) || "it is not true" };
   }
   if (!fault) return { result: "fail", why: `no fault; expected ${faults}` };
   const matches = /^F\d{3}$/.test(faults) ? fault.code === faults : fault.message.includes(faults);
@@ -309,10 +309,10 @@ export function expectation(faults, value, message, fault) {
 export function encode(v, recordNames = () => null) {
   if (isSet(v)) return `{${v.map((x) => encode(x)).join(",")}}`;
   if (Array.isArray(v)) return `[${v.map((x) => encode(x, recordNames)).join(",")}]`;
-  if (v === null || v === undefined) return "empty";
+  if (v === null || v === undefined) return "null";
   if (isNumber(v)) return D.words(v);
   if (isDate(v)) return v.iso;
-  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (typeof v === "boolean") return v ? "true" : "false";
   if (v instanceof StrideRecord) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);
     return inside(v, () => `${v.type}{${v.fields.map((f, i) => `${names[i]}=${encode(f, recordNames)}`).join(";")}}`);

@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record kid { name: text, born: number, ok: yes-no }
-let ks = [new kid { name: "a", born: 1, ok: yes }]
+record kid { name: string, born: number, ok: bool }
+let ks = [new kid { name: "a", born: 1, ok: true }]
 let a = sorted(ks, by: "bron")
 let b = sorted(ks, by: "ok")
 # rule S399 14.4

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(l: list of number) -> number {
+function f(l: list<number>) -> number {
   l = [2]
   return count(l)
 }

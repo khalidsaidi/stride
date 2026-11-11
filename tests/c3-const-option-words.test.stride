@@ -1,4 +1,4 @@
-options s { "a" "A" "b" "B" }
+enum s { "a" "A" "b" "B" }
 const O: s = "a"
 expect O == "a"
 expect O != "b"

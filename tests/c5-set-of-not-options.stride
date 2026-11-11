@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
+  a: string
 }
-var x: set of r
+var x: set<r>
 fill "A" = join(x, ", ")
 
 # rule 5.6 S210

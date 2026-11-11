@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record p { name: text }
+record p { name: string }
 var r = new p { name: "x" }
 var s = r
 s.name = "y"

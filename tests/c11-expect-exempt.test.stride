@@ -1,4 +1,4 @@
-define half(x: number) -> number {
+function half(x: number) -> number {
   return x / 0
 }
 expect half(1) faults "F001"

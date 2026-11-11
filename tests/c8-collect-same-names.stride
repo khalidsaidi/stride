@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number
+var l: list<number>
 collect x, x in l "More?" {
   ask x: number "N"
 }

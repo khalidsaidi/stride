@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define takes_one(x: number, d: number) -> number {
+function takes_one(x: number, d: number) -> number {
   return d
 }
-define pass(l: list of number) -> number {
+function pass(l: list<number>) -> number {
   ask z: number "Z"
   return takes_one(l[z - 1], 1 / z)
 }

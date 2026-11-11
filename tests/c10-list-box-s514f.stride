@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
-ask o: one-of st "State"
-ask p: one-of st "P"
+enum st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
+ask o: one_of st "State"
+ask p: one_of st "P"
 let u = lower(o ?? "")
 fill "L" = upper(u)
-var w: text = p
+var w: string = p
 w = "{w}"
 fill "M" = w
 # rule 10.3

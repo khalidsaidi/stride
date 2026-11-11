@@ -1,17 +1,17 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "b" "B" "a" "A" "c" "C" }
-ask o: one-of s "O"
-ask p: one-of s "P"
-ask q: one-of s "Q"
+enum s { "b" "B" "a" "A" "c" "C" }
+ask o: one_of s "O"
+ask p: one_of s "P"
+ask q: one_of s "Q"
 print(o < "b")
 print(o < "zz")
 print(p > o)
 let l = [o, p, q]
 print(join(sorted(l)))
-print(join(sorted(l, descending: yes)))
+print(join(sorted(l, descending: true)))
 print(smallest(l))
 print(largest(l))
 # rule 6.7 14.4 S379
 # answers {"o": "c", "p": "a", "q": "b"}
-# prints ["no", "yes", "no", "a, b, c", "c, b, a", "a", "c"]
+# prints ["false","true","false","a, b, c","c, b, a","a","c"]

@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define row(n: number, v: text) {
+function row(n: number, v: string) {
   fill "R{n}" = v
 }
 ask n: number "N"
-ask title: text "Title"
-ask more: yes-no "{title}, is there more?"
+ask title: string "Title"
+ask more: bool "{title}, is there more?"
 fill "Box{n}" = "x"
 for i in 1..n {
   fill "B{i}" = "y"

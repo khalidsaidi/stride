@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record address {
-  city: text
+  city: string
 }
 record person {
-  name: text
+  name: string
   age: number
   home: address
 }

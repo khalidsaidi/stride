@@ -4,7 +4,7 @@
 //
 // The generator writes a program as a person would: an option set and a record, a few functions (pure ones that
 // work numbers and words out, and one that asks), then a body of questions, lets, vars and their assignments, ifs,
-// matches, loops, for eaches, collects, comprehensions and every kind of box write, each name used after it is
+// matches, loops over ranges and lists, collects, comprehensions and every kind of box write, each name used after it is
 // declared and every answer and let read. Expressions are made by type, to a depth, from what is in scope.
 //
 // A run the machine exhausts (F014, F015) is passed over (§19.1.2).
@@ -28,10 +28,10 @@ function random(seed) {
   return { next, int, pick: (l) => l[int(0, l.length - 1)], chance: (p) => next() < p };
 }
 
-const N = { t: "number" }, T = { t: "text" }, B = { t: "yes-no" }, D = { t: "date" }, O = { t: "option" }, S = { t: "set" }, R = { t: "record" };
-const LN = { t: "list", of: "number" }, LT = { t: "list", of: "text" };
+const N = { t: "number" }, T = { t: "string" }, B = { t: "bool" }, D = { t: "date" }, O = { t: "option" }, S = { t: "set" }, R = { t: "record" };
+const LN = { t: "list", of: "number" }, LT = { t: "list", of: "string" };
 const same = (a, b) => a.t === b.t && a.of === b.of;
-const typeWords = (t) => (t.t === "list" ? `list of ${t.of}` : t.t === "option" ? "option of colour" : t.t === "set" ? "set of colour" : t.t === "record" ? "item" : t.t);
+const typeWords = (t) => (t.t === "list" ? `list<${t.of}>` : t.t === "option" ? "colour" : t.t === "set" ? "set<colour>" : t.t === "record" ? "item" : t.t);
 
 const COLOURS = ["red", "green", "blue"];
 const WORDS = ["", "a", "Ada", "  x  ", "a,b,c", "Straße", "ς", "ſ", "İa", "12", "1 234.5", "\\u{1F600}", "line\\none", "quote \\\" in", "\\{brace\\}"];
@@ -58,12 +58,12 @@ export function generate(seed) {
   };
   const ofType = (sc, type) => all(sc).filter((n) => same(n.type, type));
   const use = (n) => ((n.read = true), n.name);
-  // A name read where a value is needed (§6.3): an answer or a list's item may be empty, so it is read with a
+  // A name read where a value is needed (§6.3): an answer or a list's item may be null, so it is read with a
   // value for that; now and then as it is, which may fault (F023).
-  const OTHERWISE = { number: ["0", "1", "2.5"], text: ['""', '"-"'], date: ["date_of(2000, 1, 1)"] };
+  const OTHERWISE = { number: ["0", "1", "2.5"], string: ['""', '"-"'], date: ["date_of(2000, 1, 1)"] };
   const val = (n) => (["answer", "item"].includes(n.kind) && OTHERWISE[n.type.t] && !r.chance(0.1) ? `(${use(n)} ?? ${r.pick(OTHERWISE[n.type.t])})` : use(n));
   // A list whose items are all there, for what puts them in order or computes with them.
-  const whole = (n) => (n.type.of === "text" ? `filled(${use(n)})` : use(n));
+  const whole = (n) => (n.type.of === "string" ? `filled(${use(n)})` : use(n));
 
   const functions = []; // { name, params: [types], result, asks }
 
@@ -85,8 +85,8 @@ export function generate(seed) {
         () => `either(pick_one(${sub()}, ${sub()}), 0)`,
         () => `either(second(${r.chance(0.5) ? `[${sub()}]` : `[${sub()}, ${sub()}]`}), 0)`,
         () => `n_of([${sub()}, ${sub()}])`,
-        () => `(${r.chance(0.5) ? "empty" : `-${sub()}`} ?? 1)`,
-        () => `(pick_one(${sub()}, empty) ?? ${sub()})`,
+        () => `(${r.chance(0.5) ? "null" : `-${sub()}`} ?? 1)`,
+        () => `(pick_one(${sub()}, null) ?? ${sub()})`,
         () => `round(${sub()}, ${r.int(0, 3)})`,
         () => `round(${sub()}, places: ${r.int(0, 3)})`,
         () => `round(${sub()})`,
@@ -158,7 +158,7 @@ export function generate(seed) {
         () => `remove_prefix(${sub()}, "a")`,
         () => `(character(${sub()}, ${r.int(0, 3)}) ?? "")`,
         () => `(line(${sub()}, ${r.int(0, 1)}) ?? "no line")`,
-        () => `text_of(${num(sc, d - 1)})`,
+        () => `string_of(${num(sc, d - 1)})`,
         () => `fixed(${num(sc, d - 1)}, ${r.int(0, 2)})`,
         () => `grouped(${num(sc, d - 1)})`,
         () => `format(${date(sc, d - 1)}, "${r.pick(["YYYY-MM-DD", "DD/MM/YY", "M-D"])}")`,
@@ -168,14 +168,14 @@ export function generate(seed) {
         () => `either(pick_one(${sub()}, ${sub()}), "")`,
       );
       const lists = all(sc).filter((n) => n.type.t === "list");
-      if (lists.length) choices.push(() => `join(${use(r.pick(lists))}, "${r.pick([",", " ", ""])}")`, () => `join(${use(r.pick(lists))}, separator: "/")`, () => `join(sorted(${whole(r.pick(lists))}, descending: yes))`);
-      const tl = all(sc).filter((n) => n.type.t === "list" && n.type.of === "text");
+      if (lists.length) choices.push(() => `join(${use(r.pick(lists))}, "${r.pick([",", " ", ""])}")`, () => `join(${use(r.pick(lists))}, separator: "/")`, () => `join(sorted(${whole(r.pick(lists))}, descending: true))`);
+      const tl = all(sc).filter((n) => n.type.t === "list" && n.type.of === "string");
       if (tl.length) choices.push(() => `either(first(${use(r.pick(tl))}), "-")`);
       const opts = ofType(sc, O);
-      if (opts.length) choices.push(() => `text_of(${use(r.pick(opts))})`);
+      if (opts.length) choices.push(() => `string_of(${use(r.pick(opts))})`);
       const sets = ofType(sc, S);
       if (sets.length) {
-        // A set not answered is empty (§8.7): `?? []` makes it a set with no options.
+        // A set not answered is null (§8.7): `?? []` makes it a set with no options.
         const chosen = () => `(${use(r.pick(sets))} ?? [])`;
         choices.push(() => `join(${chosen()})`);
         if (sets.length > 1 || r.chance(0.5)) choices.push(() => `join(${r.pick(["union", "intersection", "difference"])}(${chosen()}, ${chosen()}), ",")`);
@@ -183,7 +183,7 @@ export function generate(seed) {
       }
       const recs = all(sc).filter((n) => n.type.t === "record");
       if (recs.length) choices.push(() => `${use(r.pick(recs))}.label`);
-      const fns = functions.filter((f) => f.result === "text" && !f.asks && f.ready);
+      const fns = functions.filter((f) => f.result === "string" && !f.asks && f.ready);
       if (fns.length) {
         const f = r.pick(fns);
         choices.push(() => `${f.name}(${f.params.map((p) => expr(sc, p, d - 1)).join(", ")})`);
@@ -194,7 +194,7 @@ export function generate(seed) {
 
   function bool(sc, d) {
     const vars = ofType(sc, B);
-    const choices = [() => r.pick(["yes", "no"])];
+    const choices = [() => r.pick(["true", "false"])];
     if (vars.length) choices.push(() => use(r.pick(vars)), () => use(r.pick(vars)));
     if (d > 0) {
       choices.push(
@@ -202,17 +202,17 @@ export function generate(seed) {
         () => `(${text(sc, d - 1)} ${r.pick(["==", "!=", "<"])} ${text(sc, d - 1)})`,
         () => `(${bool(sc, d - 1)} ${r.pick(["and", "or"])} ${bool(sc, d - 1)})`,
         () => `(not ${bool(sc, d - 1)})`,
-        () => `(${expr(sc, r.pick([N, T, B, D]), d - 1)} is ${r.chance(0.5) ? "not " : ""}empty)`,
-        () => `(${r.pick(["empty", '""'])} ${r.pick(["==", "!="])} ${r.pick(["empty", '""'])})`,
+        () => `(${expr(sc, r.pick([N, T, B, D]), d - 1)} ${r.chance(0.5) ? "!=" : "=="} null)`,
+        () => `(${r.pick(["null", '""'])} ${r.pick(["==", "!="])} ${r.pick(["null", '""'])})`,
         () => `${r.pick(["contains", "starts_with", "ends_with"])}(${text(sc, d - 1)}, ${text(sc, d - 1)})`,
         () => `(${date(sc, d - 1)} < ${date(sc, d - 1)})`,
       );
       const sets = ofType(sc, S);
       if (sets.length) {
         choices.push(() => `("${r.pick(COLOURS)}" ${r.pick(["in", "not in"])} (${use(r.pick(sets))} ?? []))`);
-        // A set compared with a list of its options, or with empty (§6.6).
+        // A set compared with a list of its options, or with null (§6.6).
         const some = () => `[${COLOURS.filter(() => r.chance(0.5)).map((c) => `"${c}"`).join(", ")}]`;
-        choices.push(() => `(${use(r.pick(sets))} ${r.pick(["==", "!="])} ${r.chance(0.2) ? "empty" : some()})`);
+        choices.push(() => `(${use(r.pick(sets))} ${r.pick(["==", "!="])} ${r.chance(0.2) ? "null" : some()})`);
       }
       const opts = ofType(sc, O);
       if (opts.length) choices.push(() => `(${use(r.pick(opts))} == "${r.pick(COLOURS)}")`);
@@ -222,7 +222,7 @@ export function generate(seed) {
       if (recs.length) choices.push(() => `${use(r.pick(recs))}.done`);
       // What an answer holds or not, whatever its type.
       const answers = all(sc).filter((n) => n.kind === "answer");
-      if (answers.length) choices.push(() => `(${use(r.pick(answers))} is ${r.chance(0.5) ? "not " : ""}empty)`);
+      if (answers.length) choices.push(() => `(${use(r.pick(answers))} ${r.chance(0.5) ? "!=" : "=="} null)`);
     }
     return r.pick(choices)();
   }
@@ -243,8 +243,8 @@ export function generate(seed) {
       const v = r.pick(vars);
       choices.push(() => use(v), () => `sorted(${whole(v)})`, () => `${r.pick(["reversed", "filled"])}(${use(v)})`);
       if (d > 0) {
-        choices.push(() => `[${type.of === "number" ? "x * 2" : 'upper(x ?? "")'} for each x in ${use(v)}]`);
-        choices.push(() => `[${type.of === "number" ? "x + k" : "x + text_of(k)"} for each k, x in ${whole(v)} if k ${r.pick([">", "<", "!="])} ${r.int(0, 1)}]`);
+        choices.push(() => `[${type.of === "number" ? "x * 2" : 'upper(x ?? "")'} for x in ${use(v)}]`);
+        choices.push(() => `[${type.of === "number" ? "x + k" : "x + string_of(k)"} for k, x in ${whole(v)} if k ${r.pick([">", "<", "!="])} ${r.int(0, 1)}]`);
         if (type.of === "number") choices.push(() => `doubled(${use(v)})`);
       }
     }
@@ -255,9 +255,9 @@ export function generate(seed) {
     switch (type.t) {
       case "number":
         return num(sc, d);
-      case "text":
+      case "string":
         return text(sc, d);
-      case "yes-no":
+      case "bool":
         return bool(sc, d);
       case "date":
         return date(sc, d);
@@ -314,8 +314,8 @@ export function generate(seed) {
         // A collect of records: each item's fields asked, then the list read field by field.
         const name = fresh("rows");
         const x = fresh("row");
-        const out = [`${i}var ${name}: list of item`, `${i}collect ${x} in ${name} "Another row?" {`, `${i}  ask ${x}.label: text "Label"`, `${i}  ask ${x}.amount: number "Amount"`, `${i}  ask ${x}.done: yes-no "Done"`, `${i}}`];
-        out.push(`${i}for each n, row in ${r.chance(0.5) ? ((by) => `sorted([x for each x in ${name} if x.${by} is not empty], by: "${by}"${r.chance(0.5) ? ", descending: yes" : ""})`)(r.pick(["label", "amount"])) : name} {`, `${i}  fill "${box("R")}_{n}" = row.label`, `${i}  print(row.amount)`, `${i}  print(row.done)`, `${i}}`);
+        const out = [`${i}var ${name}: list<item>`, `${i}collect ${x} in ${name} "Another row?" {`, `${i}  ask ${x}.label: string "Label"`, `${i}  ask ${x}.amount: number "Amount"`, `${i}  ask ${x}.done: bool "Done"`, `${i}}`];
+        out.push(`${i}for n, row in ${r.chance(0.5) ? ((by) => `sorted([x for x in ${name} if x.${by} != null], by: "${by}"${r.chance(0.5) ? ", descending: true" : ""})`)(r.pick(["label", "amount"])) : name} {`, `${i}  fill "${box("R")}_{n}" = row.label`, `${i}  print(row.amount)`, `${i}  print(row.done)`, `${i}}`);
         boxes.pop();
         return out;
       }
@@ -323,13 +323,13 @@ export function generate(seed) {
         // A list made longer by +.
         const name = fresh("grow");
         const more = fresh("grow");
-        return [`${i}var ${name}: list of number = [${num(sc, 1)}]`, `${i}${name}[1] = ${num(sc, 1)}`, `${i}let ${more}: list of number = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[${r.pick(["0..2", "0..<3", "1..", "..<2"])}])`, `${i}print(${name})`];
+        return [`${i}var ${name}: list<number> = [${num(sc, 1)}]`, `${i}${name}[1] = ${num(sc, 1)}`, `${i}let ${more}: list<number> = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[${r.pick(["0..2", "0..<3", "1..", "..<2"])}])`, `${i}print(${name})`];
       }
       case "shared": {
         // A list, a record and a map held by two names and given to a function that changes them (§3.4): changed
         // in place by the library and through a let, a parameter and a loop's item, then read through each name.
         const l = fresh("shared"), also = fresh("shared"), apart = fresh("shared"), rec = fresh("shared"), recs = fresh("shared"), m = fresh("shared");
-        const out = [`${i}${r.pick(["let", "var"])} ${l}: list of number = [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}let ${also} = ${l}`, `${i}let ${apart} = copy(${l})`];
+        const out = [`${i}${r.pick(["let", "var"])} ${l}: list<number> = [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}let ${also} = ${l}`, `${i}let ${apart} = copy(${l})`];
         out.push(`${i}let ${rec} = new item { label: ${text(sc, 1)}, amount: ${num(sc, 1)} }`, `${i}let ${recs} = [${rec}, new item { amount: ${num(sc, 1)} }]`, `${i}let ${m} = {"a": ${num(sc, 1)}}`);
         for (let k = r.int(2, 6); k > 0; k--) {
           out.push(i + r.pick([
@@ -339,12 +339,12 @@ export function generate(seed) {
             () => `${r.pick([l, also])} += [${num(sc, 1)}]`,
             () => `${also}[${r.int(0, 2)}] = ${num(sc, 1)}`,
             () => `change(${r.pick([l, also, apart])}, ${r.pick([rec, `${recs}[${r.int(0, 1)}]`])}, ${m})`,
-            () => `for each x in ${recs} { x.amount = ${num(sc, 1)} }`,
+            () => `for x in ${recs} { x.amount = ${num(sc, 1)} }`,
             () => `${rec}.label = ${text(sc, 1)}`,
             () => `${m}["${r.pick(["a", "b"])}"] = ${num(sc, 1)}`,
             () => `remove(${m}, "${r.pick(["a", "b", "k"])}")`,
             () => `clear(${r.pick([l, apart, m])})`,
-            () => `for each x in ${l} { append(${also}, x) }`,
+            () => `for x in ${l} { append(${also}, x) }`,
           ])());
         }
         out.push(`${i}print(${l} == ${also})`, `${i}print(${apart})`, `${i}print(${recs})`, `${i}print(${m})`);
@@ -353,17 +353,17 @@ export function generate(seed) {
       case "loopfill":
         return [`${i}fill "${ctx.inLoop.box}_{${ctx.inLoop.counter}}_${++counter}" = ${expr(sc, r.pick([N, T]), d)}`];
       case "ask": {
-        const type = r.pick(["text", "number", "yes-no", "date", "one-of", "any-of", "long-text", "phone", "email"]);
+        const type = r.pick(["string", "number", "bool", "date", "one_of", "any_of", "long_text", "phone", "email"]);
         const name = fresh("q");
-        const t = { text: T, "long-text": T, phone: { t: "phone" }, email: { t: "email" }, number: N, "yes-no": B, date: D, "one-of": O, "any-of": S }[type];
-        const what = type === "one-of" || type === "any-of" ? `${type} colour` : type;
+        const t = { string: T, long_text: T, phone: { t: "phone" }, email: { t: "email" }, number: N, bool: B, date: D, one_of: O, any_of: S }[type];
+        const what = type === "one_of" || type === "any_of" ? `${type} colour` : type;
         let line = `${i}ask ${name}: ${what} "${r.pick(["Name", "How many", "When", "Which"])} {${r.int(1, 9)}}?"`;
-        if (r.chance(0.3) && ["text", "number", "date", "yes-no"].includes(type)) line += ` default ${expr(sc, t, 1)}`;
+        if (r.chance(0.3) && ["string", "number", "date", "bool"].includes(type)) line += ` default ${expr(sc, t, 1)}`;
         const n = declare(sc, name, t, "answer");
         const out = [line];
-        if (r.chance(0.3) && (type === "number" || type === "text")) out.push(`${i}  check ${name} is empty or ${type === "number" ? `${name} > 0` : `length(${name}) < 20`} "Too ${type === "number" ? "small" : "long"}."`);
-        // Into a box the way its type goes: a yes-no ticks one, a set's options are joined (§10).
-        if (r.chance(0.5)) out.push(type === "yes-no" ? `${i}tick "${box("A")}" when ${use(n)}` : `${i}fill "${box("A")}" = ${type === "any-of" ? `join(${use(n)} ?? [])` : use(n)}`);
+        if (r.chance(0.3) && (type === "number" || type === "string")) out.push(`${i}  check ${name} == null or ${type === "number" ? `${name} > 0` : `length(${name}) < 20`} "Too ${type === "number" ? "small" : "long"}."`);
+        // Into a box the way its type goes: a bool ticks one, a set's options are joined (§10).
+        if (r.chance(0.5)) out.push(type === "bool" ? `${i}tick "${box("A")}" when ${use(n)}` : `${i}fill "${box("A")}" = ${type === "any_of" ? `join(${use(n)} ?? [])` : use(n)}`);
         return out;
       }
       case "let": {
@@ -445,7 +445,7 @@ export function generate(seed) {
         const inner = scope(sc);
         const x = fresh("x");
         declare(inner, x, l.type.of === "number" ? N : T, "item");
-        const out = [`${i}for each ${x} in ${use(l)} {`, `${i}  print(${x})`];
+        const out = [`${i}for ${x} in ${use(l)} {`, `${i}  print(${x})`];
         inner.names[0].read = true;
         out.push(`${i}  print(${expr(inner, r.pick([N, T, B]), d)})`);
         out.push(`${i}}`);
@@ -454,8 +454,8 @@ export function generate(seed) {
       case "collect": {
         const name = fresh("people");
         const x = fresh("p");
-        const extra = r.chance(0.5) ? [`${i}  ask ${x}_note: text "Note"`, `${i}  print(${x}_note)`] : [];
-        const out = [`${i}var ${name}: list of text`, `${i}collect ${x} in ${name}${r.chance(0.5) ? ` any "Any {${r.int(1, 3)}}?"` : ""} "Another?" {`, `${i}  ask ${x}: text "Who"`, ...extra, `${i}}`];
+        const extra = r.chance(0.5) ? [`${i}  ask ${x}_note: string "Note"`, `${i}  print(${x}_note)`] : [];
+        const out = [`${i}var ${name}: list<string>`, `${i}collect ${x} in ${name}${r.chance(0.5) ? ` any "Any {${r.int(1, 3)}}?"` : ""} "Another?" {`, `${i}  ask ${x}: string "Who"`, ...extra, `${i}}`];
         declare(sc, name, LT, "collected");
         return out;
       }
@@ -463,7 +463,7 @@ export function generate(seed) {
         const name = fresh("it");
         const out = [`${i}var ${name}: item = new item { label: ${text(sc, d)}, amount: ${num(sc, d)} }`];
         const n = declare(sc, name, R, "var");
-        if (r.chance(0.5)) out.push(`${i}ask ${name}.done: yes-no "Done?"`);
+        if (r.chance(0.5)) out.push(`${i}ask ${name}.done: bool "Done?"`);
         else out.push(`${i}${name}.done = ${bool(sc, d)}`);
         if (r.chance(0.5)) out.push(`${i}${name}.amount = ${num(sc, d)}`);
         if (r.chance(0.5)) out.push(`${i}${name}.tags[${r.int(0, 1)}] = ${text(sc, d)}`, `${i}print(${name}.tags)`);
@@ -486,36 +486,36 @@ export function generate(seed) {
   // ----- the program
 
   lines.push("form fuzz", `pdf ${PDF}`, "");
-  lines.push(`options colour {`, ...COLOURS.map((c) => `  "${c}" "${c[0].toUpperCase()}${c.slice(1)}"`), `}`);
-  lines.push("record item {", "  label: text", "  amount: number", "  done: yes-no", "  tags: list of text", "}", "");
+  lines.push(`enum colour {`, ...COLOURS.map((c) => `  "${c}" "${c[0].toUpperCase()}${c.slice(1)}"`), `}`);
+  lines.push("record item {", "  label: string", "  amount: number", "  done: bool", "  tags: list<string>", "}", "");
   // Helpers every program has: a loop with bounds worked out as it runs, a generic function, list
   // parameters. (A function calling itself is S401.)
   lines.push(
-    "define fact(n: number) -> number {",
+    "function fact(n: number) -> number {",
     "  var p = 1",
     "  for i in 1..n {",
     "    p *= i",
     "  }",
     "  return p",
     "}",
-    "define pick_one<t>(a: t, b: t) -> t {",
-    "  if a is empty {",
+    "function pick_one<t>(a: t, b: t) -> t {",
+    "  if a == null {",
     "    return b",
     "  }",
     "  return a",
     "}",
-    "define n_of(xs: list of number) -> number {",
-    "  return count([x * 2 for each x in xs if x != 0])",
+    "function n_of(xs: list<number>) -> number {",
+    "  return count([x * 2 for x in xs if x != 0])",
     "}",
-    "define second(xs: list of number) -> number {",
+    "function second(xs: list<number>) -> number {",
     "  if count(xs) < 2 {",
-    "    return empty",
+    "    return null",
     "  }",
     "  return xs[1]",
     "}",
-    "define doubled(xs: list of number) -> list of number {",
-    "  var out: list of number",
-    "  for each k, x in xs {",
+    "function doubled(xs: list<number>) -> list<number> {",
+    "  var out: list<number>",
+    "  for k, x in xs {",
     "    out[k] = x * 2",
     "  }",
     "  return out",
@@ -523,23 +523,23 @@ export function generate(seed) {
     "",
   );
   // One that changes the list, the record and the map it is given (§3.4).
-  lines.push("define change(l: list of number, it: item, m: map of text to number) {", "  append(l, count(l))", "  l[0] = 0", "  it.amount = count(l)", "  it.done = yes", '  m["k"] = count(m)', "}", "");
+  lines.push("function change(l: list<number>, it: item, m: map<string, number>) {", "  append(l, count(l))", "  l[0] = 0", "  it.amount = count(l)", "  it.done = true", '  m["k"] = count(m)', "}", "");
   // Pure functions of numbers and words, and one that asks.
   for (let k = 0; k < r.int(1, 3); k++) {
     const name = fresh("f");
     const params = Array.from({ length: r.int(1, 3) }, () => r.pick([N, T, B]));
-    const result = r.pick(["number", "text"]);
+    const result = r.pick(["number", "string"]);
     const f = { name, params, result, asks: false, ready: false };
     const sc = scope();
     const ps = params.map((p, j) => declare(sc, `a${j}`, p, "param"));
     const body = [];
     if (r.chance(0.5)) {
       // A condition on a parameter: one written out would leave the last return unreachable (S406).
-      body.push(`  if (text_of(${use(ps[0])}) == "1") or ${bool(sc, 2)} {`, `    return ${expr(sc, result === "number" ? N : T, 2)}`, `  }`);
+      body.push(`  if (string_of(${use(ps[0])}) == "1") or ${bool(sc, 2)} {`, `    return ${expr(sc, result === "number" ? N : T, 2)}`, `  }`);
     }
     body.push(`  return ${expr(sc, result === "number" ? N : T, 2)}`);
     // A parameter not read is no mistake; a function not called is only a warning.
-    lines.push(`define ${name}(${ps.map((p) => `${p.name}: ${typeWords(p.type)}`).join(", ")}) -> ${result} {`, ...body, "}", "");
+    lines.push(`function ${name}(${ps.map((p) => `${p.name}: ${typeWords(p.type)}`).join(", ")}) -> ${result} {`, ...body, "}", "");
     f.ready = true;
     functions.push(f);
   }
@@ -547,7 +547,7 @@ export function generate(seed) {
     const name = fresh("g");
     const sc = scope();
     const p = declare(sc, "n", N, "param");
-    lines.push(`define ${name}(n: number) -> number {`, `  ask k: number "Value {n}"`, `  return either(k, 0) + ${use(p)}`, "}", "");
+    lines.push(`function ${name}(n: number) -> number {`, `  ask k: number "Value {n}"`, `  return either(k, 0) + ${use(p)}`, "}", "");
     functions.push({ name, params: [N], result: "number", asks: true, ready: true });
   }
   const main = scope();
@@ -565,11 +565,11 @@ function answerFor(r, step) {
       return r.pick(["0", "1", "-2", "3.5", "1,000", "12345678901234567890.25", "0.000001", "abc", ""]);
     case "date":
       return r.pick(["2024-02-29", "2023-02-29", "1999-12-31", "0001-01-01", "9999-12-31", "31/12/2020"]);
-    case "yes-no":
+    case "bool":
       return r.pick(["yes", "no", true, false, "maybe"]);
-    case "one-of":
+    case "one_of":
       return r.pick([...COLOURS, "purple"]);
-    case "any-of":
+    case "any_of":
       return r.pick([[], ["red"], ["blue", "red"], ["green", "purple"]]);
     default:
       return r.pick(WORDS.map((w) => w.replace(/\\u\{1F600\}/, "😀").replace(/\\n/, "\n").replace(/\\"/, '"')));

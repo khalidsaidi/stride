@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask p: phone "P"
 ask e: email "E"
 let l = [p] + ["x"]
-define mail(m: text) -> text {
+function mail(m: string) -> string {
   return m
 }
 print(mail(l[0]) + e)

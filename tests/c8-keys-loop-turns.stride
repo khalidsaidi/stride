@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var kids: list of text = ["a", "b", "c"]
-define row(n: number) {
-  ask v: text "V"
+var kids: list<string> = ["a", "b", "c"]
+function row(n: number) {
+  ask v: string "V"
   fill "R{n}" = v
 }
 for i in 1..2 {
-  for each n, c in kids {
+  for n, c in kids {
     ask age: number "Age"
     print(age)
     print(c)

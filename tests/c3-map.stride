@@ -3,11 +3,11 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record tally {
   n: number
 }
-var ages: map of text to number = {"Ann": 30, "Bo": 41}
+var ages: map<string, number> = {"Ann": 30, "Bo": 41}
 ages["Cy"] = 25
 ages["Ann"] = ages["Ann"] + 1
 print(ages)
-print(ages["Zed"] is empty)
+print(ages["Zed"] == null)
 print(count(ages))
 print(has(ages, "Bo"))
 let other = copy(ages)
@@ -15,26 +15,26 @@ remove(ages, "Bo")
 print(keys(ages))
 print(values(ages))
 print(count(other))
-var seen: map of text to tally
-print(seen is empty)
+var seen: map<string, tally>
+print(seen == null)
 print(count(seen))
 seen["x"].n = 1
 seen["x"].n += 1
 print(seen)
-var by_number: map of number to text = {}
+var by_number: map<number, string> = {}
 by_number[3] = "three"
 print(by_number == {3: "three"})
-define total<k>(m: map of k to number) -> number {
+function total<k>(m: map<k, number>) -> number {
   return sum(values(m))
 }
 print(total(ages) + total({1: 2, 3: 4}))
-for each name in other {
+for name in other {
   print(name)
 }
-for each name, age in other {
+for name, age in other {
   print("{name} is {age}")
 }
-print([other[k] + 1 for each k in other if k != "Bo"])
-print(["{k}={v}" for each k, v in other if v > 30])
+print([other[k] + 1 for k in other if k != "Bo"])
+print(["{k}={v}" for k, v in other if v > 30])
 # rule 3.10 3.2 6.11.1 14.4.1
-# prints ["{Ann: 31, Bo: 41, Cy: 25}", "yes", "3", "yes", "[Ann, Cy]", "[31, 25]", "3", "no", "0", "{x: tally { n: 2 }}", "yes", "62", "Ann", "Bo", "Cy", "Ann is 31", "Bo is 41", "Cy is 25", "[32, 26]", "[Ann=31, Bo=41]"]
+# prints ["{Ann: 31, Bo: 41, Cy: 25}","true","3","true","[Ann, Cy]","[31, 25]","3","false","0","{x: tally { n: 2 }}","true","62","Ann","Bo","Cy","Ann is 31","Bo is 41","Cy is 25","[32, 26]","[Ann=31, Bo=41]"]

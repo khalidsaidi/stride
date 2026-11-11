@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-record r { f: text }
+record r { f: string }
 let t = "words"
 let x = 12
 let y = 1.5
 let d = date_of(2026, 11, 7)
-let b = yes
+let b = true
 let o: s = "a"
 let r1 = new r { f: "v" }
 let l = [1, 2]
@@ -21,4 +21,4 @@ print(o)
 print(r1.f)
 print(count(l))
 # rule 3.1
-# prints ["words", "12", "1.5", "2026-11-07", "yes", "a", "v", "2"]
+# prints ["words","12","1.5","2026-11-07","true","a","v","2"]

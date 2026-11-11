@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options acts {
+enum acts {
   "sign" "Sign"
 }
-ask a: any-of acts "Acts"
+ask a: any_of acts "Acts"
 # mistake 8 S386 not one of acts
 tick "X" when "seal" in a
 # rule 6.8 S386

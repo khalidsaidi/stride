@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record r { a: text }
-options s { "a" "A" }
-define f<r>(a: r) -> r {
+record r { a: string }
+enum s { "a" "A" }
+function f<r>(a: r) -> r {
   return a
 }
-define g<s>(a: s) -> s {
+function g<s>(a: s) -> s {
   return a
 }
 print(f("a"))
 print(g(1))
 # rule 9.5 S220
-# mistake 5:10 S220
-# mistake 8:10 S220
+# mistake 5:12 S220
+# mistake 8:12 S220

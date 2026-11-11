@@ -1,17 +1,17 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-ask b: long-text "B"
+ask a: string "A"
+ask b: long_text "B"
 ask c: number "C"
 ask d: date "D"
 ask e: phone "E"
 ask f: email "F"
-ask g: yes-no "G"
-ask h: one-of "H" {
+ask g: bool "G"
+ask h: one_of "H" {
   option "x" "X"
   option "y" "Y"
 }
-ask i: any-of "I" {
+ask i: any_of "I" {
   option "p" "P"
   option "q" "Q"
 }

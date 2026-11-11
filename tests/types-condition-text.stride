@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-# mistake 5 S310 needs yes or no
+ask a: string "A"
+# mistake 5 S310 needs true or false
 if a {
   fill "A" = a
 }

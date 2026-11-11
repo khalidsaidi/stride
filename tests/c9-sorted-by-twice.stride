@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record p { name: text, t: text }
+record p { name: string, t: string }
 let l = [new p { name: "b", t: "x" }, new p { name: "a", t: "y" }]
-print(count(sorted(l, by: "name", descending: yes, by: "t")))
+print(count(sorted(l, by: "name", descending: true, by: "t")))
 # rule 9.4 S389
-# mistake 5:52 S389
+# mistake 5:53 S389

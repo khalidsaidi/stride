@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask y: yes-no "Y"
+ask y: bool "Y"
 fill "L" = "{y}"
 fill "M" = if y then "yes" else "no"
 # rule 10.3

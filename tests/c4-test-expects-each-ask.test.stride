@@ -1,7 +1,7 @@
-define f() -> text {
-  ask v: text "V"
+function f() -> string {
+  ask v: string "V"
   return v
 }
-expect f() is empty
-expect f() is empty
+expect f() == null
+expect f() == null
 # rule 7.17.1

@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define run() -> number {
-  var kids: list of text
+function run() -> number {
+  var kids: list<string>
   let n = function() -> number { return count(kids) }
   collect k in kids "Another?" {
-    ask k: text "Name"
+    ask k: string "Name"
   }
   return n()
 }

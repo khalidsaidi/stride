@@ -1,11 +1,11 @@
 export record person {
-  first: text
-  last: text
+  first: string
+  last: string
 }
 export const ROWS = 2
-export define full(p: person) -> text {
+export function full(p: person) -> string {
   return "{p.first} {p.last}"
 }
-define secret() -> text {
+function secret() -> string {
   return "s"
 }

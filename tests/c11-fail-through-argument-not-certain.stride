@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define maybe(x: number) {
+function maybe(x: number) {
   if x > 1 {
     fail("x")
   }

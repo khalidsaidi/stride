@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 for i in 1..3 {
-  ask line: text "Line"
+  ask line: string "Line"
   fill "L{i}" = line
 }
 # answers {"line[2]": "two"}

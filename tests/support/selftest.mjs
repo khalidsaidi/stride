@@ -44,7 +44,7 @@ import { parseDigits, expectResults } from "../../src/test.mjs";
 import { Diagnostics, SourceFile } from "../../src/source.mjs";
 import { parse } from "../../src/parse.mjs";
 import { format, comments } from "../../src/format.mjs";
-import { textOf } from "../../runtime/natives.mjs";
+import { stringOf } from "../../runtime/natives.mjs";
 import * as IR from "../../src/ir.mjs";
 import { fileURLToPath } from "node:url";
 
@@ -64,8 +64,8 @@ export function canon(v) {
   if (Array.isArray(v)) return v.map(canon);
   if (v && typeof v === "object" && Array.isArray(v.fields)) return { [v.type]: v.fields.map(canon) };
   if (v === null || v === undefined) return null;
-  if (typeof v === "boolean") return v ? "yes" : "no";
-  return textOf(v);
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return stringOf(v);
 }
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -173,8 +173,8 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
     for (const b of fn.blocks) {
       for (const s of b.stmts) {
         if (!["fill", "tick", "pick"].includes(s.op) || !IR.isConst(s.box)) continue;
-        if (s.op !== "pick") add(first.program.prefix + textOf(s.box.v), s.op, null);
-        else if (IR.isConst(s.button)) add(first.program.prefix + textOf(s.box.v), "pick", textOf(s.button.v));
+        if (s.op !== "pick") add(first.program.prefix + stringOf(s.box.v), s.op, null);
+        else if (IR.isConst(s.button)) add(first.program.prefix + stringOf(s.box.v), "pick", stringOf(s.button.v));
       }
     }
   }

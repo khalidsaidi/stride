@@ -57,7 +57,7 @@ function compileDoc(uri, text, texts = openTexts()) {
   const lib = libraryOf(path, libraries);
   if (lib) {
     const dir = basename(lib.folder) === "lib" ? dirname(lib.folder) : lib.folder;
-    return { out: compile(`use "${lib.name}"\n`, "library-check.stride", { dir, read, libraries: [lib.folder, ...libraries] }), own: `lib/${lib.name}.stride`, path, problem };
+    return { out: compile(`import "${lib.name}"\n`, "library-check.stride", { dir, read, libraries: [lib.folder, ...libraries] }), own: `lib/${lib.name}.stride`, path, problem };
   }
   const base = path.replace(/\.stride$/, "");
   const header = disk(`${base}.boxes.json`);
@@ -157,12 +157,12 @@ function hoverOf(symbol) {
   if (lib && (symbol.kind === "native" || symbol.unit?.std)) return `\`\`\`stride\n${lib.signatures.join("\n")}\n\`\`\`\n${lib.gives}`;
   if (symbol.kind === "function" || symbol.kind === "native") {
     const params = (symbol.params ?? []).map((p) => `${p.name}: ${p.type ? describe(p.type) : "?"}`).join(", ");
-    return `\`\`\`stride\ndefine ${symbol.name}(${params})${symbol.result && symbol.result.t !== "none" ? ` -> ${describe(symbol.result)}` : ""}\n\`\`\``;
+    return `\`\`\`stride\nfunction ${symbol.name}(${params})${symbol.result && symbol.result.t !== "none" ? ` -> ${describe(symbol.result)}` : ""}\n\`\`\``;
   }
   return `\`\`\`stride\n${symbol.kind} ${symbol.name}${symbol.type ? `: ${describe(symbol.type)}` : ""}\n\`\`\``;
 }
 
-// After `name.` (or `a.b.`): what the name holds, the exports of a library kept under it (use "x" as name), or
+// After `name.` (or `a.b.`): what the name holds, the exports of a library kept under it (import "x" as name), or
 // the fields of the record it is; null when the text before the cursor is not that.
 function members(doc, offset) {
   const before = doc.text.slice(0, offset).match(/([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.([A-Za-z0-9_]*)$/);
@@ -377,7 +377,7 @@ function completions(doc, offset = null) {
   const add = (sym) => {
     if (!sym?.name || seen.has(sym.name)) return;
     seen.add(sym.name);
-    items.push({ label: sym.name, kind: { function: 3, record: 22, options: 13, const: 21, answer: 6, let: 6, var: 6, param: 6 }[sym.kind] ?? 6, detail: sym.kind });
+    items.push({ label: sym.name, kind: { function: 3, record: 22, enum: 13, const: 21, answer: 6, let: 6, var: 6, param: 6 }[sym.kind] ?? 6, detail: sym.kind });
   };
   for (const sym of r?.scope.names.values() ?? []) add(sym);
   const walked = new Set();

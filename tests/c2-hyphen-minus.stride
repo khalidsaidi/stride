@@ -1,10 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-let yes_ = 3
-let no_ = 1
-print(yes_ - no_)
-let a = 5
-let b = 2
-print(a-b)
-# rule 2.2 2.7
-# prints ["2", "3"]
+let yes = 3
+let no = 1
+print(yes - no)
+let one = 5
+let of = 2
+print(one-of)
+let long = 9
+let text = 4
+print(long-text)
+# rule 2.1 2.7
+# prints ["2", "3", "5"]

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
+ask a: string "A"
 # mistake 5 S345 a program cannot change it
 a = "x"
 fill "A" = a

@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "b" "B"  "a" "A" }
+enum s { "b" "B"  "a" "A" }
 ask n: number "N"
-ask chosen: any-of s "Chosen"
+ask chosen: any_of s "Chosen"
 print(n ?? "none")
 print(chosen ?? ["z"])
 print(chosen ?? 1)
 print(n ?? 1 == 1)
 # rule 6.16 3.9 S394 S386
-# mistake 6:12 S394 ?? gives number on one side and text on the other, which do not join
+# mistake 6:12 S394 ?? gives number on one side and string on the other, which do not join
 # mistake 7:18 S386
 # mistake 8:17 S394
-# mistake 9:12 S394 ?? gives number on one side and yes-no on the other
+# mistake 9:12 S394 ?? gives number on one side and bool on the other

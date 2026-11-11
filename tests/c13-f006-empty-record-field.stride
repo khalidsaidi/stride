@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text }
+record person { name: string }
 var p: person
 fill "A" = p.name
 # rule F006 F023 6.9.1
-# fault F023 at 5:12 empty where a record is needed: what a field is read of
+# fault F023 at 5:12 null where a record is needed: what a field is read of

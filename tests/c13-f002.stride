@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask z: number "Z"
-ask w: yes-no "W"
+ask w: bool "W"
 if w {
   fill "A" = 7 // z
 } else {

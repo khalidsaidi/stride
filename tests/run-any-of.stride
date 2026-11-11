@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options acts {
+enum acts {
   "a" "A"
   "b" "B"
 }
-ask x: any-of acts "X"
+ask x: any_of acts "X"
 tick "A" when "a" in x
 tick "B" when "b" in x
 fill "C" = join(x, ",")

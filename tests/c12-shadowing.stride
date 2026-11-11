@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define total() -> number {
+function total() -> number {
   return 3
 }
-define f(total: number) -> number {
+function f(total: number) -> number {
   let total = total + 1
   return total
 }

@@ -57,7 +57,7 @@ export function comments(text) {
 }
 
 // How tightly each operator binds (§6.1): `if … then … else` loosest (0), a field, a position or a call tightest (8).
-const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "is-empty": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7 };
+const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7 };
 
 export function format(text, name = "program.stride") {
   const diagnostics = new Diagnostics();
@@ -124,8 +124,8 @@ export function format(text, name = "program.stride") {
 
   function item_(n, indent) {
     switch (n.kind) {
-      case "use":
-        put(n, indent, `use ${plain(n.path)}${n.alias ? ` as ${n.alias}` : ""}`);
+      case "import":
+        put(n, indent, `import ${plain(n.path)}${n.alias ? ` as ${n.alias}` : ""}`);
         return trailing(n.span.line);
       case "record":
         put(n, indent, `${exp(n)}record ${n.name} {`);
@@ -135,8 +135,8 @@ export function format(text, name = "program.stride") {
           if (n.span.line !== n.span.endLine) trailing(f.span.line);
         }
         return close(n, indent);
-      case "options":
-        put(n, indent, `${exp(n)}options ${n.name} {`);
+      case "enum":
+        put(n, indent, `${exp(n)}enum ${n.name} {`);
         opening(n);
         for (const o of n.options) {
           put(o, `${indent}  `, `${plain(o.value)} ${str(o.printed)}`);
@@ -147,10 +147,10 @@ export function format(text, name = "program.stride") {
         put(n, indent, `${exp(n)}const ${n.name}${n.type ? `: ${type(n.type)}` : ""} = ${expr(n.value)}`);
         return trailing(n.span.endLine);
       case "native":
-        put(n, indent, `${exp(n)}native define ${n.name}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""}`);
+        put(n, indent, `${exp(n)}native function ${n.name}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""}`);
         return trailing(n.span.line);
-      case "define":
-        put(n, indent, `${exp(n)}define ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""} {`);
+      case "function":
+        put(n, indent, `${exp(n)}function ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""} {`);
         trailing(n.span.line);
         block(n.body, `${indent}  `);
         return close(n, indent);
@@ -158,7 +158,7 @@ export function format(text, name = "program.stride") {
         return statement(n, indent);
     }
   }
-  const DECLARATIONS = new Set(["use", "record", "options", "const", "native", "define"]);
+  const DECLARATIONS = new Set(["import", "record", "enum", "const", "native", "function"]);
 
   // A comment after the opening line of a construct that is all on one line belongs after its closing brace.
   function opening(n) {
@@ -251,7 +251,7 @@ export function format(text, name = "program.stride") {
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "for-each":
-        put(s, indent, `for each ${s.index ? `${s.index}, ` : ""}${s.item} in ${expr(s.list)} {`);
+        put(s, indent, `for ${s.index ? `${s.index}, ` : ""}${s.item} in ${expr(s.list)} {`);
         opening(s);
         block(s.body, `${indent}  `);
         return close(s, indent);
@@ -337,11 +337,11 @@ export function format(text, name = "program.stride") {
   function type(t) {
     switch (t.kind) {
       case "type-list":
-        return `list of ${type(t.element)}`;
+        return `list<${type(t.element)}>`;
       case "type-map":
-        return `map of ${type(t.key)} to ${type(t.value)}`;
+        return `map<${type(t.key)}, ${type(t.value)}>`;
       case "type-set":
-        return `set of ${t.name}`;
+        return `set<${t.name}>`;
       case "type-any":
         return "any";
       case "type-function":
@@ -375,10 +375,10 @@ export function format(text, name = "program.stride") {
       }
       case "number":
         return e.raw ?? String(e.value);
-      case "yes-no":
-        return e.value ? "yes" : "no";
-      case "empty":
-        return "empty";
+      case "bool":
+        return e.value ? "true" : "false";
+      case "null":
+        return "null";
       case "plain-string":
         return plain(e.value);
       case "string":
@@ -388,8 +388,6 @@ export function format(text, name = "program.stride") {
       case "unary":
         if (e.op === "not") return wrap(PRECEDENCE.not, `not ${expr(e.operand, PRECEDENCE.not)}`);
         return wrap(PRECEDENCE.neg, `-${expr(e.operand, PRECEDENCE.neg)}`);
-      case "is-empty":
-        return wrap(4, `${expr(e.operand, 5)} is ${e.not ? "not " : ""}empty`);
       case "binary": {
         const p = PRECEDENCE[e.op];
         // Comparisons do not chain; arithmetic is left to right, so the right side of - and / needs parentheses
@@ -413,7 +411,7 @@ export function format(text, name = "program.stride") {
       case "map":
         return `{${e.entries.map((x) => `${expr(x.key)}: ${expr(x.value)}`).join(", ")}}`;
       case "comprehension":
-        return `[${expr(e.value)} for each ${e.index ? `${e.index}, ` : ""}${e.item} in ${expr(e.list, 1)}${e.condition ? ` if ${expr(e.condition, 1)}` : ""}]`;
+        return `[${expr(e.value)} for ${e.index ? `${e.index}, ` : ""}${e.item} in ${expr(e.list, 1)}${e.condition ? ` if ${expr(e.condition, 1)}` : ""}]`;
       case "cond":
         return wrap(0.5, `if ${expr(e.condition)} then ${expr(e.yes)} else ${expr(e.no)}`);
       case "new":

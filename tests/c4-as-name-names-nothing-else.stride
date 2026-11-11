@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-a" as a
-use "people" as p
+import "c-a" as a
+import "people" as p
 const a = 1
-define f(p: number) -> number {
+function f(p: number) -> number {
   return p
 }
 let a = "q"
 print(f(1) + a.shared)
 # rule 4.5 S110
 # mistake 5 S110
-# mistake 6:10 S110
+# mistake 6:12 S110
 # mistake 9 S110

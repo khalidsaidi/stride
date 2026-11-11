@@ -29,14 +29,14 @@ in whichever of these ways suits (§17.12):
 | | |
 |---|---|
 | `stride run greet.stride` at a terminal | each question is asked there as the run reaches it; an empty line leaves it unanswered |
-| `stride run greet.stride name=Ada born=1815-12-10` | answers as arguments, question key = answer; an any-of answer's options with commas, `likes=red,blue` |
+| `stride run greet.stride name=Ada born=1815-12-10` | answers as arguments, question key = answer; an any_of answer's options with commas, `likes=red,blue` |
 | `stride run greet.stride answers.json` | a JSON object, question key to answer |
 | `cat answers.json \| stride run greet.stride -` | the same object on stdin |
 | `printf 'Ada\n1815-12-10\n' \| stride run greet.stride --prompt` | the questions asked in turn, the answers read from stdin |
 | `echo 'print(1 + 1)' \| stride run -` | a script read from stdin |
 
 ```stride answers={"name":"Ada","born":"1815-12-10"}
-ask name: text "Your name"
+ask name: string "Your name"
 ask born: date "Date of birth"
 print("Hello, {name ?? "there"}")
 print("You were born in {year(born)}.")
@@ -54,7 +54,7 @@ $ stride repl
 stride> let names = ["Ada", "Bo"]
 stride> names[0]
 Ada
-stride> define twice(n: number) -> number {
+stride> function twice(n: number) -> number {
    ...>   return n * 2
    ...> }
 stride> twice(21)
@@ -81,7 +81,7 @@ is:
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
-ask full_name: text "Full name"
+ask full_name: string "Full name"
 fill "name" = full_name
 
 # tick "agree" when …
@@ -94,16 +94,16 @@ statement that writes it; write those you need. A box the program never mentions
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
-ask full_name: text "Full name"
+ask full_name: string "Full name"
 fill "name" = full_name
-ask agrees: yes-no "I agree to the terms"
+ask agrees: bool "I agree to the terms"
 tick "agree" when agrees
 ```
 
-A question not answered yet holds empty (§3). `fill` leaves its box blank for it and `tick … when` leaves its box
+A question not answered yet holds null (§3). `fill` leaves its box blank for it and `tick … when` leaves its box
 unticked, so this program runs before anything is answered. What is worked out from an answer needs the answer:
 `fill "initials" = upper(full_name)` is a fault until the name is given (F023, §11). Give it a value for the time
-being, `upper(full_name ?? "")`, or work it out only when the answer is there, `if full_name is not empty { … }`.
+being, `upper(full_name ?? "")`, or work it out only when the answer is there, `if full_name != null { … }`.
 
 A PDF's own names for its boxes are often a machine's (`topmostSubform[0].Page1[0].f1_05[0]`). Give such a box
 a name of your own once, as a constant, and use that name wherever the box goes (§7.9):
@@ -139,27 +139,27 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 
 | Type | Values | Written |
 |---|---|---|
-| `text` | words | `"words"`, `"Line {n}"` |
+| `string` | words | `"words"`, `"Line {n}"` |
 | `number` | an exact decimal: `0.1 + 0.2` is `0.3` | `12`, `1.5` |
 | `date` | a day, 0001-01-01 to 9999-12-31 | `date_of(2026, 7, 4)`, `today()` |
-| `yes-no` | `yes`, `no` | |
-| an option set | one of its options | `"red"` where one is expected |
-| `set of` an option set | some of its options | `["red", "blue"]` where one is expected |
+| `bool` | `true`, `false` | |
+| an option set (an `enum`) | one of its options | `"red"` where one is expected |
+| `set<S>`, S an option set | some of its options | `["red", "blue"]` where one is expected |
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
-| `list of T` | any number of items | `[1, 2, 3]` |
+| `list<T>` | any number of items | `[1, 2, 3]` |
 
-Every type also has **empty**: no value, what a question not answered or a field not set holds, as `None` or
-`null` elsewhere. Words of no characters `""` and a list with no items `[]` are values, not empty. Empty is never a
-mistake to hold: it counts as `no` in a condition, `"{x}"` and `fill` put in no characters for it, and `==`
+Every type also has **null**: no value, what a question not answered or a field not set holds, as `None` or
+`null` elsewhere. Words of no characters `""` and a list with no items `[]` are values, not null. Null is never a
+mistake to hold: it counts as `false` in a condition, `"{x}"` and `fill` put in no characters for it, and `==`
 compares it. Computing with it is a fault (F023, §6.3): arithmetic, an order, a field, an item, a library function
-all need a value. Test for it with `is empty`, and give a value in its place with `??`:
+all need a value. Test for it with `== null`, and give a value in its place with `??`:
 
 ```stride
-let price: number = empty
-print(price is empty)
+let price: number = null
+print(price == null)
 print(price ?? 0)
 print((price ?? 0) + 5)
-print("" is empty)
+print("" == null)
 print("price: {price}")
 try {
   print(price + 5)
@@ -168,12 +168,12 @@ try {
 }
 ```
 ```output
-yes
+true
 0
 5
-no
+false
 price: 
-empty where a number is needed: the left side of +
+null where a number is needed: the left side of +
 ```
 
 Numbers are exact decimals of up to 34 significant digits (§3.3), not binary floating point: `0.1 + 0.2` is `0.3`,
@@ -200,8 +200,8 @@ print(grouped(1234567.891, 2))
 
 ## 4. Expressions
 
-Arithmetic `+ - * / // %`, comparisons `== != < <= > >=`, `in` and `not in` for lists and sets, `is empty`,
-`and`, `or`, `not`, and `a ?? b`: a, or b when a is empty (§6.16). Operands are worked out left to right, and `and` and `or` stop as soon as the left side decides
+Arithmetic `+ - * / // %`, comparisons `== != < <= > >=`, `in` and `not in` for lists and sets, `== null`,
+`and`, `or`, `not`, and `a ?? b`: a, or b when a is null (§6.16). Operands are worked out left to right, and `and` and `or` stop as soon as the left side decides
 (§6.2), so the right side of this `and` never divides by zero:
 
 ```stride
@@ -211,7 +211,7 @@ print(if n > 0 then "some" else "none")
 print("{n} items")
 ```
 ```output
-no
+false
 none
 0 items
 ```
@@ -222,7 +222,7 @@ Comparisons do not chain: `a < b < c` is a mistake; write `a < b and b < c`.
 
 ```stride
 let ages = [12, 30, 67]
-for each n, age in ages {
+for n, age in ages {
   if age < 18 {
     print("{n}: child")
   } else if age >= 65 {
@@ -253,7 +253,7 @@ for i in 1..10 {
 `match` chooses by words, or by an option, and `return` ends a function, or the program:
 
 ```stride
-define size(code: text) -> text {
+function size(code: string) -> string {
   match code {
     "S", "M" => {
       return "small"
@@ -271,20 +271,20 @@ small
 large
 ```
 
-`while c { … }` runs its body as long as c is yes. A program that never ends runs until its host stops it;
+`while c { … }` runs its body as long as c is true. A program that never ends runs until its host stops it;
 calls deeper than 10,000 stop the run (F015).
 
 ## 6. Functions
 
 ```stride
-define greeting(name: text, polite: yes-no = yes) -> text {
+function greeting(name: string, polite: bool = true) -> string {
   if polite {
     return "Good morning, {name}."
   }
   return "Hi {name}"
 }
 print(greeting("Ada"))
-print(greeting("Bo", polite: no))
+print(greeting("Bo", polite: false))
 ```
 ```output
 Good morning, Ada.
@@ -292,7 +292,7 @@ Hi Bo
 ```
 
 A parameter may have a default; arguments are given in order, then by name. A function without `-> type` has its
-result worked out from its returns. `define biggest<t>(l: list of t) -> t` is generic: `t` is worked out at each
+result worked out from its returns. `function biggest<t>(l: list<t>) -> t` is generic: `t` is worked out at each
 call (§9.5). A list, a record or a map given to a function is the caller's own: what the function changes in it,
 the caller sees (§3.4).
 A function reads the program's own names (an answer, a let, a var), and may change its vars (§9.1).
@@ -308,16 +308,16 @@ Lists, records and maps are shared, as in Python, JavaScript and Java: `var b = 
 `==` compares items:
 
 ```stride
-options colour {
+enum colour {
   "red" "Red"
   "green" "Green"
   "blue" "Blue"
 }
 record person {
-  name: text
+  name: string
   age: number
 }
-var names: list of text = ["Ada", "Bo"]
+var names: list<string> = ["Ada", "Bo"]
 let same = names
 let other = copy(names)
 append(same, "Cy")
@@ -327,43 +327,43 @@ print(names[1..<3])
 print(other == ["Ada", "Bo"])
 let p = new person { name: "Ada", age: 36 }
 print(p.name)
-let warm: set of colour = ["red", "green"]
+let warm: set<colour> = ["red", "green"]
 print("green" in warm)
-print([upper(x) for each x in names if x != "Bo"])
+print([upper(x) for x in names if x != "Bo"])
 ```
 ```output
 [Ada, Bo, Cy]
 [Ada, Bo]
 [Bo, Cy]
-yes
+true
 Ada
-yes
+true
 [ADA, CY]
 ```
 
 `append(l, x)`, `insert(l, position, x)`, `remove_at(l, position)`, `clear(l)` and `l += m` change the list
 itself; `sorted`, `reversed`, `filled`, `without`, a slice and `l + m` give a new list (§14.4).
 
-A map holds values under keys (§3.10). Reading a key it does not have gives empty:
+A map holds values under keys (§3.10). Reading a key it does not have gives null:
 
 ```stride
-var ages: map of text to number = {"Ann": 30, "Bo": 41}
+var ages: map<string, number> = {"Ann": 30, "Bo": 41}
 ages["Cy"] = 25
 ages["Ann"] = ages["Ann"] + 1
 print(ages["Ann"])
-print(ages["Zed"] is empty)
-for each name, age in ages {
+print(ages["Zed"] == null)
+for name, age in ages {
   print("{name}: {age}")
 }
 print(has(ages, "Bo"))
 ```
 ```output
 31
-yes
+true
 Ann: 31
 Bo: 41
 Cy: 25
-yes
+true
 ```
 
 ## 8. Functions as values
@@ -372,10 +372,10 @@ A function's name, where a value goes, is the function itself (§9.10): it can b
 in a `let`, and called through that name. Its type is written `function(number) -> number`.
 
 ```stride
-define double(n: number) -> number {
+function double(n: number) -> number {
   return n * 2
 }
-define apply(f: function(number) -> number, n: number) -> number {
+function apply(f: function(number) -> number, n: number) -> number {
   return f(n)
 }
 print(apply(double, 21))
@@ -391,7 +391,7 @@ A function can be written where it is used, without a name (§9.11). It reads th
 the vars around it:
 
 ```stride
-define adder(k: number) -> function(number) -> number {
+function adder(k: number) -> function(number) -> number {
   return function(n: number) -> number { return n + k }
 }
 let add5 = adder(5)
@@ -405,22 +405,22 @@ print(less(10))
 ```
 
 For the common cases there are shorter ways: keeping some items or changing each is a comprehension
-(`[upper(x) for each x in names if x is not empty]`), and ordering records is `sorted(l, by: "field")`.
+(`[upper(x) for x in names if x != null]`), and ordering records is `sorted(l, by: "field")`.
 
 ## 9. Files and libraries
 
 A library is a file in `lib/` beside the program, `lib/<name>.stride`, holding declarations; `export` makes one
-visible to the files that use it:
+visible to the files that import it:
 
 ```stride file=lib/money.stride
 # lib/money.stride
-export define dollars(n: number) -> text {
+export function dollars(n: number) -> string {
   return "${grouped(n, 2)}"
 }
 ```
 
-and `use "money"` in a program makes `dollars` its own; `use "money" as m` makes it `m.dollars`. A library may use
-others, never in a circle. The standard library is used everywhere without a `use`.
+and `import "money"` in a program makes `dollars` its own; `import "money" as m` makes it `m.dollars`. A library may import
+others, never in a circle. The standard library is there everywhere without an `import`.
 
 ## 10. The standard library
 
@@ -429,7 +429,7 @@ whose name or description holds the word. The tables are in §14.
 
 ```
 $ stride doc pad
-pad_left(t: text, width: number, padding: text = " ") -> text    14.1 Words
+pad_left(t: string, width: number, padding: string = " ") -> string    14.1 Words
   padding put before t until it is width characters; t at least width long: t. …
   example: pad_left("7", 3, "0") gives 007
 ```
@@ -445,7 +445,7 @@ code; `stride explain W009` says what the code means and what to do. `--json` gi
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
-ask full_name: text "Full name"
+ask full_name: string "Full name"
 fill "nmae" = full_name
 ```
 
@@ -462,7 +462,7 @@ A **fault** happens as the program runs, on some answers: it stops the run and s
 there (§16.3), on stderr, with exit status 1:
 
 ```stride answers={"n":"0"}
-define share(total: number, n: number) -> number {
+function share(total: number, n: number) -> number {
   return total / n
 }
 ask n: number "How many people"
@@ -477,7 +477,7 @@ fault F001: division by zero
 A `try` catches a fault: the catch runs, with the fault's message, and the program goes on (§7.18).
 
 ```stride
-define share(total: number, n: number) -> number {
+function share(total: number, n: number) -> number {
   return total / n
 }
 try {
@@ -499,8 +499,8 @@ still running
 | a mistake | before anything runs | nothing runs, and nothing is compiled |
 | a fault | as it runs, on some answers | the run stops; nothing it wrote counts; the page says so and keeps the answers |
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
-| an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |
-| computing with empty (`total + 1`, `upper(name)` before the question is answered) | as it runs | fault F023; `total ?? 0`, `name ?? ""` or `if name is not empty` gives it a value |
+| an answer that is not a number or a date | as it runs | it is null, and marked unreadable |
+| computing with null (`total + 1`, `upper(name)` before the question is answered) | as it runs | fault F023; `total ?? 0`, `name ?? ""` or `if name != null` gives it a value |
 
 A program can also guard against faults before they happen (`if n != 0`, `??`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
 faults`, below).
@@ -511,7 +511,7 @@ A function is tested in a test file, `<name>.test.stride` beside a library, with
 
 ```stride file=lib/money.test.stride then=test
 # lib/money.test.stride
-use "money"
+import "money"
 expect dollars(1234.5) == "$1,234.50"
 expect dollars(1 / 0) faults "F001"
 ```
@@ -624,7 +624,7 @@ under `"libraries"`, so libraries are shared without copying them (§4.7):
 forms/
   stride.json          {"stride": "1.0", "libraries": ["../shared/lib"]}
   lib/money.stride     shared by every program below
-  w9/w9.stride         use "money"
+  w9/w9.stride         import "money"
   w9/w9.boxes.json     the header: the PDF's sha256 and its boxes   (stride header, stride new)
   w9/w9.pdf            the issuer's PDF, beside its workflow          (stride new copies it)
   w9/w9.tests/*.json   its tests                                     (stride new starts one)
@@ -656,21 +656,21 @@ write the same boxes.
   on the page and on the form. Stride does not read them off the PDF: you do.
 - **Conditional questions** are questions inside an `if`: asked only when the condition holds.
 - **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", until
-  the answer is no; a `for each` then fills one row of boxes per item, `"Name{n}"`.
+  the answer is no; a `for` then fills one row of boxes per item, `"Name{n}"`.
 
   ```
-  record vehicle { vin: text, make: text }
-  var vehicles: list of vehicle
+  record vehicle { vin: string, make: string }
+  var vehicles: list<vehicle>
   collect n, v in vehicles "Add another vehicle?" {
-    ask v.vin: text "Vehicle Identification Number"
-    ask v.make: text "Make"
+    ask v.vin: string "Vehicle Identification Number"
+    ask v.make: string "Make"
   }
   # The form calls its rows' boxes "Make", "Make_2", "Make_3" …: a function builds the names.
-  define row(n: number) -> text {
+  function row(n: number) -> string {
     return if n == 0 then "" else "_{n + 1}"
   }
   # The form has five rows.
-  for each n, v in vehicles[..<5] {
+  for n, v in vehicles[..<5] {
     fill "Vehicle Identification Number{row(n)}" = v.vin
     fill "Make{row(n)}" = v.make
   }
@@ -680,8 +680,8 @@ write the same boxes.
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
-ask full_name: text "Full name"
-ask agrees: yes-no "I agree to the terms"
+ask full_name: string "Full name"
+ask agrees: bool "I agree to the terms"
 if agrees {
   fill "name" = full_name
 }
@@ -729,7 +729,7 @@ Linux. Other platforms are outside this release's scope.
 
 | | |
 |---|---|
-| loops | `for`, `for each`, `while`, `collect` |
+| loops | `for`, `while`, `collect` |
 | recursion | a function may call itself; calls deeper than 10,000 stop the run (F015) |
 | functions | are values: passed, kept, returned, written in place (§9.10, §9.11) |
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |

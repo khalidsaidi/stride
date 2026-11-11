@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
   "b" "B"
   "c" "C"
 }
-ask k: any-of s "K"
+ask k: any_of s "K"
 print(join(union(k, ["c"]), ","))
 print(join(intersection(["c", "a"], k), ","))
 print(join(difference(k, ["a"]), ","))

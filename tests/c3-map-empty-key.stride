@@ -1,16 +1,16 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var m: map of text to number
+var m: map<string, number>
 let none = ""
 m[none] = 1
 print(m[none])
 print(has(m, none))
-let k: text = empty
-print(m[k] is empty)
+let k: string = null
+print(m[k] == null)
 print(has(m, k))
 print(k in m)
 print(count(remove(m, k)))
 m[k] = 2
 # rule 6.11.1 F023
-# prints ["1", "yes", "yes", "no", "no", "1"]
-# fault F023 at 13:2 empty where a key is needed: the key a value is put under
+# prints ["1","true","true","false","false","1"]
+# fault F023 at 13:2 null where a key is needed: the key a value is put under

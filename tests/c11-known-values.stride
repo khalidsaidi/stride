@@ -5,9 +5,9 @@ let q = upper("x")
 for i in 1..2 {
   fill "{P}{i}{q}" = "v"
 }
-var l: list of text
+var l: list<string>
 collect n, x in l "More?" {
-  ask x: text "Item"
+  ask x: string "Item"
   fill "Item{n}" = x
 }
 # rule 11.1 11.2

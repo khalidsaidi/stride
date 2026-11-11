@@ -20,4 +20,4 @@ fill "A" = character("abc", n)
 # fault F007 at 4:12
 # run empty
 # answers {}
-# fault F023 at 4:12 empty where a number is needed: character's n
+# fault F023 at 4:12 null where a number is needed: character's n

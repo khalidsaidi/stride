@@ -1,4 +1,4 @@
-# The standard library (docs/spec.md §14). Every program and every library has it without a `use`. The
+# The standard library (docs/spec.md §14). Every program and every library has it without an `import`. The
 # natives are written in JavaScript (runtime/natives.mjs) and declared here with their parameters,
 # defaults and results; the rest is written in Stride. A native whose result is `any` gives a value of the type of
 # its first argument after conversion, unless §14 specifies otherwise (`either` joins both arguments); `element`
@@ -8,236 +8,236 @@
 # Each `# example:` line is shown by `stride doc` and run by the conformance suite in every engine: what
 # `stride eval` gives for it, what it prints, or the fault it stops with. The examples may use these:
 #
-#   options colour {
+#   enum colour {
 #     "red" "Red"
 #     "green" "Green"
 #     "blue" "Blue"
 #   }
 #   record person {
-#     name: text
+#     name: string
 #     age: number
 #   }
-#   let warm: set of colour = ["red", "green"]
-#   let cool: set of colour = ["green", "blue"]
-#   let people: list of person = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }]
+#   let warm: set<colour> = ["red", "green"]
+#   let cool: set<colour> = ["green", "blue"]
+#   let people: list<person> = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }]
 #
 # and the day today() gives is 2026-11-09.
 
 # ----- words (§14.1)
 
 # example: upper("Ab ç") gives AB Ç
-# example: upper(empty) faults F023
+# example: upper(null) faults F023
 # example: length(upper("")) gives 0
-export native define upper(t: text) -> text
+export native function upper(t: string) -> string
 # example: lower("Ab") gives ab
-export native define lower(t: text) -> text
+export native function lower(t: string) -> string
 # example: title("anne-marie o'neil") gives Anne-Marie O'Neil
-export native define title(t: text) -> text
+export native function title(t: string) -> string
 # example: capitalize("hello world") gives Hello world
-export native define capitalize(t: text) -> text
+export native function capitalize(t: string) -> string
 # example: "[{trim("  a   b  ")}]" gives [a   b]
-export native define trim(t: text) -> text
+export native function trim(t: string) -> string
 # example: "[{trim_start("  a  ")}]" gives [a  ]
-export native define trim_start(t: text) -> text
+export native function trim_start(t: string) -> string
 # example: "[{trim_end("  a  ")}]" gives [  a]
-export native define trim_end(t: text) -> text
+export native function trim_end(t: string) -> string
 # example: remove_prefix("Mr Smith", "Mr ") gives Smith
-export native define remove_prefix(t: text, prefix: text) -> text
+export native function remove_prefix(t: string, prefix: string) -> string
 # example: remove_suffix("report.pdf", ".pdf") gives report
-export native define remove_suffix(t: text, suffix: text) -> text
+export native function remove_suffix(t: string, suffix: string) -> string
 # example: length("héllo") gives 5
-export native define length(t: any) -> number
+export native function length(t: any) -> number
 # example: chars("123-45-6789", 3, 4) gives 45
-export native define chars(t: text, from: number, to: number) -> text
+export native function chars(t: string, from: number, to: number) -> string
 # example: character("A1-B2", 2) gives B
-# example: character("A1-B2", 9) is empty gives yes
-export native define character(t: text, n: number) -> text
+# example: character("A1-B2", 9) == null gives true
+export native function character(t: string, n: number) -> string
 # example: slice("Hello", 1, 3) gives ell
-export native define slice(t: text, from: number, to: number) -> text
+export native function slice(t: string, from: number, to: number) -> string
 # example: digits("(555) 123-4567") gives 5551234567
-export native define digits(t: text) -> text
+export native function digits(t: string) -> string
 # example: letters("a1b2") gives ab
-export native define letters(t: text) -> text
-# example: is_digits("0123") gives yes
-# example: is_digits("") gives no
-export native define is_digits(t: text) -> yes-no
-# example: is_letters("abc") gives yes
-export native define is_letters(t: text) -> yes-no
+export native function letters(t: string) -> string
+# example: is_digits("0123") gives true
+# example: is_digits("") gives false
+export native function is_digits(t: string) -> bool
+# example: is_letters("abc") gives true
+export native function is_letters(t: string) -> bool
 # example: replace("a-b-c", "-", "/") gives a/b/c
-export native define replace(t: text, part: text, with: text) -> text
-# example: contains("Hello", "ell") gives yes
-export native define contains(t: text, part: text) -> yes-no
-# example: starts_with("Hello", "He") gives yes
-export native define starts_with(t: text, part: text) -> yes-no
-# example: ends_with("Hello", "lo") gives yes
-export native define ends_with(t: text, part: text) -> yes-no
+export native function replace(t: string, part: string, with: string) -> string
+# example: contains("Hello", "ell") gives true
+export native function contains(t: string, part: string) -> bool
+# example: starts_with("Hello", "He") gives true
+export native function starts_with(t: string, part: string) -> bool
+# example: ends_with("Hello", "lo") gives true
+export native function ends_with(t: string, part: string) -> bool
 # example: find("banana", "an") gives 1
 # example: find("banana", "x") gives -1
-export native define find(t: text, part: text) -> number
+export native function find(t: string, part: string) -> number
 # example: occurrences("banana", "an") gives 2
-export native define occurrences(t: text, part: text) -> number
+export native function occurrences(t: string, part: string) -> number
 # example: split("a,b,,c", ",") gives [a, b, , c]
-export native define split(t: text, separator: text) -> list of text
+export native function split(t: string, separator: string) -> list<string>
 # example: line("one\n  two  ", 1) gives two
-export native define line(t: text, n: number) -> text
+export native function line(t: string, n: number) -> string
 # example: line_count("a\n") gives 2
-export native define line_count(t: text) -> number
+export native function line_count(t: string) -> number
 # example: replace(rest_lines("Name\n 12 Main St\nTown "), "\n", " / ") gives 12 Main St / Town
-export native define rest_lines(t: text) -> text
+export native function rest_lines(t: string) -> string
 # example: word("John  Q Public", 1) gives Q
-export native define word(t: text, n: number) -> text
+export native function word(t: string, n: number) -> string
 # example: word_count(" a  b c ") gives 3
-export native define word_count(t: text) -> number
+export native function word_count(t: string) -> number
 # example: pad_left("7", 3, "0") gives 007
-export native define pad_left(t: text, width: number, padding: text = " ") -> text
-# example: text_of(date_of(2026, 1, 2)) gives 2026-01-02
-# example: text_of(empty) == "" gives yes
-export native define text_of(v: any) -> text
+export native function pad_left(t: string, width: number, padding: string = " ") -> string
+# example: string_of(date_of(2026, 1, 2)) gives 2026-01-02
+# example: string_of(null) == "" gives true
+export native function string_of(v: any) -> string
 # example: number_of("1,234.5") gives 1234.5
-export native define number_of(t: text) -> number
+export native function number_of(t: string) -> number
 
 # ----- numbers (§14.2)
 
 # example: round(2.345, 2) gives 2.35
 # example: round(-2.5) gives -3
-export native define round(n: number, places: number = 0) -> number
+export native function round(n: number, places: number = 0) -> number
 # example: ceil(1.2) gives 2
-export native define ceil(n: number) -> number
+export native function ceil(n: number) -> number
 # example: floor(-1.2) gives -2
-export native define floor(n: number) -> number
+export native function floor(n: number) -> number
 # example: whole(-1.7) gives -1
-export native define whole(n: number) -> number
+export native function whole(n: number) -> number
 # example: abs(-3) gives 3
-export native define abs(n: number) -> number
+export native function abs(n: number) -> number
 # example: power(2, 10) gives 1024
-export native define power(n: number, k: number) -> number
+export native function power(n: number, k: number) -> number
 # example: min(2, 5) gives 2
-export native define min(a: number, b: number) -> number
+export native function min(a: number, b: number) -> number
 # example: max(2, 5) gives 5
-# example: max(2, empty) faults F023
-export native define max(a: number, b: number) -> number
+# example: max(2, null) faults F023
+export native function max(a: number, b: number) -> number
 # example: grouped(1234.5, 2) gives 1,234.50
-export native define grouped(n: number, places: number = 0) -> text
+export native function grouped(n: number, places: number = 0) -> string
 # example: fixed(1234.5, 2) gives 1234.50
-export native define fixed(n: number, places: number = 0) -> text
+export native function fixed(n: number, places: number = 0) -> string
 # example: divide(7, 2) gives 3.5
 # example: divide(1, 0) faults F001
-export native define divide(a: number, b: number) -> number
+export native function divide(a: number, b: number) -> number
 # example: remainder(7, 2) gives 1
-export native define remainder(a: number, b: number) -> number
+export native function remainder(a: number, b: number) -> number
 
 # ----- dates (§14.3)
 
 # example: today() gives 2026-11-09
-export native define today() -> date
+export native function today() -> date
 # example: date_of(2024, 2, 29) gives 2024-02-29
-# example: date_of(2023, 2, 29) is empty gives yes
-export native define date_of(year: number, month: number, day: number) -> date
+# example: date_of(2023, 2, 29) == null gives true
+export native function date_of(year: number, month: number, day: number) -> date
 # example: year(date_of(2026, 7, 4)) gives 2026
-export native define year(d: date) -> number
+export native function year(d: date) -> number
 # example: month(date_of(2026, 7, 4)) gives 7
-export native define month(d: date) -> number
+export native function month(d: date) -> number
 # example: day(date_of(2026, 7, 4)) gives 4
-export native define day(d: date) -> number
+export native function day(d: date) -> number
 # example: format(date_of(2026, 7, 4), "MM/DD/YYYY") gives 07/04/2026
-export native define format(d: date, pattern: text) -> text
+export native function format(d: date, pattern: string) -> string
 # example: days_between(date_of(2026, 1, 1), date_of(2026, 3, 1)) gives 59
-export native define days_between(from: date, to: date) -> number
+export native function days_between(from: date, to: date) -> number
 # example: years_between(date_of(2000, 2, 29), date_of(2001, 2, 28)) gives 1
-export native define years_between(from: date, to: date) -> number
+export native function years_between(from: date, to: date) -> number
 # example: add_days(date_of(2026, 12, 31), 1) gives 2027-01-01
-export native define add_days(d: date, n: number) -> date
+export native function add_days(d: date, n: number) -> date
 # example: add_months(date_of(2026, 1, 31), 1) gives 2026-02-28
-export native define add_months(d: date, n: number) -> date
+export native function add_months(d: date, n: number) -> date
 
 # ----- lists and sets (§14.4)
 
 # example: count([1, 2, 3]) gives 3
 # example: count(cool) gives 2
 # example: count([]) gives 0
-# example: count(empty) faults F023
-export native define count(l: any) -> number
+# example: count(null) faults F023
+export native function count(l: any) -> number
 # A map's keys, in the order they were first given.
 # example: keys({"a": 1, "b": 2}) gives [a, b]
-export native define keys<k, v>(m: map of k to v) -> list of k
+export native function keys<k, v>(m: map<k, v>) -> list<k>
 # A map's values, in the order of their keys.
 # example: values({"a": 1, "b": 2}) gives [1, 2]
-export native define values<k, v>(m: map of k to v) -> list of v
+export native function values<k, v>(m: map<k, v>) -> list<v>
 # Whether a map has a key.
-# example: has({"a": 1}, "a") gives yes
-export native define has<k, v>(m: map of k to v, key: k) -> yes-no
+# example: has({"a": 1}, "a") gives true
+export native function has<k, v>(m: map<k, v>, key: k) -> bool
 # Takes a key out of the map itself, and gives the map.
 # example: remove({"a": 1, "b": 2}, "a") gives {b: 2}
-export native define remove<k, v>(m: map of k to v, key: k) -> map of k to v
+export native function remove<k, v>(m: map<k, v>, key: k) -> map<k, v>
 # example: join(["a", "", "b"], "; ") gives a; ; b
-# example: join(filled(["a", empty, "b"]), "; ") gives a; b
+# example: join(filled(["a", null, "b"]), "; ") gives a; b
 # example: join(warm) gives red, green
-export native define join(l: any, separator: text = ", ") -> text
+export native function join(l: any, separator: string = ", ") -> string
 # example: first([4, 5]) gives 4
-export native define first(l: any) -> element
+export native function first(l: any) -> element
 # example: last([4, 5]) gives 5
-export native define last(l: any) -> element
-# example: filled(["a", empty, "", "b"]) gives [a, , b]
-export native define filled(l: any) -> any
+export native function last(l: any) -> element
+# example: filled(["a", null, "", "b"]) gives [a, , b]
+export native function filled(l: any) -> any
 # example: index_of([5, 6, 7], 6) gives 1
 # example: index_of([5, 6, 7], 8) gives -1
-export native define index_of(l: any, x: any) -> number
+export native function index_of(l: any, x: any) -> number
 # Adds x after the last item of the list itself, and gives the list.
-# example: append(filled(["a", empty, empty]), "b") gives [a, b]
-# example: count(append(people, people[0])) == count(people) gives yes
-export native define append(l: any, x: any) -> any
+# example: append(filled(["a", null, null]), "b") gives [a, b]
+# example: count(append(people, people[0])) == count(people) gives true
+export native function append(l: any, x: any) -> any
 # Puts x before the item at a position of the list itself, and gives the list.
 # example: insert([1, 3], 1, 2) gives [1, 2, 3]
 # example: insert([1, 2], 2, 3) gives [1, 2, 3]
 # example: insert([1, 2], 3, 4) faults F005
-export native define insert(l: any, position: number, x: any) -> any
+export native function insert(l: any, position: number, x: any) -> any
 # Takes the item at a position out of the list itself, and gives the item.
 # example: remove_at([5, 6, 7], 1) gives 6
 # example: remove_at([5, 6, 7], 3) faults F004
 # example: remove_at(people, 0).name + first(people).name gives BoAl
-export native define remove_at(l: any, position: number) -> element
+export native function remove_at(l: any, position: number) -> element
 # Takes every item out of the list itself, or every key out of the map itself, and gives it.
 # example: clear([1, 2]) gives []
 # example: count(clear(people)) + count(people) gives 0
 # example: clear({"a": 1}) gives {}
-export native define clear(l: any) -> any
+export native function clear(l: any) -> any
 # A copy of a list, a record or a map, with everything inside it copied too; any other value itself.
 # example: copy([[1], [2, 3]]) gives [[1], [2, 3]]
-# example: copy(people) == people gives yes
+# example: copy(people) == people gives true
 # example: count(append(copy(people), people[0])) - count(people) gives 1
-export native define copy(x: any) -> any
+export native function copy(x: any) -> any
 # example: without([1, 2, 1], 1) gives [2]
-export native define without(l: any, x: any) -> any
+export native function without(l: any, x: any) -> any
 # example: reversed([1, 2, 3]) gives [3, 2, 1]
-export native define reversed(l: any) -> any
+export native function reversed(l: any) -> any
 # example: sorted([3, 1, 2]) gives [1, 2, 3]
-# example: sorted([3, empty, 2]) faults F023
-# example: join([p.name for each p in sorted(people, by: "age")]) gives Al, Bo
-export native define sorted(l: any, descending: yes-no = no) -> any
-# example: sum([1, 2.5, empty]) faults F023
-# example: sum(filled([1, 2.5, empty])) gives 3.5
-export native define sum(l: any) -> number
+# example: sorted([3, null, 2]) faults F023
+# example: join([p.name for p in sorted(people, by: "age")]) gives Al, Bo
+export native function sorted(l: any, descending: bool = false) -> any
+# example: sum([1, 2.5, null]) faults F023
+# example: sum(filled([1, 2.5, null])) gives 3.5
+export native function sum(l: any) -> number
 # example: smallest([3, 1, 2]) gives 1
-export native define smallest(l: any) -> element
+export native function smallest(l: any) -> element
 # example: largest([3, 1, 2]) gives 3
-export native define largest(l: any) -> element
-# example: any([no, yes]) gives yes
-export native define any(l: list of yes-no) -> yes-no
-# example: all([yes, no]) gives no
-export native define all(l: list of yes-no) -> yes-no
+export native function largest(l: any) -> element
+# example: any([false, true]) gives true
+export native function any(l: list<bool>) -> bool
+# example: all([true, false]) gives false
+export native function all(l: list<bool>) -> bool
 # example: join(union(warm, cool)) gives red, green, blue
-export native define union(a: any, b: any) -> any
+export native function union(a: any, b: any) -> any
 # example: join(intersection(warm, cool)) gives green
-export native define intersection(a: any, b: any) -> any
+export native function intersection(a: any, b: any) -> any
 # example: join(difference(warm, cool)) gives red
-export native define difference(a: any, b: any) -> any
+export native function difference(a: any, b: any) -> any
 
-# ----- empty, faults and output (§14.5)
+# ----- null, faults and output (§14.5)
 
-# example: either(empty, 5) gives 5
-# example: either("", "x") == "" gives yes
-export native define either(a: any, b: any) -> any
+# example: either(null, 5) gives 5
+# example: either("", "x") == "" gives true
+export native function either(a: any, b: any) -> any
 # example: fail("stop") faults F013
-export native define fail(message: text)
+export native function fail(message: string)
 # example: print(people[0]) prints person { name: Bo, age: 40 }
-export native define print(v: any)
+export native function print(v: any)

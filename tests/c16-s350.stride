@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define say() {
+function say() {
   print("x")
 }
-var x: text
+var x: string
 x = say()
 fill "A" = x
 # rule S350 16.4 7.5

@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number
+var l: list<number>
 l = l + [1]
 l += [2, 3]
 l = append(l, 4)
 print(count(l))
-define evens(xs: list of number) -> list of number {
-  var out: list of number
-  for each x in xs {
+function evens(xs: list<number>) -> list<number> {
+  var out: list<number>
+  for x in xs {
     if x % 2 == 0 {
       out += [x]
     }

@@ -34,7 +34,7 @@ out.libRefs = (await ask("textDocument/references", { ...at(6, 9), context: { in
 const rename = (await ask("textDocument/rename", { ...at(6, 9), newName: "double" })).result.changes;
 out.rename = Object.entries(rename).map(([u, edits]) => u.split("/").pop() + ":" + edits.map((e) => e.range.start.line + ":" + e.range.start.character + "=" + e.newText).join(","));
 out.renameStd = (await ask("textDocument/rename", { ...at(7, 8), newName: "pad" })).error?.message;
-out.renameKeyword = (await ask("textDocument/rename", { ...at(6, 15), newName: "define" })).error?.message;
+out.renameKeyword = (await ask("textDocument/rename", { ...at(6, 15), newName: "function" })).error?.message;
 console.log(JSON.stringify(out));
 process.exit(0);
 `;
@@ -45,21 +45,21 @@ export function test() {
   const problems = [];
   try {
     mkdirSync(join(dir, "lib"));
-    writeFileSync(join(dir, "lib", "maths.stride"), "export define twice(n: number) -> number {\n  return n * 2\n}\n");
-    const text = 'use "maths" as m\nrecord person {\n  name: text\n  age: number\n}\nlet p = new person { name: "Ada", age: 36 }\nprint(m.twice(p.age))\nprint(pad_left(p.name, 9, "."))\n';
+    writeFileSync(join(dir, "lib", "maths.stride"), "export function twice(n: number) -> number {\n  return n * 2\n}\n");
+    const text = 'import "maths" as m\nrecord person {\n  name: string\n  age: number\n}\nlet p = new person { name: "Ada", age: 36 }\nprint(m.twice(p.age))\nprint(pad_left(p.name, 9, "."))\n';
     writeFileSync(join(dir, "main.stride"), text);
     const out = JSON.parse(execFileSync("node", ["--input-type=module", "-e", CHILD, cli, pathToFileURL(join(dir, "main.stride")).href, text], { encoding: "utf8", timeout: 30_000 }));
     const same = (what, got, wanted) => JSON.stringify(got) !== JSON.stringify(wanted) && problems.push(`${what}: ${JSON.stringify(got)}, expected ${JSON.stringify(wanted)}`);
     same("capabilities", [!!out.capabilities.signatureHelpProvider, out.capabilities.referencesProvider, out.capabilities.renameProvider], [true, true, true]);
     same("after m.", out.module, ["twice"]);
-    same("after p.", out.fields, ["name:text", "age:number"]);
+    same("after p.", out.fields, ["name:string", "age:number"]);
     same("a library function's signature", [out.signature?.signatures[0].label, out.signature?.activeParameter], ["twice(n: number) -> number", 0]);
-    same("the standard library's, at its second argument", [out.signature2?.signatures[0].label, out.signature2?.activeParameter], ['pad_left(t: text, width: number, padding: text = " ") -> text', 1]);
+    same("the standard library's, at its second argument", [out.signature2?.signatures[0].label, out.signature2?.activeParameter], ['pad_left(t: string, width: number, padding: string = " ") -> string', 1]);
     same("references to p", out.refs, ["main.stride:5:4-5", "main.stride:6:14-15", "main.stride:7:15-16"]);
-    same("references to a library's function", out.libRefs, ["maths.stride:0:14-19", "main.stride:6:8-13"]);
-    same("renaming it in both files", out.rename.sort(), ["main.stride:6:8=double", "maths.stride:0:14=double"]);
+    same("references to a library's function", out.libRefs, ["maths.stride:0:16-21", "main.stride:6:8-13"]);
+    same("renaming it in both files", out.rename.sort(), ["main.stride:6:8=double", "maths.stride:0:16=double"]);
     same("renaming the standard library's", out.renameStd, "pad_left is the standard library's: it is not renamed");
-    same("renaming to a keyword", out.renameKeyword, "define is not a name Stride takes (§2.1)");
+    same("renaming to a keyword", out.renameKeyword, "function is not a name Stride takes (§2.1)");
   } catch (e) {
     problems.push(`the exchange did not finish: ${e.message.slice(0, 300)}`);
   } finally {

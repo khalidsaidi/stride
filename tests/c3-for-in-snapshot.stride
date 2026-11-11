@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list<number> = [1, 2]
+var n = 0
+for x in l {
+  append(l, x)
+  n = n + 1
+}
+print(n)
+print(l)
+for x in l {
+  remove_at(l, 0)
+  n = n + x
+}
+print(n)
+print(l)
+# rule 3.4.5
+# prints ["2", "[1, 2, 1, 2]", "8", "[]"]

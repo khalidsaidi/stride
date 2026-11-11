@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let l = ["a"]
 collect x in l "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
 fill "A" = join(l, ",")
 # rule 8.5 S333

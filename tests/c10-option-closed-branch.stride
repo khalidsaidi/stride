@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options k { "a" "Alpha"  "b" "Beta" }
-ask o: one-of k "Kind"
+enum k { "a" "Alpha"  "b" "Beta" }
+ask o: one_of k "Kind"
 if o == "a" {
   print("a")
 }
-tick "B" when yes
+tick "B" when true
 if o == "b" {
-  tick "A" when yes
+  tick "A" when true
 }
 # rule 10.3
 # box A check near Kind Beta

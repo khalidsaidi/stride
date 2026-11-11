@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask p: phone "Phone"
-ask k: one-of "Kind" {
+ask k: one_of "Kind" {
   option "a" "A"
 }
 let w = p + " / " + k

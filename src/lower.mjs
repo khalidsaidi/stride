@@ -1,7 +1,7 @@
 // Phase 6: lower the checked syntax tree into the intermediate form (ir.mjs): the program's statements become the
 // function `main`, each function a function of basic blocks.
 //
-// Everything runs in the machine as it is written: a loop is a loop, a for each goes through its list, a collect
+// Everything runs in the machine as it is written: a loop is a loop, a for over a list goes through it, a collect
 // asks one item after the other until the person says no (Docassemble's gathering loop), a function is one
 // function whatever it is called with. What a person is asked, and which box each value goes into, are worked out
 // as the program runs:
@@ -18,7 +18,7 @@
 import * as V from "../runtime/values.mjs";
 import { KIND } from "./source.mjs";
 import { evaluate } from "./constant.mjs";
-import { textOf } from "../runtime/natives.mjs";
+import { stringOf } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
 export function lower(resolved, diagnostics, options = {}) {
@@ -69,7 +69,7 @@ export function lower(resolved, diagnostics, options = {}) {
       if (diagnostics.empty) err("S412", e, `${why} are worked out by the compiler: words, or constants`);
       return "";
     }
-    return textOf(v);
+    return stringOf(v);
   }
 
   // Words joined.
@@ -198,11 +198,11 @@ export function lower(resolved, diagnostics, options = {}) {
     }
   }
 
-  // A var's first value when it is declared without one: a list with no items, a map with no keys, or empty.
+  // A var's first value when it is declared without one: a list with no items, a map with no keys, or null.
   function initial(type) {
     if (type?.t === "list") return IR.list([]);
     if (type?.t === "map") return IR.native("map_of", []);
-    // A record var without a value starts empty (§7.4); writing a field makes it (§7.5.1).
+    // A record var without a value starts null (§7.4); writing a field makes it (§7.5.1).
     return IR.constant(null);
   }
 
@@ -224,7 +224,7 @@ export function lower(resolved, diagnostics, options = {}) {
       const rest = suffix(ctx, it ? it.suffixes : 0);
       key = join(base, IR.constant(names.length > 1 ? `.${names.slice(1).join(".")}` : ""), rest);
       dst = ctx.locals.get(sym);
-      // The record on the way to the field is made when its place holds empty (§7.5.1).
+      // The record on the way to the field is made when its place holds null (§7.5.1).
       let type = sym.type;
       for (const name of names.slice(1)) {
         const i = type.decl.fields.findIndex((f) => f.name === name);
@@ -248,16 +248,16 @@ export function lower(resolved, diagnostics, options = {}) {
       node: s,
     });
     const def = s.modifiers.find((m) => m.kind === "default");
-    // The default is placed as the answer's type (§3.6, §3.8): words for an any-of made the set, in its order.
+    // The default is placed as the answer's type (§3.6, §3.8): words for an any_of made the set, in its order.
     emit(ctx, { op: "ask", q, key, printed: expr(s.printed, ctx), dst, path, default: def ? placeAs(expr(def.value, ctx), answerType, def.value.type) : null, node: s });
-    // §8.4.1 step 5: the checks, in the order written, after the answer is bound; none when it is empty.
+    // §8.4.1 step 5: the checks, in the order written, after the answer is bound; none when it is null.
     const checks = s.modifiers.filter((m) => m.kind === "check");
     if (checks.length) {
       let value = IR.local(dst);
       for (const p of path) value = IR.field(value, p.field, p.name);
       const run = ctx.fn.block();
       const after = ctx.fn.block();
-      terminate(ctx, { op: "branch", cond: IR.native("is_empty", [value]), yes: after, no: run, node: s });
+      terminate(ctx, { op: "branch", cond: IR.native("is_null", [value]), yes: after, no: run, node: s });
       ctx.block = run;
       for (const c of checks) emit(ctx, { op: "check", q, cond: expr(c.condition, ctx), message: expr(c.message, ctx), node: c });
       jumpTo(ctx, after, s);
@@ -265,7 +265,7 @@ export function lower(resolved, diagnostics, options = {}) {
   }
 
   // An assignment (§7.5, §7.5.1): the place's positions worked out once, each as the path reaches it and checked
-  // there, before the value; the records on the way made when a place holds empty. An augmented one keeps each
+  // there, before the value; the records on the way made when a place holds null. An augmented one keeps each
   // position in a temporary as it is worked out (`into`), and reads the place's current value through them.
   function lowerAssign(s, ctx) {
     const target = s.target;
@@ -295,7 +295,7 @@ export function lower(resolved, diagnostics, options = {}) {
     for (const st of steps) {
       if (st.kind === "field") {
         const entry = { field: st.fieldIndex, name: st.name };
-        // A record is made where a var, a field or an item holds empty (§7.5.1); another name keeps what it holds.
+        // A record is made where a var, a field or an item holds null (§7.5.1); another name keeps what it holds.
         if (type?.t === "record" && (path.length || x.symbol.kind === "var")) entry.ensure = type.decl;
         path.push(entry);
         type = type?.decl?.fields[st.fieldIndex]?.type;
@@ -338,7 +338,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const body = ctx.fn.block();
     const handler = ctx.fn.block();
     const join = ctx.fn.block();
-    const caught = ctx.fn.local(s.caught?.name ?? "fault", { t: "text" });
+    const caught = ctx.fn.local(s.caught?.name ?? "fault", { t: "string" });
     if (s.caught?.symbol) ctx.locals.set(s.caught.symbol, caught);
     terminate(ctx, { op: "try", body, handler, dst: caught, node: s });
     ctx.block = body;
@@ -449,7 +449,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: eachOf(s.list, ctx), node: s });
-    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [eachOf(s.list, ctx)]) : eachOf(s.list, ctx), node: s });
+    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "string" ? IR.native("each_character", [eachOf(s.list, ctx)]) : eachOf(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -470,7 +470,7 @@ export function lower(resolved, diagnostics, options = {}) {
       if (s.indexSymbol) inner.locals.set(s.indexSymbol, k);
     }
     inner.locals.set(s.itemSymbol, itemLocal);
-    // An unrolled for each adds its turn, the item's number, to the keys inside it (§8.6.2).
+    // An unrolled for over a list adds its turn, the item's number, to the keys inside it (§8.6.2).
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(k), IR.constant("]")));
     const base = overMap ? null : listKey(s.list, ctx);
     if (base) inner.items.set(s.itemSymbol, { base: join(base, IR.constant("["), IR.local(k), IR.constant("]")), suffixes: inner.suffixes.length });
@@ -491,7 +491,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const exit = ctx.fn.block();
     if (s.any) {
       const any = ctx.fn.local(`${listSym.name}.any`, null);
-      const q = new IR.Question({ name: `${listSym.name}.any`, type: "yes-no", options: [], set: null, hasDefault: false, check: null, node: s, item: true });
+      const q = new IR.Question({ name: `${listSym.name}.any`, type: "bool", options: [], set: null, hasDefault: false, check: null, node: s, item: true });
       emit(ctx, { op: "ask", q, key: join(base, IR.constant("#any"), suffix(ctx)), printed: expr(s.any, ctx), dst: any, path: [], default: null, node: s });
       const first = ctx.fn.block();
       terminate(ctx, { op: "branch", cond: IR.local(any), yes: first, no: exit, node: s });
@@ -521,7 +521,7 @@ export function lower(resolved, diagnostics, options = {}) {
     emit(turn, { op: "append", dst: listLocal, value: IR.local(itemLocal), node: s });
     // Another?
     const another = ctx.fn.local(`${listSym.name}.another`, null);
-    const q = new IR.Question({ name: `${listSym.name}.another`, type: "yes-no", options: [], set: null, hasDefault: false, check: null, node: s, item: true });
+    const q = new IR.Question({ name: `${listSym.name}.another`, type: "bool", options: [], set: null, hasDefault: false, check: null, node: s, item: true });
     emit(turn, { op: "ask", q, key: join(segment, IR.constant("#another"), turns), printed: expr(s.another, ctx), dst: another, path: [], default: null, node: s });
     const next = ctx.fn.block();
     terminate(turn, { op: "branch", cond: IR.local(another), yes: next, no: exit, node: s });
@@ -548,14 +548,14 @@ export function lower(resolved, diagnostics, options = {}) {
     return x;
   }
 
-  // A function's name as a key writes it: after its library's use path when a library declares it (§8.6.2).
+  // A function's name as a key writes it: after its library's import path when a library declares it (§8.6.2).
   function keyName(sym) {
     const f = sym.unit?.file?.name ?? "";
     if (!sym.unit?.library || sym.unit?.std) return sym.name;
     return `${f.replace(/^lib\//, "").replace(/\.stride$/, "")}:${sym.name}`;
   }
 
-  // What a for each or a comprehension goes through (§7.11, §6.12): empty there is F023, at the list.
+  // What a for or a comprehension goes through (§7.11, §6.12): null there is F023, at the list.
   function eachOf(list, ctx) {
     return withAt(IR.native("each_of", [expr(list, ctx)]), placeOf(list, list.span));
   }
@@ -563,9 +563,9 @@ export function lower(resolved, diagnostics, options = {}) {
   function expr(e, ctx) {
     switch (e.kind) {
       case "number":
-      case "yes-no":
+      case "bool":
         return IR.constant(e.value);
-      case "empty":
+      case "null":
         return IR.constant(null);
       case "plain-string":
         return IR.constant(e.value);
@@ -587,7 +587,7 @@ export function lower(resolved, diagnostics, options = {}) {
         if (ctx.fnSym && sym.program && !ctx.locals.has(sym)) return IR.outer(sym);
         const l = ctx.locals.get(sym);
         if (!l) {
-          // A question asked in a branch that is not this one, or not asked yet on this path: it is empty here.
+          // A question asked in a branch that is not this one, or not asked yet on this path: it is null here.
           const fresh = ctx.fn.local(sym.name, sym.type);
           ctx.locals.set(sym, fresh);
           return IR.local(fresh);
@@ -596,10 +596,6 @@ export function lower(resolved, diagnostics, options = {}) {
       }
       case "unary":
         return withAt(IR.unary(e.op, expr(e.operand, ctx)), placeOf(e, e.span));
-      case "is-empty": {
-        const test = IR.native("is_empty", [expr(e.operand, ctx)]);
-        return e.not ? IR.unary("not", test) : test;
-      }
       case "binary": {
         let a = expr(e.a, ctx);
         let b = expr(e.b, ctx);
@@ -622,7 +618,7 @@ export function lower(resolved, diagnostics, options = {}) {
         // l[a..<b] ends before b: at b - 1.
         return withAt(IR.slice(expr(e.target, ctx), expr(e.from, ctx), e.exclusive ? withAt(IR.native("slice_end", [expr(e.to, ctx)]), placeOf(e)) : expr(e.to, ctx)), placeOf(e));
       case "comprehension": {
-        // [e for each n, x in l if c]: its own loop, inside the expression (§6.12).
+        // [e for n, x in l if c]: its own loop, inside the expression (§6.12).
         const inner = child(ctx);
         const item = ctx.fn.local(e.item, e.itemSymbol.type);
         // Over a map with two names: each key and the value under it.

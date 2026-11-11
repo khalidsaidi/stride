@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 const QUESTIONS = ["First?", "Second?"]
 const BOXES = ["A", "B"]
 for i in 0..1 {
-  ask ok: yes-no QUESTIONS[i]
+  ask ok: bool QUESTIONS[i]
   tick BOXES[i] when ok
 }
 # rule 11.1 7.9

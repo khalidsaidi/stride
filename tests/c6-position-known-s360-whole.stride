@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define at(l: list of number) -> number {
+function at(l: list<number>) -> number {
   return l[1.5]
 }
 print(at([1]))

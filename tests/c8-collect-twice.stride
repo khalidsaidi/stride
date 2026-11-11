@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text
+var l: list<string>
 collect x in l "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
 collect y in l "One more?" {
-  ask y: text "Y"
+  ask y: string "Y"
 }
 fill "A" = join(l, ",")
 # rule 8.5 S337

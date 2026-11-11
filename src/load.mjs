@@ -1,7 +1,7 @@
 // Phase 2: load. A program and every library it uses, directly or through another library, each parsed once,
 // in an order where a library comes before every file that uses it. The standard library (lib/
-// std.stride) is loaded first and is used by every file without a `use`. A library is looked for in lib/ beside
-// the program: `use "people"` is lib/people.stride.
+// std.stride) is loaded first and is there in every file without an `import`. A library is looked for in lib/ beside
+// the program: `import "people"` is lib/people.stride.
 //
 // A unit is { file, tree, library: bool, uses: [unit], std: bool }.
 import { KIND, SourceFile } from "./source.mjs";
@@ -10,7 +10,7 @@ import { parse } from "./parse.mjs";
 export const STD = "std";
 
 // `read(path)` gives a file's text, or null if there is none: the command line reads the disk, a test can give
-// sources from memory. `libDir` is where `use` looks: a folder, or folders in the order they are looked in (lib/
+// sources from memory. `libDir` is where `import` looks: a folder, or folders in the order they are looked in (lib/
 // beside the program, then its project's, §4.5); `stdPath` is the standard library.
 export function load(programFile, diagnostics, { read, libDir, stdPath }) {
   const units = new Map(); // path -> unit
@@ -26,10 +26,10 @@ export function load(programFile, diagnostics, { read, libDir, stdPath }) {
 
   // Depth first; `chain` holds the files being loaded, so a file that comes back to one of them is a circle.
   function visit(unit, chain) {
-    for (const use of unit.tree.items.filter((i) => i.kind === "use")) {
+    for (const use of unit.tree.items.filter((i) => i.kind === "import")) {
       const name = use.path; // small letters, digits, - and _, with / between folders: no ".stride" (§4.5, S102)
       if (name === STD) {
-        diagnostics.add(KIND.LIBRARY, unit.file, use.span, `the standard library is always there; use "${STD}" is not needed`, [], "S101");
+        diagnostics.add(KIND.LIBRARY, unit.file, use.span, `the standard library is always there; import "${STD}" is not needed`, [], "S101");
         continue;
       }
       if (!/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/.test(name)) {
@@ -41,8 +41,8 @@ export function load(programFile, diagnostics, { read, libDir, stdPath }) {
       const shown = `lib/${name}.stride`;
       const inChain = chain.findIndex((u) => u.path === path);
       if (inChain >= 0) {
-        const circle = [...chain.slice(inChain).map((u) => u.file.name), shown].join(" uses ");
-        diagnostics.add(KIND.LIBRARY, unit.file, use.span, `libraries cannot use each other in a circle: ${circle}`, [], "S103");
+        const circle = [...chain.slice(inChain).map((u) => u.file.name), shown].join(" imports ");
+        diagnostics.add(KIND.LIBRARY, unit.file, use.span, `libraries cannot import each other in a circle: ${circle}`, [], "S103");
         continue;
       }
       let lib = units.get(path);
@@ -62,7 +62,7 @@ export function load(programFile, diagnostics, { read, libDir, stdPath }) {
     const text = read(path);
     if (text === null) {
       if (isStd) throw new Error(`the standard library is missing: ${path}`);
-      diagnostics.add(KIND.LIBRARY, from, use.pathSpan, `use "${use.path}": there is no ${shown} beside the program`, [], "S104");
+      diagnostics.add(KIND.LIBRARY, from, use.pathSpan, `import "${use.path}": there is no ${shown} beside the program`, [], "S104");
       return null;
     }
     const file = new SourceFile(shown, text);
@@ -74,8 +74,8 @@ export function load(programFile, diagnostics, { read, libDir, stdPath }) {
   }
 
   if (std) {
-    // The standard library uses nothing.
-    for (const u of std.tree.items.filter((i) => i.kind === "use")) diagnostics.add(KIND.LIBRARY, std.file, u.span, "the standard library uses no other library", [], "S105");
+    // The standard library imports nothing.
+    for (const u of std.tree.items.filter((i) => i.kind === "import")) diagnostics.add(KIND.LIBRARY, std.file, u.span, "the standard library imports no other library", [], "S105");
   }
   visit(main, [main]);
   return { std, units: [...(std ? [std] : []), ...order], main };

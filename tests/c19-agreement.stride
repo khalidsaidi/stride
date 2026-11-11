@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define label(n: number) -> text {
+function label(n: number) -> string {
   return "item {n}"
 }
 ask n: number "N" default 2 check n > 0 "must be more than none"
-ask s: text "S" default label(n)
+ask s: string "S" default label(n)
 print(s)
 fill "A" = s
 # rule 19.1 19.2

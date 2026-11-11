@@ -1,31 +1,31 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
+  a: string
   b: number
 }
-options s {
+enum s {
   "x" "X"
   "y" "Y"
 }
-ask c: any-of s "C"
-ask d: any-of s "D"
+ask c: any_of s "C"
+ask d: any_of s "D"
 print(new r { a: "q", b: 1 } == new r { a: "q", b: 1.0 })
 print(new r { a: "q" } == new r { a: "q", b: 1 })
 print([1, 2] == [1, 2])
 print([1, 2] == [2, 1])
 print(c == d)
-print(empty == "")
-print([] == empty)
-print(empty == empty)
+print(null == "")
+print([] == null)
+print(null == null)
 print("" == "")
 print([] == [])
-print([empty] == [empty])
-print([""] == [empty])
+print([null] == [null])
+print([""] == [null])
 print(1 != 1.00)
 print("a" == "A")
 
 # rule 6.6
 # run
 # answers {"c": ["x", "y"], "d": ["y", "x"]}
-# prints ["yes", "no", "yes", "no", "yes", "no", "no", "yes", "yes", "yes", "yes", "no", "no", "no"]
+# prints ["true","false","true","false","true","false","false","true","true","true","true","false","false","false"]

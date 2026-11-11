@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options k { "a" "Alpha"  "b" "Beta" }
-ask o: one-of k "Kind"
-ask b: yes-no "Joint"
+enum k { "a" "Alpha"  "b" "Beta" }
+ask o: one_of k "Kind"
+ask b: bool "Joint"
 if o == "a" { tick "J" when b }
 # box J check near Joint
 # rule 10.3

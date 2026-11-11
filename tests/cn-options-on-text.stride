@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask x: text "X" {
+ask x: string "X" {
   option "a" "A"
 }
 print(x)

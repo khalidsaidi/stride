@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record box {
   n: number
 }
-define counter(start: number) -> function() -> number {
+function counter(start: number) -> function() -> number {
   var n = start
   var b: box
   return function() -> number {
@@ -17,7 +17,7 @@ let c2 = counter(10)
 print(c1())
 print(c1())
 print(c2())
-define both() -> number {
+function both() -> number {
   var seen = 0
   let note = function(k: number) {
     seen += k
@@ -35,7 +35,7 @@ define both() -> number {
   return nested()
 }
 print(both())
-var fs: list of function() -> number = []
+var fs: list<function() -> number> = []
 for i in 1..3 {
   var mine = i * 100
   fs = append(fs, function() -> number {

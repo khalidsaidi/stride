@@ -1,7 +1,7 @@
-use "c-test-boxes"
-define local_write() -> yes-no {
+import "c-test-boxes"
+function local_write() -> bool {
   fill "Local" = "value"
-  return yes
+  return true
 }
 expect local_write()
 expect fill_box()

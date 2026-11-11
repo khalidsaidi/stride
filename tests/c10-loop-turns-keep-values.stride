@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
-var x: text = "CA"
+var x: string = "CA"
 for i in 1..n {
   x = "CA"
 }

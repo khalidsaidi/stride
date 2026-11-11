@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define date() -> number {
+function date() -> number {
   return 1
 }
 print(date())

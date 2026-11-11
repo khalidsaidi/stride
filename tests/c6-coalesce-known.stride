@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-const A = (empty ?? 2) + 1
-const B = empty + 1
-const C = upper(empty)
-const D = [1, 2][empty]
-const E = empty < 1
-const F = -empty
+const A = (null ?? 2) + 1
+const B = null + 1
+const C = upper(null)
+const D = [1, 2][null]
+const E = null < 1
+const F = -null
 print(A)
 print(B)
 print(C)
@@ -13,8 +13,8 @@ print(D)
 print(E)
 print(F)
 # rule 6.16 6.3 11.1 11.3 S413
-# mistake 4:17 S413 F023 empty where a number is needed: the left side of +
-# mistake 5:11 S413 F023 empty where words are needed: upper's t
-# mistake 6:17 S413 F023 empty where a number is needed: the position in [ ]
-# mistake 7:17 S413 F023 empty where a number is needed: the left side of <
-# mistake 8:11 S413 F023 empty where a number is needed: what - stands before
+# mistake 4:16 S413 F023 null where a number is needed: the left side of +
+# mistake 5:11 S413 F023 null where words are needed: upper's t
+# mistake 6:17 S413 F023 null where a number is needed: the position in [ ]
+# mistake 7:16 S413 F023 null where a number is needed: the left side of <
+# mistake 8:11 S413 F023 null where a number is needed: what - stands before

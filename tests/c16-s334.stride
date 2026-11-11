@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: text
+var l: string
 collect x in l "Another?" {
-  ask x: text "N"
+  ask x: string "N"
 }
 fill "A" = l
 # rule S334 16.4 8.5

@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record row {
-  another: text
+  another: string
 }
-var rows: list of row
+var rows: list<row>
 collect r in rows "More?" {
-  ask r.another: text "Another thing"
+  ask r.another: string "Another thing"
 }
 fill "A" = rows[0].another
 # rule 8.6.2 2.3.1

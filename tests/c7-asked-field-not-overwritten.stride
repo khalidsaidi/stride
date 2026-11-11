@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record h { c: text }
-record r { a: text, h: h }
+record h { c: string }
+record r { a: string, h: h }
 var p: r
-ask p.a: text "Q"
-ask p.h.c: text "C"
+ask p.a: string "Q"
+ask p.h.c: string "C"
 p = new r { a: "changed" }
 p.h = new h { c: "x" }
 print(p.a)

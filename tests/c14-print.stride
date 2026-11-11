@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
+record person { name: string, age: number }
 ask n: number "N"
 print(n)
 print([n, 2])

@@ -2,10 +2,10 @@
 // it may do:
 //
 //   - an operator gets operands it works on: + adds numbers or joins words, < compares numbers or dates, and/or
-//     take yes-no, `in` asks a set of options or a list;
+//     take bools, `in` asks a set of options or a list;
 //   - an option is compared only with one of its own values ("sign" in acts, kind == "individual");
 //   - a call has as many arguments as its function has parameters, each of the parameter's type;
-//   - a box is filled with words, a number, a date or an option; ticked or picked on a yes-no;
+//   - a box is filled with words, a number, a date or an option; ticked or picked on a bool;
 //   - an answer is never given another value, nor a let, a constant, a parameter or a counter;
 //   - a function gives a value of its declared type, and one with no result gives none;
 //   - a list is collected once, into a var, and holds records or plain values.
@@ -84,7 +84,7 @@ export function check(resolved, diagnostics) {
     if (sym.declaredType && !fitsAt(sym.node.value, type, sym.declaredType)) err("S305", sym.node.value, `${sym.name} is declared ${T.describe(sym.declaredType)}, and its value is ${T.describe(type)}`);
     else if (sym.declaredType) optionLiteral(sym.node.value, sym.declaredType);
     sym.type = sym.declaredType ?? type;
-    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, yes or no, a set, or a list of them; ${sym.name} is ${T.describe(sym.type)}`);
+    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, true or false, a set, or a list of them; ${sym.name} is ${T.describe(sym.type)}`);
     return sym.type;
   }
 
@@ -126,9 +126,9 @@ export function check(resolved, diagnostics) {
     for (const sym of r.functions) checkFunction(sym, r.unit);
   }
 
-  // A type no value tells: the bare empty, or a list of such at any depth (§6.11, S328, S344).
+  // A type no value tells: the bare null, or a list of such at any depth (§6.11, S328, S344).
   function untold(t) {
-    return t?.t === "empty" || (t?.t === "list" && untold(t.element));
+    return t?.t === "null" || (t?.t === "list" && untold(t.element));
   }
 
   // A function's body, once; a function whose result is worked out from its returns is checked before the first
@@ -143,13 +143,13 @@ export function check(resolved, diagnostics) {
       let result = T.NONE;
       for (const { type, node } of ctx.returns) {
         if (T.isError(type) || type.t === "none") continue;
-        if (result.t === "none" || result.t === "empty") result = type;
+        if (result.t === "none" || result.t === "null") result = type;
         else if (T.fits(type, result)) continue;
         else if (T.fits(result, type)) result = type;
         else err("S343", node, `${sym.name} gives ${T.describe(result)} on one path and ${T.describe(type)} here; one function gives one type (or write it: -> type)`);
       }
       if (untold(result)) {
-        err("S344", sym.node, `${sym.name} returns only empty, so its type cannot be worked out; write it: -> text`);
+        err("S344", sym.node, `${sym.name} returns only null, so its type cannot be worked out; write it: -> string`);
         result = T.ERROR;
       }
       sym.result = result;
@@ -200,7 +200,7 @@ export function check(resolved, diagnostics) {
         text(s.box, ctx, "a box's name");
         const type = expr(s.value, ctx);
         if (!T.fillable(type)) {
-          if (type.t === "yes-no") err("S307", s.value, `fill writes words or a number; a yes-no answer goes into a check box with tick "box" when …`);
+          if (type.t === "bool") err("S307", s.value, `fill writes words or a number; a bool goes into a check box with tick "box" when …`);
           else if (type.t === "options") err("S308", s.value, `${describeExpr(s.value)} holds several options; fill one box with join(${describeExpr(s.value)}, ", "), or tick a box for each option`);
           else if (type.t === "none") {
             // A call to a function with no result has said so already.
@@ -230,8 +230,8 @@ export function check(resolved, diagnostics) {
         return block(s.body, ctx);
       case "for": {
         const a = expr(s.from, ctx), b = expr(s.to, ctx);
-        // Empty fits a number (§3.6): an empty bound is F023 when it runs (§7.11), S413 when known.
-        for (const [e, t] of [[s.from, a], [s.to, b]]) if (t.t !== "number" && t.t !== "empty" && !T.isError(t)) err("S313", e, `a for loop counts numbers; this is ${T.describe(t)}`);
+        // Null fits a number (§3.6): a null bound is F023 when it runs (§7.11), S413 when known.
+        for (const [e, t] of [[s.from, a], [s.to, b]]) if (t.t !== "number" && t.t !== "null" && !T.isError(t)) err("S313", e, `a for loop counts numbers; this is ${T.describe(t)}`);
         return block(s.body, ctx);
       }
       case "for-each": {
@@ -240,15 +240,15 @@ export function check(resolved, diagnostics) {
           s.itemSymbol.type = type.element;
           // The items of a collected list are answers (§8.5), through a loop's name for them too.
           if (s.list.kind === "name" && s.list.symbol?.collectedBy) s.itemSymbol.ofCollected = true;
-        } else if (T.isTextLike(type)) s.itemSymbol.type = T.TEXT; // each character
+        } else if (T.isStringLike(type)) s.itemSymbol.type = T.STRING; // each character
         else if (type.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it (§7.11).
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
           else s.itemSymbol.type = type.key;
         } else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
-        else if (type.t === "empty") s.itemSymbol.type = T.EMPTY; // empty fits a list (§3.6); F023 when it runs
+        else if (type.t === "null") s.itemSymbol.type = T.NULL; // null fits a list (§3.6); F023 when it runs
         else {
-          if (!T.isError(type)) err("S314", s.list, `for each goes through a list, a map or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}`);
+          if (!T.isError(type)) err("S314", s.list, `for … in goes through a list, a map, a set of options or a range a..b; ${describeExpr(s.list)} is ${T.describe(type)}`);
           s.itemSymbol.type = T.ERROR;
         }
         return block(s.body, ctx);
@@ -280,7 +280,7 @@ export function check(resolved, diagnostics) {
 
   function ask(s, ctx) {
     const form = s.question.form;
-    const answer = form === "one-of" || form === "any-of" ? (s.set ? T.typeOfAnswer(form, s.set) : T.ERROR) : T.typeOfAnswer(form);
+    const answer = form === "one_of" || form === "any_of" ? (s.set ? T.typeOfAnswer(form, s.set) : T.ERROR) : T.typeOfAnswer(form);
     s.answerType = answer;
     text(s.printed, ctx, "a question's printed words");
     if (s.set?.anonymous) for (const o of s.set.options) text(o.printed, ctx, "an option's printed words");
@@ -351,14 +351,14 @@ export function check(resolved, diagnostics) {
       else if (type) optionLiteral(s.value, s.declaredType);
       type = s.declaredType;
     } else if (!type) {
-      err("S326", s, `var ${s.name} needs a type or a value: var ${s.name}: text, or var ${s.name} = …`);
+      err("S326", s, `var ${s.name} needs a type or a value: var ${s.name}: string, or var ${s.name} = …`);
       type = T.ERROR;
-    } else if (type.t === "empty") {
-      err("S327", s.value, `${s.name} = empty says nothing about what ${s.name} holds; give it a type: ${s.kind} ${s.name}: text = empty`);
+    } else if (type.t === "null") {
+      err("S327", s.value, `${s.name} = null says nothing about what ${s.name} holds; give it a type: ${s.kind} ${s.name}: string = null`);
       type = T.ERROR;
     } else if (type.t === "list" && untold(type.element)) {
-      // `[]`, `[[]]`, `[[empty]]`: no item says what the list holds, at any depth (§6.11, §7.4).
-      err("S328", s.value, `an empty list says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: list of text`);
+      // `[]`, `[[]]`, `[[null]]`: no item says what the list holds, at any depth (§6.11, §7.4).
+      err("S328", s.value, `an empty list says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: list<string>`);
       type = T.ERROR;
     }
     // One let or var declared in two arms has one type (§12.4, S315).
@@ -368,7 +368,7 @@ export function check(resolved, diagnostics) {
 
   function match(s, ctx) {
     const type = expr(s.subject, ctx);
-    if (!T.isError(type) && type.t !== "option" && type.t !== "number" && !T.isTextLike(type)) err("S329", s.subject, `match chooses on an option, on words or on a number; ${describeExpr(s.subject)} is ${T.describe(type)}`);
+    if (!T.isError(type) && type.t !== "option" && type.t !== "number" && !T.isStringLike(type)) err("S329", s.subject, `match chooses on an option, on words or on a number; ${describeExpr(s.subject)} is ${T.describe(type)}`);
     const seen = new Map();
     s.arms.forEach((arm, i) => {
       if (!arm.values) {
@@ -483,7 +483,7 @@ export function check(resolved, diagnostics) {
       // items never change, and an answer stays as the person gave it.
       if (sym && collectedItem(sym)) err("S346", target, `${sym.name} is a collected item; its fields are answers`);
       else if (sym && !["var", "let", "param", "item"].includes(sym.kind)) err("S347", target, sym.kind === "const" ? `${sym.name} is a constant, and its items do not change; copy(${sym.name}) gives a list that can` : `${sym.name} is ${what(sym)}, which holds nothing that can be given a value`);
-      if (target.kind === "index" && T.isTextLike(target.target.type ?? T.ERROR)) err("S349", target, `${describeExpr(target.target)} is words, whose characters cannot be given a value; a list's item or a map's key can`);
+      if (target.kind === "index" && T.isStringLike(target.target.type ?? T.ERROR)) err("S349", target, `${describeExpr(target.target)} is words, whose characters cannot be given a value; a list's item or a map's key can`);
       if (sym && target.kind === "field") {
         const path = fieldPath(target);
         // The field itself asked, or a field inside it (§7.5): either answer would change.
@@ -500,7 +500,7 @@ export function check(resolved, diagnostics) {
     else optionLiteral(s.value, wanted);
   }
 
-  // The item of a collect, or of a for each over a collected list: an answer (§8.5).
+  // The item of a collect, or of a for over a collected list: an answer (§8.5).
   function collectedItem(sym) {
     const item = sym.kept ?? sym;
     return item.kind === "item" && !!(item.collected || item.ofCollected);
@@ -520,16 +520,16 @@ export function check(resolved, diagnostics) {
 
   function condition(e, ctx, what) {
     const type = expr(e, ctx);
-    // The bare `empty` fits here as everywhere, and counts as no (§3.6, §6.15).
-    if (type.t !== "yes-no" && type.t !== "empty" && !T.isError(type)) {
-      if (T.isTextLike(type) || type.t === "option") err("S310", e, `${what} needs yes or no; ${describeExpr(e)} is ${T.describe(type)}: compare it (== "…") or test it (is not empty)`);
-      else err("S311", e, `${what} needs yes or no, and this is ${T.describe(type)}`);
+    // The bare `null` fits here as everywhere, and counts as false (§3.6, §6.15).
+    if (type.t !== "bool" && type.t !== "null" && !T.isError(type)) {
+      if (T.isStringLike(type) || type.t === "option") err("S310", e, `${what} needs true or false; ${describeExpr(e)} is ${T.describe(type)}: compare it (== "…") or test it (!= null)`);
+      else err("S311", e, `${what} needs true or false, and this is ${T.describe(type)}`);
     }
   }
 
   function text(e, ctx, what) {
     const type = expr(e, ctx);
-    if (!T.isTextLike(type) && !T.isError(type)) err(null, e, `${what} is words, not ${T.describe(type)}`);
+    if (!T.isStringLike(type) && !T.isError(type)) err(null, e, `${what} is words, not ${T.describe(type)}`);
   }
 
   // A literal compared with or given to an option must be one of its values.
@@ -546,7 +546,7 @@ export function check(resolved, diagnostics) {
   // where several options are.
   function fitsAt(e, type, wanted) {
     if (T.fits(type, wanted)) return true;
-    if (wanted.t === "option" && T.isTextLike(type) && literalValues(e).length === 1 && e.kind === "string") return true;
+    if (wanted.t === "option" && T.isStringLike(type) && literalValues(e).length === 1 && e.kind === "string") return true;
     if (wanted.t === "options" && e.kind === "list" && e.items.every((x) => x.kind === "string" && literalValues(x).length === 1)) return true;
     return false;
   }
@@ -558,7 +558,7 @@ export function check(resolved, diagnostics) {
   }
 
   // `how.statement`: the call is a statement; `how.allowNone`: the context says itself what is wrong with a call that
-  // gives no value (S324, S350, S356, S366, S371). Anywhere else such a call is S370.
+  // gives no value (S324, S350, S366, S371). Anywhere else such a call is S370.
   function expr(e, ctx, how = {}) {
     const type = typeOf(e, ctx, how);
     e.type = type;
@@ -574,19 +574,19 @@ export function check(resolved, diagnostics) {
     switch (e.kind) {
       case "number":
         return T.NUMBER;
-      case "yes-no":
-        return T.YES_NO;
-      case "empty":
-        return T.EMPTY;
+      case "bool":
+        return T.BOOL;
+      case "null":
+        return T.NULL;
       case "plain-string":
-        return T.TEXT;
+        return T.STRING;
       case "string":
         for (const p of e.parts) {
           if (typeof p === "string") continue;
           const t = expr(p, ctx, { allowNone: true });
           if (["record", "list", "none"].includes(t.t)) err("S352", p, `{…} puts words, a number, a date or an option into words; this is ${T.describe(t)}`);
         }
-        return T.TEXT;
+        return T.STRING;
       case "lambda": {
         // A function written in place (§9.11): what it keeps has the type it has here.
         const sym = e.symbol;
@@ -642,20 +642,15 @@ export function check(resolved, diagnostics) {
         const t = expr(e.operand, ctx, { allowNone: true });
         if (t.t === "none") {
           err("S371", e.operand, `${describeExpr(e.operand)} gives no value`);
-          return e.op === "-" ? T.NUMBER : T.YES_NO;
+          return e.op === "-" ? T.NUMBER : T.BOOL;
         }
         if (e.op === "-") {
-          // Empty fits a number (§3.6): `-empty` is F023 when it runs.
-          if (t.t !== "number" && t.t !== "empty" && !T.isError(t)) err("S354", e, `- before a value is for numbers, and this is ${T.describe(t)}`);
+          // Null fits a number (§3.6): `-null` is F023 when it runs.
+          if (t.t !== "number" && t.t !== "null" && !T.isError(t)) err("S354", e, `- before a value is for numbers, and this is ${T.describe(t)}`);
           return T.NUMBER;
         }
-        if (t.t !== "yes-no" && t.t !== "empty" && !T.isError(t)) err("S355", e, `not is for yes or no, and ${describeExpr(e.operand)} is ${T.describe(t)}`);
-        return T.YES_NO;
-      }
-      case "is-empty": {
-        const t = expr(e.operand, ctx, { allowNone: true });
-        if (t.t === "none") err("S356", e.operand, `${describeExpr(e.operand)} gives no value`);
-        return T.YES_NO;
+        if (t.t !== "bool" && t.t !== "null" && !T.isError(t)) err("S355", e, `not is for true or false, and ${describeExpr(e.operand)} is ${T.describe(t)}`);
+        return T.BOOL;
       }
       case "binary":
         return binary(e, ctx);
@@ -679,17 +674,17 @@ export function check(resolved, diagnostics) {
         const i = expr(e.index, ctx);
         // A map's value is chosen by its key (§6.12).
         if (t.t === "map") {
-          if (!T.isError(i) && i.t !== "empty" && t.key.t !== "empty" && !T.fits(i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
+          if (!T.isError(i) && i.t !== "null" && t.key.t !== "null" && !T.fits(i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
           else optionLiteral(e.index, t.key);
           e.mapIndex = true;
           return t.value;
         }
-        if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 0), not ${T.describe(i)}`);
+        if (i.t !== "number" && i.t !== "null" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 0), not ${T.describe(i)}`);
         if (T.isError(t)) return T.ERROR;
         // Words are indexed as a list is: one character (§6.9.2).
-        if (T.isTextLike(t)) return T.TEXT;
+        if (T.isStringLike(t)) return T.STRING;
         if (t.t !== "list") {
-          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; character(words, position) takes one character of words" : ""}`);
+          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isStringLike(t) ? "; character(words, position) takes one character of words" : ""}`);
           return T.ERROR;
         }
         // A known position that is not a whole number of 0 or more (§6.9.2).
@@ -704,7 +699,7 @@ export function check(resolved, diagnostics) {
         return call(e, ctx, how);
       case "map": {
         // The join of the keys' types, and of the values' (§6.12, §3.9).
-        let key = T.EMPTY, value = T.EMPTY;
+        let key = T.NULL, value = T.NULL;
         for (const x of e.entries) {
           const k = expr(x.key, ctx), v = expr(x.value, ctx);
           const jk = T.join(key, k), jv = T.join(value, v);
@@ -713,12 +708,12 @@ export function check(resolved, diagnostics) {
           if (!jv) err("S361", x.value, `a map's values join into one type; this is ${T.describe(v)}, and the values before are ${T.describe(value)}`);
           else value = jv;
         }
-        if (!["text", "number", "date", "yes-no", "option", "empty", "error"].includes(key.t)) err("S361", e, `a map's keys are words, numbers, dates, yes-no or options, not ${T.describe(key)}`);
+        if (!["string", "number", "date", "bool", "option", "null", "error"].includes(key.t)) err("S361", e, `a map's keys are words, numbers, dates, bools or options, not ${T.describe(key)}`);
         return T.map(key, value);
       }
       case "list": {
         // The join of the items' types, left to right (§6.11, §3.9).
-        let element = T.EMPTY;
+        let element = T.NULL;
         for (const item of e.items) {
           const t = expr(item, ctx);
           const j = T.join(element, t);
@@ -742,10 +737,10 @@ export function check(resolved, diagnostics) {
         const t = expr(e.target, ctx);
         for (const x of [e.from, e.to]) {
           const i = expr(x, ctx);
-          if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S396", x, `a slice's bounds are numbers, not ${T.describe(i)}`);
+          if (i.t !== "number" && i.t !== "null" && !T.isError(i)) err("S396", x, `a slice's bounds are numbers, not ${T.describe(i)}`);
         }
         if (T.isError(t)) return T.ERROR;
-        if (T.isTextLike(t)) return T.TEXT; // part of words, as part of a list
+        if (T.isStringLike(t)) return T.STRING; // part of words, as part of a list
         if (t.t !== "list") {
           err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list`);
           return T.ERROR;
@@ -754,8 +749,8 @@ export function check(resolved, diagnostics) {
       }
       case "comprehension": {
         const l = expr(e.list, ctx);
-        if (T.isTextLike(l)) {
-          e.itemSymbol.type = T.TEXT; // each character
+        if (T.isStringLike(l)) {
+          e.itemSymbol.type = T.STRING; // each character
           e.overText = true;
         } else if (l.t === "list") {
           e.itemSymbol.type = l.element;
@@ -766,10 +761,10 @@ export function check(resolved, diagnostics) {
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
           else e.itemSymbol.type = l.key;
           e.overMap = true;
-        } else if (l.t === "empty") {
-          e.itemSymbol.type = T.EMPTY; // empty fits a list (§3.6); F023 when it runs
+        } else if (l.t === "null") {
+          e.itemSymbol.type = T.NULL; // null fits a list (§3.6); F023 when it runs
         } else {
-          if (!T.isError(l)) err("S314", e.list, `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
+          if (!T.isError(l)) err("S314", e.list, `for … in goes through a list, a map, a set of options or a range a..b; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
         }
         if (e.condition) condition(e.condition, ctx, "a comprehension's if");
@@ -879,7 +874,7 @@ export function check(resolved, diagnostics) {
     // Each candidate remembers the argument it came from, for the place of S367.
     const collect = (want, got, from) => {
       if (want.t === "typevar") {
-        if (got.t !== "empty") {
+        if (got.t !== "null") {
           candidates.set(want.sym, [...(candidates.get(want.sym) ?? []), { type: got, from }]);
           ordered.push({ tv: want.sym, type: got, from });
         }
@@ -901,12 +896,12 @@ export function check(resolved, diagnostics) {
     const joined = new Map();
     for (const c of ordered) {
       if (joinFailed && joinFailed.tv === c.tv) continue;
-      const before = joined.get(c.tv) ?? T.EMPTY;
+      const before = joined.get(c.tv) ?? T.NULL;
       const next = T.join(before, c.type);
       if (!next) joinFailed ??= { tv: c.tv, before, value: c.type, from: c.from };
       else joined.set(c.tv, next);
     }
-    for (const [tv, j] of joined) if (j.t !== "empty") bindings.set(tv, j);
+    for (const [tv, j] of joined) if (j.t !== "null") bindings.set(tv, j);
     if (joinFailed) {
       // The first argument whose candidate does not join the ones before it (§9.5.1).
       const i = joinFailed.from;
@@ -931,13 +926,13 @@ export function check(resolved, diagnostics) {
       result = T.ERROR;
     }
     const first = bound[0]?.type ?? T.ERROR;
-    // A native whose result is its T (§14.4, §14.5): the arguments that hold T must tell it; the bare `empty` gives
-    // no candidate (§9.5.1), so when all of them are empty, T is not told: S368.
+    // A native whose result is its T (§14.4, §14.5): the arguments that hold T must tell it; the bare `null` gives
+    // no candidate (§9.5.1), so when all of them are null, T is not told: S368.
     const TOLD_BY = { first: [0], last: [0], filled: [0], reversed: [0], sorted: [0], smallest: [0], largest: [0], either: [0, 1] };
     // An empty list says nothing either (S368): `[]` holds no item to tell T by.
-    const tells = (t) => t && t.t !== "empty" && !(t.t === "list" && !tells(t.element));
+    const tells = (t) => t && t.t !== "null" && !(t.t === "list" && !tells(t.element));
     if (sym.kind === "native" && TOLD_BY[sym.name] && TOLD_BY[sym.name].every((i) => !tells(bound[i]?.type))) {
-      err("S368", e, `the arguments do not tell what ${sym.name} gives (an empty list, or the bare empty, says nothing); give a value of the type`);
+      err("S368", e, `the arguments do not tell what ${sym.name} gives (an empty list, or the bare null, says nothing); give a value of the type`);
       return T.ERROR;
     }
     // either(a: T, b: T) -> T (§14.5): T is the join of its two arguments (§3.9, §9.5.1), or S367 when there is none.
@@ -965,16 +960,16 @@ export function check(resolved, diagnostics) {
     const l = bound[0]?.type;
     if (!l || T.isError(l)) return;
     const element = l.t === "list" ? l.element : l.t === "options" ? T.option(l.set) : null;
-    const hasWords = (t) => T.isTextLike(t) || ["number", "date", "yes-no", "option", "empty", "error"].includes(t.t);
+    const hasWords = (t) => T.isStringLike(t) || ["number", "date", "bool", "option", "null", "error"].includes(t.t);
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
-    if (sym.name === "count" && (l.t === "map" || T.isTextLike(l))) return;
+    if (sym.name === "count" && (l.t === "map" || T.isStringLike(l))) return;
     if (sym.name === "clear") {
-      if (l.t !== "list" && l.t !== "map" && l.t !== "empty") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
+      if (l.t !== "list" && l.t !== "map" && l.t !== "null") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
       return;
     }
-    if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "empty") {
+    if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "null") {
       err("S369", bound[0], `${sym.name} takes a list${SET_FUNCTIONS.includes(sym.name) ? " or a set of options" : ""}, and this is ${T.describe(l)}`);
       return;
     }
@@ -986,11 +981,11 @@ export function check(resolved, diagnostics) {
     // The value to look for, or to put in: one of the items.
     const x = ["index_of", "append", "without"].includes(sym.name) ? bound[1] : sym.name === "insert" ? bound[2] : null;
     if (x && element?.t === "option") optionLiteral(x, element);
-    if (x && element && x.type && !T.isError(x.type) && (!T.join(element, x.type) || (["append", "insert"].includes(sym.name) && element.t !== "empty" && !fitsAt(x, x.type, element)))) err("S367", x, `${sym.name} ${["append", "insert"].includes(sym.name) ? "adds" : "looks for"} one of the items, which are ${T.describe(element)}, and this is ${T.describe(x.type)}`);
-    if (sym.name === "sum" && element && !["number", "empty", "error"].includes(element.t)) err("S367", bound[0], `sum adds numbers up, and the items are ${T.describe(element)}`);
+    if (x && element && x.type && !T.isError(x.type) && (!T.join(element, x.type) || (["append", "insert"].includes(sym.name) && element.t !== "null" && !fitsAt(x, x.type, element)))) err("S367", x, `${sym.name} ${["append", "insert"].includes(sym.name) ? "adds" : "looks for"} one of the items, which are ${T.describe(element)}, and this is ${T.describe(x.type)}`);
+    if (sym.name === "sum" && element && !["number", "null", "error"].includes(element.t)) err("S367", bound[0], `sum adds numbers up, and the items are ${T.describe(element)}`);
     if (sym.name === "join" && element && !hasWords(element)) err("S367", bound[0], `join puts items' words together, and the items are ${T.describe(element)}, which have no words`);
     // A set has words too: its options' values in declaration order (§3.5).
-    if (sym.name === "text_of" && !hasWords(l) && l.t !== "options") err("S367", bound[0], `text_of gives a value's words, and ${T.describe(l)} has none`);
+    if (sym.name === "string_of" && !hasWords(l) && l.t !== "options") err("S367", bound[0], `string_of gives a value's words, and ${T.describe(l)} has none`);
     if (["sorted", "smallest", "largest"].includes(sym.name) && element) {
       if (sortBy) {
         if (element.t !== "record") err("S367", bound[0], `sorted by a field takes a list of records, and these are ${T.describe(element)}`);
@@ -1031,20 +1026,20 @@ export function check(resolved, diagnostics) {
         if (a.t === "number" && b.t === "number") return T.NUMBER;
         // Lists join (§6.5.1): the join of the elements.
         if (a.t === "list" || b.t === "list") {
-          const x = a.t === "list" ? a : T.list(T.EMPTY);
-          const y = b.t === "list" ? b : T.list(T.EMPTY);
-          if ((a.t !== "list" && a.t !== "empty") || (b.t !== "list" && b.t !== "empty")) return err2("S373", `+ joins two lists, not ${T.describe(a)} and ${T.describe(b)}`);
+          const x = a.t === "list" ? a : T.list(T.NULL);
+          const y = b.t === "list" ? b : T.list(T.NULL);
+          if ((a.t !== "list" && a.t !== "null") || (b.t !== "list" && b.t !== "null")) return err2("S373", `+ joins two lists, not ${T.describe(a)} and ${T.describe(b)}`);
           const element = T.join(x.element, y.element);
           // No join stands at the second value (§3.9 rule 5).
           if (!element) return (err("S373", e.b, `+ joins lists whose items join into one type; these hold ${T.describe(x.element)} and ${T.describe(y.element)}`), T.ERROR);
           return T.list(element);
         }
-        // Words of any kind, an option among them, join into text (§6.5).
-        const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";
-        if (wordy(a) && wordy(b) && (a.t !== "empty" || b.t !== "empty")) return T.TEXT;
+        // Words of any kind, an option among them, join into a string (§6.5).
+        const wordy = (t) => T.isStringLike(t) || t.t === "option" || t.t === "null";
+        if (wordy(a) && wordy(b) && (a.t !== "null" || b.t !== "null")) return T.STRING;
         // Empty fits a number (§3.6): F023 when it runs.
-        if (a.t === "empty" && (b.t === "number" || b.t === "empty")) return b;
-        if (b.t === "empty" && a.t === "number") return a;
+        if (a.t === "null" && (b.t === "number" || b.t === "null")) return b;
+        if (b.t === "null" && a.t === "number") return a;
         if ((wordy(a) && b.t === "number") || (a.t === "number" && wordy(b))) return err2("S372", `+ adds two numbers or joins two words; to put a number into words, write "…{${describeExpr(a.t === "number" ? e.a : e.b)}}…"`);
         return err2("S373", `+ adds numbers or joins words, not ${T.describe(a)} and ${T.describe(b)}`);
       case "-":
@@ -1053,7 +1048,7 @@ export function check(resolved, diagnostics) {
       case "//":
       case "%":
         if (anyError) return T.NUMBER;
-        if ((a.t === "number" || a.t === "empty") && (b.t === "number" || b.t === "empty")) return T.NUMBER;
+        if ((a.t === "number" || a.t === "null") && (b.t === "number" || b.t === "null")) return T.NUMBER;
         if (e.op === "-" && a.t === "date" && b.t === "date") return err2("S375", "dates are not subtracted; days_between(from, to) counts the days");
         return err2("S374", `${e.op} is for numbers, not ${T.describe(a)} and ${T.describe(b)}`);
       case "==":
@@ -1062,31 +1057,31 @@ export function check(resolved, diagnostics) {
         if ((a.t === "options" && fitsAt(e.b, b, a)) || (b.t === "options" && fitsAt(e.a, a, b))) {
           if (a.t === "options") optionLiteral(e.b, a);
           else optionLiteral(e.a, b);
-          return T.YES_NO;
+          return T.BOOL;
         }
         if (!T.comparable(a, b)) {
-          if ((a.t === "yes-no" && T.isTextLike(b)) || (b.t === "yes-no" && T.isTextLike(a))) {
-            return err2("S376", `a yes-no answer is yes or no, without quotes: ${describeExpr(a.t === "yes-no" ? e.a : e.b)} == yes, or ${describeExpr(a.t === "yes-no" ? e.a : e.b)} alone as the condition`);
+          if ((a.t === "bool" && T.isStringLike(b)) || (b.t === "bool" && T.isStringLike(a))) {
+            return err2("S376", `a bool is true or false, without quotes: ${describeExpr(a.t === "bool" ? e.a : e.b)} == true, or ${describeExpr(a.t === "bool" ? e.a : e.b)} alone as the condition`);
           }
           if (a.t === "options" || b.t === "options") return err2("S377", `${describeExpr(a.t === "options" ? e.a : e.b)} holds several options; ask if one is chosen with "…" in ${describeExpr(a.t === "options" ? e.a : e.b)}`);
           return err2("S378", `${T.describe(a)} and ${T.describe(b)} cannot be compared`);
         }
         if (a.t === "option") optionLiteral(e.b, a);
         if (b.t === "option") optionLiteral(e.a, b);
-        return T.YES_NO;
+        return T.BOOL;
       }
       case "<":
       case "<=":
       case ">":
       case ">=":
-        if (!anyError && !T.ordered(a.t === "empty" ? b : a, b.t === "empty" ? a : b)) return err2("S379", `${e.op} orders two numbers, two dates or two words, not ${T.describe(a)} and ${T.describe(b)}`);
-        return T.YES_NO;
+        if (!anyError && !T.ordered(a.t === "null" ? b : a, b.t === "null" ? a : b)) return err2("S379", `${e.op} orders two numbers, two dates or two words, not ${T.describe(a)} and ${T.describe(b)}`);
+        return T.BOOL;
       case "and":
       case "or":
         for (const [x, t] of [[e.a, a], [e.b, b]]) {
-          if (t.t !== "yes-no" && t.t !== "empty" && !T.isError(t)) err("S380", x, `${e.op} joins two conditions (yes or no); ${describeExpr(x)} is ${T.describe(t)}`);
+          if (t.t !== "bool" && t.t !== "null" && !T.isError(t)) err("S380", x, `${e.op} joins two conditions (true or false); ${describeExpr(x)} is ${T.describe(t)}`);
         }
-        return T.YES_NO;
+        return T.BOOL;
       case "??": {
         // a ?? b (§6.16): the join of the two (§3.9); a set takes words in quotes that name its options (§3.6).
         if (anyError) return T.isError(a) ? b : a;
@@ -1098,27 +1093,27 @@ export function check(resolved, diagnostics) {
       }
       case "in":
       case "not in":
-        if (anyError) return T.YES_NO;
+        if (anyError) return T.BOOL;
         if (b.t === "options") {
           if (a.t === "option" && a.set !== b.set) return err2("S381", `${describeExpr(e.a)} is one of ${a.set.name}, and ${describeExpr(e.b)} holds options of ${b.set.name}`);
-          if (!T.isTextLike(a) && a.t !== "option" && a.t !== "empty") return err2("S382", `${e.op} asks whether an option is among ${describeExpr(e.b)}; this is ${T.describe(a)}`);
+          if (!T.isStringLike(a) && a.t !== "option" && a.t !== "null") return err2("S382", `${e.op} asks whether an option is among ${describeExpr(e.b)}; this is ${T.describe(a)}`);
           optionLiteral(e.a, b);
-          return T.YES_NO;
+          return T.BOOL;
         }
         if (b.t === "list") {
           if (!T.fits(a, b.element) && !T.fits(b.element, a)) return err2("S383", `${describeExpr(e.b)} holds ${T.describe(b.element)}, and this is ${T.describe(a)}`);
           // Words looked for among options are one of the set's values (§3.6, S386).
           if (b.element.t === "option") optionLiteral(e.a, b.element);
-          return T.YES_NO;
+          return T.BOOL;
         }
-        if (b.t === "empty") return T.YES_NO; // empty fits a list (§3.6); F023 when it runs
+        if (b.t === "null") return T.BOOL; // null fits a list (§3.6); F023 when it runs
         // Words within words, and a key among a map's.
-        if (T.isTextLike(b) && (T.isTextLike(a) || a.t === "option" || a.t === "empty")) return T.YES_NO;
+        if (T.isStringLike(b) && (T.isStringLike(a) || a.t === "option" || a.t === "null")) return T.BOOL;
         if (b.t === "map") {
           if (!T.fits(a, b.key)) return err2("S383", `${describeExpr(e.b)}'s keys are ${T.describe(b.key)}, and this is ${T.describe(a)}`);
-          return T.YES_NO;
+          return T.BOOL;
         }
-        if (T.isTextLike(b)) return err2("S384", `${e.op} asks about a set of options or a list; for words within words, contains(${describeExpr(e.b)}, ${describeExpr(e.a)})`);
+        if (T.isStringLike(b)) return err2("S384", `${e.op} asks about a set of options or a list; for words within words, contains(${describeExpr(e.b)}, ${describeExpr(e.a)})`);
         return err2("S385", `${e.op} asks about a set of options or a list; ${describeExpr(e.b)} is ${T.describe(b)}`);
       default:
         throw new Error(`unknown operator ${e.op}`);
@@ -1143,10 +1138,10 @@ export function describeExpr(e) {
       return String(e.value);
     case "string":
       return e.parts.length === 1 && typeof e.parts[0] === "string" ? `"${e.parts[0]}"` : '"…"';
-    case "yes-no":
-      return e.value ? "yes" : "no";
-    case "empty":
-      return "empty";
+    case "bool":
+      return e.value ? "true" : "false";
+    case "null":
+      return "null";
     default:
       return "this";
   }

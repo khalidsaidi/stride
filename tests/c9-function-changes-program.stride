@@ -5,9 +5,9 @@ record box {
 }
 var total = 10
 var b: box
-var log: list of text = []
+var log: list<string> = []
 var later: number
-define bump(by: number) {
+function bump(by: number) {
   total += by
   b.n = total
   log[count(log)] = "bumped {by}"

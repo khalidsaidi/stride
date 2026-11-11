@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask n: text "Name"
+ask n: string "Name"
 print(n)
 
 # rule 7.2

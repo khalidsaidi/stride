@@ -15,7 +15,7 @@
 // question the program asks, and, for the page, which boxes a question's answer goes into, where the program
 // says so plainly (`fill "box" = answer`, `tick "box" when … answer …`).
 import { KIND, didYouMean } from "./source.mjs";
-import { textOf } from "../runtime/natives.mjs";
+import { stringOf } from "../runtime/natives.mjs";
 import * as V from "../runtime/values.mjs";
 
 // What an expression is when it is written out: words, a number, a date; undefined when it is worked out as the
@@ -25,13 +25,13 @@ function written(x) {
   if (x.e === "const") return x.v;
   if (x.e === "concat") {
     const parts = x.parts.map(written);
-    return parts.some((p) => p === undefined) ? undefined : parts.map((p) => (V.isEmpty(p) ? "" : textOf(p))).join("");
+    return parts.some((p) => p === undefined) ? undefined : parts.map((p) => (V.isNull(p) ? "" : stringOf(p))).join("");
   }
   return undefined;
 }
 const wordsOf = (x) => {
   const v = written(x);
-  return v === undefined ? undefined : V.isEmpty(v) ? "" : textOf(v);
+  return v === undefined ? undefined : V.isNull(v) ? "" : stringOf(v);
 };
 
 // The locals an expression reads.

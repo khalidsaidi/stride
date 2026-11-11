@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "people" as p
-var folks: list of p.person
+import "people" as p
+var folks: list<p.person>
 collect f in folks "Another?" {
-  ask f.first: text "First"
-  ask f.last: text "Last"
+  ask f.first: string "First"
+  ask f.last: string "Last"
 }
-for each n, f in folks {
+for n, f in folks {
   fill "N{n}" = f.full()
 }
 fill "Rows" = p.ROWS

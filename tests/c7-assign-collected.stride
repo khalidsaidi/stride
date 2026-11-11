@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var names: list of text
+var names: list<string>
 collect x in names "Another?" {
-  ask x: text "Name"
+  ask x: string "Name"
 }
 names[1] = "z"
 print(join(names, ","))

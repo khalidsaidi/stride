@@ -20,4 +20,4 @@ print("abc"[1..<b])
 # fault F004 at 5:13
 # run empty
 # answers {}
-# fault F023 at 5:13 empty where a number is needed: a bound of [ .. ]
+# fault F023 at 5:13 null where a number is needed: a bound of [ .. ]

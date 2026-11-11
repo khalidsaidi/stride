@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
+record person { name: string, age: number }
 var r: person
-ask r.name: text "N"
-ask r.name: text "N again"
+ask r.name: string "N"
+ask r.name: string "N again"
 fill "A" = r.name
 # rule S321 16.4 8.6
 # mistake 6 S321

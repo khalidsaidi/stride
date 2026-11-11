@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define apply(f: function(text) -> text, t: text) -> text {
+function apply(f: function(string) -> string, t: string) -> string {
   return f(t)
 }
 print(apply(upper, "hello"))

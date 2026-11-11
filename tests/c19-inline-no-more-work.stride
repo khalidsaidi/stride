@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(x: yes-no) -> number {
+function f(x: bool) -> number {
   return (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0) + (if x then 1 else 0)
 }
 ask a: number "A"

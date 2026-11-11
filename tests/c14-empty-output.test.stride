@@ -1,4 +1,4 @@
-expect either(empty, 2) == 2
+expect either(null, 2) == 2
 expect either(1, 2) == 1
 expect either("", "x") == ""
 expect either([], [1]) == []

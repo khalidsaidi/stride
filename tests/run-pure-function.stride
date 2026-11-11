@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define square(n: number) -> number {
+function square(n: number) -> number {
   return n * n
 }
 ask n: number "N"

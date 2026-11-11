@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: bool "A"
+ask b: bool "B"
+ask c: bool "C" default true
+ask d: bool "D" default true
+ask e: bool "E"
+ask f: bool "F"
+ask g: bool "G"
+ask h: bool "H"
+ask i: bool "I"
+ask j: bool "J"
+ask k: bool "K"
+print("{a}|{b}|{c}|{d}|{e}|{f}|{g}|{h}|{i}|{j}|{k}")
+# rule 8.7
+# answers {"a": "Yes", "b": "TRUE", "c": "", "d": null, "e": false, "f": "true", "g": "false", "h": "YES", "i": "nO", "j": "on", "k": "Off"}
+# prints ["true||||false|true|false|true|false|true|false"]
+# steps [{"key": "a", "value": true}, {"key": "b", "unreadable": "not true or false"}, {"key": "c", "value": null}, {"key": "d", "value": null}, {"key": "e", "value": false}, {"key": "f", "value": true}, {"key": "g", "value": false}, {"key": "h", "value": true}, {"key": "i", "value": false}, {"key": "j", "value": true}, {"key": "k", "value": false}]

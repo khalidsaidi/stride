@@ -1,35 +1,35 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: yes-no "A"
-define t(w: text) -> yes-no {
+ask a: bool "A"
+function t(w: string) -> bool {
   print(w)
-  return yes
+  return true
 }
-print(yes and a)
+print(true and a)
 print(a and t("r1"))
-print(no and t("r2"))
-print(yes or t("r3"))
-print(no or a)
+print(false and t("r2"))
+print(true or t("r3"))
+print(false or a)
 print(a or t("r4"))
-print((yes and a) is empty)
-print((no or a) is empty)
+print((true and a) == null)
+print((false or a) == null)
 print(not a)
-print(empty and t("r5"))
-print(empty or yes)
-print(empty or no)
-print(empty or empty)
-print(yes and empty)
-print(yes or empty)
-print(not empty)
-print(not yes)
-print(not no)
+print(null and t("r5"))
+print(null or true)
+print(null or false)
+print(null or null)
+print(true and null)
+print(true or null)
+print(not null)
+print(not true)
+print(not false)
 
 # rule 6.15.1 6.2
 # run a yes
 # answers {"a": true}
-# prints ["yes", "r1", "yes", "no", "yes", "yes", "yes", "no", "no", "no", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]
+# prints ["true","r1","true","false","true","true","true","false","false","false","false","true","false","false","false","true","true","false","true"]
 # run a no
 # answers {"a": false}
-# prints ["no", "no", "no", "yes", "no", "r4", "yes", "no", "no", "yes", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]
+# prints ["false","false","false","true","false","r4","true","false","false","true","false","true","false","false","false","true","true","false","true"]
 # run a unanswered
-# prints ["no", "no", "no", "yes", "no", "r4", "yes", "no", "no", "yes", "no", "yes", "no", "no", "no", "yes", "yes", "no", "yes"]
+# prints ["false","false","false","true","false","r4","true","false","false","true","false","true","false","false","false","true","true","false","true"]

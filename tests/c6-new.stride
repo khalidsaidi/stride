@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
+  a: string
   b: number
 }
 let x = new r { a: "q" }
 print(x.a)
-print(x.b is empty)
+print(x.b == null)
 
 # rule 6.14
 # run
-# prints ["q", "yes"]
+# prints ["q","true"]

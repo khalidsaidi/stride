@@ -1,7 +1,7 @@
 // rule 17.12 17.15 17.11
 // One program, one set of answers, every way of running it: key=value words, a JSON file, JSON on stdin, typed at
 // the prompt, traced, debugged, as JSON. Each prints the same lines. The answers hold what is easy to lose: keys of a
-// question asked in a function call (`ask_person.age`, its `.` inside the key), an any-of's options, words with
+// question asked in a function call (`ask_person.age`, its `.` inside the key), an any_of's options, words with
 // a character beyond the first 64 thousand (an emoji) sitting across the point where stdin is read in two, a
 // question whose default would fault (asked at the prompt all the same), and a record printed whole.
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
@@ -11,19 +11,19 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const PROGRAM = `record person {
-  name: text
+  name: string
   age: number
 }
-options colour {
+enum colour {
   "red" "Red"
   "blue" "Blue"
 }
-define ask_person(n: number) -> person {
-  ask name: text "Name {n}"
+function ask_person(n: number) -> person {
+  ask name: string "Name {n}"
   ask age: number "Age {n}" default 0
   return new person { name: name, age: age }
 }
-ask likes: any-of colour "Likes"
+ask likes: any_of colour "Likes"
 let p = ask_person(1)
 print(p)
 print(join(likes))

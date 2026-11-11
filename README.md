@@ -11,8 +11,8 @@ the form has. It is no stricter than the form itself.
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
-ask full_name: text "Full name"
-ask agrees: yes-no "I agree to the terms"
+ask full_name: string "Full name"
+ask agrees: bool "I agree to the terms"
 if agrees {
   fill "name" = full_name
 }

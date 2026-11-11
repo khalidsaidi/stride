@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-define f(x: s) -> text {
+function f(x: s) -> string {
   return x
 }
 print(f("a"))

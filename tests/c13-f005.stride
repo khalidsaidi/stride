@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask i: number "I"
-var l: list of number = [1]
+var l: list<number> = [1]
 l[i] = 9
 fill "A" = join(l, "-")
 # rule F005 7.5 7.5.1

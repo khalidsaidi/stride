@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "x" "X"
 }
-options u {
+enum u {
   "x" "X"
 }
-ask a: one-of s "A"
-ask b: any-of u "B"
+ask a: one_of s "A"
+ask b: any_of u "B"
 print(a in b)
 
 # rule 6.8 S381

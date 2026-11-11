@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-print(first(empty))
-print(last(empty))
-print(reversed(empty))
-print(sorted(empty))
-print(filled(empty))
-print(smallest(empty))
-print(largest(empty))
-print(either(empty, empty))
-print("{either(empty, 1)} {count(without(empty, 1))} {index_of(empty, 1)} {count(empty)}")
+print(first(null))
+print(last(null))
+print(reversed(null))
+print(sorted(null))
+print(filled(null))
+print(smallest(null))
+print(largest(null))
+print(either(null, null))
+print("{either(null, 1)} {count(without(null, 1))} {index_of(null, 1)} {count(null)}")
 # rule 9.5 9.5.1 S368
 # mistake 3:7 S368
 # mistake 4:7 S368

@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 8) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 9) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -11,11 +11,11 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isNull, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
-export const textOf = words;
+export const stringOf = words;
 
 // Instructions in one run: no limit, unless the host that runs the program sets one (the limit option, or
 // STRIDE_LIMIT in the environment), as a host stops a script that runs too long (§15).
@@ -58,10 +58,10 @@ export function convert(question, raw) {
     }
     raw = raw.token;
   }
-  if (question.type === "any-of" && Array.isArray(raw)) raw = raw.map((v) => (v instanceof D.JsonNumber ? v.token : v));
+  if (question.type === "any_of" && Array.isArray(raw)) raw = raw.map((v) => (v instanceof D.JsonNumber ? v.token : v));
   switch (question.type) {
-    case "text":
-    case "long-text":
+    case "string":
+    case "long_text":
     case "phone":
     case "email": {
       // Words take words, or a JSON number as written (its exact token, kept by the host); anything else is not words.
@@ -81,19 +81,20 @@ export function convert(question, raw) {
       const d = dateFrom(typeof raw === "string" ? raw : null);
       return d ? { value: d, unreadable: null } : { value: null, unreadable: "not a date" };
     }
-    case "yes-no":
+    case "bool":
       if (raw === "") return { value: null, unreadable: null };
-      if (raw === true || ["yes", "on", "Yes", "true"].includes(raw)) return { value: true, unreadable: null };
-      if (raw === false || ["no", "Off", "No", "false"].includes(raw)) return { value: false, unreadable: null };
-      return { value: null, unreadable: "not yes or no" };
-    case "one-of": {
+      // true and false, as JSON or as words; a person's yes and no, in any letter case; a check box's on and Off.
+      if (raw === true || raw === "true" || raw === "on" || (typeof raw === "string" && raw.toLowerCase() === "yes")) return { value: true, unreadable: null };
+      if (raw === false || raw === "false" || raw === "Off" || (typeof raw === "string" && raw.toLowerCase() === "no")) return { value: false, unreadable: null };
+      return { value: null, unreadable: "not true or false" };
+    case "one_of": {
       if (raw === "") return { value: null, unreadable: null };
       // One value, given as words (or a JSON number as written); a list or anything else is not one of them.
       if (typeof raw !== "string" && typeof raw !== "number" && !isNumber(raw)) return { value: null, unreadable: "not one of the options" };
       const v = typeof raw === "number" ? jsNumberWords(raw) : typeof raw === "string" ? raw : words(raw);
       return v !== null && question.options.some((o) => o.value === v) ? { value: v, unreadable: null } : { value: null, unreadable: "not one of the options" };
     }
-    case "any-of": {
+    case "any_of": {
       // A list of values (nothing chosen: no words, or an empty list); anything else is not among them.
       if (!Array.isArray(raw) && raw !== "") return { value: null, unreadable: "not among the options" };
       // Each member words or a JSON number as written; an empty one (null, "") adds no option; any other is stray.
@@ -218,8 +219,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
   };
   // A position an item is set at (§7.5): in a list that is there (F023), from 0 to the number of items (F005).
   const setPosition = (l, i) => {
-    if (isEmpty(l)) needed("a list is", "what an item is set in");
-    if (isEmpty(i)) needed("a number is", "the position an item is set at");
+    if (isNull(l)) needed("a list is", "what an item is set in");
+    if (isNull(i)) needed("a number is", "the position an item is set at");
     const n = whole(i);
     if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
     if (n === null || n < 0 || n > l.length) fault("F005", `position ${words(i)} cannot be set: the list holds ${l.length}`);
@@ -272,7 +273,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.FALSE:
           stack.push(false);
           break;
-        case OP.EMPTY:
+        case OP.NULL:
           stack.push(null);
           break;
         case OP.LOAD:
@@ -363,7 +364,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const i = stack[stack.length - 1];
           const l = stack[stack.length - 2];
           if (l instanceof StrideMap) {
-            if (isEmpty(i)) needed("a key is", "the key a value is put under");
+            if (isNull(i)) needed("a key is", "the key a value is put under");
             break;
           }
           setPosition(l, i);
@@ -371,8 +372,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.ENSURE_RECORD: {
           if (f.locals[ins.a] instanceof Cell) {
-            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].starts, p.records[ins.b].fields);
-          } else if (isEmpty(f.locals[ins.a])) {
+            if (isNull(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].starts, p.records[ins.b].fields);
+          } else if (isNull(f.locals[ins.a])) {
             const r = p.records[ins.b];
             f.locals[ins.a] = emptyRecord(r.name, r.starts, r.fields);
           }
@@ -380,7 +381,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.ENSURE_FIELD: {
           const r = record(stack[stack.length - 1]);
-          if (r && isEmpty(r.fields[ins.a])) {
+          if (r && isNull(r.fields[ins.a])) {
             const t = p.records[ins.b];
             r.fields[ins.a] = emptyRecord(t.name, t.starts, t.fields);
           }
@@ -391,7 +392,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const l = stack[stack.length - 2];
           if (l instanceof StrideMap) {
             // A record under a key not there yet is made, as a record var's is (§7.5.1).
-            if (isEmpty(l.get(i))) {
+            if (isNull(l.get(i))) {
               const t = p.records[ins.a];
               l.set(i, emptyRecord(t.name, t.starts, t.fields));
             }
@@ -399,7 +400,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           }
           const n = readPosition(l, i);
           if (n >= l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
-          if (isEmpty(l[n])) {
+          if (isNull(l[n])) {
             const t = p.records[ins.a];
             l[n] = emptyRecord(t.name, t.starts, t.fields);
           }
@@ -408,7 +409,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.APPEND: {
           const v = pop();
           const l = f.locals[ins.a] instanceof Cell ? f.locals[ins.a].v : f.locals[ins.a];
-          if (isEmpty(l)) needed("a list is", "what an item is added to");
+          if (isNull(l)) needed("a list is", "what an item is added to");
           if (!Array.isArray(l)) fault("F006", "an item was added to something that is not a list");
           l.push(v);
           break;
@@ -455,7 +456,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           frames[0].given?.add(ins.a);
           break;
         case OP.ENSURE_MAIN: {
-          if (isEmpty(frames[0].locals[ins.a])) {
+          if (isNull(frames[0].locals[ins.a])) {
             const r = p.records[ins.b];
             frames[0].locals[ins.a] = emptyRecord(r.name, r.starts, r.fields);
           }
@@ -518,7 +519,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const has = Object.prototype.hasOwnProperty.call(answers, key);
           const given = has ? convert(q, answers[key]) : { value: undefined, unreadable: null };
           // The default only when the answers do not hold the key at all.
-          // An answer is never words of no characters or a set of no options: it is empty (§8.7).
+          // An answer is never words of no characters or a set of no options: it is null (§8.7).
           const held = has ? given.value : def ?? null;
           const value = held === "" || (isSet(held) && !held.length) ? null : held;
           steps.push({ question: q, index: ins.a, key, printed: shown, value, default: def, answered: has, failed: [], unreadable: given.unreadable });

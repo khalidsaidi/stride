@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
   "b" "B"
 }
-define f(x: set of s) -> number {
+function f(x: set<s>) -> number {
   return count(x)
 }
 print(f(["a", "b"]))

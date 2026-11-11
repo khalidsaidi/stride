@@ -1,3 +1,3 @@
-expect (if yes then [1] else [1, 2])[1] faults "F004"
+expect (if true then [1] else [1, 2])[1] faults "F004"
 expect [[1], [1, 2]][0][1] faults "F004"
 # rule 3.9 6.13

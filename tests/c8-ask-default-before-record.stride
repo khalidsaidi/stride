@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
-var p: person = empty
-ask p.name: text "Name" default if p is empty then "before" else "after"
+record person { name: string, age: number }
+var p: person = null
+ask p.name: string "Name" default if p == null then "before" else "after"
 print(p.name)
 # rule 8.4.1 7.5.1
 # prints ["before"]

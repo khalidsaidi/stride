@@ -1,2 +1,2 @@
-use "c-a"
+import "c-a"
 expect shared == shared

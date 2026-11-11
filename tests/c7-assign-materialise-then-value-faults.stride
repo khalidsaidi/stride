@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record address {
-  city: text
+  city: string
 }
 record person {
-  name: text
+  name: string
   age: number
   home: address
 }
 ask z: number "Z"
-var xs: list of person = [empty]
+var xs: list<person> = [null]
 xs[0].age = 1 / z
 print("{xs[0].age}")
 

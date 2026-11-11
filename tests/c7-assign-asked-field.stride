@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record address {
-  city: text
+  city: string
 }
 record person {
-  name: text
+  name: string
   age: number
   home: address
 }
 var p: person
-ask p.name: text "Name"
+ask p.name: string "Name"
 p.name = "B"
 print(p.name)
 

@@ -1,6 +1,6 @@
-define f(x: number = 1 / 0) -> number {
+function f(x: number = 1 / 0) -> number {
   return x
 }
 expect f() == 1
 # rule 11.3 9.2 S413
-# mistake 1:24 S413
+# mistake 1:26 S413

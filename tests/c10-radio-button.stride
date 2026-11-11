@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask k: yes-no "Kind Individual"
+ask k: bool "Kind Individual"
 pick "Kind" "biz" when k
 pick "Kind" "ind" when not k
 # rule 10.3 S511

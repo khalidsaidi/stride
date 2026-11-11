@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-print(1 in [1] == yes)
-print(1 is empty == no)
-print((1 in [1]) == yes)
+print(1 in [1] == true)
+print(1 == null == false)
+print((1 in [1]) == true)
 # rule 6.6 S014
 # mistake 3:16 S014
-# mistake 4:18 S014
+# mistake 4:17 S014

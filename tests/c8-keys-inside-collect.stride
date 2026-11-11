@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define who() -> number {
+function who() -> number {
   ask age: number "Age"
   return age
 }
-var kids: list of text
+var kids: list<string>
 collect k in kids "Another kid?" {
-  ask k: text "Kid"
-  ask note: text "Note"
+  ask k: string "Kid"
+  ask note: string "Note"
   print(note)
   print(who())
 }

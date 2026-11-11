@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var m: map of text to number = {"a": 1}
+var m: map<string, number> = {"a": 1}
 print(m[3])
 m["b"] = "two"
 let bad = {"a": 1, 2: 3}

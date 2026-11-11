@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var a: list of number = [1, 2]
+var a: list<number> = [1, 2]
 var b = a
 b[0] = 9
 print(a[0])

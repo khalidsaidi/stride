@@ -12,7 +12,7 @@ export function examples(std = stdSource()) {
   for (const line of std.split("\n")) {
     const e = line.match(/^# example: (.*?) (gives|prints|faults) (.*)$/);
     if (e) pending.push({ text: `${e[1]} ${e[2]} ${e[3]}`, expr: e[1], verb: e[2], want: e[3] });
-    const d = line.match(/^export (?:native )?define (\w+)(?:<[^>]*>)?\(/);
+    const d = line.match(/^export (?:native )?function (\w+)(?:<[^>]*>)?\(/);
     if (d) {
       for (const x of pending) out.push({ name: d[1], ...x });
       pending = [];

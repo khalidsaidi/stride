@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-if a is empty {
+ask a: string "A"
+if a == null {
 # mistake 6:12 S010 is not understood here
   fill "B" a
   fill "C" = a

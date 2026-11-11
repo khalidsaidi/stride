@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
-var kids: list of text
+ask c: bool "C"
+var kids: list<string>
 collect x in kids any "Any kids?" "More?" {
-  ask x: text "Kid"
+  ask x: string "Kid"
 }
 if c {
   fail("asked to stop")
@@ -11,10 +11,10 @@ if c {
 for i in 1..0 {
   fail("never")
 }
-for each k in kids {
+for k in kids {
   fail("a kid")
 }
-if no {
+if false {
   fail("no")
 }
 # rule 11.3.3 F013

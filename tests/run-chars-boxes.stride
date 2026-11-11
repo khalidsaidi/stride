@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask s: text "S"
+ask s: string "S"
 for i in 0..2 {
   fill "C{i}" = character(s, i)
 }

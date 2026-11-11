@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-let x = yes + no
+let x = true + false
 fill "A" = "a"
 # rule S373 16.4 6.5
 # mistake 3 S373

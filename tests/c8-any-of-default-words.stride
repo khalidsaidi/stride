@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
   "b" "B"
 }
-ask m: any-of s "M" default ["b", "a"]
-var v: set of s = ["a", "b"]
+ask m: any_of s "M" default ["b", "a"]
+var v: set<s> = ["a", "b"]
 print(m == v)
 print(m)
 print(join(m))
 # rule 8.4.1 3.6 3.8
-# prints ["yes", "a, b", "a, b"]
+# prints ["true","a, b","a, b"]

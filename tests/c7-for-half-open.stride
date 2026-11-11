@@ -17,7 +17,7 @@ for i in 0..<stop {
 }
 print(stop)
 for i in 1..<n {
-  ask q: text "Q"
+  ask q: string "Q"
   print(either(q, "{i}"))
 }
 # rule 7.11 2.7 F023

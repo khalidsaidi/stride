@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-options u {
+enum u {
   "b" "B"
 }
-ask x: one-of s "X"
-ask y: one-of u "Y"
+ask x: one_of s "X"
+ask y: one_of u "Y"
 let l = [x, y]
 print(join(l, "+"))
 # rule 3.9

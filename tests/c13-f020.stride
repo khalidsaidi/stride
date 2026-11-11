@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text }
+record person { name: string }
 ask i: number "I"
-var xs: list of person = [new person { name: "a" }, new person { name: "b" }]
+var xs: list<person> = [new person { name: "a" }, new person { name: "b" }]
 xs[i].name = "z"
-fill "A" = join([x.name for each x in xs], ",")
+fill "A" = join([x.name for x in xs], ",")
 # rule F020 7.5.1
 # run present
 # answers {"i": 1}

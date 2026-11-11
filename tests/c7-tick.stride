@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "Check"
+ask c: bool "Check"
 tick "Box" when c
 
 # rule 7.7

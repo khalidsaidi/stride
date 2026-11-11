@@ -22,7 +22,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const declaredOn = new Set(); // the lets and vars declared on the path being walked (§12.1.1)
   // Why a let or var may have no value: the latest construct that leaves it so on some path, for S407's words.
   const cause = new Map(); // symbol -> { kind: "declared" | "if" | "match" | "loop", node }
-  // What a condition or a subject written out is (`if yes`, §11.3.3): never a call of a Stride function, whose
+  // What a condition or a subject written out is (`if true`, §11.3.3): never a call of a Stride function, whose
   // value the run gives.
   const know = (e, env) => (e?.kind === "call" && e.callee?.kind === "function" ? undefined : evaluate(e, env));
   // A parameter's default worked out at the call (§9.2) is read as a statement at the head of its function.
@@ -98,7 +98,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       case "binary":
         return [e.a, e.b];
       case "unary":
-      case "is-empty":
         return [e.operand];
       case "field":
         return [e.target];
@@ -270,7 +269,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
             falls = r.falls;
             break;
           }
-          // Each arm a path, and without an else one more where no arm runs: an empty subject, which no value
+          // Each arm a path, and without an else one more where no arm runs: a null subject, which no value
           // equals, takes none even when every option has its arm. A let or var declared on only some of these
           // paths may not be there after the match (§12.1.1), as after an if.
           const before = new Set(declaredOn);

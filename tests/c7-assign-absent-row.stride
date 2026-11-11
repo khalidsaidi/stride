@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record address {
-  city: text
+  city: string
 }
 record person {
-  name: text
+  name: string
   age: number
   home: address
 }
-ask go: yes-no "Go?"
-var xs: list of person = [empty]
+ask go: bool "Go?"
+var xs: list<person> = [null]
 if go {
   xs[1].name = "Ada"
 }

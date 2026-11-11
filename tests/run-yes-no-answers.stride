@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask y: yes-no "Y"
-tick "A" when y
-tick "B" when not y
-# answers {"y": "no"}
-# boxes {"B": "Yes"}
-# rule 8.7 6.15.1

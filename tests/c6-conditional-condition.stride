@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask t: text "T"
+ask t: string "T"
 print(if t then "a" else "b")
 
 # rule 6.13 S310

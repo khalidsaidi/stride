@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 var x: number
 x += 1
-var t: text
+var t: string
 t += "a"
 var y: number
 y = 2

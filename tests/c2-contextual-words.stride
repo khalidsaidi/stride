@@ -7,13 +7,13 @@ let of = 1
 let when = "now"
 let then = "later"
 var total = 0
-for each x in list {
+for x in list {
   total += x
 }
 for each in 1..2 {
   print(each)
 }
-var names: list of text
+var names: list<string>
 names += [set, when, then]
 print(if fields > 2 then join(names, ",") else "no")
 print(of + total)

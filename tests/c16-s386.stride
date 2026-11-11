@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s1 { "a" "A"  "b" "B" }
-options s2 { "x" "X" }
-ask k: one-of s1 "K"
+enum s1 { "a" "A"  "b" "B" }
+enum s2 { "x" "X" }
+ask k: one_of s1 "K"
 tick "A" when k == "zz"
 # rule S386 16.4 6.6 3.6
 # mistake 6 S386

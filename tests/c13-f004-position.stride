@@ -22,4 +22,4 @@ print("xyz"[i])
 # fault F004 at 5:8
 # run empty
 # answers {}
-# fault F023 at 5:8 empty where a number is needed: the position in [ ]
+# fault F023 at 5:8 null where a number is needed: the position in [ ]

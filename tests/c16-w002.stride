@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define unused() -> number {
+function unused() -> number {
   return 1
 }
 fill "A" = "x"

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-pair"
+import "c-pair"
 let p = new pair { left: "a", right: "b" }
 fill "A" = both(p)
 fill "B" = "{hidden}"

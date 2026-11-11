@@ -1,8 +1,8 @@
 // What Stride's operators mean (docs/spec.md §6), on the values of runtime/values.mjs. The machine
 // runs them on answers, and the compiler on a constant's value: one definition.
-// An operator given empty where it needs a value is F023 (§6.3). One given values it does not take is F018: the
+// An operator given null where it needs a value is F023 (§6.3). One given values it does not take is F018: the
 // checker refuses such a program, so reaching it is a compiler fault.
-import { D, StrideFault, equal, order, truthy, StrideMap, isEmpty, isNumber, words, needed, kindOf } from "./values.mjs";
+import { D, StrideFault, equal, order, truthy, StrideMap, isNull, isNumber, words, needed, kindOf } from "./values.mjs";
 
 function numberOp(f) {
   try {
@@ -19,8 +19,8 @@ function noOp(op, a, b) {
 
 // Empty where the operator needs a value (§6.3): F023, naming the side.
 function sides(op, a, b) {
-  if (isEmpty(a)) needed(kindOf(b), `the left side of ${op}`);
-  if (isEmpty(b)) needed(kindOf(a), `the right side of ${op}`);
+  if (isNull(a)) needed(kindOf(b), `the left side of ${op}`);
+  if (isNull(b)) needed(kindOf(a), `the right side of ${op}`);
 }
 
 export function binary(op, a, b) {
@@ -61,12 +61,12 @@ export function binary(op, a, b) {
       return truthy(a) || truthy(b);
     case "in":
     case "not in": {
-      if (isEmpty(b)) needed("a list is", `the right side of ${op}`);
+      if (isNull(b)) needed("a list is", `the right side of ${op}`);
       let found;
       if (typeof b === "string") {
-        if (isEmpty(a)) needed("words are", `the left side of ${op}`);
+        if (isNull(a)) needed("words are", `the left side of ${op}`);
         found = b.includes(words(a));
-      } else found = b instanceof StrideMap ? !isEmpty(a) && b.has(a) : Array.isArray(b) ? b.some((x) => equal(x, a)) : false;
+      } else found = b instanceof StrideMap ? !isNull(a) && b.has(a) : Array.isArray(b) ? b.some((x) => equal(x, a)) : false;
       return op === "in" ? found : !found;
     }
     default:
@@ -76,7 +76,7 @@ export function binary(op, a, b) {
 
 export function unary(op, a) {
   if (op === "-") {
-    if (isEmpty(a)) needed("a number is", "what - stands before");
+    if (isNull(a)) needed("a number is", "what - stands before");
     if (!isNumber(a)) return noOp(op, a, a);
     return D.neg(a);
   }

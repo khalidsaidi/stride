@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define say() {
+function say() {
   print("x")
 }
 let x = say() + 1

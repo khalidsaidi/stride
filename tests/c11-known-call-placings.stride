@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define w(n: number) -> number {
-  var l: list of number = [n]
+function w(n: number) -> number {
+  var l: list<number> = [n]
   return count(l) + either(l[0], 0)
 }
-define keep(b: yes-no) -> list of number {
+function keep(b: bool) -> list<number> {
   return [1]
 }
 print(w(1))
-print(keep(yes)[3] is empty)
+print(keep(true)[3] == null)
 # rule 6.9.2
 # prints ["2"]
-# fault F004 at 11:16 position 3 is outside the list: it holds 1
+# fault F004 at 11:17 position 3 is outside the list: it holds 1

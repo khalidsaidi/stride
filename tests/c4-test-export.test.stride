@@ -1,6 +1,6 @@
-export define f() -> number {
+export function f() -> number {
   return 1
 }
 expect f() == 1
 # rule 4.3 S107
-# mistake 1 S107 nothing uses a test file
+# mistake 1 S107 nothing imports a test file

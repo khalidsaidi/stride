@@ -5,8 +5,8 @@ let l = [1]
 1
 "a"
 [1]
-yes
-not yes
+true
+not true
 1 + 2
 x + 1
 (1)

@@ -9,4 +9,4 @@ print(2 >= 2.0)
 
 # rule 6.7
 # run
-# prints ["yes", "yes", "yes", "yes", "yes", "yes"]
+# prints ["true","true","true","true","true","true"]

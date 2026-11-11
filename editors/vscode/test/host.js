@@ -18,9 +18,9 @@ const until = async (what, f, ms = 20000) => {
 exports.run = async () => {
   const dir = process.env.STRIDE_TEST_DIR;
   fs.mkdirSync(path.join(dir, "lib"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "doubles.stride"), 'define twice(n: number) -> number {\n  return n * 2\n}\nlet total = twice(4)\nprint(totl)\n');
-  fs.writeFileSync(path.join(dir, "lib", "math.stride"), "export define triple(n: number) -> number {\n  return n * 3\n}\n");
-  fs.writeFileSync(path.join(dir, "uses.stride"), 'use "math"\nprint(triple(2))\n');
+  fs.writeFileSync(path.join(dir, "doubles.stride"), 'function twice(n: number) -> number {\n  return n * 2\n}\nlet total = twice(4)\nprint(totl)\n');
+  fs.writeFileSync(path.join(dir, "lib", "math.stride"), "export function triple(n: number) -> number {\n  return n * 3\n}\n");
+  fs.writeFileSync(path.join(dir, "uses.stride"), 'import "math"\nprint(triple(2))\n');
   fs.writeFileSync(path.join(dir, "messy.stride"), "let  x=1\nprint( x )\n");
 
   const open = async (name) => {
@@ -40,7 +40,7 @@ exports.run = async () => {
 
   // Hover on the call of twice: its signature.
   const hover = await vscode.commands.executeCommand("vscode.executeHoverProvider", doubles.uri, new vscode.Position(3, 13));
-  assert.ok(hover.some((h) => h.contents.some((c) => /define twice\(n: number\) -> number/.test(c.value ?? c))), "hover on twice");
+  assert.ok(hover.some((h) => h.contents.some((c) => /function twice\(n: number\) -> number/.test(c.value ?? c))), "hover on twice");
 
   const definition = await vscode.commands.executeCommand("vscode.executeDefinitionProvider", doubles.uri, new vscode.Position(3, 13));
   assert.strictEqual((definition[0].targetRange ?? definition[0].range).start.line, 0, "definition of twice");
@@ -62,7 +62,7 @@ exports.run = async () => {
   await vscode.workspace.applyEdit(change);
   assert.strictEqual(messy.getText(), "let x = 1\nprint(x)\n");
   // Highlighting: the grammar's scopes, as VS Code tokenises the file.
-  fs.writeFileSync(path.join(dir, "colours.stride"), '# a note\ndefine f(n: number) -> text {\n  return "n is {n}"\n}\n');
+  fs.writeFileSync(path.join(dir, "colours.stride"), '# a note\nfunction f(n: number) -> string {\n  return "n is {n}"\n}\n');
   const colours = await open("colours.stride");
   const tokens = await vscode.commands.executeCommand("_workbench.captureSyntaxTokens", colours.uri);
   const scopeOf = (text) => tokens.find((t) => t.c === text)?.t ?? "";
@@ -72,8 +72,8 @@ exports.run = async () => {
   assert.ok(tokens.some((t) => /string\.quoted/.test(t.t) && t.c.includes("n is")), "words in quotes");
   assert.ok(tokens.some((t) => /meta\.interpolation/.test(t.t)), "a value put in words");
   // Names: a library kept as m, a record's fields, a signature, references and renaming across files.
-  fs.writeFileSync(path.join(dir, "lib", "maths.stride"), "export define twice(n: number) -> number {\n  let d = n * 2\n  return d\n}\n");
-  fs.writeFileSync(path.join(dir, "names.stride"), 'use "maths" as m\nrecord person {\n  name: text\n  age: number\n}\nlet p = new person { name: "Ada", age: 36 }\nprint(m.twice(p.age))\n');
+  fs.writeFileSync(path.join(dir, "lib", "maths.stride"), "export function twice(n: number) -> number {\n  let d = n * 2\n  return d\n}\n");
+  fs.writeFileSync(path.join(dir, "names.stride"), 'import "maths" as m\nrecord person {\n  name: string\n  age: number\n}\nlet p = new person { name: "Ada", age: 36 }\nprint(m.twice(p.age))\n');
   const names = await open("names.stride");
   await until("names.stride checked", () => vscode.languages.getDiagnostics(names.uri).length === 0);
   const labelsAt = async (line, ch) => (await vscode.commands.executeCommand("vscode.executeCompletionItemProvider", names.uri, new vscode.Position(line, ch))).items.map((i) => (typeof i.label === "string" ? i.label : i.label.label));
@@ -87,7 +87,7 @@ exports.run = async () => {
   assert.deepStrictEqual(renamed.entries().map(([u]) => path.basename(u.fsPath)).sort(), ["maths.stride", "names.stride"], "renaming across the files");
 
   // Debugging: a breakpoint in the library, stopped there, its values, then to the end.
-  fs.writeFileSync(path.join(dir, "debugged.stride"), 'use "maths"\nvar total: number = 0\nfor i in 1..2 {\n  total = total + twice(i)\n}\nprint(total)\n');
+  fs.writeFileSync(path.join(dir, "debugged.stride"), 'import "maths"\nvar total: number = 0\nfor i in 1..2 {\n  total = total + twice(i)\n}\nprint(total)\n');
   const libUri = vscode.Uri.file(path.join(dir, "lib", "maths.stride"));
   vscode.debug.addBreakpoints([new vscode.SourceBreakpoint(new vscode.Location(libUri, new vscode.Position(2, 0)))]);
   const seen = [];

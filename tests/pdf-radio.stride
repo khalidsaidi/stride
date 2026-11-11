@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Kind radio:ind near Kind of taxpayer: Individual
 # box Kind radio:bus near Kind of taxpayer: Business
-ask k: one-of "Kind" {
+ask k: one_of "Kind" {
   option "ind" "Individual"
   option "bus" "Business"
 }

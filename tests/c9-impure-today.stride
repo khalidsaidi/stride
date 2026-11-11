@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define now() -> date {
+function now() -> date {
   return today()
 }
-define p() -> number {
+function p() -> number {
   print("p")
   return 1
 }
@@ -11,7 +11,7 @@ fill "Y" = year(now())
 for i in 1..3 {
   p()
 }
-if no {
+if false {
   print("never")
 }
 # rule 9.9 11.3.3

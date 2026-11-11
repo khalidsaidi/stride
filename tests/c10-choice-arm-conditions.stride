@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
-ask t: text "T"
+ask t: string "T"
 ask d: date "D"
 fill "L" = if (n ?? 0) > 5 then "high" else "low"
-fill "M" = if t == "a" then t else empty
-fill "P" = if d == date_of(2026, 1, 2) then "{d}" else empty
-fill "Q" = if t != "a" then t else empty
+fill "M" = if t == "a" then t else null
+fill "P" = if d == date_of(2026, 1, 2) then "{d}" else null
+fill "Q" = if t != "a" then t else null
 # rule 10.3
 # box L choice:high,low near N T D
 # box M choice:a near N T D

@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box SSN text near SSN
-ask s: text "SSN"
+ask s: string "SSN"
 fill "SSN" = s
 # answers {"s": "123"}
 # boxes {"SSN": "123"}

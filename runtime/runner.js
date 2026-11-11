@@ -6,13 +6,13 @@
 //
 // The language says what is asked and what goes where; how it is shown and how a person moves through it are the
 // runner's. The page that hosts it gives the boxes (box, read, show).
-import { boxValues, faultWords, load, run, textOf } from "./vm.mjs";
+import { boxValues, faultWords, load, run, stringOf } from "./vm.mjs";
 // The page is the host here: it stops a run that goes on too long, so a program that never ends does not freeze it.
 const PAGE_LIMIT = 100_000_000;
 
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length);
 // An answer as the page keeps it: a number or a date as its words, the way a person would type it.
-const kept = (v) => (v !== null && typeof v === "object" && !Array.isArray(v) ? textOf(v) : v);
+const kept = (v) => (v !== null && typeof v === "object" && !Array.isArray(v) ? stringOf(v) : v);
 
 // The compiled workflow, from the bytes of its file.
 export const workflow = (bytes) => load(bytes);
@@ -120,16 +120,16 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
       }
       return wrap;
     };
-    if (q.type === "yes-no") body.append(choose([["yes", "Yes"], ["no", "No"]], false));
-    else if (q.type === "one-of" || q.type === "any-of") body.append(choose(q.options.map((o) => [o.value, o.printed]), q.type === "any-of"));
+    if (q.type === "bool") body.append(choose([["yes", "Yes"], ["no", "No"]], false));
+    else if (q.type === "one_of" || q.type === "any_of") body.append(choose(q.options.map((o) => [o.value, o.printed]), q.type === "any_of"));
     else {
-      const input = el(q.type === "long-text" ? "textarea" : "input");
+      const input = el(q.type === "long_text" ? "textarea" : "input");
       if (input.tagName === "INPUT") input.type = { date: "date", phone: "tel", email: "email" }[q.type] ?? "text";
       if (q.type === "number") input.inputMode = "decimal";
-      if (q.type === "long-text") input.rows = 3;
+      if (q.type === "long_text") input.rows = 3;
       const most = into.find((l) => l.direct && l.max)?.max;
       if (most) input.maxLength = most;
-      input.value = value == null ? "" : textOf(value);
+      input.value = value == null ? "" : stringOf(value);
       input.oninput = () => set(input.value);
       body.append(input);
       setTimeout(() => input.focus(), 0);

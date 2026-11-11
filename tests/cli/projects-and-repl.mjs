@@ -24,18 +24,18 @@ export function test() {
     r = stride(["init"]);
     check("init again", r.status === 1 && r.stderr.includes("is there already"), r);
     // A library in the project's lib/, one in a folder stride.json names, a program two folders down using both.
-    writeFileSync(join(dir, "lib", "money.stride"), 'export define dollars(n: number) -> text {\n  return "${grouped(n, 2)}"\n}\n');
+    writeFileSync(join(dir, "lib", "money.stride"), 'export function dollars(n: number) -> string {\n  return "${grouped(n, 2)}"\n}\n');
     mkdirSync(join(top, "shared", "lib"), { recursive: true });
-    writeFileSync(join(top, "shared", "lib", "names.stride"), 'export define polite(n: text) -> text {\n  return "Dear {n}"\n}\n');
+    writeFileSync(join(top, "shared", "lib", "names.stride"), 'export function polite(n: string) -> string {\n  return "Dear {n}"\n}\n');
     writeFileSync(join(dir, "stride.json"), JSON.stringify({ stride: "1.0", libraries: ["../shared/lib"] }));
     mkdirSync(join(dir, "pay", "w9"), { recursive: true });
-    writeFileSync(join(dir, "pay", "w9", "bill.stride"), 'use "money"\nuse "names" as n\nask who: text "Who"\nask owed: number "Owed"\nprint("{n.polite(who)}: {dollars(owed)}")\n');
+    writeFileSync(join(dir, "pay", "w9", "bill.stride"), 'import "money"\nimport "names" as n\nask who: string "Who"\nask owed: number "Owed"\nprint("{n.polite(who)}: {dollars(owed)}")\n');
     r = stride(["run", "pay/w9/bill.stride", "who=Ada", "owed=1234.5"]);
     check("the project's libraries", r.status === 0 && r.stdout === "Dear Ada: $1,234.50\n", r);
     mkdirSync(join(dir, "pay", "w9", "bill.tests"));
     writeFileSync(join(dir, "pay", "w9", "bill.tests", "ada.json"), JSON.stringify({ answers: { who: "Ada", owed: "10" }, prints: ["Dear Ada: $10.00"] }));
     writeFileSync(join(dir, "pay", "w9", "bill.tests", "bo.json"), JSON.stringify({ answers: { who: "Bo", owed: "2" }, prints: ["Dear Bo: $2.00"] }));
-    writeFileSync(join(dir, "lib", "money.test.stride"), 'use "money"\nexpect dollars(1) == "$1.00"\n');
+    writeFileSync(join(dir, "lib", "money.test.stride"), 'import "money"\nexpect dollars(1) == "$1.00"\n');
     r = stride(["test"]);
     check("test with no file", r.status === 0 && /3 tests passed in 2 files/.test(r.stdout), r);
     r = stride(["test", "--match", "bo"]);
@@ -66,7 +66,7 @@ export function test() {
     check("its tests, elsewhere", r.status === 0 && /2 tests passed/.test(r.stdout), r);
 
     // The session.
-    const session = 'let names = ["Ada", "Bo"]\nnames[1]\ndefine twice(n: number) -> number {\n  return n * 2\n}\ntwice(21)\nprint("printed once")\nnosuch\n1 / 0\nask age: number "Your age"\n40\nage + 1\n:list\n';
+    const session = 'let names = ["Ada", "Bo"]\nnames[1]\nfunction twice(n: number) -> number {\n  return n * 2\n}\ntwice(21)\nprint("printed once")\nnosuch\n1 / 0\nask age: number "Your age"\n40\nage + 1\n:list\n';
     r = stride(["repl"], { cwd: top, input: session });
     const outLines = r.stdout.split("\n");
     check("the session's values", r.status === 0 && outLines[0] === "Bo" && outLines[1] === "42" && outLines[2] === "printed once" && outLines[3] === "41", r);

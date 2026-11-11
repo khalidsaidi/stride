@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 const Q = "Full name"
 const MSG = "too short"
 
-ask name: text Q
+ask name: string Q
   check length(name) > 1 MSG
 if length(name) > 1 {
   fill "A" = name

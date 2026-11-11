@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define say(t: text) -> text {
+function say(t: string) -> string {
   print(t)
   return t
 }
-define two(a: text, b: text) -> text {
+function two(a: string, b: string) -> string {
   return a + b
 }
 record pair {
-  a: text
-  b: text
+  a: string
+  b: string
 }
 fill "A" = two(say("1"), say("2"))
 let l = [say("3"), say("4")]

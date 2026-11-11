@@ -1,17 +1,17 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record child {
-  name: text
+  name: string
 }
 record parent {
-  name: text
-  children: list of child
+  name: string
+  children: list<child>
 }
-var parents: list of parent
+var parents: list<parent>
 collect p in parents "Another parent?" {
-  ask p.name: text "Parent"
+  ask p.name: string "Parent"
 }
-for each i, p in parents {
+for i, p in parents {
   fill "P{i}" = p.name
 }
 # answers {"parents[0].name": "Ann", "parents[0]#another": "yes", "parents[1].name": "Bo"}

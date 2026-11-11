@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
-print(n and yes)
+print(n and true)
 
 # rule 6.15 S380
 # mistake 4:7 S380

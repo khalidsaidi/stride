@@ -1,5 +1,5 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-# mistake 4 S367 upper's t is text
+# mistake 4 S367 upper's t is string
 fill "A" = "{upper(3)}"
 # rule 9.4 S367

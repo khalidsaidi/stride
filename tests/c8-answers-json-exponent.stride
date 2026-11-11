@@ -2,8 +2,8 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 ask m: number "M"
-ask w: text "W"
-ask o: one-of "O" {
+ask w: string "W"
+ask o: one_of "O" {
   option "1e5" "x"
 }
 ask big: number "Big"

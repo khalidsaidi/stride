@@ -66,8 +66,8 @@ try {
 
   // 3. A project, a library, a program that uses it.
   expect("stride init", stride(["init", "-q"]), (x) => x.status === 0 && existsSync(join(work, "stride.json")));
-  write("lib/shares.stride", 'export record person {\n  name: text\n  owes: number\n}\nexport define share(total: number, n: number) -> number {\n  if total < 0 {\n    fail("a bill is never below zero")\n  }\n  return round(total / n, 2)\n}\n');
-  write("bills/split.stride", 'use "shares"\nask total: number "The bill"\nvar people: list of text\ncollect who in people "Another person?" {\n  ask who: text "Name"\n}\nlet part = share(total, count(people))\nfor each name in people {\n  print("{name} owes {fixed(part, 2)}")\n}\n');
+  write("lib/shares.stride", 'export record person {\n  name: string\n  owes: number\n}\nexport function share(total: number, n: number) -> number {\n  if total < 0 {\n    fail("a bill is never below zero")\n  }\n  return round(total / n, 2)\n}\n');
+  write("bills/split.stride", 'import "shares"\nask total: number "The bill"\nvar people: list<string>\ncollect who in people "Another person?" {\n  ask who: string "Name"\n}\nlet part = share(total, count(people))\nfor name in people {\n  print("{name} owes {fixed(part, 2)}")\n}\n');
   expect("check the program", stride(["check", "-q"]), (x) => x.status === 0 && x.stderr === "");
   // 4. Input, every way.
   expect("answers as key=value", stride(["run", "bills/split.stride", "total=90", "people[0]=Ada", "people[0]#another=yes", "people[1]=Bo", "people[1]#another=no"]), (x) => x.stdout === "Ada owes 45.00\nBo owes 45.00\n");
@@ -79,7 +79,7 @@ try {
   // 5. Tests.
   write("bills/split.tests/two.json", JSON.stringify({ answers: { total: "90", "people[0]": "Ada", "people[0]#another": "yes", "people[1]": "Bo", "people[1]#another": "no" }, prints: ["Ada owes 45.00", "Bo owes 45.00"] }));
   write("bills/split.tests/nobody.json", JSON.stringify({ answers: { total: "-1", "people[0]": "Ada" }, fault: "F013" }));
-  write("lib/shares.test.stride", 'use "shares"\nexpect share(10, 3) == 3.33\nexpect share(-1, 2) faults "F013"\n');
+  write("lib/shares.test.stride", 'import "shares"\nexpect share(10, 3) == 3.33\nexpect share(-1, 2) faults "F013"\n');
   expect("the project's tests", stride(["test"]), (x) => x.status === 0 && x.stdout.includes("4 tests passed in 2 files"));
   // 6. Debugging.
   expect("the debugger", stride(["debug", "bills/split.stride", "total=90", "people[0]=Ada", "people[0]#another=no"], { input: "b lib/shares.stride:9\nc\np n\nwhere\nc\n" }), (x) => x.status === 0 && x.stderr.includes("breakpoint at lib/shares.stride:9") && x.stderr.includes("n = 1") && x.stderr.includes("    main  split.stride:7") && x.stdout === "Ada owes 90.00\n");

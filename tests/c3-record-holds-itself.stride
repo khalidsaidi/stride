@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record node {
   n: number
   next: node
-  kids: list of node
+  kids: list<node>
 }
 let a = new node { n: 1 }
 a.next = a
@@ -30,5 +30,5 @@ try {
 }
 print(c.kids)
 # rule 3.4.6 F024
-# prints ["1", "yes", "yes", "2", "1", "a node holds itself, so it has no words and cannot be printed or compared", "no", "a node holds itself, so it has no words and cannot be printed or compared"]
+# prints ["1","true","true","2","1","a node holds itself, so it has no words and cannot be printed or compared","false","a node holds itself, so it has no words and cannot be printed or compared"]
 # fault F024 at 31:1

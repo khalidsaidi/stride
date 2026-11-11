@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-fill "A" = either(a, "none") + either("", "x") + either(empty, "y")
+ask a: string "A"
+fill "A" = either(a, "none") + either("", "x") + either(null, "y")
 # boxes {"A": "noney"}
 # rule 14.5

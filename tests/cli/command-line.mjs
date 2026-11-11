@@ -2,7 +2,7 @@
 // The command line as most tools have it: --version and -h; --name=value and --name value; -q; `--` ending the
 // options, so a file or an expression starting with a dash is taken as it is; a negative number never an option; a
 // file name with spaces; an option given twice, without its value, or unknown, a usage mistake naming the command's
-// own usage. And the answers a run is given: key=value (an any-of's options with commas), a JSON file, JSON on stdin,
+// own usage. And the answers a run is given: key=value (an any_of's options with commas), a JSON file, JSON on stdin,
 // answers typed in turn with --prompt, a script read from stdin, and what may not be combined.
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -47,20 +47,20 @@ export function test() {
     expect(["nosuch"], 2, "", /^stride: no command nosuch\n/);
 
     // Answers.
-    writeFileSync(join(dir, "greet.stride"), 'options colour {\n  "red" "Red"\n  "green" "Green"\n  "blue" "Blue"\n}\nask name: text "Your name"\nask likes: any-of colour "Colours you like"\nask fav: one-of colour "Your favourite"\nask tea: yes-no "Tea?"\nprint("{name ?? "nobody"}: {join(likes ?? [])}; {fav ?? "none"}; {tea ?? no}")\n');
-    expect(["run", "greet.stride", "name=Ada", "likes=red,blue", "fav=green", "tea=yes"], 0, "Ada: red, blue; green; yes\n", "");
+    writeFileSync(join(dir, "greet.stride"), 'enum colour {\n  "red" "Red"\n  "green" "Green"\n  "blue" "Blue"\n}\nask name: string "Your name"\nask likes: any_of colour "Colours you like"\nask fav: one_of colour "Your favourite"\nask tea: bool "Tea?"\nprint("{name ?? "nobody"}: {join(likes ?? [])}; {fav ?? "none"}; {tea ?? false}")\n');
+    expect(["run", "greet.stride", "name=Ada", "likes=red,blue", "fav=green", "tea=yes"], 0, "Ada: red, blue; green; true\n", "");
     writeFileSync(join(dir, "a.json"), JSON.stringify({ name: "Bo", likes: ["green"] }));
-    expect(["run", "greet.stride", "a.json"], 0, "Bo: green; none; no\n", "");
-    expect(["run", "greet.stride", "a.json", "name=Cy"], 0, "Cy: green; none; no\n", "");
-    expect(["run", "greet.stride", "-"], 0, "Di: red; none; no\n", "", JSON.stringify({ name: "Di", likes: ["red"] }));
-    expect(["run", "greet.stride", "--prompt", "-q"], 0, "Ed: red, blue; blue; yes\n", /Your name\n.*Colours you like\n  1\. Red \(red\)/s, "Ed\n1,3\n3\ny\n");
-    expect(["run", "greet.stride", "--prompt", "-q"], 0, "nobody: ; none; no\n", null, "\n\n\n\n");
+    expect(["run", "greet.stride", "a.json"], 0, "Bo: green; none; false\n", "");
+    expect(["run", "greet.stride", "a.json", "name=Cy"], 0, "Cy: green; none; false\n", "");
+    expect(["run", "greet.stride", "-"], 0, "Di: red; none; false\n", "", JSON.stringify({ name: "Di", likes: ["red"] }));
+    expect(["run", "greet.stride", "--prompt", "-q"], 0, "Ed: red, blue; blue; true\n", /Your name\n.*Colours you like\n  1\. Red \(red\)/s, "Ed\n1,3\n3\ny\n");
+    expect(["run", "greet.stride", "--prompt", "-q"], 0, "nobody: ; none; false\n", null, "\n\n\n\n");
     expect(["run", "greet.stride", "--prompt", "--no-prompt"], 2, "", /opposites/);
     expect(["run", "greet.stride", "a.json", "b.json"], 2, "", /one answers file only/);
     expect(["run", "-"], 0, "3\n", "", "print(1 + 2)\n");
     expect(["run", "-", "-"], 2, "", /stdin holds the program/, "print(1)\n");
     // Not at a terminal and given nothing: nothing is asked, the questions stay unanswered.
-    expect(["run", "greet.stride"], 0, "nobody: ; none; no\n", "", "");
+    expect(["run", "greet.stride"], 0, "nobody: ; none; false\n", "", "");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

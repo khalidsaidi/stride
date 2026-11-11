@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let a = yes
+let b = no
+let c = empty
+var d: text = "x"
+print("{a}{b}{c}{d}")
+# rule S201 S209
+# mistake 3:9 S201 nothing called yes is defined here; the value is written true
+# mistake 4:9 S201 nothing called no is defined here; the value is written false
+# mistake 5:9 S201 nothing called empty is defined here; no value is written null
+# mistake 6:8 S209 there is no type called text; words are a string

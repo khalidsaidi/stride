@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f() {
-  return empty
+function f() {
+  return null
 }
 fill "A" = f()
 # rule S344 16.4 9.6

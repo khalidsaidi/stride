@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record representative { name: text }
+record representative { name: string }
 var r: representative
   fill "Name" = r.nmae
 # rule 16.2 16.2.1 16.4 S318 1.3

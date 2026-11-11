@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  name: text
+  name: string
 }
-var l: list of r
+var l: list<r>
 collect n, x in l "Another?" {
-  ask x.name: text "Name"
+  ask x.name: string "Name"
 }
-for each n, x in l {
+for n, x in l {
   fill "N{n}" = x.name
 }
 fill "C" = "{count(l)}"

@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum s {
+  "a" "A"
+  "b" "B"
+}
+ask c: any_of s "C"
+fill "A" = string_of(c)
+# rule 14.1 3.5
+# answers {"c": ["b", "a"]}
+# boxes {"A": "a, b"}

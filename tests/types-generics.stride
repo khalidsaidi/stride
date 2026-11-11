@@ -1,19 +1,19 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define first_of<t>(l: list of t) -> t {
+function first_of<t>(l: list<t>) -> t {
   return l[0]
 }
-define twice(n: number) {
+function twice(n: number) {
   return n * 2
 }
-define pick_either<t>(a: t, b: t) -> t {
-  if a is empty {
+function pick_either<t>(a: t, b: t) -> t {
+  if a == null {
     return b
   }
   return a
 }
-var l: list of text = ["x", "y"]
-var nums: list of number = [4, 5]
-fill "A" = upper(first_of(l)) + "{first_of(nums) + twice(3)}" + pick_either(empty, "z")
+var l: list<string> = ["x", "y"]
+var nums: list<number> = [4, 5]
+fill "A" = upper(first_of(l)) + "{first_of(nums) + twice(3)}" + pick_either(null, "z")
 # boxes {"A": "X10z"}
 # rule 9.5 9.5.1 9.6

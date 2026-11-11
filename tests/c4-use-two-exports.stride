@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-a"
-use "c-b"
-fill "A" = "{shared}"
-
-# rule 4.5 S109
-# mistake 4:1 S109 shared
-# mistake 4:1 S109 label

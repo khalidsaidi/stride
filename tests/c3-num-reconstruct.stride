@@ -7,7 +7,7 @@ print(a % b)
 # rule 3.3.1 6.4.1
 # run rounds-to-no
 # answers {"a": 9999999999999999999999999999999995, "b": 1.5}
-# prints ["no", "0.5"]
+# prints ["false","0.5"]
 # run rounds-to-yes
 # answers {"a": 9999999999999999999999999999999999, "b": 1.7}
-# prints ["yes", "0.4"]
+# prints ["true","0.4"]

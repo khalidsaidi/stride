@@ -1,31 +1,31 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record item {
-  label: text
+  label: string
 }
-var a: list of text
+var a: list<string>
 collect x in a any "Any a?" "Another a?" {
-  ask x: text "A"
+  ask x: string "A"
 }
-var b: list of text
+var b: list<string>
 collect y in b any "Any b?" "Another b?" {
-  ask y: text "B"
+  ask y: string "B"
 }
-var c: list of text
+var c: list<string>
 collect z in c "Another c?" {
-  ask z: text "C"
+  ask z: string "C"
 }
 if count(a) > count(b) {
   print("more a")
 }
-var rows: list of item
+var rows: list<item>
 collect row in rows "Another row?" {
-  ask row.label: text "Label"
+  ask row.label: string "Label"
 }
-for each n, r in rows {
+for n, r in rows {
   fill "Row_{n}" = r.label
 }
-for each n, r in sorted(rows, by: "label", descending: yes) {
+for n, r in sorted(rows, by: "label", descending: true) {
   fill "Sorted_{n}" = r.label
 }
 print(a)

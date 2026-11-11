@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f<t>(a: t, b: t) -> t {
+function f<t>(a: t, b: t) -> t {
   return a
 }
-# mistake 7 S367 f's b is number, and this is text
+# mistake 7 S367 f's b is number, and this is string
 fill "A" = "{f(1, "x")}"
 # rule 9.5 9.5.1 S367

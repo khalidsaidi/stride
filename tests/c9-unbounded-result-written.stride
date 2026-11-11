@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define keep(xs: list of number) -> list of number {
+function keep(xs: list<number>) -> list<number> {
   return xs
 }
 fill "A" = count(keep([1, 2]))

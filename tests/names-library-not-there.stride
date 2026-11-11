@@ -1,5 +1,5 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # mistake 4 S104 there is no lib/nothere.stride
-use "nothere"
+import "nothere"
 # rule 4.5 S104

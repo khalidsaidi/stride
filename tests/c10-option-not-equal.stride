@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask o: one-of "Kind" {
+ask o: one_of "Kind" {
   option "a" "Apple"
   option "b" "Banana"
 }

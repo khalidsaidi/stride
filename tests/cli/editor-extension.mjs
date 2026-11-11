@@ -52,7 +52,7 @@ const vscode = {
 };
 const load = Module._load;
 Module._load = (req, ...rest) => (req === "vscode" ? vscode : load(req, ...rest));
-const text = 'define twice(n: number) -> number {\\n  return n * 2\\n}\\nlet total = twice(4)\\nprint(totl)\\n';
+const text = 'function twice(n: number) -> number {\\n  return n * 2\\n}\\nlet total = twice(4)\\nprint(totl)\\n';
 const uri = "file:///tmp/editor-test/doubles.stride";
 const doc = { uri: { toString: () => uri }, languageId: "stride", version: 1, getText: () => text };
 vscode.workspace.textDocuments = [doc];
@@ -90,7 +90,7 @@ export function test() {
     return [...problems, `the extension did not run: ${e.message.slice(0, 400)}`];
   }
   if (!/^S\d{3}$/.test(out.diagnostic.code) || out.diagnostic.line !== 4 || out.diagnostic.character !== 6 || out.diagnostic.severity !== 0) problems.push(`diagnostic: ${JSON.stringify(out.diagnostic)}`);
-  for (const l of ["twice", "total", "pad_left", "define"]) if (!out.completion.includes(l)) problems.push(`completion has no ${l}`);
+  for (const l of ["twice", "total", "pad_left", "function"]) if (!out.completion.includes(l)) problems.push(`completion has no ${l}`);
   // The document still has its mistake (totl), so names are resolved and types not yet worked out.
   if (!/let total/.test(out.hover ?? "")) problems.push(`hover: ${out.hover}`);
   if (out.definition !== 0) problems.push(`definition: ${out.definition}`);

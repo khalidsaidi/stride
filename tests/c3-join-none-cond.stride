@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
+ask c: bool "C"
 let v = if c then 1 else "a"
 print(v)
 # rule 3.9 S394

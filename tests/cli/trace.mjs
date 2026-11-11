@@ -10,7 +10,7 @@ import { compile } from "../../src/compile.mjs";
 export function test() {
   const source = `form t
 pdf ${"0".repeat(64)}
-define twice(n: number) -> number {
+function twice(n: number) -> number {
   var doubled = n
   doubled *= 2
   return doubled
@@ -18,7 +18,7 @@ define twice(n: number) -> number {
 var counter = 1
 counter = 2
 let result = twice(counter)
-var xs: list of number = [1]
+var xs: list<number> = [1]
 xs[0] = counter
 print(result)
 print(xs[0])

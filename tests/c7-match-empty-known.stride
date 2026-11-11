@@ -1,5 +1,5 @@
-define f() -> number {
-  let s: text = empty
+function f() -> number {
+  let s: string = null
   match s {
     "" => {
       return 1

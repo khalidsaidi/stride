@@ -4,7 +4,7 @@ ask a: number "A" default 1 default 2
 let x = 1 + (2 + "w")
 let y = 1 * ("a" - 2)
 let z = (today() - today())
-let q = (yes < no) or yes
+let q = (true < false) or true
 print([a, y])
 print([x])
 print([z])
@@ -16,8 +16,8 @@ print([q])
 # mistake 4:14 S372
 # label 4:14-4:21 + adds two numbers or joins two words
 # mistake 5:14 S374
-# label 5:14-5:21 - is for numbers, not text and number
+# label 5:14-5:21 - is for numbers, not string and number
 # mistake 6:10 S375
 # label 6:10-6:27 dates are not subtracted
 # mistake 7:10 S379
-# label 7:10-7:18 < orders two numbers, two dates or two words, not yes-no and yes-no
+# label 7:10-7:22 < orders two numbers, two dates or two words, not bool and bool

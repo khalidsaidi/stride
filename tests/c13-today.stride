@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define day() -> date {
+function day() -> date {
   return today()
 }
 fill "A" = day()

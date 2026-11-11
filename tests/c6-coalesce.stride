@@ -1,46 +1,46 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "b" "B"  "a" "A" }
-record r { f: text }
-define loud(n: number) -> number {
+enum s { "b" "B"  "a" "A" }
+record r { f: string }
+function loud(n: number) -> number {
   print("worked out {n}")
   return n
 }
-const KNOWN = empty ?? 5
+const KNOWN = null ?? 5
 const FIRST = 1 ?? 1 / 0
 ask n: number "N"
-ask t: text "T"
-ask chosen: any-of s "Chosen"
-ask one: one-of s "One"
-ask p: yes-no "P"
+ask t: string "T"
+ask chosen: any_of s "Chosen"
+ask one: one_of s "One"
+ask p: bool "P"
 var who: r
 print(n ?? 7)
 print(t ?? "none")
 print("" ?? "x")
 print(count([] ?? [1]))
 print(0 ?? 9)
-print(no ?? yes)
-print(n ?? empty ?? 3)
+print(false ?? true)
+print(n ?? null ?? 3)
 print(n ?? loud(4))
 print(2 ?? loud(5))
 print(n ?? 1 + 1)
 print(1 ?? 2 + 3)
-print(yes ?? no and no)
-print((yes ?? no) and no)
+print(true ?? false and false)
+print((true ?? false) and false)
 print(p ?? 1 == 1)
-print((if yes then n else 1 ?? 2) is empty)
-print((if yes then n else 1) ?? 2)
+print((if true then n else 1 ?? 2) == null)
+print((if true then n else 1) ?? 2)
 print(count(chosen ?? []))
 print(chosen ?? ["a", "b"])
 print(one ?? "neither")
-print(p ?? yes)
+print(p ?? true)
 print((who ?? new r { f: "made" }).f)
 print(KNOWN)
 print(FIRST)
 print([n ?? 0, 5])
 # rule 6.16 6.1 6.2 3.9 3.6 11.1
 # run empty
-# prints ["7", "none", "", "0", "0", "no", "3", "worked out 4", "4", "2", "2", "1", "yes", "no", "yes", "yes", "2", "0", "b, a", "neither", "yes", "made", "5", "1", "[0, 5]"]
+# prints ["7","none","","0","0","false","3","worked out 4","4","2","2","1","true","false","true","true","2","0","b, a","neither","true","made","5","1","[0, 5]"]
 # run given
 # answers {"n": 8, "t": "w", "chosen": ["a"], "one": "b", "p": false}
-# prints ["8", "w", "", "0", "0", "no", "8", "8", "2", "8", "1", "yes", "no", "no", "no", "8", "1", "a", "b", "no", "made", "5", "1", "[8, 5]"]
+# prints ["8","w","","0","0","false","8","8","2","8","1","true","false","false","false","8","1","a","b","false","made","5","1","[8, 5]"]

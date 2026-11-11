@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask k: one-of "K" {
+ask k: one_of "K" {
   option "a" "A"
 } default "a"
 fill "A" = k

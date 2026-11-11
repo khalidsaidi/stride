@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text
+var l: list<string>
 collect x in l "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
-for each n, x in l {
+for n, x in l {
   fill "B{n}" = upper(x)
 }
 # answers {"l[0]": "a", "l[0]#another": "yes", "l[1]": "b", "l[1]#another": "yes", "l[2]": "c"}

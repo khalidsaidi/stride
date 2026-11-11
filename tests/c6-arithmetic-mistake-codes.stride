@@ -5,8 +5,8 @@ print(date_of(2020, 1, 1) - date_of(2020, 1, 2))
 print(1 + "x")
 print("x" - 1)
 print(date_of(2020, 1, 1) * 2)
-options s { "a" "A" }
-ask o: one-of s "Option"
+enum s { "a" "A" }
+ask o: one_of s "Option"
 print(1 + o)
 print(o + 1)
 # rule 6.4 S373 S375 S372 S374

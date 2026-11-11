@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define inner(n: number) -> number {
+function inner(n: number) -> number {
   return 10 / n
 }
-define outer(n: number) -> number {
+function outer(n: number) -> number {
   return round(inner(n))
 }
 ask z: number "Z"

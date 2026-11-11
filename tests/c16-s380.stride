@@ -1,5 +1,5 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-tick "A" when 1 and yes
+tick "A" when 1 and true
 # rule S380 16.4 6.15
 # mistake 3 S380

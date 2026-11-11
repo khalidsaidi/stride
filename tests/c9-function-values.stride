@@ -1,33 +1,33 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define double(n: number) -> number {
+function double(n: number) -> number {
   return n * 2
 }
-define square(n: number) -> number {
+function square(n: number) -> number {
   return n * n
 }
-define apply(f: function(number) -> number, n: number) -> number {
+function apply(f: function(number) -> number, n: number) -> number {
   return f(n)
 }
-define map_each(xs: list of number, f: function(number) -> number) -> list of number {
-  var out: list of number
-  for each x in xs {
+function map_each(xs: list<number>, f: function(number) -> number) -> list<number> {
+  var out: list<number>
+  for x in xs {
     out += [f(x)]
   }
   return out
 }
-define shout(words: text) {
+function shout(words: string) {
   print(upper(words))
 }
-define ask_yes(words: text) -> yes-no {
-  ask answer: yes-no words
-  return answer == yes
+function ask_yes(words: string) -> bool {
+  ask answer: bool words
+  return answer == true
 }
 print(apply(double, 21))
 print(join(map_each([1, 2, 3], square), ","))
 let chosen = if 1 < 2 then double else square
 print(chosen(5))
-let say: function(text) = shout
+let say: function(string) = shout
 say("hello")
 let asker = ask_yes
 print(asker("Ready?"))
@@ -37,4 +37,4 @@ print(double)
 # rule 9.10
 # run two answers
 # answers {"ask_yes.answer": "yes", "ask_yes#2.answer": "no"}
-# prints ["42", "1,4,9", "10", "HELLO", "yes", "no", "yes", "function double"]
+# prints ["42","1,4,9","10","HELLO","true","false","true","function double"]

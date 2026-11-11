@@ -1,21 +1,21 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "b" "B"
   "a" "A"
 }
-ask m: any-of s "M"
-ask o: one-of s "O"
-ask t: text "T"
+ask m: any_of s "M"
+ask o: one_of s "O"
+ask t: string "T"
 let d = date_of(2026, 1, 2)
 fill "N" = 1.50
 fill "D" = d
 fill "O" = o
 fill "T" = t
-print("{yes} {no}")
+print("{true} {false}")
 print("{m}")
 print("[{t}]")
 # rule 3.5 3.8
 # answers {"m": ["a", "b"], "o": "a"}
 # boxes {"N": "1.5", "D": "2026-01-02", "O": "a", "T": ""}
-# prints ["yes no", "b, a", "[]"]
+# prints ["true false","b, a","[]"]

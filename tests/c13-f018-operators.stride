@@ -7,7 +7,7 @@ fill "D" = a * 2
 # rule F018 F019 F023 6.3
 # run empty
 # answers {}
-# fault F023 at 4:14 empty where a number is needed: the left side of +
+# fault F023 at 4:14 null where a number is needed: the left side of +
 # run given
 # answers {"a": 2}
 # boxes {"B": "3", "C": "1", "D": "4"}

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define g<t>(l: list of t) -> t {
+function g<t>(l: list<t>) -> t {
   return first(l)
 }
 fill "A" = g([])

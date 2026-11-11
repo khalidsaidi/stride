@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum basis { "Race" "Race"  "Age" "Age"  "Sex" "Sex" }
+ask why: any_of basis "Basis"
+for b in ["Race", "Age", "Sex"] {
+  tick b when b in why
+}
+# rule 11.1
+# box Race check
+# box Age check
+# box Sex check
+# run two
+# answers {"why": ["Race", "Sex"]}
+# boxes {"Race": "Yes", "Sex": "Yes"}

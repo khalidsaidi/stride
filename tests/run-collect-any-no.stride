@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text
+var l: list<string>
 collect x in l any "Any?" another "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
-for each n, x in l {
+for n, x in l {
   fill "X{n}" = x
 }
 fill "C" = "{count(l)}"

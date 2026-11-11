@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number = [1]
+var l: list<number> = [1]
 l = append(l, 2)
 l = append(l, 3)
 print(join(l, ","))
-var names: list of text
+var names: list<string>
 names = append(names, "a")
 print(count(names))
 # rule 14.4

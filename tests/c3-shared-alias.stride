@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record p { n: number, tags: list of text }
-var a: list of number = [1, 2]
+record p { n: number, tags: list<string> }
+var a: list<number> = [1, 2]
 var b = a
 b[0] = 9
 append(b, 3)
@@ -20,4 +20,4 @@ b = [0]
 print(a)
 print(b)
 # rule 3.4 3.4.4
-# prints ["[9, 2, 3]", "yes", "p { n: 2, tags: [t] }", "{k: 1, j: 2}", "[9, 2, 3]", "[0]"]
+# prints ["[9, 2, 3]","true","p { n: 2, tags: [t] }","{k: 1, j: 2}","[9, 2, 3]","[0]"]

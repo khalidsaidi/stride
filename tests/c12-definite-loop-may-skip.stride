@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
-define f(c: yes-no) -> number {
+ask c: bool "C"
+function f(c: bool) -> number {
   var y: number
   for i in 1..3 {
     if c {
@@ -11,7 +11,7 @@ define f(c: yes-no) -> number {
   }
   return y
 }
-define g() -> number {
+function g() -> number {
   var y: number
   for i in 1..0 {
     y = i

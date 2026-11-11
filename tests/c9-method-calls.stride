@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-label-a" as a
-define twice(t: text, sep: text) -> text {
+import "c-label-a" as a
+function twice(t: string, sep: string) -> string {
   return t + sep + t
 }
 fill "A" = "x".upper()

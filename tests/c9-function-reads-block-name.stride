@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f() -> number {
+function f() -> number {
   return inner
 }
 if 1 == 1 {

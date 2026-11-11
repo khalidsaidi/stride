@@ -1,18 +1,18 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
-  b: text
+  a: string
+  b: string
 }
 record q {
-  a: text
-  b: text
+  a: string
+  b: string
 }
 var x: r
-ask x.a: text "A"
+ask x.a: string "A"
 print(x)
 var y: q
-ask y.b: text "B"
+ask y.b: string "B"
 print(y.a)
 # rule 16.4 W005
 # warning 15 W005

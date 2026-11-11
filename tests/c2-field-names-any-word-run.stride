@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record entry {
+  default: number
+  check: string
+  form: string
+  if: bool
+  in: string
+  function: list<number>
+  next: entry
+}
+var e = new entry { default: 1, check: "c", form: "f", if: true, function: [7] }
+e.default = e.default + 1
+e.next.default = 5
+ask e.in: string "In"
+fill "A" = "{e.default} {e.check} {e.form} {e.if} {e.in} {e.function[0]} {e.next.default}"
+# rule 2.3.2 5.1 6.14
+# answers {"e.in": "x"}
+# boxes {"A": "2 c f true x 7 5"}

@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-person-a" as a
-use "c-person-b" as b
+import "c-person-a" as a
+import "c-person-b" as b
 record person {
-  zip: text
-  x: text
-  y: text
+  zip: string
+  x: string
+  y: string
 }
 print(a.make_a())
 print(b.make_b())

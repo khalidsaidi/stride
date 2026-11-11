@@ -2,12 +2,12 @@
 // option's printed words. This is its evaluator for them; it works on the syntax tree, before
 // anything is lowered, and gives a value, or undefined for what only a run can work out.
 //
-// The values are the machine's (runtime/values.mjs): words, exact decimals, dates, yes or no, null for
-// empty. A fault met on known values (dividing by zero, a native given what it cannot take) gives no value and is
+// The values are the machine's (runtime/values.mjs): words, exact decimals, dates, true or false, null for
+// null. A fault met on known values (dividing by zero, a native given what it cannot take) gives no value and is
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as textOf, isEmpty, sliced, sliceBounds, readPosition, outside, copy, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.6, §3.8): a list of options made the set.
 function placed(v, type) {
@@ -41,9 +41,9 @@ function value(e, env, visiting) {
   switch (e.kind) {
     case "number":
       return e.value;
-    case "yes-no":
+    case "bool":
       return e.value;
-    case "empty":
+    case "null":
       return null;
     case "string": {
       let out = "";
@@ -52,7 +52,7 @@ function value(e, env, visiting) {
         else {
           const v = value(p, env, visiting);
           if (v === undefined) return undefined;
-          out += textOf(v);
+          out += stringOf(v);
         }
       }
       return out;
@@ -91,10 +91,10 @@ function value(e, env, visiting) {
     }
     case "binary": {
       const a = value(e.a, env, visiting);
-      // and / or decide on the left when they can, and give yes or no (§6.15.1).
+      // and / or decide on the left when they can, and give true or false (§6.15.1).
       if (e.op === "and" && a !== undefined && a !== true) return false;
       if (e.op === "or" && a === true) return true;
-      // a ?? b works out b only when a is empty (§6.16); the one it gives is placed as their join.
+      // a ?? b works out b only when a is null (§6.16); the one it gives is placed as their join.
       if (e.op === "??" && a !== undefined && a !== null) return placed(a, e.type);
       const b = value(e.b, env, visiting);
       if (a === undefined || b === undefined) return undefined;
@@ -103,11 +103,6 @@ function value(e, env, visiting) {
       if (e.b.type?.t === "options" && e.a.type?.t === "list") return faultOf(e, () => binary(e.op, placed(a, e.b.type), b));
       if (e.op === "??") return placed(b, e.type);
       return faultOf(e, () => binary(e.op, a, b));
-    }
-    case "is-empty": {
-      const a = value(e.operand, env, visiting);
-      if (a === undefined) return undefined;
-      return e.not ? !isEmpty(a) : isEmpty(a);
     }
     case "call": {
       const callee = e.callee ?? (e.target.kind === "name" ? e.target.symbol : null);

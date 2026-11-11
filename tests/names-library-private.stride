@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "people"
+import "people"
 # mistake 5 S201 nothing called secret
 fill "A" = secret
 # rule 4.2 S201

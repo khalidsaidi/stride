@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
-  name: text
+  name: string
 }
-ask x: one-of person "X"
+ask x: one_of person "X"
 print(x)
 
 # rule S222

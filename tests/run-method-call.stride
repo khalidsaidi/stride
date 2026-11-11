@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define shout(t: text) -> text {
+function shout(t: string) -> string {
   return upper(t) + "!"
 }
-ask a: text "A"
+ask a: string "A"
 fill "A" = a.shout()
 # answers {"a": "hi"}
 # boxes {"A": "HI!"}

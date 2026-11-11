@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+import "c-a" as a
+import "c-b" as b
+let t = "x"
+fill "A" = t.label()
+
+# rule 9.8 S113
+# mistake 6:12 S113

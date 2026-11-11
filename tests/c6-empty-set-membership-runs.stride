@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask s: any-of "S" {
+ask s: any_of "S" {
   option "a" "A"
   option "b" "B"
 }
-print(s is empty)
+print(s == null)
 print("a" in (s ?? []))
 print("a" not in (s ?? []))
 print(count(s ?? []))
@@ -12,11 +12,11 @@ print("a" in s)
 # rule 6.8 6.16 8.7 F023
 # run none chosen
 # answers {"s": []}
-# prints ["yes", "no", "yes", "0"]
-# fault F023 at 11:11 empty where a list is needed: the right side of in
+# prints ["true","false","true","0"]
+# fault F023 at 11:11 null where a list is needed: the right side of in
 # run not answered
-# prints ["yes", "no", "yes", "0"]
+# prints ["true","false","true","0"]
 # fault F023 at 11:11
 # run a
 # answers {"s": ["a"]}
-# prints ["no", "yes", "no", "1", "yes"]
+# prints ["false","true","false","1","true"]

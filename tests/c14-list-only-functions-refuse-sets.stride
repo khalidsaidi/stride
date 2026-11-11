@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "b" "B" "a" "A" }
-ask st: any-of s "S"
+enum s { "b" "B" "a" "A" }
+ask st: any_of s "S"
 print(reversed(st))
 print(filled(st))
 print(index_of(st, "a"))

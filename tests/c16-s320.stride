@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
+record person { name: string, age: number }
 var r: person
 ask r.name: number "N"
 fill "A" = r.name

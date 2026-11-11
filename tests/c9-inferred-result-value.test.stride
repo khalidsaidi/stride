@@ -1,4 +1,4 @@
-define identity(n: number) {
+function identity(n: number) {
   return n
 }
 let x = identity(1)

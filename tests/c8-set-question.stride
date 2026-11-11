@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options kinds {
+enum kinds {
   "b" "B"
   "a" "A"
 }
-ask k: one-of kinds "K"
-ask s: any-of kinds "S"
+ask k: one_of kinds "K"
+ask s: any_of kinds "S"
 fill "K" = k
 fill "S" = join(s, ",")
 # rule 8.2 8.1

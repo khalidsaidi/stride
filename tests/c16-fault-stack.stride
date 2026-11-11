@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define half(x: number, y: number) -> number {
+function half(x: number, y: number) -> number {
   return x / y
 }
 ask z: number "Z"

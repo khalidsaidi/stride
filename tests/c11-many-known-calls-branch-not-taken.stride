@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(k: number) -> number {
+function f(k: number) -> number {
   if k > 100 {
     return 1 / 0
   }

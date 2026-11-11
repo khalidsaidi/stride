@@ -1,20 +1,20 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask o: one-of "O" {
+ask o: one_of "O" {
   option "a" "A"
   option "a,b" "AB"
 }
-ask p: one-of "P" {
+ask p: one_of "P" {
   option "a" "A"
 }
-ask x: any-of "X" {
+ask x: any_of "X" {
   option "b" "B"
 }
-ask y: any-of "Y" {
+ask y: any_of "Y" {
   option "b" "B"
 }
-print("{o}|{p}|{x is empty}|{count(y)}")
+print("{o}|{p}|{x == null}|{count(y)}")
 # rule 8.7
 # answers {"o": ["a", "b"], "p": "a", "x": "b", "y": ["b"]}
-# prints ["|a|yes|1"]
+# prints ["|a|true|1"]
 # steps [{"key": "o", "unreadable": "not one of the options"}, {"key": "p", "value": "a"}, {"key": "x", "unreadable": "not among the options"}, {"key": "y", "value": ["b"]}]

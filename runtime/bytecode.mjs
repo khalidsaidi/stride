@@ -1,4 +1,4 @@
-// Stride's bytecode, version 8 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 9 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -6,7 +6,7 @@
 //    2 numbers    every number constant, as its words (§3.3.5): exact, never a binary float
 //    3 program    the form's id, the PDF's sha256, the prefix of its field names
 //    4 boxes      each box the program writes: its name, how (fill, tick, pick), its export value
-//    5 records    each record type: its name, its fields' names and what each starts as (empty, a list, a map)
+//    5 records    each record type: its name, its fields' names and what each starts as (null, a list, a map)
 //    6 questions  each question as written: its name, type, option set, options, flags, line, file
 //    7 natives    the natives the code calls: name and how many values each takes
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, whether it takes its call's key
@@ -19,13 +19,13 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 8;
+export const VERSION = 9;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];
 export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, LINKS: 11 };
 
-export const QUESTION_TYPES = ["text", "long-text", "number", "date", "phone", "email", "yes-no", "one-of", "any-of"];
+export const QUESTION_TYPES = ["string", "long_text", "number", "date", "phone", "email", "bool", "one_of", "any_of"];
 export const WRITES = ["fill", "tick", "pick"];
 
 // The instructions. Operands: v a varint, a a 4-byte address.
@@ -35,13 +35,13 @@ export const OP = {
   NUMBER: 2, // v number: push it
   TRUE: 3,
   FALSE: 4,
-  EMPTY: 5,
+  NULL: 5,
   LOAD: 6, // v local: push its value
   STORE: 7, // v local: pop a value into the local
   POP: 8,
   DUP: 9,
-  NEW_RECORD: 10, // v record type: push a record with every field empty
-  GET_FIELD: 11, // v field: pop a record, push its field (F023 of empty; F006 of anything else that is no record)
+  NEW_RECORD: 10, // v record type: push a record with every field null
+  GET_FIELD: 11, // v field: pop a record, push its field (F023 of null; F006 of anything else that is no record)
   SET_FIELD: 12, // v field: pop a value, pop a record, set the field to the value
   NEW_LIST: 13, // v count: pop that many values, push a list of them
   GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004)
@@ -63,8 +63,8 @@ export const OP = {
   NOT: 30,
   CONCAT: 31, // v count: pop that many values, push their words joined
   JUMP: 32, // a
-  JUMP_IF_FALSE: 33, // a: pop a condition; jump when it is not yes
-  JUMP_IF_TRUE: 34, // a: pop a condition; jump when it is yes
+  JUMP_IF_FALSE: 33, // a: pop a condition; jump when it is not true
+  JUMP_IF_TRUE: 34, // a: pop a condition; jump when it is true
   LOOP: 36, // a: jump back to a loop's head
   CALL: 37, // v function, v count: pop the arguments, run the function, push what it gives
   RETURN: 38, // pop a value and give it back
@@ -74,19 +74,19 @@ export const OP = {
   ASK_DEFAULT: 42, // v question: pop its default, its printed words and its key, push its answer
   CHECK_FAILED: 43, // v question: pop a message; the question's latest step records it as a failed check
   FILL: 44, // v box: pop a value, write its words
-  TICK: 45, // v box: pop a condition; tick the box when it is yes
-  PICK: 46, // v box, v text: pop a condition; pick that button when it is yes
+  TICK: 45, // v box: pop a condition; tick the box when it is true
+  PICK: 46, // v box, v text: pop a condition; pick that button when it is true
   FILL_AT: 47, // pop a value and a box's name; write the value's words
-  TICK_AT: 48, // pop a condition and a box's name; tick it when yes
-  PICK_AT: 49, // pop a condition, a button's name and a box's name; pick it when yes
+  TICK_AT: 48, // pop a condition and a box's name; tick it when true
+  PICK_AT: 49, // pop a condition, a button's name and a box's name; pick it when true
   FLOOR_DIV: 50,
   MOD: 51,
   GET_ITEM_THERE: 53, // pop a position, pop a list, push the item, which must be there (§7.5.1: F004, F020)
-  ENSURE_RECORD: 54, // v local, v record type: an empty local becomes a record of the type (§7.5.1)
-  ENSURE_FIELD: 55, // v field, v record type: an empty field of the record on top becomes a record
-  ENSURE_ITEM: 56, // v record type: an empty item at the position on top (of the list below it) becomes a record
+  ENSURE_RECORD: 54, // v local, v record type: a null local becomes a record of the type (§7.5.1)
+  ENSURE_FIELD: 55, // v field, v record type: a null field of the record on top becomes a record
+  ENSURE_ITEM: 56, // v record type: a null item at the position on top (of the list below it) becomes a record
   SLICE: 57, // pop b, pop a, pop a list: push its items a to b (§6.9.3)
-  TO_BOOL: 59, // pop a value, push yes when it is yes, else no (§6.15.1)
+  TO_BOOL: 59, // pop a value, push true when it is true, else false (§6.15.1)
   CHECK_SLOT: 60, // with a list and a position on top, fault F005 unless the item can be set there (§7.5.1)
   EXPECT: 61, // a after, v faults: a test file's expectation starts, its own sub-run (§7.17.1); a fault in it
   //            undoes the sub-run, is judged, and the run goes on at `after`. `faults` is 0 for a plain expect,
@@ -281,7 +281,7 @@ export function load(input) {
         break;
       case SECTION.RECORDS:
         // Each field: its name, then what it starts as in a record made on the way to a field (§7.5.1): 1 a list
-        // with no items, 2 a map with no keys, 0 empty.
+        // with no items, 2 a map with no keys, 0 null.
         p.records = list(() => {
           const r = { name: t(s), fields: [], starts: [] };
           for (let k = s.varint(); k > 0; k--) {
@@ -449,7 +449,7 @@ export function verify(p) {
 // How many values an instruction takes from the stack and gives back, given its operands.
 function stackEffect(op, args) {
   switch (op) {
-    case OP.TEXT: case OP.NUMBER: case OP.TRUE: case OP.FALSE: case OP.EMPTY: case OP.LOAD: case OP.LOAD_CELL: case OP.NEW_RECORD:
+    case OP.TEXT: case OP.NUMBER: case OP.TRUE: case OP.FALSE: case OP.NULL: case OP.LOAD: case OP.LOAD_CELL: case OP.NEW_RECORD:
       return [0, 1];
     case OP.ASK:
       return [2, 1];

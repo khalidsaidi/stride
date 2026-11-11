@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(x: number) -> number {
+function f(x: number) -> number {
   print("f")
   return 1 / x
 }

@@ -31,7 +31,7 @@ const send = (m) => { const b = Buffer.from(JSON.stringify({ jsonrpc: "2.0", ...
 const next = (pred) => new Promise((ok) => { const look = () => { const i = got.findIndex(pred); if (i >= 0) { const [m] = got.splice(i, 1); waiting = null; ok(m); } else waiting = look; }; look(); });
 const out = {};
 send({ id: 1, method: "initialize", params: {} }); out.init = (await next((m) => m.id === 1)).result.capabilities;
-const bad = 'define twice(n: number) -> number {\\n  return n * 2\\n}\\nlet total = twice(4)\\nprint(totl)\\n';
+const bad = 'function twice(n: number) -> number {\\n  return n * 2\\n}\\nlet total = twice(4)\\nprint(totl)\\n';
 send({ method: "textDocument/didOpen", params: { textDocument: { uri, text: bad } } });
 out.open = (await next((m) => m.method === "textDocument/publishDiagnostics")).params.diagnostics;
 const good = bad.replace("totl", "total");
@@ -50,13 +50,13 @@ out.format = (await next((m) => m.id === 5)).result;
 const fs = await import("node:fs"), path = await import("node:path"), url = await import("node:url");
 const dir = path.dirname(url.fileURLToPath(uri));
 fs.mkdirSync(path.join(dir, "lib"), { recursive: true });
-const libText = "export define twice(n: number) -> number {\\n  return n * 2\\n}\\n";
+const libText = "export function twice(n: number) -> number {\\n  return n * 2\\n}\\n";
 fs.writeFileSync(path.join(dir, "lib", "math.stride"), libText);
 const libUri = url.pathToFileURL(path.join(dir, "lib", "math.stride")).href;
 send({ method: "textDocument/didOpen", params: { textDocument: { uri: libUri, text: libText } } });
 out.library = (await next((m) => m.method === "textDocument/publishDiagnostics" && m.params.uri === libUri)).params.diagnostics;
 const useUri = url.pathToFileURL(path.join(dir, "uses.stride")).href;
-send({ method: "textDocument/didOpen", params: { textDocument: { uri: useUri, text: 'use "math"\\nprint(twice(2))\\n' } } });
+send({ method: "textDocument/didOpen", params: { textDocument: { uri: useUri, text: 'import "math"\\nprint(twice(2))\\n' } } });
 await next((m) => m.method === "textDocument/publishDiagnostics" && m.params.uri === useUri);
 send({ id: 7, method: "textDocument/definition", params: { textDocument: { uri: useUri }, position: { line: 1, character: 7 } } });
 out.libraryDefinition = (await next((m) => m.id === 7)).result;
@@ -66,7 +66,7 @@ send({ method: "textDocument/didOpen", params: { textDocument: { uri: emojiUri, 
 out.emoji = (await next((m) => m.method === "textDocument/publishDiagnostics" && m.params.uri === emojiUri)).params.diagnostics;
 // Lines ended by a lone CR (§1.2): navigation finds the same places.
 const crUri = url.pathToFileURL(path.join(dir, "cr.stride")).href;
-send({ method: "textDocument/didOpen", params: { textDocument: { uri: crUri, text: "define twice(n: number) -> number {\\r  return n * 2\\r}\\rprint(twice(2))\\r" } } });
+send({ method: "textDocument/didOpen", params: { textDocument: { uri: crUri, text: "function twice(n: number) -> number {\\r  return n * 2\\r}\\rprint(twice(2))\\r" } } });
 out.crDiagnostics = (await next((m) => m.method === "textDocument/publishDiagnostics" && m.params.uri === crUri)).params.diagnostics;
 send({ id: 8, method: "textDocument/definition", params: { textDocument: { uri: crUri }, position: { line: 3, character: 8 } } });
 out.crDefinition = (await next((m) => m.id === 8)).result;
@@ -74,7 +74,7 @@ send({ id: 9, method: "textDocument/hover", params: { textDocument: { uri: crUri
 out.crHover = (await next((m) => m.id === 9)).result;
 // A library using one on disk that is not UTF-8 (byte FF): the mistake is the other file's, S001, said here.
 fs.writeFileSync(path.join(dir, "lib", "bad.stride"), Buffer.concat([Buffer.from('export const LABEL = "'), Buffer.from([0xff]), Buffer.from('"\\n')]));
-const consumerText = 'use "bad"\\nexport define label() -> text {\\n  return LABEL\\n}\\n';
+const consumerText = 'import "bad"\\nexport function label() -> string {\\n  return LABEL\\n}\\n';
 fs.writeFileSync(path.join(dir, "lib", "consumer.stride"), consumerText);
 const consumerUri = url.pathToFileURL(path.join(dir, "lib", "consumer.stride")).href;
 send({ method: "textDocument/didOpen", params: { textDocument: { uri: consumerUri, text: consumerText } } });
@@ -101,8 +101,8 @@ export function test() {
   if (!m || !/^S\d{3}$/.test(m.code) || m.range.start.line !== 4 || m.range.start.character !== 6) problems.push(`the mistake on opening: ${JSON.stringify(out.open)}`);
   if (out.mended.some((d) => d.severity === 1)) problems.push(`mended, still: ${JSON.stringify(out.mended)}`);
   const labels = new Set(out.completion.map((c) => c.label));
-  for (const l of ["define", "pad_left", "twice", "total"]) if (!labels.has(l)) problems.push(`completion has no ${l}`);
-  if (!out.completion.find((c) => c.label === "pad_left")?.detail?.startsWith("pad_left(t: text")) problems.push("completion gives pad_left no signature");
+  for (const l of ["function", "pad_left", "twice", "total"]) if (!labels.has(l)) problems.push(`completion has no ${l}`);
+  if (!out.completion.find((c) => c.label === "pad_left")?.detail?.startsWith("pad_left(t: string")) problems.push("completion gives pad_left no signature");
   if (out.definition?.range?.start?.line !== 0) problems.push(`definition of twice: ${JSON.stringify(out.definition)}`);
   if (!/let total: number/.test(out.hover?.contents?.value ?? "")) problems.push(`hover on total: ${JSON.stringify(out.hover)}`);
   if (out.format?.[0]?.newText !== "let x = 1\nprint(x)\n") problems.push(`formatting: ${JSON.stringify(out.format)}`);
@@ -111,7 +111,7 @@ export function test() {
   const missing = out.emoji.find((d) => d.code === "S201");
   if (out.crDiagnostics.some((d) => d.severity === 1)) problems.push(`the lone-CR file: ${JSON.stringify(out.crDiagnostics)}`);
   if (out.crDefinition?.range?.start?.line !== 0) problems.push(`definition in the lone-CR file: ${JSON.stringify(out.crDefinition)}`);
-  if (!/define twice/.test(out.crHover?.contents?.value ?? "")) problems.push(`hover in the lone-CR file: ${JSON.stringify(out.crHover)}`);
+  if (!/function twice/.test(out.crHover?.contents?.value ?? "")) problems.push(`hover in the lone-CR file: ${JSON.stringify(out.crHover)}`);
   if (!out.consumer.some((d) => d.code === "S001" && /lib\/bad\.stride/.test(d.message))) problems.push(`a dependency that is not UTF-8: ${JSON.stringify(out.consumer)}`);
   if (missing?.range?.start?.character !== 10 || missing?.range?.end?.character !== 17) problems.push(`the place past an emoji: ${JSON.stringify(out.emoji)}`);
   return problems;

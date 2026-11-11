@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record row {
+  cells: list<list<number>>
+  tags: map<string, list<string>>
+}
+function first_of<t>(l: list<t>) -> t {
+  return l[0]
+}
+function widths(grid: list<list<number>>) -> list<number> {
+  return [count(line) for line in grid]
+}
+var grid: list<list<number>>= [[1, 2], [3]]
+let by_name: map<string, list<number>> = {"a": [1], "b": [2, 3]}
+let fs: list<function(number) -> list<number>> = [function(n: number) -> list<number> { return [n, n] }]
+let r = new row { cells: grid, tags: {"x": ["y"]} }
+print(widths(grid))
+print(first_of(grid))
+print(by_name["b"])
+print(fs[0](4))
+print(r.tags["x"])
+print(count(grid) > 1 and 1 < count(grid))
+let n = 2
+print(n<3)
+print(count(grid)>1)
+# rule 5.6 3.10 9.5
+# prints ["[2, 1]", "[1, 2]", "[2, 3]", "[4, 4]", "[y]", "true", "true", "true"]

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask b: any-of "B" {
+ask b: any_of "B" {
   option "x" "X"
 }
 print("z" in b)

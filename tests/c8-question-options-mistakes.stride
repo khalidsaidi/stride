@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-ask x: one-of s "X" {
+ask x: one_of s "X" {
   option "a" "A"
 }
-ask y: one-of "Y"
-ask z: text "Z" {
+ask y: one_of "Y"
+ask z: string "Z" {
   option "a" "A"
 }
 fill "X" = x

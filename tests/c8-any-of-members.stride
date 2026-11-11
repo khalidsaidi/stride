@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask x: any-of "X" {
+ask x: any_of "X" {
   option "a" "A"
   option "b" "B"
 }
-ask y: any-of "Y" {
+ask y: any_of "Y" {
   option "a" "A"
   option "b" "B"
 }

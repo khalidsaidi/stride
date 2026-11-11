@@ -107,7 +107,7 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
   }
 }
 
-// Where `use` looks (§4.5): lib/ beside a program; for a test file beside a library (§4.3), inside lib/ or a folder
+// Where `import` looks (§4.5): lib/ beside a program; for a test file beside a library (§4.3), inside lib/ or a folder
 // of it, that lib/ itself.
 function libDirOf(name, dir) {
   const parts = resolvePath(dir).split(sep);
@@ -116,7 +116,7 @@ function libDirOf(name, dir) {
 }
 
 // The project a file is in (§4.7): the nearest folder above it holding stride.json, or null. Gives { root, needs,
-// libraries: the folders its programs' `use` also looks in }, or throws (projectProblem) when stride.json is not one,
+// libraries: the folders its programs' `import` also looks in }, or throws (projectProblem) when stride.json is not one,
 // or asks for a Stride these tools are not.
 export function projectOf(path) {
   for (let dir = resolvePath(dirname(path)); ; dir = dirname(dir)) {

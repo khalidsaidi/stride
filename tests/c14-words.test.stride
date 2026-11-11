@@ -1,8 +1,8 @@
 expect upper("ada é") == "ADA É"
 expect lower("ADA É") == "ada é"
-expect upper(empty) faults "empty where words are needed: upper's t"
+expect upper(null) faults "null where words are needed: upper's t"
 expect upper("") == ""
-expect upper("") is not empty
+expect upper("") != null
 expect title("ada o'neil-smith") == "Ada O'Neil-Smith"
 expect title("ADA LOVELACE") == "Ada Lovelace"
 expect capitalize("ada LOVE") == "Ada LOVE"
@@ -13,14 +13,14 @@ expect remove_prefix("Mr Smith", "Mr ") == "Smith"
 expect remove_prefix("mr Smith", "Mr ") == "mr Smith"
 expect remove_suffix("report.pdf", ".pdf") == "report"
 expect length("😀a") == 2
-expect length(empty) faults "F023"
+expect length(null) faults "F023"
 expect length("") == 0
 expect chars("123-45-6789", 3, 4) == "45"
 expect chars("12.3", 2, 1) == ""
 expect chars("12", 1, 9) == "2"
 expect character("A-B", 1) == "B"
 expect character("A-B", 0) == "A"
-expect character("ab", 5) is empty
+expect character("ab", 5) == null
 expect slice("a-b", 0, 1) == "a-"
 expect slice("abc", 2, 0) == ""
 expect slice("abc", 5, 9) == ""
@@ -31,13 +31,13 @@ expect not is_digits("")
 expect not is_digits("12a")
 expect is_letters("abé")
 expect not is_letters("")
-expect is_letters(empty) faults "F023"
+expect is_letters(null) faults "F023"
 expect replace("aaa", "aa", "b") == "ba"
 expect replace("abc", "", "x") == "abc"
 expect contains("ABC", "B")
 expect contains("abc", "")
-expect contains("abc", empty) faults "empty where words are needed: contains's part"
-expect replace("abc", "b", empty) faults "empty where words are needed: replace's with"
+expect contains("abc", null) faults "null where words are needed: contains's part"
+expect replace("abc", "b", null) faults "null where words are needed: replace's with"
 expect starts_with("Hello", "He")
 expect ends_with("Hello", "lo")
 expect find("Hello", "l") == 2
@@ -57,33 +57,33 @@ expect line("a\n b \u{d}\nc", 1) == "b"
 expect line("a\u{d}b", 1) == "b"
 expect line_count("a\nb") == 2
 expect line_count("") == 0
-expect line_count(empty) faults "F023"
+expect line_count(null) faults "F023"
 expect line("a\n\nb", 1) == ""
-expect line("a", 1) is empty
+expect line("a", 1) == null
 expect rest_lines("a") == ""
 expect rest_lines("a\nb\nc") == "b\nc"
 expect word("  a  b\tc", 2) == "c"
 expect word_count("a  b") == 2
 expect word_count("") == 0
-expect word_count(empty) faults "F023"
-expect word("a b", 2) is empty
-expect word("", 0) is empty
+expect word_count(null) faults "F023"
+expect word("a b", 2) == null
+expect word("", 0) == null
 expect pad_left("7", 3, "0") == "007"
 expect pad_left("1234", 3, "0") == "1234"
 expect pad_left("7", 3) == "  7"
 expect pad_left("7", width: 2, padding: "-") == "-7"
-expect text_of(1.50) == "1.5"
-expect text_of(yes) == "yes"
-expect text_of(empty) == ""
-expect text_of(empty) is not empty
-expect number_of("") is empty
-expect number_of(empty) faults "F023"
+expect string_of(1.50) == "1.5"
+expect string_of(true) == "true"
+expect string_of(null) == ""
+expect string_of(null) != null
+expect number_of("") == null
+expect number_of(null) faults "F023"
 expect number_of("$1,234.50") == 1234.5
-expect number_of("0x10") is empty
-expect number_of("1e5") is empty
+expect number_of("0x10") == null
+expect number_of("1e5") == null
 expect character("abc", -1) faults "F007"
 expect character("abc", 2.5) faults "F007"
-expect character("abc", empty) faults "empty where a number is needed: character's n"
+expect character("abc", null) faults "null where a number is needed: character's n"
 expect slice("abc", -1, 1) faults "F007"
 expect line("a", 0) == "a"
 expect line("a", -1) faults "F007"
@@ -91,7 +91,7 @@ expect word("a", -1) faults "F007"
 expect pad_left("7", -1, "0") faults "F009"
 expect pad_left("7", 3, "ab") faults "F009"
 expect pad_left("7", 3, "") faults "F009"
-expect pad_left(empty, 2.5, "0") faults "empty where words are needed: pad_left's t"
+expect pad_left(null, 2.5, "0") faults "null where words are needed: pad_left's t"
 expect pad_left("", 2.5, "0") faults "F009"
 expect pad_left("", 2, "0") == "00"
 # rule 14.0 14.0.1 14.0.3 14.0.3.1 14.0.4 14.1 F007 F009 F023

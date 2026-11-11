@@ -4,7 +4,7 @@ record r {
   a: number
   b: number
 }
-define f() -> number {
+function f() -> number {
   ask q: number "Q"
   return q
 }

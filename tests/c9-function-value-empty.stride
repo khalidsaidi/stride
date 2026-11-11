@@ -5,8 +5,8 @@ record op {
 }
 var o = new op { }
 let h = o.f
-print(h is empty)
+print(h == null)
 print(h(1))
 # rule 9.10 F022
-# prints ["yes"]
+# prints ["true"]
 # fault F022

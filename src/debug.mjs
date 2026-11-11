@@ -6,12 +6,12 @@ import { readSync, writeSync } from "node:fs";
 import { basename, dirname, resolve, sep } from "node:path";
 import { compileFile } from "./compile.mjs";
 import { faultWords } from "./source.mjs";
-import { textOf, load, run, boxValues } from "../runtime/vm.mjs";
+import { stringOf, load, run, boxValues } from "../runtime/vm.mjs";
 import { holdsItself } from "../runtime/values.mjs";
 
 // ----- the core
 
-const shown = (v) => (holdsItself(v) ? "(holds itself)" : v === null || v === undefined ? "empty" : typeof v === "string" ? JSON.stringify(v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.fields ? `${v.type} { ${v.fields.map((f, i) => `${v.names?.[i] ?? i}: ${shown(f)}`).join(", ")} }` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : textOf(v));
+const shown = (v) => (holdsItself(v) ? "(holds itself)" : v === null || v === undefined ? "null" : typeof v === "string" ? JSON.stringify(v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "true" : v === false ? "false" : v?.fields ? `${v.type} { ${v.fields.map((f, i) => `${v.names?.[i] ?? i}: ${shown(f)}`).join(", ")} }` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : stringOf(v));
 const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");
 
 // The program, compiled to be followed: its intermediate form, and where each of its files is on disk.
@@ -27,7 +27,7 @@ function prepare(file) {
   if (mistakes.length) return { error: mistakes.map((d) => d.format({ color: false })).join("\n\n") };
   const paths = new Map(); // a file's name as the compiler gives it -> its path
   paths.set(basename(file), resolve(file));
-  for (const r of out.resolved?.units ?? []) if (r.unit.path && !r.unit.std) paths.set(r.unit.file.name, resolve(r.unit.path)); // a library's path is as `use` found it, from here
+  for (const r of out.resolved?.units ?? []) if (r.unit.path && !r.unit.std) paths.set(r.unit.file.name, resolve(r.unit.path)); // a library's path is as `import` found it, from here
   // The lines a statement starts on, by file: where a breakpoint can stop.
   const lines = new Map();
   for (const fn of out.program.functions)

@@ -1,12 +1,12 @@
-define noisy() -> number {
+function noisy() -> number {
   print("inside")
   return 1
 }
-define bump(l: list of number) -> number {
+function bump(l: list<number>) -> number {
   l[0] = 9
   return l[0]
 }
-define counter(seen: list of number) -> function() -> number {
+function counter(seen: list<number>) -> function() -> number {
   return function() -> number {
     append(seen, 0)
     return count(seen)
@@ -23,7 +23,7 @@ expect bump(also) == 9 and l[0] == 9
 expect l == [1]
 expect next() == 2 and count(also) == 2
 expect next() == 2
-expect bump(empty) == 9 faults "F023"
+expect bump(null) == 9 faults "F023"
 expect also == [1]
 
 # rule 7.17.1 3.4

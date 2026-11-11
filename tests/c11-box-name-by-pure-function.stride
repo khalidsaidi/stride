@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define suffix(n: number) -> text {
+function suffix(n: number) -> string {
   return if n == 1 then "" else "_{n}"
 }
-ask a: text "A"
+ask a: string "A"
 for n in 1..3 {
   fill "Make{suffix(n)}" = "{a}{n}"
 }

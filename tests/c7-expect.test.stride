@@ -1,4 +1,4 @@
-define half(n: number) -> number {
+function half(n: number) -> number {
   return n / 2
 }
 expect half(4) == 2

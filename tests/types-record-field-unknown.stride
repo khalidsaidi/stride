@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  name: text
+  name: string
 }
 var x: r
 # mistake 8 S318 did you mean name?

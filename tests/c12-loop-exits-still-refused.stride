@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
-define before_assign(c: yes-no) -> number {
+ask c: bool "C"
+function before_assign(c: bool) -> number {
   var n: number
   for i in 1..2 {
     if c {
@@ -11,14 +11,14 @@ define before_assign(c: yes-no) -> number {
   }
   return n
 }
-define may_return(c: yes-no) -> number {
+function may_return(c: bool) -> number {
   for i in 1..1 {
     if c {
       return 1
     }
   }
 }
-define unknown_bounds(k: number) -> number {
+function unknown_bounds(k: number) -> number {
   for i in 1..k {
     return 1
   }

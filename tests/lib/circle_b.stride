@@ -1,1 +1,1 @@
-use "circle_a"
+import "circle_a"

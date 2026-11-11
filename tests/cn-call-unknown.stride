@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define full_name(t: text) -> text {
+function full_name(t: string) -> string {
   return t
 }
 print(fulname("a"))

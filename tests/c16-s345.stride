@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
+record person { name: string, age: number }
 const c = 1
 ask n: number "N"
 let l = 2
@@ -10,7 +10,7 @@ c = 5
 for i in 1..2 {
   i = 3
 }
-define f(p: number) -> number {
+function f(p: number) -> number {
   p = 1
   return p
 }

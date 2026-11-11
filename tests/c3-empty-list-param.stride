@@ -1,21 +1,21 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define size(xs: list of number) -> number {
+function size(xs: list<number>) -> number {
   return count(xs ?? [])
 }
-define turns(xs: list of number) -> number {
+function turns(xs: list<number>) -> number {
   var k = 0
-  for each x in xs {
+  for x in xs {
     k = k + 1
   }
   return k
 }
-var none: list of number
-print(size(empty))
+var none: list<number>
+print(size(null))
 print(size(none))
 print(turns(none))
-print(turns(empty))
+print(turns(null))
 # rule 3.7.1 7.4 7.11 F023
 # prints ["0", "0", "0"]
-# fault F023 at 8:17 empty where a list is needed: what for each goes through
-# stack ["turns c3-empty-list-param.stride:8:17", "main c3-empty-list-param.stride:17:7"]
+# fault F023 at 8:12 null where a list is needed: what for goes through
+# stack ["turns c3-empty-list-param.stride:8:12", "main c3-empty-list-param.stride:17:7"]

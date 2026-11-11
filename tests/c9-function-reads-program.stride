@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
+ask a: string "A"
 let rate = 3
 var total = 10
-define taxed(n: number) -> number {
+function taxed(n: number) -> number {
   return n * rate + total
 }
-define greet() -> text {
+function greet() -> string {
   return "hi " + a
 }
 total = total + 1

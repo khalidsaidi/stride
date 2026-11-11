@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-let asker = function(what: text) -> text {
-  ask a: text what
+let asker = function(what: string) -> string {
+  ask a: string what
   return a
 }
 print(asker("name"))

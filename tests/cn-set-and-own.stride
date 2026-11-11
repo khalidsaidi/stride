@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "a" "A"
 }
-ask x: one-of s "X" {
+ask x: one_of s "X" {
   option "b" "B"
 }
 print(x)

@@ -1,4 +1,4 @@
-define stopped() {
+function stopped() {
   fill "Missing" = "reached"
   fail("stop")
 }

@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask d: date "D"
-ask y: yes-no "Y"
-ask o: one-of "O" {
+ask y: bool "Y"
+ask o: one_of "O" {
   option "a" "A"
   option "b" "B"
 }
-ask s: any-of "S" {
+ask s: any_of "S" {
   option "b" "B"
   option "a" "A"
 }
@@ -18,22 +18,22 @@ fill "S" = join(s ?? [], ",")
 # rule 8.7 3.8
 # run valid
 # answers {"d": "2024-02-29", "y": "on", "o": "b", "s": ["a", "b", "z"]}
-# boxes {"D": "2024-02-29", "Y": "Yes", "Yw": "yes", "O": "b", "S": "b,a"}
+# boxes {"D": "2024-02-29", "Y": "Yes", "Yw": "true", "O": "b", "S": "b,a"}
 # run not real
 # answers {"d": "2023-02-29", "y": "Off", "o": "z", "s": []}
-# boxes {"D": "", "Y": "Off", "Yw": "no", "O": "", "S": ""}
+# boxes {"D": "", "Y": "Off", "Yw": "false", "O": "", "S": ""}
 # run yes spelled Yes
 # answers {"y": "Yes"}
-# boxes {"Y": "Yes", "Yw": "yes"}
+# boxes {"Y": "Yes", "Yw": "true"}
 # run no spelled No
 # answers {"y": "No"}
-# boxes {"Yw": "no"}
+# boxes {"Yw": "false"}
 # run true
 # answers {"y": true}
-# boxes {"Y": "Yes", "Yw": "yes"}
+# boxes {"Y": "Yes", "Yw": "true"}
 # run false
 # answers {"y": false}
-# boxes {"Yw": "no"}
+# boxes {"Yw": "false"}
 # run wrong shape date
 # answers {"d": "11/07/2026"}
 # boxes {}

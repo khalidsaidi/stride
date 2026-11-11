@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let text = "a"
+let empty = 1
+let yes = 2
+let no = 3
+let each = 4
+let of = 5
+let options = 6
+let use = 7
+let define = 8
+let most = 9
+let is = 10
+let string = "s"
+let bool = 11
+var number = 12
+number = number + empty + yes + no + each + of + options + use + define + most + is + bool
+print("{text}{string}{number}")
+for each in [1, 2] {
+  print(each)
+}
+# rule 2.3 2.3.1
+# prints ["as78", "1", "2"]

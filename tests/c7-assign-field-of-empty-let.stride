@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record p { n: number }
-define set(r: p) {
+function set(r: p) {
   r.n = 1
 }
 var v: p

@@ -8,6 +8,6 @@ d -= d
 print("{x}{d}")
 # rule 16.2.1 S372 S374 S375
 # mistake 4:3 S374
-# label 4:3-4:5 - is for numbers, not number and text
+# label 4:3-4:5 - is for numbers, not number and string
 # mistake 5:3 S372
 # mistake 7:3 S375

@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 for i in 1..2 {
-  var names: list of text
+  var names: list<string>
   collect x in names any "Any?" "Another?" {
-    ask x: text "Name"
+    ask x: string "Name"
   }
   fill "Name{i}" = first(names)
 }

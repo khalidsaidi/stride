@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask p: phone "P"
-ask k: one-of "K" {
+ask k: one_of "K" {
   option "a" "Alpha"
 }
 fill "A" = upper(p)

@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text = ["a"]
+var l: list<string> = ["a"]
 collect x in l "Another?" {
-  ask x: text "N"
+  ask x: string "N"
 }
 fill "A" = count(l)
 # rule S336 16.4 8.5

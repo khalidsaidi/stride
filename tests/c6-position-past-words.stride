@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let s = "héllo"
 print(s[count(s) - 1])
-let none: list of number = []
+let none: list<number> = []
 for i in 0..<count(none) {
   print(none[i])
 }

@@ -1,4 +1,4 @@
-define d<t>(a: t, b: t = 5) -> t {
+function d<t>(a: t, b: t = 5) -> t {
   return b
 }
 expect d(1) == 5

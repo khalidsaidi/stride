@@ -1,0 +1,33 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+use "people"
+options colour { "a" "A" }
+define f(n: number) -> number { return n }
+var l: list of number
+var m: map of string to number
+var s: set of colour
+var t: yes-no
+for each x in [1] { print(x) }
+let b = l is empty
+let c = l is not empty
+let d = [x for each x in [1]]
+ask q: text "Q"
+ask q2: yes-no "Q"
+ask q3: one-of "Q" { option "a" "A" }
+ask q4: long-text "Q"
+# rule S010 16.4
+# mistake 3:1 S010 a library is brought in with "import": import "…"
+# mistake 4:1 S010 an option set is declared with "enum": enum colour { … }
+# mistake 5:1 S010 a function is declared with "function": function f(…)
+# mistake 6:13 S010 this type is written list<T>
+# mistake 7:12 S010 this type is written map<K, V>
+# mistake 8:12 S010 this type is written set<S>
+# mistake 9:8 S010 the type of true and false is written bool
+# mistake 10:5 S010 "for each x in …" is written "for x in …"
+# mistake 11:11 S010 "is empty" is written "== null"
+# mistake 12:11 S010 "is not empty" is written "!= null"
+# mistake 13:16 S010 "for each x in …" is written "for x in …"
+# mistake 14:8 S010 a text question is written string
+# mistake 15:9 S010 a yes-no question is written bool
+# mistake 16:9 S010 a one-of question is written one_of
+# mistake 17:9 S010 a long-text question is written long_text

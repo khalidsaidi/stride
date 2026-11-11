@@ -55,7 +55,7 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
     return files.get(path);
   };
   let shownPrints = 0; // how many print lines the kept program has given and shown
-  const head = use ? `use "${use}"\n` : "";
+  const head = use ? `import "${use}"\n` : "";
   const interactive = process.stdin.isTTY;
   const ask = (text) => interactive && process.stderr.write(text);
   if (interactive) err(`stride repl: Stride ${LANGUAGE}; :help for help, :quit to end`);

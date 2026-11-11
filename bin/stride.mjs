@@ -27,7 +27,7 @@ import { parseExpression } from "../src/syntax.mjs";
 import { showFunction } from "../src/ir.mjs";
 import { VERSION, OP_NAME } from "../runtime/bytecode.mjs";
 import { holdsItself } from "../runtime/values.mjs";
-import { disassemble, load, run, boxValues, textOf } from "../runtime/vm.mjs";
+import { disassemble, load, run, boxValues, stringOf } from "../runtime/vm.mjs";
 
 // ----- output (§17.11): results to stdout, everything about them to stderr
 
@@ -178,7 +178,7 @@ function readable(path, what = "file") {
 const faultJSON = (f) => (f ? { code: f.code, message: f.message, file: f.file ?? null, line: f.line ?? null, column: f.column ?? null, stack: (f.stack ?? []).map((x) => ({ function: x.function, file: x.file ?? null, line: x.line ?? null, column: x.column ?? null })) } : null);
 
 // A program with no file of its own (one read from stdin, an eval, a session) stands in the folder you are in: its
-// `use` looks in lib/ there and in that folder's project (§4.7), as a file's there would. Throws as projectOf does.
+// `import` looks in lib/ there and in that folder's project (§4.7), as a file's there would. Throws as projectOf does.
 const here = () => ({ dir: process.cwd(), libraries: projectOf(`${process.cwd()}/stdin.stride`)?.libraries ?? [] });
 
 // The program a command works on: compiled from source (a file, or a script given on stdin), or read from bytecode.
@@ -330,23 +330,23 @@ function answersFrom(words, { stdinTaken }) {
 }
 
 // One answer given as words (key=value, or typed at a prompt) to an options question (§17.12): words that are one of
-// its values are that value; at a prompt, else a number is the option of that number. An any-of answer is one value,
+// its values are that value; at a prompt, else a number is the option of that number. An any_of answer is one value,
 // or values separated by commas; an option whose value holds a comma, alongside others, is given in JSON.
 function optionWords(question, words, numbered) {
   const options = question.options ?? [];
   const one = (w) => (options.some((o) => o.value === w) ? w : numbered && /^\d+$/.test(w) && options[Number(w) - 1] ? options[Number(w) - 1].value : w);
-  if (question.type === "one-of") return one(words);
+  if (question.type === "one_of") return one(words);
   if (words === "") return [];
   if (options.some((o) => o.value === words)) return [words];
   return words.split(",").map(one);
 }
 
-// key=value answers to any-of questions are made lists as the run reaches them (§17.12).
+// key=value answers to any_of questions are made lists as the run reaches them (§17.12).
 function asOptions(p, answers, keys, runOnce) {
   for (let changed = true; changed; ) {
     changed = false;
     for (const s of runOnce(answers).steps) {
-      if (s.question.type === "any-of" && keys.has(s.key) && typeof answers[s.key] === "string") {
+      if (s.question.type === "any_of" && keys.has(s.key) && typeof answers[s.key] === "string") {
         answers[s.key] = optionWords(s.question, answers[s.key], false);
         changed = true;
       }
@@ -368,8 +368,10 @@ function prompt(answers, runOnce) {
     asked.add(s.key);
     const q = s.question;
     const options = q.options ?? [];
-    const hint = { "yes-no": "yes or no", date: "YYYY-MM-DD", number: "a number", "one-of": "a number or the value", "any-of": "numbers or values, with commas" }[q.type] ?? "words";
-    err(`${s.printed || s.key}${s.default !== undefined && s.default !== null ? ` [${textOf(s.default)}]` : ""}`);
+    const hint = { bool: "yes or no", date: "YYYY-MM-DD", number: "a number", one_of: "a number or the value", any_of: "numbers or values, with commas" }[q.type] ?? "words";
+    // A person is shown yes and no for a bool, as they type them.
+    const offered = typeof s.default === "boolean" ? (s.default ? "yes" : "no") : stringOf(s.default);
+    err(`${s.printed || s.key}${s.default !== undefined && s.default !== null ? ` [${offered}]` : ""}`);
     options.forEach((o, i) => err(`  ${i + 1}. ${o.printed} (${o.value})`));
     process.stderr.write(`  ${hint}> `);
     const line = readLine();
@@ -377,8 +379,8 @@ function prompt(answers, runOnce) {
     if (!process.stdin.isTTY) err(line ?? "");
     if (line === null) return;
     if (line === "") continue;
-    if (q.type === "one-of" || q.type === "any-of") answers[s.key] = optionWords(q, line, true);
-    else if (q.type === "yes-no") answers[s.key] = /^[yY]$/.test(line) ? "yes" : /^[nN]$/.test(line) ? "no" : line;
+    if (q.type === "one_of" || q.type === "any_of") answers[s.key] = optionWords(q, line, true);
+    else if (q.type === "bool") answers[s.key] = /^[yY]$/.test(line) ? "yes" : /^[nN]$/.test(line) ? "no" : line;
     else answers[s.key] = line;
   }
 }
@@ -650,7 +652,7 @@ async function main(argv) {
       const script = !r.p.form;
       const written = Object.entries(result.named ? result.writes : boxValues(r.p, result.writes)).filter(([, v]) => v !== "" && v !== "Off");
       if (json) {
-        const value = (v) => (v === null || v === undefined ? null : Array.isArray(v) ? v.map(value) : typeof v === "boolean" ? v : textOf(v));
+        const value = (v) => (v === null || v === undefined ? null : Array.isArray(v) ? v.map(value) : typeof v === "boolean" ? v : stringOf(v));
         out(JSON.stringify({ ok: !result.fault, diagnostics: warnings.map((d) => d.toJSON()), questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
         return result.fault ? 1 : 0;
       }
@@ -702,7 +704,7 @@ async function main(argv) {
         for (const m of alone.mistakes) d.add(KIND.SYNTAX, own, m.span, m.message, [], m.code ?? "S010");
         return json ? (done(false, { diagnostics: d.sorted().map((x) => x.toJSON()) }), 1) : (report(d.sorted()), 1);
       }
-      const uses = values.has("--use") ? `use "${values.get("--use")}"\n` : "";
+      const uses = values.has("--use") ? `import "${values.get("--use")}"\n` : "";
       const pdf = "0".repeat(64);
       let context;
       try {
@@ -889,7 +891,7 @@ const ITSELF = "(holds itself)";
 // changes, by name (§17). The trace is called before each instruction runs, so a line is printed when the next
 // one starts, once what it changed is known.
 function traceTo(p) {
-  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
+  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "null" : stringOf(v));
   const snap = (v) => (holdsItself(v) ? ITSELF : JSON.stringify(v ?? null));
   let pending = null;
   const flush = () => {
@@ -912,7 +914,7 @@ function traceTo(p) {
 // a function with its arguments and what it gives back; each call of the library with what it gives. A loop's own
 // bookkeeping (its counter going up, its item taken) is not a statement of the program and is not shown as one.
 function sourceTrace() {
-  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
+  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "true" : v === false ? "false" : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "null" : stringOf(v));
   const snapOne = (v) => (holdsItself(v) ? ITSELF : JSON.stringify(v ?? null));
   const snap = (locals) => new Map([...locals].map(([l, v]) => [l, snapOne(v)]));
   const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");

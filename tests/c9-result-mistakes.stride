@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define h() {
+function h() {
   return 1
 }
-define k() {
+function k() {
   print("x")
 }
 fill "A" = k()

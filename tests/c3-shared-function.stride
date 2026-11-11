@@ -1,15 +1,15 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record p { n: number }
-define change(l: list of number, r: p, m: map of text to number) {
+function change(l: list<number>, r: p, m: map<string, number>) {
   l[0] = 7
   l += [8]
   r.n = 9
   m["k"] = 10
 }
-var a: list of number = [1, 2]
+var a: list<number> = [1, 2]
 let r = new p { n: 1 }
-var m: map of text to number
+var m: map<string, number>
 change(a, r, m)
 print(a)
 print(r)

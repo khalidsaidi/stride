@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "people"
+import "people"
 fill "A" = full(new person { first: "Ada", last: "Lovelace" })
 # boxes {"A": "Ada Lovelace"}
 # rule 4.2 4.5

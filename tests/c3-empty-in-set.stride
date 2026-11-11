@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "a" "A" }
-ask x: any-of s "X"
-print(empty in x)
-print(empty not in x)
+enum s { "a" "A" }
+ask x: any_of s "X"
+print(null in x)
+print(null not in x)
 # rule 3.6 S382
 # answers {"x": ["a"]}
-# prints ["no", "yes"]
+# prints ["false","true"]

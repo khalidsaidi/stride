@@ -1,16 +1,16 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
-  b: text
+  a: string
+  b: string
 }
-var l: list of r
+var l: list<r>
 collect x in l "Another?" {
-  ask x.a: text "A"
+  ask x.a: string "A"
 # warning 11 W005 no r's b is ever read
-  ask x.b: text "B"
+  ask x.b: string "B"
 }
-for each n, x in l {
+for n, x in l {
   fill "A{n}" = x.a
 }
 # rule W005

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number = [1]
+var l: list<number> = [1]
 l[0] += 5
 print(join(l, ","))
 l[1] += 5

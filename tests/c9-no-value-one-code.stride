@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r { x: number }
-define f() {
+function f() {
   print(1)
 }
-define g() -> number {
+function g() -> number {
   return f()
 }
 print("{f()}")
@@ -15,9 +15,9 @@ if f() {
 }
 print(f().x)
 print(f()[1])
-print(if yes then f() else 1)
+print(if true then f() else 1)
 print(new r { x: f() })
-for each x in f() {
+for x in f() {
   print(x)
 }
 match f() {
@@ -34,7 +34,7 @@ print(g())
 # mistake 13:4 S370
 # mistake 16:7 S370
 # mistake 17:7 S370
-# mistake 18:19 S370
+# mistake 18:20 S370
 # mistake 19:18 S370
-# mistake 20:15 S370
+# mistake 20:10 S370
 # mistake 23:7 S370

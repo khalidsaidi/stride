@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask s: text "S" check length(digits(s)) == 9 "nine digits"
+ask s: string "S" check length(digits(s)) == 9 "nine digits"
 fill "A" = s
 # answers {"s": "12"}
 # boxes {"A": "12"}

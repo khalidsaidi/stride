@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask o: one-of "O" {
+ask o: one_of "O" {
   option "a" "Apple"
 }
 tick "C" when o == "a"

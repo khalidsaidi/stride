@@ -1,23 +1,23 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define factorial(n: number) -> number {
+function factorial(n: number) -> number {
   if n <= 1 {
     return 1
   }
   return n * factorial(n - 1)
 }
-define even(n: number) -> yes-no {
-  return if n == 0 then yes else odd(n - 1)
+function even(n: number) -> bool {
+  return if n == 0 then true else odd(n - 1)
 }
-define odd(n: number) -> yes-no {
-  return if n == 0 then no else even(n - 1)
+function odd(n: number) -> bool {
+  return if n == 0 then false else even(n - 1)
 }
-define forever(n: number) -> number {
+function forever(n: number) -> number {
   return forever(n + 1)
 }
 print(factorial(20))
 print(even(10))
 print(forever(1))
 # rule 9.7 F015
-# prints ["2432902008176640000", "yes"]
+# prints ["2432902008176640000","true"]
 # fault F015

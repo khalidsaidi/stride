@@ -104,8 +104,8 @@ export class Fn {
 export class Question {
   constructor({ name, type, options, set, hasDefault, check, node, item }) {
     this.name = name; // its name in the program: name, r.name, representatives.another
-    this.type = type; // text long-text number date phone email yes-no one-of any-of
-    this.options = options; // [{ value, printed }] for one-of and any-of
+    this.type = type; // string long_text number date phone email bool one_of any_of
+    this.options = options; // [{ value, printed }] for one_of and any_of
     this.set = set; // the option set's name, or null for a question's own
     this.hasDefault = hasDefault;
     this.check = check; // the check's message, or null
@@ -209,7 +209,7 @@ export function expressionsOf(s) {
 export function showExpr(x) {
   switch (x.e) {
     case "const":
-      return x.v === null ? "empty" : typeof x.v === "string" ? JSON.stringify(x.v) : String(x.v?.iso ?? x.v);
+      return x.v === null ? "null" : typeof x.v === "string" ? JSON.stringify(x.v) : String(x.v?.iso ?? x.v);
     case "local":
       return `%${x.l.name}`;
     case "unary":
@@ -245,7 +245,7 @@ export function showExpr(x) {
     case "slice":
       return `${showExpr(x.a)}[${showExpr(x.from)}..${showExpr(x.to)}]`;
     case "comp":
-      return `[${showExpr(x.value)} for each %${x.index.name}, %${x.item.name} in ${showExpr(x.list)}${x.cond ? ` if ${showExpr(x.cond)}` : ""}]`;
+      return `[${showExpr(x.value)} for %${x.index.name}, %${x.item.name} in ${showExpr(x.list)}${x.cond ? ` if ${showExpr(x.cond)}` : ""}]`;
     default:
       return `?${x.e}`;
   }

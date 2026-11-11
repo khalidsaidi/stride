@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record entry {
+  default: number
+  check: string
+  form: string
+  if: bool
+  in: string
+  function: list<number>
+}
+var e = new entry { default: 1, check: "c", form: "f", if: true, function: [7] }
+e.default = e.default + 1
+ask e.in: string "In"
+fill "A" = "{e.default} {e.check} {e.form} {e.if} {e.in} {e.function[0]}"
+print(e.null.default)
+# rule 2.3.2 5.1 6.14
+# mistake 15:7 S318 no field null

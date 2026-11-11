@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
-  name: text
+  name: string
 }
 let p = new person { name: "A" }
 print(p.nmae)

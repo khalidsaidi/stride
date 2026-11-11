@@ -2,9 +2,9 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 const K = 1
 let x = 1
-print([y for each y, y in [1, 2]])
-print([x for each x in [1, 2]])
-print([K for each K in [5]])
+print([y for y, y in [1, 2]])
+print([x for x in [1, 2]])
+print([K for K in [5]])
 print(x + K)
 # rule 12.3 S231
 # mistake 5:7 S231

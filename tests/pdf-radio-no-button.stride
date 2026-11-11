@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Kind radio:ind near Individual
-ask y: yes-no "Individual"
+ask y: bool "Individual"
 # mistake 6 S511 has no button "x"
 pick "Kind" "x" when y
 pick "Kind" "ind" when y

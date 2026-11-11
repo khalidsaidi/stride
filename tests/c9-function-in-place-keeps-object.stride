@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define counter(l: list of number) -> function() -> number {
+function counter(l: list<number>) -> function() -> number {
   return function() -> number {
     append(l, count(l))
     return count(l)

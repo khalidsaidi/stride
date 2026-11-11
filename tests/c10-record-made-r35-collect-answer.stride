@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record kid { age: number }
-var kids: list of kid
+var kids: list<kid>
 collect n, k in kids "Another?" {
   ask k.age: number "Age"
   pick "K{n}" "A" when (k.age ?? 0) > 5

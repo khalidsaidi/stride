@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+import "c-a" as x
+import "c-b" as x
+fill "A" = "{x.shared}"
+
+# rule 4.5 S110
+# mistake 4:1 S110

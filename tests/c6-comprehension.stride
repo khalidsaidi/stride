@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let l = [1, 2, 3]
-let d = [n * 10 for each n in l if n > 1]
+let d = [n * 10 for n in l if n > 1]
 print(join(d, ","))
-let e = [i * n for each i, n in l]
+let e = [i * n for i, n in l]
 print(join(e, ","))
 
 # rule 6.12

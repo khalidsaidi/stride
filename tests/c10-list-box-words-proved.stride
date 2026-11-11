@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options st { "NY" "New York"  "CA" "California" }
-ask t: text "Text" check t != "" "Say it"
-ask u: text "More"
-ask v: text "Other"
-ask b: yes-no "B"
-ask o: one-of st "Pick"
+enum st { "NY" "New York"  "CA" "California" }
+ask t: string "Text" check t != "" "Say it"
+ask u: string "More"
+ask v: string "Other"
+ask b: bool "B"
+ask o: one_of st "Pick"
 if t == "CA" {
   fill "L" = t
 }

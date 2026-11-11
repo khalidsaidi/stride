@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-native define upper(t: text) -> text
+native function upper(t: string) -> string
 fill "A" = "x"
 
 # rule 4.4 5.5 S108

@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
-ask o: one-of st "State"
-fill "State" = if o != "TX" then o else empty
+enum st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
+ask o: one_of st "State"
+fill "State" = if o != "TX" then o else null
 # rule 10.3 S514
 # box State choice:NY,CA near State New York California Texas

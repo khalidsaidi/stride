@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
+ask c: bool "C"
 if c {
-  ask a: text "A"
+  ask a: string "A"
 } else {
   ask a: number "A"
 }

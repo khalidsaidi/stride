@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask stop: yes-no "Stop?"
+ask stop: bool "Stop?"
 print("a")
 if stop {
   fail("stop")

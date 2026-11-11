@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(a: number = 1, b: number) -> number {
+function f(a: number = 1, b: number) -> number {
   return a + b
 }
 fill "A" = f(1, 2)

@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask c: yes-no "C"
+ask c: bool "C"
 ask z: number "Z"
 ask p: phone "P"
 let w = if c then "x" else p
-define mail(m: text) -> text {
+function mail(m: string) -> string {
   return m
 }
 print(mail(w))
-let l = if c then [empty, empty] else [1]
+let l = if c then [null, null] else [1]
 print("{count(l)}")
 print("{if c then 1 else 1 / z}")
 

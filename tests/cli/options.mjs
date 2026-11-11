@@ -47,7 +47,7 @@ export function test() {
     expect(["compile", join(dir, "p.stride"), join(dir, "p.stride")], 2, "stride compile: takes 1 argument, and was given 2");
     expect(["run", join(dir, "p.stride"), "--terminal", join(dir, "bad.json")], 1, "not JSON");
     expect(["test", join(dir, "p.stride")], 1, "no tests in");
-    writeFileSync(join(dir, "f.test.stride"), `define half(x: number) -> number {\n  return x / 0\n}\nexpect half(1) faults "F001"\n`);
+    writeFileSync(join(dir, "f.test.stride"), `function half(x: number) -> number {\n  return x / 0\n}\nexpect half(1) faults "F001"\n`);
     expect(["test", join(dir, "f.test.stride")], 0, "expectation passed");
     expect(["test", join(dir, "p.stride"), "nosuch"], 2, "there is no test nosuch");
   } finally {

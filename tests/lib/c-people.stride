@@ -1,4 +1,4 @@
-export define address(who: text) {
-  ask city: text "City of the {who}"
+export function address(who: string) {
+  ask city: string "City of the {who}"
   fill "City {who}" = city
 }

@@ -1,7 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text = ["a"]
-# mistake 5 S231 names both the item and its number
-for each i, i in l {
-}
-# rule 7.11 S231

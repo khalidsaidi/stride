@@ -15,7 +15,7 @@ One program per form, `<form>.stride`, written against one exact PDF. Beside it:
 - `<form>.tests/*.json`: the program's tests.
 
 Libraries are in `lib/`; the standard library is `lib/std.stride`. A test file `<name>.test.stride`
-stands beside a library and holds `use`, declarations, `let` and `expect` (§4.3). The grammar is at the top of
+stands beside a library and holds `import`, declarations, `let` and `expect` (§4.3). The grammar is at the top of
 `src/syntax.mjs`, the hand-written lexer and parser that read it.
 
 ## Files
@@ -26,48 +26,49 @@ A program starts with its header, then holds imports, declarations and statement
 form irs-2848                      # the form's id
 pdf 14377021f958…                  # the sha256 of the PDF it is written against (64 hex digits, small letters)
 fields "topmostSubform[0]."        # optional: put before every box name below
-use "people"                       # a library from lib/people.stride, its exports by their own names
-use "people" as p                  # or kept under a name: p.full_name(…), p.person
+import "people"                    # a library from lib/people.stride, its exports by their own names
+import "people" as p               # or kept under a name: p.full_name(…), p.person
 ```
 
 A library has no header and holds only imports and declarations; `export` makes a declaration visible to the
-files that use it. Libraries may not use each other in a circle. The standard library is used by every file
-without a `use`. Declarations may be used before the line they stand on (§5.7).
+files that import it. Libraries may not import each other in a circle. The standard library is there in every file
+without an `import`. Declarations may be used before the line they stand on (§5.7).
 
 Whitespace and line breaks are free between tokens, except that a line break before `[` or `(` ends the
 expression before it, and a `return`'s value is on its line (§1.4); `#` starts a comment to the end of the line.
 Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `LIMIT`)
-(§2.1). Keywords cannot be names (§2.3): `and as ask break check collect const continue default define
-else empty export expect fill for form if in is let match native new no not options or pdf pick record return
-tick use var while yes`. `list`, `set`, `of`, `fields`, `each`, `when`, `then`, `option`, `any`, `another`
+(§2.1). Keywords cannot be names (§2.3): `and as ask break check collect const continue default else
+enum expect export false fill for form function if import in let match native new not null or pdf pick record
+return tick true var while`. `list`, `map`, `set`, `fields`, `when`, `then`, `option`, `any`, `another`
 and `faults` are words of the language only where the grammar uses them, and names everywhere else (§2.3.1).
+A field's name may be any word, a keyword among them: `r.default` (§2.3.2).
 
 ## Types
 
 | Type | Values |
 |---|---|
-| `text` | words (a `long-text`, `phone` or `email` question's answer is text too) |
+| `string` | words (a `long_text`, `phone` or `email` question's answer is a string too) |
 | `number` | an exact decimal: at most 34 significant digits, below 10^34, a multiple of 10^-6176 (§3.3) |
 | `date` | a day, 0001-01-01 to 9999-12-31 |
-| `yes-no` | `yes` or `no` |
+| `bool` | `true` or `false` |
 | an option set's name | one of its options |
-| `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
+| `set<S>`, S an option set's name | several of its options (an `any_of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
-| `list of T` | values of type T, as many as are added |
-| `map of K to V` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
-| `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
+| `list<T>` | values of type T, as many as are added |
+| `map<K, V>` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
+| `function(T, …) -> R` | a function as a value: `function apply(f: function(number) -> number, n: number)` |
 
 A function written in place, where a value goes: `function(n: number) -> number { return n * 2 }` (§9.11).
 
-Numbers are exact: `0.1 + 0.2 == 0.3` is yes; `+ - *` round to 34 digits only past them, and `/` rounds its
+Numbers are exact: `0.1 + 0.2 == 0.3` is true; `+ - *` round to 34 digits only past them, and `/` rounds its
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;
 an id with leading zeros is words in quotes, §2.5).
 
-Every value may also be empty: no value, an answer not given yet. `empty` is the empty value of any type; `x is
-empty` and `x is not empty` test it, and `x ?? y` gives y in its place (§3.2, §6.16). `""`, `[]` and `{}` are
-values, not empty. In a condition empty counts as no; `"{x}"` and `fill` put in no characters for it; `==`
+Every value may also be null: no value, an answer not given yet. `null` is the null value of any type; `x ==
+null` and `x != null` test it, and `x ?? y` gives y in its place (§3.2, §6.16). `""`, `[]` and `{}` are
+values, not null. In a condition null counts as false; `"{x}"` and `fill` put in no characters for it; `==`
 compares it. Anything else that needs a value — arithmetic, `< <= > >=`, joining with `+`, a field, an item, a
-slice, `for each`, a library function — stops the run when it is given empty (fault F023, §6.3).
+slice, `for`, a library function — stops the run when it is given null (fault F023, §6.3).
 
 A list, a record or a map is shared: `var b = a` makes `b` the same list as `a`, and a function given a list
 changes that list; `copy(a)` makes another (§3.4).
@@ -76,35 +77,35 @@ changes that list; `copy(a)` makes another (§3.4).
 
 ```
 record representative {            # a record: named fields, each with its type
-  name: text
-  caf: text
-  copies: yes-no
-  changed: set of changes
+  name: string
+  caf: string
+  copies: bool
+  changed: set<changes>
 }
 
-options changes {                  # an option set: values, each with the words printed beside its box
+enum changes {                     # an option set: values, each with the words printed beside its box
   "address" "Check if new: Address"
   "fax" "Fax No."
 }
 
-const LIMIT = 4                    # worked out by the compiler: words, a number, a date, yes or no, a list of them
+const LIMIT = 4                    # worked out by the compiler: words, a number, a date, true or false, a list of them
 
-define line_2(n: number, r: representative) {        # a function; `-> type` after the parameters
+function line_2(n: number, r: representative) {       # a function; `-> type` after the parameters
   fill "Page1[0].RepresentativesName{n}[0]" = r.name  # when it gives a value
 }
 
-define label(r: representative) -> text {
+function label(r: representative) -> string {
   return "{r.name} ({r.caf})"
 }
 
-define money(n: number, places: number = 2) -> text {  # a parameter may have a default, any expression,
-  return grouped(n, places)                            # worked out at the call; defaults come last (§9.2)
+function money(n: number, places: number = 2) -> string {  # a parameter may have a default, any expression,
+  return grouped(n, places)                                # worked out at the call; defaults come last (§9.2)
 }
 ```
 
 A call gives its arguments by position, then by name: `money(total, places: 0)` (§9.4).
 
-A function may be generic: `define first_of<t>(l: list of t) -> t` takes a list of any type and gives one of
+A function may be generic: `function first_of<t>(l: list<t>) -> t` takes a list of any type and gives one of
 its items; each call works out what `t` is from its arguments (§9.5). A function that returns a value and does not write its result's
 type has the join of its returns' types (§3.9, §9.6).
 
@@ -115,8 +116,8 @@ kept and called through (§9.10).
 `r.label()` calls `label(r)`: any function can be called on its first argument. A library kept under a name
 lends its functions to such calls.
 
-Only the standard library declares natives, functions the machine provides: `native define upper(t: text) ->
-text`. A native's parameter may be `any`; its result may be `any` (the type of its first argument) or `element`
+Only the standard library declares natives, functions the machine provides: `native function upper(t: string) ->
+string`. A native's parameter may be `any`; its result may be `any` (the type of its first argument) or `element`
 (the type of the items of the list given first).
 
 ## Statements
@@ -126,38 +127,38 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `ask name: type "printed words"` | asks a question; its answer is the value of `name` from here on |
 | `ask r.field: type "…"` | the answer goes into a field of a var's record, or of a list's item |
 | `… default e` | the value the answer has until the person answers; once they answer, even with nothing, it does not come back (§8.4.1) |
-| `… check c "message"` | a condition the answer should meet; when it does not, the page shows the message (the answer stays); an empty answer is not checked |
+| `… check c "message"` | a condition the answer should meet; when it does not, the page shows the message (the answer stays); a null answer is not checked |
 | `let name = e`, `let name: type = e` | a name that keeps the value it is given; the items and fields of a list, record or map it holds may be given values (§3.4) |
-| `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list starts with no items, a map with no keys and a record empty; anything else must be given a value before it is read |
+| `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list starts with no items, a map with no keys and a record null; anything else must be given a value before it is read |
 | `name = e`, `name.field = e`, `name[i] = e` | gives a var a new value; gives a field or an item of the record, list or map a name holds a new value (§7.5) |
 | `x += e`, `-=`, `*=`, `/=` | `x = x + e`, with x's place worked out once (§7.5); `l += m` adds m's items to the list l holds |
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
-| `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is yes |
-| `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
+| `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is true |
+| `pick "group" "button" when c` | picks that button of a radio group when the condition is true |
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value, by words, or by a number (`1, 2 => { }`) |
 | `for i in a..b { }`, `for i in a..<b { }` | its block for each whole number from a to b, or with `..<` to before b; a and b worked out once (§7.11) |
-| `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 0 |
-| `while c { }` | its block as long as the condition is yes (§7.11.1) |
+| `for x in list { }`, `for n, x in list { }` | its block for each item of a list or option of a set, n counting from 0 |
+| `while c { }` | its block as long as the condition is true (§7.11.1) |
 | `try { } catch problem { }` | a fault in the try runs the catch, its message in `problem` (§7.18) |
-| `break`, `continue` | end the innermost `for`, `for each` or `while`, or go to its next turn; not in a collect (§7.12) |
+| `break`, `continue` | end the innermost `for` or `while`, or go to its next turn; not in a collect (§7.12) |
 | `collect x in list "Add another…?" { }`, `collect n, x in list any "Any…?" another "Another…?" { }` | asks for the items of a list one at a time (below) |
 | `return`, `return e` | ends a function (with its value), or the program |
 | `f(…)` | calls a function for what it does |
-| `expect e "words"`, `expect e faults "F001"` | test files only: e must be yes, or working out e must give that fault (§7.17) |
+| `expect e "words"`, `expect e faults "F001"` | test files only: e must be true, or working out e must give that fault (§7.17) |
 
-Question types: `text`, `long-text`, `number`, `date`, `phone`, `email`, `yes-no`, `one-of S`, `any-of S` (S
-an option set), and `one-of` / `any-of` with their own options:
+Question types: `string`, `long_text`, `number`, `date`, `phone`, `email`, `bool`, `one_of S`, `any_of S` (S
+an option set), and `one_of` / `any_of` with their own options:
 
 ```
-ask kind: one-of "Kind of taxpayer" {
+ask kind: one_of "Kind of taxpayer" {
   option "individual" "Individual"
   option "business" "Business"
 }
 ```
 
-An `if` and a `match` are not scopes: a question asked in a branch is known after it, and empty when that branch
+An `if` and a `match` are not scopes: a question asked in a branch is known after it, and null when that branch
 did not run. A `let` or `var` declared in a branch may be read after it only where every path has declared it
 (§12.1.1). Loops, collects, comprehensions and functions are scopes. A name is used only after the statement
 that defines it; the same name is not defined twice in one function or program.
@@ -165,19 +166,19 @@ that defines it; the same name is not defined twice in one function or program.
 ### Lists and collect
 
 ```
-var representatives: list of representative
+var representatives: list<representative>
 collect n, r in representatives "Add another representative?" {
-  ask r.name: text "Name and address"
+  ask r.name: string "Name and address"
   if n < 2 {
-    ask r.copies: yes-no "Check if to be sent copies of notices and communications"
+    ask r.copies: bool "Check if to be sent copies of notices and communications"
   }
 }
-for each n, r in representatives {
+for n, r in representatives {
   fill "Page1[0].RepresentativesName{n + 1}[0]" = r.name
 }
 ```
 
-`collect` asks the first item (n is 0), then the quoted yes-no question; a yes asks the next item, and a no ends it. An item
+`collect` asks the first item (n is 0), then the quoted bool question; true asks the next item, and false ends it. An item
 enters the list when its block ends (§8.5.1). A list that may hold no items (trips abroad, arrests) asks first
 whether there are any:
 
@@ -187,28 +188,28 @@ collect t in trips any "Did you take any trips outside the United States?" anoth
 }
 ```
 
-A no leaves the list with no items. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
+False leaves the list with no items. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
 the turns of any loops around the collect after them: `trips#any[2]` (§8.6.2). The items are answers: a program
 cannot change them. A list is collected once, into a var declared as a list of records or plain values, with no items.
 
 ## Expressions
 
 Loosest first (§6.1): `if c then a else b`; `??`; `or`; `and`; `not`; comparisons `== != < <= > >=`, `in`, `not in`,
-`is empty`, `is not empty` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 0),
-`[a..b]`, `[a..<b]` and calls; then values: numbers, `"words"`, `yes`, `no`, `empty`, names, `[a, b]`,
-`[e for each x in l if c]`, `new record { field: e, … }`, `( … )`.
+`== null`, `!= null` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 0),
+`[a..b]`, `[a..<b]` and calls; then values: numbers, `"words"`, `true`, `false`, `null`, names, `[a, b]`,
+`[e for x in l if c]`, `new record { field: e, … }`, `( … )`.
 
 - `+` adds numbers, joins words, or joins two lists (§6.5.1); `- * / // %` are for
   numbers. `//` is floor division and `%` its remainder, both exact (§6.4.1). Dividing by zero is a fault.
 - `< <= > >=` compare two numbers, two dates, or two words by code points (§6.7).
 - `==` and `!=` compare values of one type; an option is compared with one of its own values, checked.
 - `"x" in s` asks whether an option is among those of a set of options, or a value among a list's items.
-- `and` and `or` decide on the left when they can; the right is then not worked out. They always give yes or no.
-- `a ?? b` is a when a is not empty, else b; b is worked out only then. It chains from the left, and its type is
+- `and` and `or` decide on the left when they can; the right is then not worked out. They always give true or false.
+- `a ?? b` is a when a is not null, else b; b is worked out only then. It chains from the left, and its type is
   the join of a's and b's (§6.16): `fill "Total" = amount ?? 0`, `upper(name ?? "")`.
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
 - `l[n]` is the item at position n, the first at 0; a position outside the list is a fault (§6.9.2). `l[a..b]`
-  is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list (§6.12).
+  is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for r in reps if r.copies]` makes a list (§6.12).
 - `"Line {n + 1}"` puts any value's words into words. `\"`, `\\`, `\{`, `\}`, `\n`, `\t` and `\u{h…}` stand
   for themselves (§2.6).
 
@@ -218,20 +219,20 @@ A box's name, a button's name, a question's printed words and a loop's bounds ar
 expressions, worked out as the program runs (§11.2). The compiler works out only a constant's value, a parameter's
 default and an option's printed words.
 
-Loops, collects, for eaches and calls run in the machine as they are written. A question's key is worked out
+Loops, collects and calls run in the machine as they are written. A question's key is worked out
 as it runs, from where it is asked (§8.6): its name, with the turn of each loop it is in (`other_act[1]`), on the
 item of a list it answers (`representatives[0].name` for the first), or after the call it is in (`line_2.name`; a second call is `line_2#2.name`).
 
 ## The standard library
 
-`lib/std.stride`, used by every file; §14 gives every signature; a function given empty where it needs a value is fault F023 (§14.0.3). Words: `upper
+`lib/std.stride`, there in every file; §14 gives every signature; a function given null where it needs a value is fault F023 (§14.0.3). Words: `upper
 lower title capitalize trim trim_start trim_end remove_prefix remove_suffix length chars character slice digits
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
-rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs power min max grouped
+rest_lines word word_count pad_left string_of number_of`. Numbers: `round ceil floor whole abs power min max grouped
 fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days add_months`.
 Lists and sets: `count join first last filled index_of append insert remove_at clear copy without reversed sorted sum
 smallest largest any all union intersection difference`; `append`, `insert`, `remove_at` and `clear` change the list
-they are given, the others give a new one. Empty, faults and output: `either fail print`.
+they are given, the others give a new one. Null, faults and output: `either fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
 one-character boxes. Their positions count from 0, as a list's do, and `find` and `index_of` give -1 for none. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).
@@ -245,14 +246,14 @@ it found none. Each phase records every mistake it finds; the parser goes on aft
 after twenty; the command line shows the first twenty and counts the rest (§16.1).
 
 - **Syntax:** anything the grammar does not allow.
-- **Libraries:** a library that is not there, libraries that use each other in a circle, two libraries
+- **Libraries:** a library that is not there, libraries that import each other in a circle, two libraries
   exporting one name to the same file, a statement in a library.
 - **Names:** a name not defined (with the nearest one as a hint), used before the line that defines it, defined
   twice; a type that is not one; a record that holds itself.
 - **Types:** an operator on values it does not take; an option compared with a value it does not have; a call
   with the wrong number or types of arguments; a function giving a value of the wrong type, or none where it
   must; an answer, a let, a constant, a parameter or a counter given a new value; a list collected twice, or not
-  into a var; a box filled with yes-no, a set, a list or a record.
+  into a var; a box filled with bool, a set, a list or a record.
 - **Flow:** a let
   or var read where not every path has given it a value; a function with a result that does not return one on
   every path; a statement after a return, break or continue; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
@@ -276,7 +277,7 @@ assembler).
 
 ## Bytecode
 
-Version 8 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 9 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),
@@ -301,7 +302,7 @@ box the run does not write is emptied.
 
 | Instructions | Do |
 |---|---|
-| `TEXT NUMBER TRUE FALSE EMPTY` | push a constant |
+| `TEXT NUMBER TRUE FALSE NULL` | push a constant |
 | `LOAD STORE POP DUP` | locals and the stack |
 | `NEW_RECORD GET_FIELD SET_FIELD ENSURE_RECORD ENSURE_FIELD ENSURE_ITEM` | records |
 | `NEW_LIST GET_ITEM GET_ITEM_THERE SET_ITEM CHECK_SLOT APPEND SLICE` | lists |

@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record pt {
-  name: text
-  tags: list of text
+  name: string
+  tags: list<string>
 }
 var a: pt
 a.tags[0] = "x"
@@ -11,9 +11,9 @@ var b: pt
 b.name = "y"
 print(count(b.tags))
 print(b.name)
-var rows: list of pt
+var rows: list<pt>
 collect r in rows "Another?" {
-  ask r.name: text "Name"
+  ask r.name: string "Name"
 }
 print(count(rows[0].tags))
 print(rows[0].name)

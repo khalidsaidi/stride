@@ -3,8 +3,8 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 let y = [[n], [1, 2]]
 print(count(y[0]))
-let m = if yes then [7] else [1, 2]
-print(m[1] is empty)
+let m = if true then [7] else [1, 2]
+print(m[1] == null)
 # rule 3.9 6.11 6.13
 # answers {"n": "3"}
 # prints ["1"]

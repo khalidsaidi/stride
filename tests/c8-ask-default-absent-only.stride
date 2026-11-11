@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask name: text "Name" default "Ada"
-ask s: any-of "S" {
+ask name: string "Name" default "Ada"
+ask s: any_of "S" {
   option "a" "A"
   option "b" "B"
 } default ["a"]

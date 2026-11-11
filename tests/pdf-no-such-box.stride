@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Name text near Name
-ask a: text "Name"
+ask a: string "Name"
 # mistake 6 S508 did you mean Name?
 fill "Nme" = a
 fill "Name" = a

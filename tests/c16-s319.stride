@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
+record person { name: string, age: number }
 let r = new person { name: "a" }
-ask r.name: text "N"
+ask r.name: string "N"
 fill "A" = r.name
 # rule S319 16.4 8.4.1
 # mistake 5 S319

@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
-  first: text
-  last: text
+  first: string
+  last: string
 }
 let p = new person { first: "Ada", last: "Lovelace" }
 fill "A" = "{p.last}, {p.first}"

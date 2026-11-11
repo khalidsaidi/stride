@@ -2,15 +2,15 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record node {
   value: number
-  kids: list of node
+  kids: list<node>
   next: node
 }
-define total(n: node) -> number {
+function total(n: node) -> number {
   var t = n.value
-  for each k in n.kids {
+  for k in n.kids {
     t += total(k)
   }
-  if n.next is not empty {
+  if n.next != null {
     t += total(n.next)
   }
   return t

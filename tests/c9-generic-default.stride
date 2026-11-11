@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define d<t>(a: t, b: t = 5) -> t {
+function d<t>(a: t, b: t = 5) -> t {
   return b
 }
 print(d(1))

@@ -1,4 +1,4 @@
-export define loud(x: number) -> number {
+export function loud(x: number) -> number {
   print("loud")
   return 1 / x
 }

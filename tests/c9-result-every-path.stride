@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: yes-no "A"
-define f(a: yes-no) -> number {
+ask a: bool "A"
+function f(a: bool) -> number {
   if a {
     return 1
   }

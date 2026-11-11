@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 ask m: number "M"
-define a(x: number) -> number {
+function a(x: number) -> number {
   print("a")
   return x
 }
@@ -13,7 +13,7 @@ for i in a(n)..a(m) {
 # run the first bound empty faults before the second is worked out
 # answers {"m": 2}
 # prints ["a"]
-# fault F023 at 9:10 empty where a number is needed: a loop's bound
+# fault F023 at 9:10 null where a number is needed: a loop's bound
 # run the second bound not whole faults after both are worked out
 # answers {"n": 1, "m": 2.5}
 # prints ["a", "a"]

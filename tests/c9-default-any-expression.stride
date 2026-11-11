@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 var rate = 2
-define twice(n: number) -> number {
+function twice(n: number) -> number {
   return n * 2
 }
-define scaled(n: number, by: number = rate, extra: number = twice(rate)) -> number {
+function scaled(n: number, by: number = rate, extra: number = twice(rate)) -> number {
   return n * by + extra
 }
-define wrapper() -> number {
+function wrapper() -> number {
   return scaled(1)
 }
 print(scaled(10))

@@ -1,31 +1,31 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-print(if empty then 1 else 2)
-if empty {
+print(if null then 1 else 2)
+if null {
   print("yes")
 } else {
   print("no")
 }
-print(count([x for each x in [1, 2] if empty]))
-print(empty in [1, empty])
+print(count([x for x in [1, 2] if null]))
+print(null in [1, null])
 try {
-  print(count([x for each x in empty]))
+  print(count([x for x in null]))
 } catch why {
   print(why)
 }
 try {
-  print(1 in empty)
+  print(1 in null)
 } catch why {
   print(why)
 }
 try {
-  print(1 not in empty)
+  print(1 not in null)
 } catch why {
   print(why)
 }
-for each y in empty {
+for y in null {
   print(y)
 }
 # rule 3.6 6.15 6.8 6.12 7.11 S311 S314 S385 F023
-# prints ["2", "no", "0", "yes", "empty where a list is needed: what for each goes through", "empty where a list is needed: the right side of in", "empty where a list is needed: the right side of not in"]
-# fault F023 at 26:15 empty where a list is needed: what for each goes through
+# prints ["2","no","0","true","null where a list is needed: what for goes through","null where a list is needed: the right side of in","null where a list is needed: the right side of not in"]
+# fault F023 at 26:10 null where a list is needed: what for goes through

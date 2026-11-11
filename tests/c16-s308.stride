@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask s: any-of "S" {
+ask s: any_of "S" {
   option "a" "A"
 }
 fill "A" = s

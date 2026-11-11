@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s { "b" "B" "a" "A" }
-ask st: any-of s "S"
+enum s { "b" "B" "a" "A" }
+ask st: any_of s "S"
 append(st, "a")
 insert(st, 0, "a")
 print(remove_at(st, 0))

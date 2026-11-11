@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask w: number "W"
-ask c: text "C"
+ask c: string "C"
 fill "A" = pad_left("7", w, "0")
 fill "B" = pad_left("7", 2, c)
 # rule F009 F023 14.1 8.7
@@ -16,4 +16,4 @@ fill "B" = pad_left("7", 2, c)
 # fault F009 at 6:12
 # run no-padding
 # answers {"w": 3, "c": ""}
-# fault F023 at 6:12 empty where words are needed: pad_left's padding
+# fault F023 at 6:12 null where words are needed: pad_left's padding

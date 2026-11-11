@@ -8,7 +8,7 @@ while n != 1 {
 }
 print(steps)
 var i = 0
-while yes {
+while true {
   i += 1
   if i == 3 {
     continue
@@ -19,14 +19,14 @@ while yes {
   print(i)
 }
 var total = 0
-var more = yes
+var more = true
 while more {
   ask amount: number "Amount"
   total += either(amount, 0)
-  more = amount is not empty
+  more = amount != null
 }
 print(total)
-while yes {
+while true {
 }
 # rule 7.11.1 F014
 # run two amounts

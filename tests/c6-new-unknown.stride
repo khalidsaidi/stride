@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
-  a: text
+  a: string
 }
 let x = new r { b: "q" }
 print(x.a)

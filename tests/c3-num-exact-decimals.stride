@@ -6,4 +6,4 @@ print(n / 10 + 0.2 == 0.3)
 print(0.1 + 0.2)
 # rule 3.3.4
 # answers {"n": 1}
-# prints ["yes", "yes", "0.3"]
+# prints ["true","true","0.3"]

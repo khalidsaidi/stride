@@ -2,5 +2,5 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # mistake 4 S202 used before it is defined, on line 5
 fill "A" = later
-ask later: text "L"
+ask later: string "L"
 # rule 12.2 S202

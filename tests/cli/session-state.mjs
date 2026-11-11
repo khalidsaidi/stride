@@ -39,17 +39,17 @@ export function test() {
     writeFileSync(join(top, "stride.json"), JSON.stringify({ stride: "1.0" }));
     mkdirSync(join(top, "lib"));
     mkdirSync(join(top, "nested"));
-    writeFileSync(join(top, "lib", "g.stride"), "export define get() -> number {\n  return 1\n}\n");
+    writeFileSync(join(top, "lib", "g.stride"), "export function get() -> number {\n  return 1\n}\n");
     const steps = [
-      { line: 'use "g"' },
+      { line: 'import "g"' },
       { line: "let x = get()" },
       { line: "x" }, // 1
-      { write: "../lib/g.stride", text: "export define get() -> number {\n  return 2\n}\n" },
+      { write: "../lib/g.stride", text: "export function get() -> number {\n  return 2\n}\n" },
       { line: "x" }, // still 1: the let ran once
       { line: "get()" }, // 1: the library as the session first read it
       { line: ":reload" },
       { line: "get()" }, // 2
-      { line: "define probe() -> number {\n  ask who: text \"Who\"\n  return 1 / (length(who) - 3)\n}" },
+      { line: "function probe() -> number {\n  ask who: string \"Who\"\n  return 1 / (length(who) - 3)\n}" },
       { line: "let bad = probe()" },
       { line: "Ada" }, // faults: not kept, nor its answer
       { line: ":answers" }, // {}

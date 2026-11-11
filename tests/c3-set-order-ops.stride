@@ -1,12 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-options s {
+enum s {
   "b" "B"
   "a" "A"
   "c" "C"
 }
-ask m: any-of s "M"
-ask k: any-of s "K"
+ask m: any_of s "M"
+ask k: any_of s "K"
 print(union(m, k))
 print(intersection(m, k))
 print(difference(m, k))

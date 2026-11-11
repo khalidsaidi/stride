@@ -1,20 +1,20 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, kids: list of text }
+record person { name: string, kids: list<string> }
 ask i: number "I"
-var ps: list of person = [new person { name: "a", kids: ["k"] }, empty, new person { name: "b" }]
+var ps: list<person> = [new person { name: "a", kids: ["k"] }, null, new person { name: "b" }]
 var q: person
 print(ps[0].kids[0])
 print(count(ps[2].kids))
-print(ps[1] is empty)
+print(ps[1] == null)
 print(count((ps[i] ?? new person { }).kids))
 print(count(q.kids))
 # rule 6.9.1 6.9.2 6.14 F023
 # run a record that is there
 # answers {"i": "0"}
-# prints ["k", "0", "yes", "1"]
-# fault F023 at 11:13 empty where a record is needed: what a field is read of
+# prints ["k","0","true","1"]
+# fault F023 at 11:13 null where a record is needed: what a field is read of
 # run an empty item
 # answers {"i": "1"}
-# prints ["k", "0", "yes", "0"]
+# prints ["k","0","true","0"]
 # fault F023 at 11:13

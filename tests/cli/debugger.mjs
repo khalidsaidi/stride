@@ -69,16 +69,16 @@ export function test() {
   const problems = [];
   try {
     mkdirSync(join(dir, "lib"));
-    writeFileSync(join(dir, "lib", "maths.stride"), "export define twice(n: number) -> number {\n  let d = n * 2\n  return d\n}\n");
-    writeFileSync(join(dir, "sum.stride"), 'use "maths"\nrecord person {\n  name: text\n}\nask who: text "Who"\nlet p = new person { name: who }\nvar total: number = 0\nfor i in 1..3 {\n  total = total + twice(i)\n}\nprint("{p.name}: {total}")\n');
+    writeFileSync(join(dir, "lib", "maths.stride"), "export function twice(n: number) -> number {\n  let d = n * 2\n  return d\n}\n");
+    writeFileSync(join(dir, "sum.stride"), 'import "maths"\nrecord person {\n  name: string\n}\nask who: string "Who"\nlet p = new person { name: who }\nvar total: number = 0\nfor i in 1..3 {\n  total = total + twice(i)\n}\nprint("{p.name}: {total}")\n');
     // At the terminal.
     const session = "list\nb 3\nb 9\nb lib/maths.stride:3\nc\np i\nlocals\nc\np d\nc\np i\ndelete lib/maths.stride:3\ns\nwhere\nn\np d\no\ndelete 9\nc\n";
     const r = spawnSync("node", [cli, "debug", "sum.stride", "who=Ada"], { cwd: dir, encoding: "utf8", input: session, timeout: 30_000 });
     const e = r.stderr;
     const want = [
       "stopped before its first line",
-      "sum.stride:5  ask who: text \"Who\"",
-      "→   5  ask who: text \"Who\"",
+      "sum.stride:5  ask who: string \"Who\"",
+      "→   5  ask who: string \"Who\"",
       "no statement starts on sum.stride:3",
       "stopping at sum.stride:9",
       "stopping at lib/maths.stride:3",
@@ -112,8 +112,8 @@ export function test() {
     // A program in a folder, given by its relative path, with its library in lib/ beside it: a breakpoint on the
     // library's line, given by its full path, as an editor gives it, stops there.
     mkdirSync(join(dir, "bills", "lib"), { recursive: true });
-    writeFileSync(join(dir, "bills", "lib", "half.stride"), "export define half(n: number) -> number {\n  return n / 2\n}\n");
-    writeFileSync(join(dir, "bills", "main.stride"), 'use "half"\nprint(half(8))\n');
+    writeFileSync(join(dir, "bills", "lib", "half.stride"), "export function half(n: number) -> number {\n  return n / 2\n}\n");
+    writeFileSync(join(dir, "bills", "main.stride"), 'import "half"\nprint(half(8))\n');
     const nested = spawnSync("node", [cli, "debug", "bills/main.stride"], { cwd: dir, encoding: "utf8", input: `b ${join(dir, "bills", "lib", "half.stride")}:2\nc\nwhere\nc\n`, timeout: 30_000 });
     if (!nested.stderr.includes("stopping at") || !nested.stderr.includes("breakpoint at lib/half.stride:2") || !nested.stderr.includes("main.stride:2") || nested.stdout !== "4\n") problems.push(`a library breakpoint for a program in a folder: stdout ${JSON.stringify(nested.stdout)}, stderr ${JSON.stringify(nested.stderr)}`);
 

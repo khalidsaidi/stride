@@ -1,5 +1,5 @@
-options s { "b" "B" "a" "A" }
-let chosen: set of s = ["a", "b"]
+enum s { "b" "B" "a" "A" }
+let chosen: set<s> = ["a", "b"]
 expect first(chosen) == "b"
 expect last(chosen) == "a"
 expect first([1, 2]) == 1

@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Name text near Name
-ask y: yes-no "Name"
+ask y: bool "Name"
 if y {
   fill "Name" = "yes"
 } else {

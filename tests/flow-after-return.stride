@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f() -> number {
+function f() -> number {
   return 1
 # mistake 6 S406 never runs
   return 2

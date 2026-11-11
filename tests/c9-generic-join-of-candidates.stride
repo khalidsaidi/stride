@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define choose<t>(a: t, b: t) -> t {
+function choose<t>(a: t, b: t) -> t {
   return a
 }
-define mail(e: text) -> text {
+function mail(e: string) -> string {
   return e
 }
 ask p: phone "P"

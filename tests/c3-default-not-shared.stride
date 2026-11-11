@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 const START = [0]
-define grown(x: number, l: list of number = [1], m: list of number = START) -> list of number {
+function grown(x: number, l: list<number> = [1], m: list<number> = START) -> list<number> {
   append(l, x)
   append(m, x)
   return l + m

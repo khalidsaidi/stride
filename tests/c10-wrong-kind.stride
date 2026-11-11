@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "Name"
-ask b: yes-no "Ok"
+ask a: string "Name"
+ask b: bool "Ok"
 tick "Name" when b
 fill "Ok" = a
 # rule 10.3 S509

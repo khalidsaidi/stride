@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 # mistake 4 S405 end every path with a return
-define f(y: yes-no) -> number {
+function f(y: bool) -> number {
   if y {
     return 1
   }
 }
-fill "A" = "{f(yes)}"
+fill "A" = "{f(true)}"
 # rule 9.6 S405

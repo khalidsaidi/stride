@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define age_of(who: text) -> number {
+function age_of(who: string) -> number {
   ask age: number "{who}'s age"
   return age
 }
-let ages = [age_of(n) for each n in ["Ada", "Bo"]]
+let ages = [age_of(n) for n in ["Ada", "Bo"]]
 print(sum(ages))
 # rule 6.12 8.6.2
 # run both

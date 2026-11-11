@@ -12,15 +12,16 @@
 //
 //   program     = header item*                 header = "form" id "pdf" sha ["fields" plain]
 //   library     = item*
-//   item        = use | declaration | statement
-//   use         = "use" plain ["as" name]
-//   declaration = ["export"] (record | options | const | native | define)
-//   record      = "record" name "{" (name ":" type [","])* "}"
-//   options     = "options" name "{" (["option"] plain string)* "}"
+//   item        = import | declaration | statement
+//   import      = "import" plain ["as" name]
+//   declaration = ["export"] (record | enum | const | native | function)
+//   record      = "record" word "{" (word ":" type [","])* "}"          word = a name or a keyword
+//   enum        = "enum" name "{" (["option"] plain string)* "}"
 //   const       = "const" name [":" type] "=" expr
-//   native      = "native" "define" name "(" [params] ")" "->" type
-//   define      = "define" name ["<" name ("," name)* ">"] "(" [params] ")" ["->" type] block
-//   type        = "list" "of" type | "set" "of" qname | "any" | qname
+//   native      = "native" "function" name "(" [params] ")" ["->" type]
+//   function    = "function" name ["<" name ("," name)* ">"] "(" [params] ")" ["->" type] block
+//   type        = "list" "<" type ">" | "map" "<" type "," type ">" | "set" "<" qname ">"
+//               | "function" "(" [type ("," type)*] ")" ["->" type] | "any" | qname
 //   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
 //   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
@@ -29,31 +30,34 @@
 //   for         = "for" name "in" expr (".." | "..<") expr block
 //   while       = "while" expr block
 //   try         = "try" block "catch" [name] block
-//   foreach     = "for" "each" [name ","] name "in" expr block
+//   foreach     = "for" [name ","] name "in" expr block               (what follows "in" has no ".." after its sum)
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = cond | coalesce;  coalesce = or ("??" or)*;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
-//   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum | "is" ["not"] "empty"]
+//   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum]
 //   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/") unary)*;  unary = "-" unary | postfix
-//   postfix     = primary ("." name | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
-//   primary     = number | string | "yes" | "no" | "empty" | "[" [args] "]" | "new" qname "{" fields "}" | name
-//               | "(" expr ")"
+//   postfix     = primary ("." word | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
+//   primary     = number | string | "true" | "false" | "null" | "[" [args] "]" | "new" qname "{" fields "}" | name
+//               | "(" expr ")" | "function" "(" [params] ")" ["->" type] block
 import { either } from "./source.mjs";
 import * as D from "../runtime/decimal.mjs";
 
 // The keywords (§2.3). `option`, `any`, `another` and `faults` are contextual (§2.3.1): names everywhere but the one
 // place the grammar uses them.
 export const KEYWORDS = new Set([
-  "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "define", "else",
-  "empty", "expect", "export", "fill", "for", "form", "if", "in", "is", "let", "match",
-  "native", "new", "no", "not", "options", "or", "pdf", "pick", "record", "return", "tick",
-  "use", "var", "while", "yes",
+  "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "else", "enum",
+  "expect", "export", "false", "fill", "for", "form", "function", "if", "import", "in", "let", "match",
+  "native", "new", "not", "null", "or", "pdf", "pick", "record", "return", "tick",
+  "true", "var", "while",
 ]);
-// Words the grammar uses in one place only (§2.3.1): a type's `list`, `set` and `of`, the header's `fields`,
-// `for each`, `when` and `then`. Anywhere else each is a name like any other.
-const CONTEXTUAL = new Set(["each", "fields", "list", "of", "set", "then", "when"]);
-const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
+// Words the grammar uses in one place only (§2.3.1): a type's `list`, `map` and `set`, the header's `fields`,
+// `when` and `then`. Anywhere else each is a name like any other.
+const CONTEXTUAL = new Set(["fields", "list", "set", "then", "when"]);
+// The ways of asking (§8.1).
+const QUESTION_TYPES = ["one_of", "any_of", "long_text", "bool", "string", "number", "date", "phone", "email"];
+// Spellings of the ways of asking that Stride does not have, and what it writes for each.
+const OTHER_QUESTION_TYPES = { "one-of": "one_of", "any-of": "any_of", "long-text": "long_text", "yes-no": "bool", text: "string" };
 const PUNCT = ["..<", "..", "??", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
-const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
+const STARTS = new Set(["import", "export", "record", "enum", "const", "native", "function", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
   constructor(message, span, code = "S010") {
@@ -132,21 +136,17 @@ export function lex(text, cursor = new Cursor(text), until = null) {
     }
     let token;
     const prev = tokens[tokens.length - 1];
-    if (prev?.type === "keyword" && (prev.value === "form" || prev.value === "pdf") && !until) {
-      // A form's id and a PDF's sha256 are read as they are written.
+    const before = tokens[tokens.length - 2];
+    const fieldName = c === ":" || (before?.type === "punct" && before.value === ".");
+    if (prev?.type === "keyword" && (prev.value === "form" || prev.value === "pdf") && !until && !fieldName) {
+      // A form's id and a PDF's sha256 are read as they are written; `form` and `pdf` as a field's name (§2.3.2)
+      // have a `.` before them or a `:` after.
       let value = "";
       while (cursor.at < text.length && !/\s/.test(cursor.peek()) && cursor.peek() !== "#" && cursor.peek() !== '"') value += cursor.next();
       token = { type: "raw", value };
     } else if (/[A-Za-z_]/.test(c)) {
       let value = "";
       while (cursor.at < text.length && /[A-Za-z0-9_]/.test(cursor.peek())) value += cursor.next();
-      // long-text, yes-no, one-of, any-of are one word.
-      for (const h of HYPHENATED) {
-        if (h.startsWith(`${value}-`) && text.startsWith(h.slice(value.length), cursor.at) && !/[A-Za-z0-9_]/.test(text[cursor.at + h.length - value.length] ?? "")) {
-          for (let i = value.length; i < h.length; i++) cursor.next();
-          value = h;
-        }
-      }
       token = { type: KEYWORDS.has(value) ? "keyword" : "name", value };
     } else if (/[0-9]/.test(c)) {
       let value = "";
@@ -311,6 +311,12 @@ class Parser {
     throw this.mistake(what);
   }
 
+  // A field's name: any word, a keyword among them (§2.3.2).
+  fieldName() {
+    if (this.is("keyword")) return this.take().value;
+    return this.name("a field's name");
+  }
+
   // A span from a token to the token before the current one.
   from(start) {
     const last = this.tokens[Math.max(this.at - 1, 0)];
@@ -354,7 +360,7 @@ class Parser {
     return { kind: "library", span: this.from(start), items };
   }
 
-  // A test file (§4.3): no header; uses, declarations, lets and expects.
+  // A test file (§4.3): no header; imports, declarations, lets and expects.
   testFile() {
     const start = this.token;
     const items = this.items(null);
@@ -427,12 +433,17 @@ class Parser {
   }
 
   item() {
-    if (this.word("use")) return this.use();
-    if (this.word("export") || this.word("record") || this.word("options") || this.word("const") || this.word("native") || this.word("define")) return this.declaration();
+    if (this.word("import")) return this.import();
+    if (this.word("export") || this.word("record") || this.word("enum") || this.word("const") || this.word("native") || (this.word("function") && !this.lambdaAhead())) return this.declaration();
     return this.statement();
   }
 
-  use() {
+  // function( … : a function written in place (§9.11), or a function's type (§9.10).
+  lambdaAhead() {
+    return this.is("keyword", "function") && this.peek().type === "punct" && this.peek().value === "(";
+  }
+
+  import() {
     const start = this.take();
     const file = this.plain();
     let alias = null;
@@ -440,7 +451,7 @@ class Parser {
       this.take();
       alias = this.name();
     }
-    return this.node("use", start, { path: file.value, pathSpan: file.span, alias });
+    return this.node("import", start, { path: file.value, pathSpan: file.span, alias });
   }
 
   // ----- declarations
@@ -451,11 +462,11 @@ class Parser {
     if (exported) this.take();
     let d;
     if (this.word("record")) d = this.record();
-    else if (this.word("options")) d = this.options();
+    else if (this.word("enum")) d = this.enum();
     else if (this.word("const")) d = this.constant();
     else if (this.word("native")) d = this.native();
-    else if (this.word("define")) d = this.define();
-    else throw this.mistake(["record", "options", "const", "define"]);
+    else if (this.word("function")) d = this.function();
+    else throw this.mistake(["record", "enum", "const", "function"]);
     d.exported = exported;
     if (exported) d.span = this.from(start);
     return d;
@@ -468,7 +479,7 @@ class Parser {
     const fields = [];
     while (!this.sym("}")) {
       const f = this.token;
-      const fname = this.name("a field's name");
+      const fname = this.fieldName();
       this.expect("punct", ":", '":" and the field\'s type');
       const type = this.type();
       fields.push(this.node("field-decl", f, { name: fname, type }));
@@ -478,14 +489,14 @@ class Parser {
     return this.node("record", start, { name, fields });
   }
 
-  options() {
+  enum() {
     const start = this.take();
     const name = this.name();
     this.expect("punct", "{");
     const options = [];
     while (!this.sym("}")) options.push(this.option(false));
     this.take();
-    return this.node("options", start, { name, options });
+    return this.node("enum", start, { name, options });
   }
 
   option(required) {
@@ -513,7 +524,7 @@ class Parser {
 
   native() {
     const start = this.take();
-    this.expect("keyword", "define");
+    this.expect("keyword", "function");
     const name = this.name();
     const typeParams = this.typeParams();
     const params = this.params();
@@ -526,7 +537,7 @@ class Parser {
     return this.node("native", start, { name, typeParams, params, result });
   }
 
-  // Type parameters: define first_of<T>(l: list of T) -> T
+  // Type parameters: function first_of<t>(l: list<t>) -> t
   typeParams() {
     const typeParams = [];
     if (this.sym("<")) {
@@ -541,7 +552,7 @@ class Parser {
     return typeParams;
   }
 
-  define() {
+  function() {
     const start = this.take();
     const name = this.name();
     const typeParams = this.typeParams();
@@ -552,7 +563,7 @@ class Parser {
       result = this.type();
     }
     const body = this.block();
-    return this.node("define", start, { name, typeParams, params, result, body });
+    return this.node("function", start, { name, typeParams, params, result, body });
   }
 
   params() {
@@ -578,34 +589,55 @@ class Parser {
 
   // ----- types
 
+  // "<" after list, map or set.
+  openAngle(written) {
+    if (this.sym("<")) return this.take();
+    throw new SyntaxMistake(`this type is written ${written}`, this.token.span, "S010");
+  }
+
+  // The ">" that closes a type's "<". In `list<number>= e` the lexer read ">=": its ">" closes, its "=" stays.
+  closeAngle() {
+    const t = this.token;
+    if (t.type === "punct" && t.value === ">=") {
+      const mid = { line: t.span.line, col: t.span.col + 1, offset: t.span.start + 1 };
+      this.tokens[this.at] = { ...t, value: "=", span: { ...t.span, col: mid.col, start: mid.offset } };
+      return;
+    }
+    this.expect("punct", ">", '">"');
+  }
+
   type() {
     const start = this.token;
     if (this.word("list")) {
       this.take();
-      this.expect("keyword", "of");
+      this.openAngle("list<T>");
       const element = this.type();
+      this.closeAngle();
       return this.node("type-list", start, { element });
     }
-    // map of text to number: values under keys (§3.10).
-    if (this.is("name", "map") && this.peek().value === "of" && ["name", "keyword"].includes(this.peek().type)) {
+    // map<string, number>: values under keys (§3.10).
+    if (this.is("name", "map") && (this.peek().value === "<" || (this.peek().type === "name" && this.peek().value === "of"))) {
       this.take();
-      this.take();
+      this.openAngle("map<K, V>");
       const key = this.type();
-      if (!this.is("name", "to")) this.expect("keyword", "to", '"to" and the type of the values');
-      else this.take();
-      return this.node("type-map", start, { key, value: this.type() });
+      this.expect("punct", ",", '"," and the type of the values');
+      const value = this.type();
+      this.closeAngle();
+      return this.node("type-map", start, { key, value });
     }
     if (this.word("set")) {
       this.take();
-      this.expect("keyword", "of");
-      return this.node("type-set", start, { name: this.qname() });
+      this.openAngle("set<S>");
+      const name = this.qname();
+      this.closeAngle();
+      return this.node("type-set", start, { name });
     }
     if (this.is("name", "any")) {
       this.take();
       return this.node("type-any", start, {});
     }
-    // function(number, text) -> yes-no: a function as a value (§9.10).
-    if (this.is("name", "function") && this.peek().type === "punct" && this.peek().value === "(") {
+    // function(number, string) -> bool: a function as a value (§9.10).
+    if (this.lambdaAhead()) {
       this.take();
       this.take();
       const params = [];
@@ -622,6 +654,7 @@ class Parser {
       return this.node("type-function", start, { params, result });
     }
     if (!this.is("name")) throw this.mistake("a type");
+    if (this.token.value === "yes" && this.peek().value === "-" && this.peek(2).value === "no") throw new SyntaxMistake(`the type of true and false is written bool`, this.token.span, "S010");
     return this.node("type-name", start, { name: this.qname() });
   }
 
@@ -700,10 +733,9 @@ class Parser {
         case "match":
           return this.match();
         case "for":
-          // for each x in …: `each`, then the item's name; a counter may itself be called each (for each in 1..3).
-          return this.peek().value === "each" && this.peek().type === "name" && !(this.peek(2).type === "keyword" && this.peek(2).value === "in") ? this.forEach() : this.forLoop();
+          return this.forLoop();
         case "while": {
-          // while c { … }: the body again and again, as long as c is yes (§7.11.1).
+          // while c { … }: the body again and again, as long as c is true (§7.11.1).
           const start = this.take();
           const condition = this.condition();
           return this.node("while", start, { condition, body: this.block() });
@@ -721,12 +753,23 @@ class Parser {
           break;
       }
     }
-    if (t.type === "name" || (t.type === "punct" && t.value === "(")) return this.assignOrCall();
+    if (t.type === "name") this.otherSpelling();
+    if (t.type === "name" || (t.type === "punct" && t.value === "(") || this.lambdaAhead()) return this.assignOrCall();
     // A value on its own, whatever it starts with, is one statement name resolution refuses (S232).
-    const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["yes", "no", "empty", "not", "new"].includes(t.value));
+    const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["true", "false", "null", "not", "new"].includes(t.value));
     const prevTok = this.tokens[this.at - 1];
     if (value && (t.broken || !prevTok || (prevTok.type === "punct" && prevTok.value === "{"))) return this.node("call-statement", t, { call: this.expr() });
     throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, try, collect, return, break, continue)", "a call"]);
+  }
+
+  // A declaration started with a word Stride does not have: what it writes for it.
+  otherSpelling() {
+    const t = this.token, next = this.peek();
+    if (next.broken) return;
+    const after = this.peek(2);
+    if (["define", "def", "fn", "func", "fun"].includes(t.value) && next.type === "name" && after.type === "punct" && ["(", "<"].includes(after.value)) throw new SyntaxMistake(`a function is declared with "function": function ${next.value}(…)`, t.span, "S010");
+    if (t.value === "options" && next.type === "name" && after.type === "punct" && after.value === "{") throw new SyntaxMistake(`an option set is declared with "enum": enum ${next.value} { … }`, t.span, "S010");
+    if (t.value === "use" && next.type === "string") throw new SyntaxMistake(`a library is brought in with "import": import "…"`, t.span, "S010");
   }
 
   // expect e ["words"]   expect e faults "code or words"   (§7.17)
@@ -748,16 +791,20 @@ class Parser {
     const names = [this.name("the answer's name")];
     while (this.sym(".")) {
       this.take();
-      names.push(this.name("a field's name"));
+      names.push(this.fieldName());
     }
     const target = this.node("path", p, { names });
     this.expect("punct", ":", '":" and the question\'s type');
     const q = this.token;
-    const types = ["one-of", "any-of", "long-text", "yes-no", "text", "number", "date", "phone", "email"];
-    if (!(this.is("name") && types.includes(q.value))) throw this.mistake(types.map((x) => `"${x}"`));
+    if (!(this.is("name") && QUESTION_TYPES.includes(q.value))) {
+      const hyphen = this.peek().value === "-" && this.peek(2).type === "name" ? `${q.value}-${this.peek(2).value}` : null;
+      const written = this.is("name") ? OTHER_QUESTION_TYPES[hyphen] ?? OTHER_QUESTION_TYPES[q.value] : null;
+      if (written) throw new SyntaxMistake(`a ${OTHER_QUESTION_TYPES[hyphen] ? hyphen : q.value} question is written ${written}`, q.span, "S010");
+      throw this.mistake(QUESTION_TYPES.map((x) => `"${x}"`));
+    }
     this.take();
     let set = null;
-    if ((q.value === "one-of" || q.value === "any-of") && this.is("name")) set = this.qname();
+    if ((q.value === "one_of" || q.value === "any_of") && this.is("name")) set = this.qname();
     const question = this.node("question-type", q, { form: q.value, set });
     const printed = this.wordsOrName("the question's printed words, in quotes, or a constant that holds them");
     let options = null;
@@ -867,17 +914,37 @@ class Parser {
     return this.node("match", start, { subject, arms });
   }
 
+  // for i in a..b, or for [n,] x in l: what follows `in` decides, a range having `..` after its first bound (§7.11).
   forLoop() {
     const start = this.take();
-    const counter = this.name("the loop's counter");
+    const [index, item] = this.loopNames();
     this.expect("keyword", "in");
-    const from = this.sum();
-    // a..b ends with b, a..<b before it (§7.11).
-    const exclusive = this.sym("..<");
-    if (exclusive) this.take();
-    else this.expect("punct", "..", '".." and where the loop ends');
-    const to = this.sum();
-    return this.node("for", start, { counter, from, to, exclusive, body: this.block() });
+    if (index === null) {
+      const at = this.at, found = this.mistakes.length;
+      let from = null;
+      try {
+        from = this.sum();
+      } catch (e) {
+        if (!(e instanceof SyntaxMistake)) throw e;
+      }
+      if (from && (this.sym("..") || this.sym("..<"))) {
+        // a..b ends with b, a..<b before it.
+        const exclusive = this.take().value === "..<";
+        const to = this.sum();
+        return this.node("for", start, { counter: item, from, to, exclusive, body: this.block() });
+      }
+      this.at = at;
+      this.mistakes.length = found;
+    }
+    const list = this.expr();
+    return this.node("for-each", start, { index, item, list, body: this.block() });
+  }
+
+  // The names after `for`, of a loop or a comprehension. `for each x in l` is the spelling of other languages.
+  loopNames() {
+    const next = this.peek();
+    if (this.is("name", "each") && next.type === "name" && !next.broken) throw new SyntaxMistake(`"for each ${next.value} in …" is written "for ${next.value} in …"`, this.token.span, "S010");
+    return this.indexAndItem();
   }
 
   // `n, item` or `item`.
@@ -888,15 +955,6 @@ class Parser {
       return [first, this.name()];
     }
     return [null, first];
-  }
-
-  forEach() {
-    const start = this.take();
-    this.take();
-    const [index, item] = this.indexAndItem();
-    this.expect("keyword", "in");
-    const list = this.expr();
-    return this.node("for-each", start, { index, item, list, body: this.block() });
   }
 
   collect() {
@@ -1013,10 +1071,10 @@ class Parser {
   compare() {
     const a = this.sum();
     const t = this.token;
-    // One comparison: a second one after it, of any kind (an order, ==, in, is empty), is S014 at its operator.
+    // One comparison: a second one after it, of any kind (an order, ==, in), is S014 at its operator.
     const once = (e) => {
       const n = this.token;
-      const another = (n.type === "punct" && ["==", "!=", "<=", ">=", "<", ">"].includes(n.value)) || this.word("in") || this.word("is") || (this.word("not") && this.peek().type === "keyword" && this.peek().value === "in");
+      const another = (n.type === "punct" && ["==", "!=", "<=", ">=", "<", ">"].includes(n.value)) || this.word("in") || (this.word("not") && this.peek().type === "keyword" && this.peek().value === "in");
       if (another) throw new SyntaxMistake("comparisons do not chain: a < b < c is written a < b and b < c", n.span, "S014");
       return e;
     };
@@ -1036,12 +1094,11 @@ class Parser {
       const b = this.sum();
       return once({ kind: "binary", op: "not in", a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
-    if (this.word("is")) {
-      this.take();
-      const not = this.word("not");
-      if (not) this.take();
-      const end = this.expect("keyword", "empty", '"empty"');
-      return once({ kind: "is-empty", not, operand: a, span: join(a.span, end.span) });
+    // x is null, x is empty, x is not None: other languages' tests for no value.
+    if (this.is("name", "is") && !t.broken) {
+      const not = this.peek().type === "keyword" && this.peek().value === "not";
+      const what = this.peek(not ? 2 : 1);
+      if ((what.type === "keyword" && what.value === "null") || (what.type === "name" && ["empty", "None", "nil"].includes(what.value))) throw new SyntaxMistake(`"is${not ? " not" : ""} ${what.value}" is written "${not ? "!=" : "=="} null"`, t.span, "S010");
     }
     return a;
   }
@@ -1082,8 +1139,10 @@ class Parser {
   postfixes(e, deeper) {
     for (;;) {
       const t = this.token;
-      if ((this.sym(".") && this.peek().type === "name") || ((this.sym("[") || this.sym("(")) && !t.broken)) deeper();
-      if (this.sym(".") && this.peek().type === "name") {
+      // After a `.`, any word is a field's name (§2.3.2).
+      const field = this.sym(".") && ["name", "keyword"].includes(this.peek().type);
+      if (field || ((this.sym("[") || this.sym("(")) && !t.broken)) deeper();
+      if (field) {
         this.take();
         const n = this.take();
         e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span };
@@ -1138,7 +1197,7 @@ class Parser {
     if (t.type === "number") return (this.take(), { kind: "number", value: t.value, raw: t.raw, span: t.span });
     if (t.type === "string") return this.string();
     // A function written in place (§9.11): function(n: number) -> number { return n * 2 }
-    if (this.is("name", "function") && this.peek().type === "punct" && this.peek().value === "(") {
+    if (this.lambdaAhead()) {
       const start = this.take();
       const params = this.params();
       let result = null;
@@ -1150,8 +1209,8 @@ class Parser {
       return this.node("lambda", start, { params, result, body, typeParams: [] });
     }
     if (t.type === "keyword") {
-      if (t.value === "yes" || t.value === "no") return (this.take(), { kind: "yes-no", value: t.value === "yes", span: t.span });
-      if (t.value === "empty") return (this.take(), { kind: "empty", span: t.span });
+      if (t.value === "true" || t.value === "false") return (this.take(), { kind: "bool", value: t.value === "true", span: t.span });
+      if (t.value === "null") return (this.take(), { kind: "null", span: t.span });
       if (t.value === "new") {
         const start = this.take();
         const type = this.qname();
@@ -1159,7 +1218,7 @@ class Parser {
         const fields = [];
         while (!this.sym("}")) {
           const f = this.token;
-          const name = this.name("a field's name");
+          const name = this.fieldName();
           this.expect("punct", ":");
           fields.push(this.node("field-value", f, { name, value: this.expr() }));
           if (this.sym(",")) this.take();
@@ -1185,11 +1244,10 @@ class Parser {
     if (this.sym("[")) {
       const start = this.take();
       const items = this.args("]");
-      // [e for each [n,] x in l if c] (§6.12)
-      if (items.length === 1 && this.word("for") && this.peek().type === "name" && this.peek().value === "each") {
+      // [e for [n,] x in l if c] (§6.12)
+      if (items.length === 1 && this.word("for")) {
         this.take();
-        this.take();
-        const [index, item] = this.indexAndItem();
+        const [index, item] = this.loopNames();
         this.expect("keyword", "in");
         const list = this.or();
         let condition = null;

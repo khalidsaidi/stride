@@ -1,4 +1,4 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 8) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 9) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
@@ -114,7 +114,7 @@ export function generate(program, pdf, debug = null) {
           return emit(x.op === "-" ? OP.NEG : OP.NOT);
         case "binary":
           if (x.op === "and" || x.op === "or") {
-            // Decided on the left when it can be: the right is not worked out; always yes or no (§6.15.1).
+            // Decided on the left when it can be: the right is not worked out; always true or false (§6.15.1).
             const decided = label();
             const end = label();
             expr(x.a);
@@ -127,11 +127,11 @@ export function generate(program, pdf, debug = null) {
             return placeLabel(end);
           }
           if (x.op === "??") {
-            // a ?? b (§6.16): a when it is not empty; b is worked out only when it is.
+            // a ?? b (§6.16): a when it is not null; b is worked out only when it is.
             const end = label();
             expr(x.a);
             emit(OP.DUP);
-            emit(OP.NATIVE, nativeIndex("is_empty"), 1);
+            emit(OP.NATIVE, nativeIndex("is_null"), 1);
             jumpTo(OP.JUMP_IF_FALSE, end);
             emit(OP.POP);
             expr(x.b);
@@ -150,10 +150,10 @@ export function generate(program, pdf, debug = null) {
           atExpr(x);
           return emit(OP.CALL, fnIndex.get(x.fn), x.args.length);
         case "outer": {
-          // The program's local of that name, in the program's own frame; a name it never gave a value is empty.
+          // The program's local of that name, in the program's own frame; a name it never gave a value is null.
           const l = program.outer?.get(x.sym);
           const k = l ? mainSlots.get(l) : undefined;
-          return k === undefined ? emit(OP.EMPTY) : emit(OP.LOAD_MAIN, k);
+          return k === undefined ? emit(OP.NULL) : emit(OP.LOAD_MAIN, k);
         }
         case "closure":
           emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
@@ -279,7 +279,7 @@ export function generate(program, pdf, debug = null) {
     }
 
     function value(v) {
-      if (v === null || v === undefined) emit(OP.EMPTY);
+      if (v === null || v === undefined) emit(OP.NULL);
       else if (v === true) emit(OP.TRUE);
       else if (v === false) emit(OP.FALSE);
       else if (isNumber(v)) emit(OP.NUMBER, N(v));
@@ -299,7 +299,7 @@ export function generate(program, pdf, debug = null) {
 
     // To the place a path names (§7.5.1), leaving the record or list that holds its last step on the stack: every
     // step but the last a read — a position there checked (F004) and present (F020) — and a record made where a
-    // place on the way holds empty.
+    // place on the way holds null.
     const mainSlot = (sym) => mainSlots.get(program.outer.get(sym));
     function navigate(dst, path, outer) {
       if (path[0]?.field !== undefined && path[0].ensure) emit(outer ? OP.ENSURE_MAIN : OP.ENSURE_RECORD, outer ? mainSlot(outer) : local(dst), recordIndex(path[0].ensure));
@@ -380,7 +380,7 @@ export function generate(program, pdf, debug = null) {
           const start = emit(OP.EXPECT, s.fault ? T(s.fault.v) + 1 : 0);
           start.to = after;
           expr(s.value);
-          if (!s.fault) s.message ? expr(s.message) : emit(OP.EMPTY);
+          if (!s.fault) s.message ? expr(s.message) : emit(OP.NULL);
           emit(OP.EXPECT_DONE, s.fault ? 1 : 0);
           return placeLabel(after);
         }

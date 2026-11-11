@@ -1,11 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record p { tags: list of text }
+record p { tags: list<string> }
 var r = new p { tags: ["a"] }
 var s = r
 s.tags[0] = "z"
 print(r.tags[0])
-var outer: list of list of number = [[1]]
+var outer: list<list<number>> = [[1]]
 var inner = outer[0]
 inner[0] = 5
 print(outer[0][0])

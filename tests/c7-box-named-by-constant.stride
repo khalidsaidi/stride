@@ -2,8 +2,8 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 const name_box = "A"
 const agree_box = "B"
-ask name: text "Name"
-ask agrees: yes-no "Agree"
+ask name: string "Name"
+ask agrees: bool "Agree"
 if agrees {
   fill name_box = name
 }

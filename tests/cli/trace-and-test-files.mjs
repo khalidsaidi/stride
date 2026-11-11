@@ -15,7 +15,7 @@ export function test() {
   const stride = (...args) => spawnSync("node", [cli, ...args], { encoding: "utf8", timeout: 30_000, cwd: dir });
   const problems = [];
   try {
-    writeFileSync(join(dir, "t.stride"), 'define double(n: number) -> number {\n  let d = n * 2\n  return d\n}\nvar total: number = 0\nfor i in 1..2 {\n  total = total + double(i)\n}\nprint(total)\n');
+    writeFileSync(join(dir, "t.stride"), 'function double(n: number) -> number {\n  let d = n * 2\n  return d\n}\nvar total: number = 0\nfor i in 1..2 {\n  total = total + double(i)\n}\nprint(total)\n');
     const r = stride("run", "t.stride", "--trace");
     const traced = r.stderr + r.stdout;
     const want = ["t.stride:5  var total: number = 0", "      total = 0", "t.stride:7  total = total + double(i)", "  → double(n = 1)", "  t.stride:2  let d = n * 2", "        d = 2", "  ← double gives 2", "      total = 2", "6"];
@@ -36,7 +36,7 @@ export function test() {
     const sh = stride("run", "s.stride", "--trace").stderr;
     if (!sh.includes("s.stride:3  append(a, 3)\n    · append([1, 2], 3) gives [1, 2, 3]\n      a = [1, 2, 3], b = [1, 2, 3]")) problems.push(`a list changed in place is not traced as it was and as it is:\n${sh}`);
     // Turns of loops whose bodies are empty are shown too, each with its own values; a loop of no turns, none.
-    writeFileSync(join(dir, "e.stride"), 'for i in 1..3 { }\nfor each i, x in [10, 20, 30] { }\nfor a in 1..2 {\n  for b in 1..0 { }\n}\nprint("done")\n');
+    writeFileSync(join(dir, "e.stride"), 'for i in 1..3 { }\nfor i, x in [10, 20, 30] { }\nfor a in 1..2 {\n  for b in 1..0 { }\n}\nprint("done")\n');
     const e = stride("run", "e.stride", "--trace").stderr.split("\n");
     const of = (n) => e.filter((l) => l.startsWith(`e.stride:${n} `)).map((l) => l.replace(/^.*\}?\s{6}/, "").trim());
     const wantTurns = { 1: ["i = 1", "i = 2", "i = 3"], 2: ["i = 0, x = 10", "i = 1, x = 20", "i = 2, x = 30"], 3: ["a = 1", "a = 2"], 4: [] };

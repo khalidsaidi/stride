@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+import "c-pair"
+let p = new pair { left: "a", right: "b" }
+fill "A" = both(p)
+
+# rule 4.2 4.5
+# run
+# boxes {"A": "ab"}

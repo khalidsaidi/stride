@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 for i in 1..2 {
-  ask k: one-of "Kind" {
+  ask k: one_of "Kind" {
     option "a" "A{i}"
   }
   print(k)

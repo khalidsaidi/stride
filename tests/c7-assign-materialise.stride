@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record address {
-  city: text
+  city: string
 }
 record person {
-  name: text
+  name: string
   age: number
   home: address
 }
@@ -12,15 +12,15 @@ var p: person
 p.name = "Ada"
 var q: person
 q.home.city = "Paris"
-var xs: list of person = [empty]
+var xs: list<person> = [null]
 xs[0].name = "Ada"
 print(p.name)
-print(p.age is empty)
+print(p.age == null)
 print(q.home.city)
-print(q.name is empty)
+print(q.name == null)
 print(xs[0].name)
 print("{count(xs)}")
 
 # rule 7.5.1
 # run
-# prints ["Ada", "yes", "Paris", "yes", "Ada", "1"]
+# prints ["Ada","true","Paris","true","Ada","1"]

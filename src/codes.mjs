@@ -22,7 +22,7 @@ export const CODES = {
     "explanation": ""
   },
   "F006": {
-    "when": "a field read or set on a value that is not a record and not empty, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program",
+    "when": "a field read or set on a value that is not a record and not null, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program",
     "explanation": ""
   },
   "F007": {
@@ -78,7 +78,7 @@ export const CODES = {
     "explanation": ""
   },
   "F023": {
-    "when": "empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value",
+    "when": "null where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for` goes through, an argument of a library function that needs a value",
     "explanation": ""
   },
   "F024": {
@@ -123,7 +123,7 @@ export const CODES = {
   },
   "S010": {
     "when": "anything the grammar does not allow there",
-    "explanation": "The message says what was found and what could stand there."
+    "explanation": "The message says what was found and what could stand there; for a spelling Stride does not have (`for each x in l`, `x is null`, `list of T`, `def f()`), what it writes instead."
   },
   "S011": {
     "when": "`=` where a comparison is meant",
@@ -151,7 +151,7 @@ export const CODES = {
   },
   "S018": {
     "when": "`{…}` in words that must be plain",
-    "explanation": "Option values, `use` paths, `fields` and match values are plain words."
+    "explanation": "Option values, `import` paths, `fields` and match values are plain words."
   },
   "S019": {
     "when": "nesting deeper than 200",
@@ -174,7 +174,7 @@ export const CODES = {
     "explanation": "A statement starts on a line of its own; a block may close on the same line."
   },
   "S101": {
-    "when": "`use \"std\"`",
+    "when": "`import \"std\"`",
     "explanation": "The standard library is in every file already."
   },
   "S102": {
@@ -182,15 +182,15 @@ export const CODES = {
     "explanation": "Small letters, digits, `-`, `_`, with `/` between folders."
   },
   "S103": {
-    "when": "libraries using each other in a circle",
-    "explanation": "A library cannot use, through others, a library that uses it."
+    "when": "libraries importing each other in a circle",
+    "explanation": "A library cannot import, through others, a library that imports it."
   },
   "S104": {
     "when": "a library that is not there",
-    "explanation": "`use \"x\"` reads `lib/x.stride`."
+    "explanation": "`import \"x\"` reads `lib/x.stride`."
   },
   "S105": {
-    "when": "a `use` in the standard library",
+    "when": "an `import` in the standard library",
     "explanation": "The standard library stands on its own."
   },
   "S106": {
@@ -199,15 +199,15 @@ export const CODES = {
   },
   "S107": {
     "when": "`export` in a program or a test file",
-    "explanation": "Nothing uses a program or a test file; export is for libraries."
+    "explanation": "Nothing imports a program or a test file; export is for libraries."
   },
   "S108": {
     "when": "a native outside the standard library",
-    "explanation": "Natives are the machine's; write the function in Stride with define."
+    "explanation": "Natives are the machine's; write the function in Stride with `function`."
   },
   "S109": {
     "when": "two libraries exporting one name",
-    "explanation": "Bring one in with `as`: `use \"b\" as b`, then `b.name`."
+    "explanation": "Bring one in with `as`: `import \"b\" as b`, then `b.name`."
   },
   "S110": {
     "when": "a library name brought in twice",
@@ -247,15 +247,15 @@ export const CODES = {
   },
   "S208": {
     "when": "a declaration named like a type",
-    "explanation": "`text`, `number`, … are types."
+    "explanation": "`string`, `number`, … are types."
   },
   "S209": {
     "when": "a type that is not one",
     "explanation": "Types are §5.6; the message gives the nearest."
   },
   "S210": {
-    "when": "`set of` something that is not an option set",
-    "explanation": "`set of` takes an option set's name."
+    "when": "`set<…>` of something that is not an option set",
+    "explanation": "`set<S>` takes an option set's name."
   },
   "S214": {
     "when": "`any` or `element` outside the natives",
@@ -287,19 +287,19 @@ export const CODES = {
   },
   "S222": {
     "when": "a question's option set that is not one",
-    "explanation": "`one-of S` takes an option set."
+    "explanation": "`one_of S` takes an option set."
   },
   "S223": {
     "when": "a question with a set and its own options",
     "explanation": "One or the other."
   },
   "S224": {
-    "when": "a one-of or any-of without options",
+    "when": "a one_of or any_of without options",
     "explanation": "Give a set, or `{ option \"v\" \"printed\" … }`."
   },
   "S225": {
     "when": "options on a question that is not a choice",
-    "explanation": "Only one-of and any-of have options."
+    "explanation": "Only one_of and any_of have options."
   },
   "S226": {
     "when": "a record or option set used as a value",
@@ -319,7 +319,7 @@ export const CODES = {
   },
   "S231": {
     "when": "one name for an item and its number",
-    "explanation": "`for each n, x in l` needs two names."
+    "explanation": "`for n, x in l` needs two names."
   },
   "S232": {
     "when": "a value on its own as a statement",
@@ -327,7 +327,7 @@ export const CODES = {
   },
   "S233": {
     "when": "`break` or `continue` outside a loop",
-    "explanation": "They belong in `for` or `for each`."
+    "explanation": "They belong in `for` or `while`."
   },
   "S234": {
     "when": "`break` or `continue` in a collect",
@@ -363,11 +363,11 @@ export const CODES = {
   },
   "S306": {
     "when": "a constant that is a record",
-    "explanation": "Constants are words, numbers, dates, yes or no, sets, and lists of them."
+    "explanation": "Constants are words, numbers, dates, true or false, sets, and lists of them."
   },
   "S307": {
-    "when": "`fill` with yes-no",
-    "explanation": "A yes-no goes into a check box: `tick \"box\" when c`."
+    "when": "`fill` with bool",
+    "explanation": "A bool goes into a check box: `tick \"box\" when c`."
   },
   "S308": {
     "when": "`fill` with several options",
@@ -379,19 +379,19 @@ export const CODES = {
   },
   "S310": {
     "when": "a condition of words or an option",
-    "explanation": "Compare it (`== \"…\"`) or test it (`is not empty`)."
+    "explanation": "Compare it (`== \"…\"`) or test it (`!= null`)."
   },
   "S311": {
-    "when": "a condition that is not yes-no",
-    "explanation": "Conditions are yes or no."
+    "when": "a condition that is not bool",
+    "explanation": "Conditions are true or false."
   },
   "S313": {
     "when": "a `for` bound that is not a number",
     "explanation": "`for i in 1..n` counts numbers."
   },
   "S314": {
-    "when": "`for each` over something not a list or set",
-    "explanation": "`for each` goes through a list or a set of options."
+    "when": "`for … in` over something not a list, a map, a set or a range",
+    "explanation": "`for x in l` goes through a list, a map or a set of options; `for i in a..b` counts."
   },
   "S315": {
     "when": "one answer, let or var with two types",
@@ -439,15 +439,15 @@ export const CODES = {
   },
   "S326": {
     "when": "`var x` without a type or a value",
-    "explanation": "`var x: text`, or `var x = …`."
+    "explanation": "`var x: string`, or `var x = …`."
   },
   "S327": {
-    "when": "`= empty` without a type",
-    "explanation": "`var x: text = empty`."
+    "when": "`= null` without a type",
+    "explanation": "`var x: string = null`."
   },
   "S328": {
-    "when": "a `let` or `var` without a type whose list value no item tells the type of (`[]`, `[empty, empty]`, `[[empty]]`)",
-    "explanation": "`var l: list of text`."
+    "when": "a `let` or `var` without a type whose list value no item tells the type of (`[]`, `[null, null]`, `[[null]]`)",
+    "explanation": "`var l: list<string>`."
   },
   "S329": {
     "when": "`match` on something that is not an option or words",
@@ -467,7 +467,7 @@ export const CODES = {
   },
   "S333": {
     "when": "collect into something not a var",
-    "explanation": "Declare `var l: list of T`."
+    "explanation": "Declare `var l: list<T>`."
   },
   "S334": {
     "when": "collect into something not a list",
@@ -506,7 +506,7 @@ export const CODES = {
     "explanation": "A function's worked-out result is the join of its returns (§3.9); or write `-> type`."
   },
   "S344": {
-    "when": "a function returning only empty",
+    "when": "a function returning only null",
     "explanation": "Write its result type."
   },
   "S345": {
@@ -550,12 +550,8 @@ export const CODES = {
     "explanation": "Only numbers are negated."
   },
   "S355": {
-    "when": "`not` of something not yes-no",
+    "when": "`not` of something not bool",
     "explanation": "`not` is for conditions."
-  },
-  "S356": {
-    "when": "`is empty` of a call with no result",
-    "explanation": "It gives no value to test."
   },
   "S357": {
     "when": "a field of something with no fields",
@@ -575,7 +571,7 @@ export const CODES = {
   },
   "S361": {
     "when": "a list literal whose items' types have no join",
-    "explanation": "A list's items join into one type (§3.9): words of different kinds join as text; numbers and words do not join."
+    "explanation": "A list's items join into one type (§3.9): words of different kinds join as a string; numbers and words do not join."
   },
   "S362": {
     "when": "a field given twice in `new`",
@@ -634,8 +630,8 @@ export const CODES = {
     "explanation": "`days_between(a, b)`."
   },
   "S376": {
-    "when": "yes-no compared with words",
-    "explanation": "`x == yes`, or `x` alone."
+    "when": "bool compared with words",
+    "explanation": "`x == true`, or `x` alone."
   },
   "S377": {
     "when": "a set compared with `==` against words",
@@ -650,7 +646,7 @@ export const CODES = {
     "explanation": "Numbers, dates, words."
   },
   "S380": {
-    "when": "`and`/`or` of something not yes-no",
+    "when": "`and`/`or` of something not bool",
     "explanation": "They join conditions."
   },
   "S381": {
@@ -787,7 +783,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "upper(t: text) -> text"
+      "upper(t: string) -> string"
     ],
     "names": [
       "upper"
@@ -797,7 +793,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "lower(t: text) -> text"
+      "lower(t: string) -> string"
     ],
     "names": [
       "lower"
@@ -807,7 +803,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "title(t: text) -> text"
+      "title(t: string) -> string"
     ],
     "names": [
       "title"
@@ -817,7 +813,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "capitalize(t: text) -> text"
+      "capitalize(t: string) -> string"
     ],
     "names": [
       "capitalize"
@@ -827,7 +823,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "trim(t: text) -> text"
+      "trim(t: string) -> string"
     ],
     "names": [
       "trim"
@@ -837,8 +833,8 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "trim_start(t: text) -> text",
-      "trim_end(t: text) -> text"
+      "trim_start(t: string) -> string",
+      "trim_end(t: string) -> string"
     ],
     "names": [
       "trim_start",
@@ -849,7 +845,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "remove_prefix(t: text, prefix: text) -> text"
+      "remove_prefix(t: string, prefix: string) -> string"
     ],
     "names": [
       "remove_prefix"
@@ -859,7 +855,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "remove_suffix(t: text, suffix: text) -> text"
+      "remove_suffix(t: string, suffix: string) -> string"
     ],
     "names": [
       "remove_suffix"
@@ -869,7 +865,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "length(t: text) -> number"
+      "length(t: string) -> number"
     ],
     "names": [
       "length"
@@ -879,7 +875,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "chars(t: text, from: number, to: number) -> text"
+      "chars(t: string, from: number, to: number) -> string"
     ],
     "names": [
       "chars"
@@ -889,17 +885,17 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "character(t: text, n: number) -> text"
+      "character(t: string, n: number) -> string"
     ],
     "names": [
       "character"
     ],
-    "gives": "the character at position n of t, the same separators left out; n past the end: empty"
+    "gives": "the character at position n of t, the same separators left out; n past the end: null"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "slice(t: text, from: number, to: number) -> text"
+      "slice(t: string, from: number, to: number) -> string"
     ],
     "names": [
       "slice"
@@ -909,7 +905,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "digits(t: text) -> text"
+      "digits(t: string) -> string"
     ],
     "names": [
       "digits"
@@ -919,7 +915,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "letters(t: text) -> text"
+      "letters(t: string) -> string"
     ],
     "names": [
       "letters"
@@ -929,27 +925,27 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "is_digits(t: text) -> yes-no"
+      "is_digits(t: string) -> bool"
     ],
     "names": [
       "is_digits"
     ],
-    "gives": "yes when t has a character and every character is 0–9"
+    "gives": "true when t has a character and every character is 0–9"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "is_letters(t: text) -> yes-no"
+      "is_letters(t: string) -> bool"
     ],
     "names": [
       "is_letters"
     ],
-    "gives": "yes when t has a character and every character is a letter"
+    "gives": "true when t has a character and every character is a letter"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "replace(t: text, part: text, with: text) -> text"
+      "replace(t: string, part: string, with: string) -> string"
     ],
     "names": [
       "replace"
@@ -959,18 +955,18 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "contains(t: text, part: text) -> yes-no"
+      "contains(t: string, part: string) -> bool"
     ],
     "names": [
       "contains"
     ],
-    "gives": "whether part is in t, as written (`contains(lower(t), \"llc\")` to ignore case); part of no characters: yes"
+    "gives": "whether part is in t, as written (`contains(lower(t), \"llc\")` to ignore case); part of no characters: true"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "starts_with(t: text, part: text) -> yes-no",
-      "ends_with(t: text, part: text) -> yes-no"
+      "starts_with(t: string, part: string) -> bool",
+      "ends_with(t: string, part: string) -> bool"
     ],
     "names": [
       "starts_with",
@@ -981,7 +977,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "find(t: text, part: text) -> number"
+      "find(t: string, part: string) -> number"
     ],
     "names": [
       "find"
@@ -991,7 +987,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "occurrences(t: text, part: text) -> number"
+      "occurrences(t: string, part: string) -> number"
     ],
     "names": [
       "occurrences"
@@ -1001,7 +997,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "split(t: text, separator: text) -> list of text"
+      "split(t: string, separator: string) -> list<string>"
     ],
     "names": [
       "split"
@@ -1011,17 +1007,17 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "line(t: text, n: number) -> text"
+      "line(t: string, n: number) -> string"
     ],
     "names": [
       "line"
     ],
-    "gives": "the line at position n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays; n past the last line: empty"
+    "gives": "the line at position n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays; n past the last line: null"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "line_count(t: text) -> number"
+      "line_count(t: string) -> number"
     ],
     "names": [
       "line_count"
@@ -1031,7 +1027,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "rest_lines(t: text) -> text"
+      "rest_lines(t: string) -> string"
     ],
     "names": [
       "rest_lines"
@@ -1041,17 +1037,17 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "word(t: text, n: number) -> text"
+      "word(t: string, n: number) -> string"
     ],
     "names": [
       "word"
     ],
-    "gives": "the word at position n of t, words split on runs of spaces and tabs; n past the last word: empty"
+    "gives": "the word at position n of t, words split on runs of spaces and tabs; n past the last word: null"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "word_count(t: text) -> number"
+      "word_count(t: string) -> number"
     ],
     "names": [
       "word_count"
@@ -1061,7 +1057,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "pad_left(t: text, width: number, padding: text = \" \") -> text"
+      "pad_left(t: string, width: number, padding: string = \" \") -> string"
     ],
     "names": [
       "pad_left"
@@ -1071,22 +1067,22 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "text_of(v: any) -> text"
+      "string_of(v: any) -> string"
     ],
     "names": [
-      "text_of"
+      "string_of"
     ],
-    "gives": "v's words (§3.5); empty: no characters; a list or record is S367"
+    "gives": "v's words (§3.5); null: no characters; a list or record is S367"
   },
   {
     "section": "14.1 Words",
     "signatures": [
-      "number_of(t: text) -> number"
+      "number_of(t: string) -> number"
     ],
     "names": [
       "number_of"
     ],
-    "gives": "the number t holds by §8.7, or empty when it holds none"
+    "gives": "the number t holds by §8.7, or null when it holds none"
   },
   {
     "section": "14.2 Numbers",
@@ -1163,7 +1159,7 @@ export const LIBRARY = [
   {
     "section": "14.2 Numbers",
     "signatures": [
-      "grouped(n: number, places: number = 0) -> text"
+      "grouped(n: number, places: number = 0) -> string"
     ],
     "names": [
       "grouped"
@@ -1173,7 +1169,7 @@ export const LIBRARY = [
   {
     "section": "14.2 Numbers",
     "signatures": [
-      "fixed(n: number, places: number = 0) -> text"
+      "fixed(n: number, places: number = 0) -> string"
     ],
     "names": [
       "fixed"
@@ -1218,7 +1214,7 @@ export const LIBRARY = [
     "names": [
       "date_of"
     ],
-    "gives": "that day; no such day, or a part not whole: empty"
+    "gives": "that day; no such day, or a part not whole: null"
   },
   {
     "section": "14.3 Dates",
@@ -1237,7 +1233,7 @@ export const LIBRARY = [
   {
     "section": "14.3 Dates",
     "signatures": [
-      "format(d: date, pattern: text) -> text"
+      "format(d: date, pattern: string) -> string"
     ],
     "names": [
       "format"
@@ -1287,7 +1283,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "count(l: list of T or set) -> number"
+      "count(l: list<T> or set) -> number"
     ],
     "names": [
       "count"
@@ -1297,39 +1293,39 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "join(l: list of T or set, separator: text = \", \") -> text"
+      "join(l: list<T> or set, separator: string = \", \") -> string"
     ],
     "names": [
       "join"
     ],
-    "gives": "T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out); no items: no characters"
+    "gives": "T a type with words (§3.5): words, a number, a date, a bool, an option; a list of records or of lists is S367. The items' words joined, a null item as no words (`join(filled(l))` leaves null items out); no items: no characters"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "first(l: list of T or set) -> T",
-      "last(l: list of T or set) -> T"
+      "first(l: list<T> or set) -> T",
+      "last(l: list<T> or set) -> T"
     ],
     "names": [
       "first",
       "last"
     ],
-    "gives": "the first, the last item; empty when there is none"
+    "gives": "the first, the last item; null when there is none"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "filled(l: list of T) -> list of T"
+      "filled(l: list<T>) -> list<T>"
     ],
     "names": [
       "filled"
     ],
-    "gives": "a new list of the items that are not empty, in order; `\"\"` and `[]` are not empty and stay; l empty: a list with no items"
+    "gives": "a new list of the items that are not null, in order; `\"\"` and `[]` are not null and stay; l null: a list with no items"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "index_of(l: list of T, x: T) -> number"
+      "index_of(l: list<T>, x: T) -> number"
     ],
     "names": [
       "index_of"
@@ -1339,7 +1335,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "append(l: list of T, x: T) -> list of T"
+      "append(l: list<T>, x: T) -> list<T>"
     ],
     "names": [
       "append"
@@ -1349,7 +1345,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "insert(l: list of T, position: number, x: T) -> list of T"
+      "insert(l: list<T>, position: number, x: T) -> list<T>"
     ],
     "names": [
       "insert"
@@ -1359,7 +1355,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "remove_at(l: list of T, position: number) -> T"
+      "remove_at(l: list<T>, position: number) -> T"
     ],
     "names": [
       "remove_at"
@@ -1369,8 +1365,8 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "clear(l: list of T) -> list of T",
-      "clear(m: map of K to V) -> map of K to V"
+      "clear(l: list<T>) -> list<T>",
+      "clear(m: map<K, V>) -> map<K, V>"
     ],
     "names": [
       "clear",
@@ -1391,7 +1387,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "without(l: list of T, x: T) -> list of T"
+      "without(l: list<T>, x: T) -> list<T>"
     ],
     "names": [
       "without"
@@ -1401,7 +1397,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "reversed(l: list of T) -> list of T"
+      "reversed(l: list<T>) -> list<T>"
     ],
     "names": [
       "reversed"
@@ -1411,64 +1407,64 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "sorted(l: list of T, descending: yes-no = no) -> list of T"
+      "sorted(l: list<T>, descending: bool = false) -> list<T>"
     ],
     "names": [
       "sorted"
     ],
-    "gives": "T a number, a date or words (else S367): a new list of the items in order (§6.7); l is not changed; equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`)"
+    "gives": "T a number, a date or words (else S367): a new list of the items in order (§6.7); l is not changed; equal items keeping their order, ascending or descending; a null item is F023 (`sorted(filled(l))`)"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "sorted(l: list of R, by: \"field\", descending: yes-no = no) -> list of R"
+      "sorted(l: list<R>, by: \"field\", descending: bool = false) -> list<R>"
     ],
     "names": [
       "sorted"
     ],
-    "gives": "R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; an empty item, or one whose field is empty, is F023"
+    "gives": "R a record; `by` is given by its name only (a second value given without a name is `descending`, which is bool); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; a null item, or one whose field is null, is F023"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "sum(l: list of number) -> number"
+      "sum(l: list<number>) -> number"
     ],
     "names": [
       "sum"
     ],
-    "gives": "the items added up; no items: 0; an empty item is F023 (`sum(filled(l))`)"
+    "gives": "the items added up; no items: 0; a null item is F023 (`sum(filled(l))`)"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "smallest(l: list of T) -> T",
-      "largest(l: list of T) -> T"
+      "smallest(l: list<T>) -> T",
+      "largest(l: list<T>) -> T"
     ],
     "names": [
       "smallest",
       "largest"
     ],
-    "gives": "T a number, a date or words: the least, the greatest of the items; no items: empty; an empty item is F023"
+    "gives": "T a number, a date or words: the least, the greatest of the items; no items: null; a null item is F023"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "any(l: list of yes-no) -> yes-no"
+      "any(l: list<bool>) -> bool"
     ],
     "names": [
       "any"
     ],
-    "gives": "yes when some item is yes (an empty item counts as no); no items: no"
+    "gives": "true when some item is true (a null item counts as false); no items: false"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "all(l: list of yes-no) -> yes-no"
+      "all(l: list<bool>) -> bool"
     ],
     "names": [
       "all"
     ],
-    "gives": "yes when every item is yes; no items: yes"
+    "gives": "true when every item is true; no items: true"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1487,7 +1483,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "keys(m: map of K to V) -> list of K"
+      "keys(m: map<K, V>) -> list<K>"
     ],
     "names": [
       "keys"
@@ -1497,7 +1493,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "values(m: map of K to V) -> list of V"
+      "values(m: map<K, V>) -> list<V>"
     ],
     "names": [
       "values"
@@ -1507,7 +1503,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "has(m: map of K to V, key: K) -> yes-no"
+      "has(m: map<K, V>, key: K) -> bool"
     ],
     "names": [
       "has"
@@ -1517,7 +1513,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "remove(m: map of K to V, key: K) -> map of K to V"
+      "remove(m: map<K, V>, key: K) -> map<K, V>"
     ],
     "names": [
       "remove"
@@ -1535,19 +1531,19 @@ export const LIBRARY = [
     "gives": "the number of keys"
   },
   {
-    "section": "14.5 Empty, faults and output",
+    "section": "14.5 Null, faults and output",
     "signatures": [
       "either(a: T, b: T) -> T"
     ],
     "names": [
       "either"
     ],
-    "gives": "a when it is not empty, else b (`a ?? b`, §6.16, with both worked out)"
+    "gives": "a when it is not null, else b (`a ?? b`, §6.16, with both worked out)"
   },
   {
-    "section": "14.5 Empty, faults and output",
+    "section": "14.5 Null, faults and output",
     "signatures": [
-      "fail(message: text)"
+      "fail(message: string)"
     ],
     "names": [
       "fail"
@@ -1555,7 +1551,7 @@ export const LIBRARY = [
     "gives": "no value: fault F013 with the message"
   },
   {
-    "section": "14.5 Empty, faults and output",
+    "section": "14.5 Null, faults and output",
     "signatures": [
       "print(v: any)"
     ],

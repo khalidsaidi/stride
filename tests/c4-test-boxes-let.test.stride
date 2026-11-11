@@ -1,4 +1,4 @@
-use "c-test-boxes"
+import "c-test-boxes"
 let written = fill_box()
 expect written
 # rule 4.3 S508

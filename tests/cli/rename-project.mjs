@@ -53,10 +53,10 @@ export function test() {
     writeFileSync(join(dir, "stride.json"), JSON.stringify({ stride: "1.0", libraries: ["vendor"] }));
     mkdirSync(join(dir, "lib"));
     mkdirSync(join(dir, "vendor"));
-    writeFileSync(join(dir, "lib", "maths.stride"), "export define twice(n: number) -> number {\n  return n * 2\n}\n");
-    writeFileSync(join(dir, "vendor", "greet.stride"), 'export define hello(who: text) -> text {\n  return "Hello, {who}"\n}\n');
-    writeFileSync(join(dir, "a.stride"), 'use "maths"\nlet x = twice(2)\nlet y = x + 1\nprint(x)\nprint(y)\n');
-    writeFileSync(join(dir, "b.stride"), 'use "maths"\nuse "greet"\nprint(twice(5))\nprint(hello("Bo"))\n');
+    writeFileSync(join(dir, "lib", "maths.stride"), "export function twice(n: number) -> number {\n  return n * 2\n}\n");
+    writeFileSync(join(dir, "vendor", "greet.stride"), 'export function hello(who: string) -> string {\n  return "Hello, {who}"\n}\n');
+    writeFileSync(join(dir, "a.stride"), 'import "maths"\nlet x = twice(2)\nlet y = x + 1\nprint(x)\nprint(y)\n');
+    writeFileSync(join(dir, "b.stride"), 'import "maths"\nimport "greet"\nprint(twice(5))\nprint(hello("Bo"))\n');
     const out = JSON.parse(execFileSync("node", ["--input-type=module", "-e", CHILD, cli, dir], { encoding: "utf8", timeout: 60_000 }));
     same("a library in a folder stride.json names", out.vendor, []);
     same("references from one caller find the other", out.refs, ["a.stride:1", "b.stride:2", "maths.stride:0"]);
@@ -70,7 +70,7 @@ export function test() {
     same("the project checked after the rename", [check.status, check.stderr], [0, ""]);
     same("a.stride after", spawnSync("node", [cli, "run", "a.stride"], { cwd: dir, encoding: "utf8" }).stdout, "4\n5\n");
     same("b.stride after", spawnSync("node", [cli, "run", "b.stride"], { cwd: dir, encoding: "utf8" }).stdout, "10\nHello, Bo\n");
-    same("the library after", readFileSync(join(dir, "lib", "maths.stride"), "utf8").startsWith("export define double("), true);
+    same("the library after", readFileSync(join(dir, "lib", "maths.stride"), "utf8").startsWith("export function double("), true);
     same("to a word of the language", out.toWhile, "for is not a name Stride takes (§2.1)");
     same("to a name declared there", out.toY?.startsWith("renaming x to y would"), true);
     same("to a standard library name", out.toUpper, "upper is the standard library's upper: another name keeps both");

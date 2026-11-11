@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-ask a: text "A again"
+ask a: string "A"
+ask a: string "A again"
 fill "A" = a
 # rule 12.3 S205
 # mistake 4:5 S205

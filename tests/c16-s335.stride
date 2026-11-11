@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of list of text
+var l: list<list<string>>
 collect x in l "Another?" {
   print("x")
 }

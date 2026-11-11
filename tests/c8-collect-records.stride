@@ -1,14 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
-  name: text
+  name: string
 }
-var people: list of person
+var people: list<person>
 collect p in people any "Any people?" "Another person?" {
-  ask p.name: text "Name"
+  ask p.name: string "Name"
 }
 fill "Count" = count(people)
-for each n, p in people {
+for n, p in people {
   fill "Name{n}" = p.name
 }
 # rule 8.5 8.5.1 8.6.2

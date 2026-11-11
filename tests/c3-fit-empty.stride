@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record r { f: text }
-define f(x: number, l: list of text, v: r) -> number {
+record r { f: string }
+function f(x: number, l: list<string>, v: r) -> number {
   return count(l ?? [])
 }
-print(f(empty, empty, empty))
+print(f(null, null, null))
 # rule 3.6
 # prints ["0"]

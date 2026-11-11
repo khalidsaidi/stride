@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "A"
-ask b: text "B" default a
+ask a: string "A"
+ask b: string "B" default a
 fill "A" = b
 # answers {"a": "x", "b": "y"}
 # boxes {"A": "y"}

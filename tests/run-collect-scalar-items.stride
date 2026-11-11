@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text
+var l: list<string>
 collect x in l "Another?" {
-  ask x: text "X"
+  ask x: string "X"
 }
 fill "J" = join(l, "+")
 # answers {"l[0]": "a", "l[0]#another": "yes", "l[1]": "b"}

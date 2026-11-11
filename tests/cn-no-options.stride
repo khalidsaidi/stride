@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask x: any-of "X"
+ask x: any_of "X"
 print(join(x, ","))
 
 # rule S224

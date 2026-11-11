@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define risky(n: number) -> number {
+function risky(n: number) -> number {
   return 10 / n
 }
-define guarded(n: number) -> number {
+function guarded(n: number) -> number {
   try {
     return risky(n)
   } catch {

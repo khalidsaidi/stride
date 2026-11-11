@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
-  first: text
+  first: string
 }
 var p: person
-ask p.first: text "First"
+ask p.first: string "First"
 fill "A" = p.first
 # answers {"p.first": "Ada"}
 # boxes {"A": "Ada"}

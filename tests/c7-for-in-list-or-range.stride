@@ -1,0 +1,36 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let l = [10, 20]
+let m = {"a": 1}
+var none: list<number> = null
+var out: list<string>
+for i in 1..2 {
+  out += ["r{i}"]
+}
+for i in 0..<count(l) {
+  out += ["x{i}"]
+}
+for x in l {
+  out += ["l{x}"]
+}
+for x in l + [30] {
+  out += ["p{x}"]
+}
+for n, x in l {
+  out += ["{n}:{x}"]
+}
+for k, v in m {
+  out += ["{k}={v}"]
+}
+for x in none ?? [] {
+  out += ["never"]
+}
+for c in "ab" {
+  out += [c]
+}
+for i in count(l)..count(l) + 1 {
+  out += ["c{i}"]
+}
+print(join(out, " "))
+# rule 7.11
+# prints ["r1 r2 x0 x1 l10 l20 p10 p20 p30 0:10 1:20 a=1 a b c2 c3"]

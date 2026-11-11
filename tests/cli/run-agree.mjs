@@ -58,7 +58,7 @@ export function test() {
     writeFileSync(join(dir, "consent.pdf"), tinyPdf());
     execFileSync("node", [cli, "header", "consent.pdf", "-q"], { cwd: dir });
     const sha = JSON.parse(readFileSync(join(dir, "consent.boxes.json"), "utf8")).pdf;
-    writeFileSync(join(dir, "consent.stride"), `form consent\npdf ${sha}\n\nask full_name: text "Full name"\nask agrees: yes-no "I agree to the terms"\nif agrees {\n  fill "name" = "{full_name}, {today()}"\n}\ntick "agree" when agrees\n`);
+    writeFileSync(join(dir, "consent.stride"), `form consent\npdf ${sha}\n\nask full_name: string "Full name"\nask agrees: bool "I agree to the terms"\nif agrees {\n  fill "name" = "{full_name}, {today()}"\n}\ntick "agree" when agrees\n`);
     execFileSync("node", [cli, "compile", "consent.stride", "-q"], { cwd: dir });
     const answers = [{ text: "Ada Lovelace" }, { choose: "yes" }];
     const browserRun = (file, out) => {

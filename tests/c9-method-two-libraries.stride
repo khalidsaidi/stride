@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-use "c-label-a" as a
-use "c-label-b" as b
+import "c-label-a" as a
+import "c-label-b" as b
 fill "A" = "x".tag()
 # rule 9.8 S113
 # mistake 5 S113

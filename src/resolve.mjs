@@ -1,14 +1,14 @@
 // Phase 3: resolve names. Every name in every file is tied to the declaration it means, through scopes:
 //
-//   imports    what the standard library and every `use`d library export
+//   imports    what the standard library and every imported library export
 //   module     a file's own records, option sets, constants and functions (declared before anything runs, so
 //              they may be used before the line they stand on)
 //   function   a function's parameters; inside it, its blocks
 //   main       a program's statements, in order
-//   block      the body of a loop, a collect, a for each
+//   block      the body of a loop or a collect
 //
 // An `if` and a `match` are not scopes, as in Python: a question asked in a branch is known after it (and is
-// empty when that branch did not run; the flow check sees to it that nothing reads it where it may not be
+// null when that branch did not run; the flow check sees to it that nothing reads it where it may not be
 // asked). A function sees its module and its own names, not the program's answers: what it needs is passed.
 //
 // Inside a block, a name is known from the statement that defines it on; a name used before is a mistake that
@@ -71,11 +71,14 @@ export class Scope {
 }
 
 const LOCAL_KINDS = new Set(["let", "var", "answer", "param", "counter", "item", "index"]);
-const DECLARATION_KINDS = new Set(["record", "options", "const", "define", "native"]);
-const SYM_KIND = { record: "record", options: "options", const: "const", define: "function", native: "native" };
+// Words other languages write for Stride's values and types, and what Stride writes.
+const OTHER_VALUES = { yes: "the value is written true", no: "the value is written false", True: "the value is written true", False: "the value is written false", empty: "no value is written null", None: "no value is written null", nil: "no value is written null", undefined: "no value is written null" };
+const OTHER_TYPES = { text: "words are a string", str: "words are a string", String: "words are a string", boolean: "true and false are a bool", int: "numbers are a number", float: "numbers are a number" };
+const DECLARATION_KINDS = new Set(["record", "enum", "const", "function", "native"]);
+const SYM_KIND = { record: "record", enum: "enum", const: "const", function: "function", native: "native" };
 const WHAT = {
   record: "a record",
-  options: "an option set",
+  enum: "an option set",
   const: "a constant",
   function: "a function",
   native: "a function",
@@ -110,7 +113,7 @@ export function resolve(loaded, diagnostics) {
         if (!sym.exported) continue;
         if (imports.names.has(name) && imports.names.get(name) !== sym) {
           const first = from.get(name);
-          err("S109", unit.file, useNode?.span ?? null, `${name} is exported by both ${first.file.name} and ${other.file.name}; a file can use only one of them`);
+          err("S109", unit.file, useNode?.span ?? null, `${name} is exported by both ${first.file.name} and ${other.file.name}; a file can import only one of them`);
           continue;
         }
         imports.names.set(name, sym);
@@ -118,7 +121,7 @@ export function resolve(loaded, diagnostics) {
       }
     };
     if (loaded.std && unit !== loaded.std) bring(loaded.std, null);
-    for (const use of unit.tree.items.filter((i) => i.kind === "use")) {
+    for (const use of unit.tree.items.filter((i) => i.kind === "import")) {
       if (!use.unit) continue;
       if (!use.alias) {
         bring(use.unit, use);
@@ -131,7 +134,7 @@ export function resolve(loaded, diagnostics) {
       mod.library = use.unit;
       // The name names this library from here on, so its uses say nothing more (§16.1).
       const was = imports.names.get(use.alias);
-      if (was) err("S110", unit.file, use.span, was.kind === "module" ? `${use.alias} is already brought in by another use` : `${use.alias} is already ${what(was)} of ${was.unit?.std ? "the standard library" : was.file?.name ?? "a library"}; give the library another name`);
+      if (was) err("S110", unit.file, use.span, was.kind === "module" ? `${use.alias} is already brought in by another import` : `${use.alias} is already ${what(was)} of ${was.unit?.std ? "the standard library" : was.file?.name ?? "a library"}; give the library another name`);
       // A refused name keeps what it named before, so its uses say nothing more (§16.1).
       if (!was || was.kind === "module") imports.names.set(use.alias, mod);
       else refusedAliases.add(use.alias);
@@ -146,9 +149,9 @@ export function resolve(loaded, diagnostics) {
       if (!DECLARATION_KINDS.has(item.kind)) continue;
       const sym = new Sym(SYM_KIND[item.kind], item.name, item, unit);
       item.symbol = sym;
-      if (sym.exported && !unit.library) err("S107", unit.file, item.span, `export is for libraries; nothing uses a ${unit.test ? "test file" : "program"}, so ${item.name} needs no export`);
-      if (item.kind === "native" && !unit.std) err("S108", unit.file, item.span, `only the standard library declares natives (functions written in the machine); write ${item.name} in Stride with define`);
-      if (T.SCALARS[item.name] || ["one-of", "any-of"].includes(item.name)) {
+      if (sym.exported && !unit.library) err("S107", unit.file, item.span, `export is for libraries; nothing imports a ${unit.test ? "test file" : "program"}, so ${item.name} needs no export`);
+      if (item.kind === "native" && !unit.std) err("S108", unit.file, item.span, `only the standard library declares natives (functions written in the machine); write ${item.name} in Stride with function`);
+      if (T.SCALARS[item.name] || ["one_of", "any_of"].includes(item.name)) {
         err("S208", unit.file, item.span, `${item.name} is the name of a type, and cannot be the name of ${what(sym)}`);
         // Its uses are of this refused name: S208 is all there is to say of them (§16.1).
         typeNamed.add(item.name);
@@ -159,17 +162,17 @@ export function resolve(loaded, diagnostics) {
       const clash = scope.own(item.name);
       // A library's `as` name names nothing else (§4.5).
       if (imports.names.get(item.name)?.kind === "module") {
-        err("S110", unit.file, item.span, `${item.name} names the library brought in by use … as ${item.name}; give ${what(sym)} another name`);
+        err("S110", unit.file, item.span, `${item.name} names the library brought in by import … as ${item.name}; give ${what(sym)} another name`);
         continue;
       }
       if (!clash && imports.names.has(item.name)) imports.names.delete(item.name);
       if (clash) {
-        const where = clash.unit === unit ? `on line ${clash.line}` : `in ${clash.file.name}, which this file uses`;
+        const where = clash.unit === unit ? `on line ${clash.line}` : `in ${clash.file.name}, which this file imports`;
         err("S207", unit.file, item.span, `${item.name} is already ${what(clash)} ${where}`, [{ file: clash.file, span: clash.span, message: `${item.name} is defined here` }]);
         continue;
       }
       scope.names.set(item.name, sym);
-      ({ record: result.records, options: result.options, const: result.consts, define: result.functions, native: result.natives })[item.kind].push(sym);
+      ({ record: result.records, enum: result.options, const: result.consts, function: result.functions, native: result.natives })[item.kind].push(sym);
     }
 
     // What declarations hold: option sets' options, records' fields, functions' signatures.
@@ -202,7 +205,7 @@ export function resolve(loaded, diagnostics) {
         tp.symbol = tv;
         // A type's name cannot be one: a scalar's, or a record's or option set's this file sees (S220).
         const seen = scope.lookup(tp.name);
-        if (fnScope.own(tp.name) || T.SCALARS[tp.name] || ["one-of", "any-of"].includes(tp.name) || ["record", "options"].includes(seen?.kind)) {
+        if (fnScope.own(tp.name) || T.SCALARS[tp.name] || ["one_of", "any_of"].includes(tp.name) || ["record", "enum"].includes(seen?.kind)) {
           err("S220", unit.file, tp.span, `${tp.name} cannot be a type parameter's name here`);
           tv.reported = true;
         } else fnScope.names.set(tp.name, tv);
@@ -223,7 +226,7 @@ export function resolve(loaded, diagnostics) {
         else {
           const outer = scope.lookup(p.name);
           // Native signatures have no body or local bindings (date_of's year parameter is alongside year()).
-          if (sym.kind === "function" && outer?.kind === "module") err("S110", unit.file, p.span, `${p.name} names the library brought in by use … as ${p.name}; give the parameter another name`);
+          if (sym.kind === "function" && outer?.kind === "module") err("S110", unit.file, p.span, `${p.name} names the library brought in by import … as ${p.name}; give the parameter another name`);
           fnScope.names.set(p.name, param);
         }
         sym.params.push(param);
@@ -239,7 +242,7 @@ export function resolve(loaded, diagnostics) {
     }
 
     // Bodies: the program's own statements in order, then each function's (which may read the program's names).
-    const statements = unit.tree.items.filter((i) => !DECLARATION_KINDS.has(i.kind) && i.kind !== "use");
+    const statements = unit.tree.items.filter((i) => !DECLARATION_KINDS.has(i.kind) && i.kind !== "import");
     if (unit.library) {
       // An expect is a test file's (§7.17): S236 wherever else it stands.
       for (const s of statements) {
@@ -283,27 +286,27 @@ export function resolve(loaded, diagnostics) {
         if (node.name === "element" && native) return T.ELEMENT;
         const sym = lookupQualified(scope, node.name);
         if (sym?.kind === "record") return sym.type ?? T.record(sym.decl);
-        if (sym?.kind === "options") return sym.type;
+        if (sym?.kind === "enum") return sym.type;
         if (sym?.kind === "typevar") return sym.type;
         if (node.name === "element") {
           err("S214", unit.file, node.span, "element is only for the natives of the standard library");
           return T.ERROR;
         }
-        const types = [...Object.keys(T.SCALARS), ...visibleQualified(scope).filter((n) => ["record", "options"].includes(lookupQualified(scope, n)?.kind))];
-        err("S209", unit.file, node.span, sym ? `${node.name} is ${what(sym)}, not a type` : `there is no type called ${node.name}${didYouMean(node.name, types)}`);
+        const types = [...Object.keys(T.SCALARS), ...visibleQualified(scope).filter((n) => ["record", "enum"].includes(lookupQualified(scope, n)?.kind))];
+        err("S209", unit.file, node.span, sym ? `${node.name} is ${what(sym)}, not a type` : `there is no type called ${node.name}${OTHER_TYPES[node.name] ? `; ${OTHER_TYPES[node.name]}` : didYouMean(node.name, types)}`);
         return T.ERROR;
       }
       case "type-set": {
         const sym = lookupQualified(scope, node.name);
-        if (sym?.kind === "options") return T.options(sym.type.set);
-        const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "options");
-        err("S210", unit.file, node.span, sym ? `set of needs an option set, and ${node.name} is ${what(sym)}` : `there is no option set called ${node.name}${didYouMean(node.name, sets)}`);
+        if (sym?.kind === "enum") return T.options(sym.type.set);
+        const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "enum");
+        err("S210", unit.file, node.span, sym ? `set<…> needs an option set, and ${node.name} is ${what(sym)}` : `there is no option set called ${node.name}${didYouMean(node.name, sets)}`);
         return T.ERROR;
       }
       case "type-map": {
         const key = resolveType(node.key, scope, unit, native);
         const value = resolveType(node.value, scope, unit, native);
-        if (!["text", "number", "date", "yes-no", "option", "typevar", "error"].includes(key.t)) err("S209", unit.file, node.key.span, `a map's keys are words, numbers, dates, yes-no or options, not ${T.describe(key)}`);
+        if (!["string", "number", "date", "bool", "option", "typevar", "error"].includes(key.t)) err("S209", unit.file, node.key.span, `a map's keys are words, numbers, dates, bools or options, not ${T.describe(key)}`);
         return T.map(key, value);
       }
       case "type-list": {
@@ -388,7 +391,7 @@ export function resolve(loaded, diagnostics) {
     // A library's `as` name names nothing else (§4.5).
     const outer = scope.parent?.lookup(sym.name);
     if (outer?.kind === "module") {
-      err("S110", unit.file, sym.span, `${sym.name} names the library brought in by use … as ${sym.name}; give ${what(sym)} another name`);
+      err("S110", unit.file, sym.span, `${sym.name} names the library brought in by import … as ${sym.name}; give ${what(sym)} another name`);
       // Its uses here are of this refused name, not of the library: S110 is all there is to say of them (§16.1).
       sym.type = T.ERROR;
       sym.refused = true;
@@ -446,7 +449,7 @@ export function resolve(loaded, diagnostics) {
         inBranch(s, 1, () => {
           if (s.caught) {
             const sym = new Sym("let", s.caught.name, s.caught, unit);
-            sym.type = T.TEXT;
+            sym.type = T.STRING;
             s.caught.symbol = sym;
             declare(scope, sym, unit);
           }
@@ -488,7 +491,7 @@ export function resolve(loaded, diagnostics) {
         }
         const item = new Sym("item", s.item, s, unit);
         s.itemSymbol = item;
-        if (s.index === s.item) err("S231", unit.file, s.span, `${s.item} names both the item and its number; give them two names: for each n, ${s.item} in …`);
+        if (s.index === s.item) err("S231", unit.file, s.span, `${s.item} names both the item and its number; give them two names: for n, ${s.item} in …`);
         else declare(inner, item, unit);
         resolveBlock(s.body, inner, unit);
         return;
@@ -500,7 +503,7 @@ export function resolve(loaded, diagnostics) {
         // in each turn.
         for (let at = scope; at && !at.names.has(s.list); at = at.parent) {
           if (at.loop) {
-            err("S337", unit.file, s.span, `${s.list} is declared outside this ${at.loop === "for-each" ? "for each" : at.loop}, so each turn would collect it again; declare it inside, or collect it once`);
+            err("S337", unit.file, s.span, `${s.list} is declared outside this ${at.loop === "for-each" ? "for" : at.loop}, so each turn would collect it again; declare it inside, or collect it once`);
             break;
           }
         }
@@ -529,7 +532,7 @@ export function resolve(loaded, diagnostics) {
         return;
       case "break":
       case "continue": {
-        // In the innermost for or for each, not across a collect or a function (§7.12).
+        // In the innermost for or while, not across a collect or a function (§7.12).
         let inLoop = false;
         for (let x = scope; x && x.kind === "block"; x = x.parent) {
           if (x.loop === "collect") {
@@ -541,7 +544,7 @@ export function resolve(loaded, diagnostics) {
             break;
           }
         }
-        if (!inLoop) err("S233", unit.file, s.span, `${s.kind} belongs inside a for or a for each`);
+        if (!inLoop) err("S233", unit.file, s.span, `${s.kind} belongs inside a for or a while`);
         return;
       }
       case "expect":
@@ -571,17 +574,17 @@ export function resolve(loaded, diagnostics) {
     // Options: a named set, or the question's own.
     if (s.question.set) {
       const sym = lookupQualified(scope, s.question.set);
-      if (sym?.kind === "options") s.set = sym.type.set;
+      if (sym?.kind === "enum") s.set = sym.type.set;
       else {
-        const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "options");
+        const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "enum");
         err("S222", unit.file, s.question.span, sym ? `${s.question.set} is ${what(sym)}, not an option set` : `there is no option set called ${s.question.set}${didYouMean(s.question.set, sets)}`);
       }
       if (s.options) err("S223", unit.file, s.span, `${head} takes its options from ${s.question.set}; it cannot have its own as well`);
-    } else if (s.question.form === "one-of" || s.question.form === "any-of") {
+    } else if (s.question.form === "one_of" || s.question.form === "any_of") {
       if (!s.options?.length) err("S224", unit.file, s.question.span, `a ${s.question.form} question needs options: a block { option "value" "printed words" … }, or an option set after ${s.question.form}`);
       else s.set = optionSet(s.options, unit, head, true);
     } else if (s.options) {
-      err("S225", unit.file, s.span, `a ${s.question.form} question has no options; one-of or any-of has`);
+      err("S225", unit.file, s.span, `a ${s.question.form} question has no options; one_of or any_of has`);
     }
     resolveExpr(s.printed, scope, unit);
     for (const o of s.set?.anonymous ? s.set.options : []) resolveExpr(o.printed, scope, unit);
@@ -660,7 +663,7 @@ export function resolve(loaded, diagnostics) {
       const outer = results.get(unit).mainScope.own(name);
       outer.program = true;
       return outer;
-    } else err("S201", unit.file, node.span, `nothing called ${name} is defined here${didYouMean(name, scope.visible())}`);
+    } else err("S201", unit.file, node.span, `nothing called ${name} is defined here${OTHER_VALUES[name] ? `; ${OTHER_VALUES[name]}` : didYouMean(name, scope.visible())}`);
     return null;
   }
 
@@ -683,7 +686,7 @@ export function resolve(loaded, diagnostics) {
     return out;
   }
 
-  // A loop, for each or collect of the blocks around here that defines the name inside it.
+  // A loop or collect of the blocks around here that defines the name inside it.
   function findInner(scope, name) {
     for (let s = scope; s; s = s.parent) {
       for (const st of s.statements ?? []) {
@@ -697,7 +700,7 @@ export function resolve(loaded, diagnostics) {
   // The names the program's own statements define, for "a function does not see the program's answers".
   function mainNames(unit) {
     const r = results.get(unit);
-    return r?.mainNames ?? (r ? (r.mainNames = laterNames(unit.tree.items.filter((i) => i.kind !== "use" && !DECLARATION_KINDS.has(i.kind)))) : new Map());
+    return r?.mainNames ?? (r ? (r.mainNames = laterNames(unit.tree.items.filter((i) => i.kind !== "import" && !DECLARATION_KINDS.has(i.kind)))) : new Map());
   }
 
   function findLater(scope, name) {
@@ -751,7 +754,7 @@ export function resolve(loaded, diagnostics) {
           err("S111", unit.file, e.span, `${e.name} is the library ${e.symbol.library.file.name}; name what it exports: ${e.name}.${[...e.symbol.exports.keys()][0] ?? "…"}`);
           e.symbol = null;
         }
-        if (e.symbol?.kind === "record" || e.symbol?.kind === "options") {
+        if (e.symbol?.kind === "record" || e.symbol?.kind === "enum") {
           err("S226", unit.file, e.span, `${e.name} is ${what(e.symbol)}, a type, not a value${e.symbol.kind === "record" ? `; new ${e.name} { … } makes one` : ""}`);
           e.symbol = null;
         }
@@ -764,7 +767,6 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(e.b, scope, unit);
         return;
       case "unary":
-      case "is-empty":
         resolveExpr(e.operand, scope, unit);
         return;
       case "field": {
@@ -872,7 +874,7 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(e.to, scope, unit);
         return;
       case "comprehension": {
-        // [e for each n, x in l if c]: the list is worked out outside; x and n are known only inside (§6.12).
+        // [e for n, x in l if c]: the list is worked out outside; x and n are known only inside (§6.12).
         resolveExpr(e.list, scope, unit);
         const inner = new Scope(scope, "block");
         inner.loop = "comprehension";
@@ -882,10 +884,10 @@ export function resolve(loaded, diagnostics) {
           e.indexSymbol = index;
           declare(inner, index, unit);
         }
-        // Named as a for each's are (§12.3, S231): no name defined twice, none hiding the file's declarations.
+        // Named as a for.s are (§12.3, S231): no name defined twice, none hiding the file's declarations.
         const item = new Sym("item", e.item, e, unit);
         e.itemSymbol = item;
-        if (e.index === e.item) err("S231", unit.file, e.span, `${e.item} names both the item and its number; give them two names: [… for each n, ${e.item} in …]`);
+        if (e.index === e.item) err("S231", unit.file, e.span, `${e.item} names both the item and its number; give them two names: [… for n, ${e.item} in …]`);
         else declare(inner, item, unit);
         if (e.condition) resolveExpr(e.condition, inner, unit);
         resolveExpr(e.value, inner, unit);
@@ -902,8 +904,8 @@ export function resolve(loaded, diagnostics) {
         return;
       }
       case "number":
-      case "yes-no":
-      case "empty":
+      case "bool":
+      case "null":
       case "plain-string":
         return;
       default:

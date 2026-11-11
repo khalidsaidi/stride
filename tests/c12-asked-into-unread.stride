@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record r { a: text }
+record r { a: string }
 var v: r
-ask v.a: text "A"
+ask v.a: string "A"
 # rule 12.1 W005 W007
 # warning 5 W005

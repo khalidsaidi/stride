@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 fill "A" = twice("a")
 fill "B" = "{later}"
-define twice(t: text) -> text {
+function twice(t: string) -> string {
   return t + t
 }
 const later = 4

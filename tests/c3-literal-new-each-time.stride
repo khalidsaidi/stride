@@ -1,10 +1,10 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record p { n: number }
-define make() -> list of number {
+function make() -> list<number> {
   return [1, 2]
 }
-var all: list of list of number
+var all: list<list<number>>
 for i in 1..3 {
   let row = [0]
   append(row, i)
@@ -14,8 +14,8 @@ print(all)
 let x = make()
 append(x, 3)
 print(make())
-var ps: list of p
-var ms: list of map of text to number
+var ps: list<p>
+var ms: list<map<string, number>>
 for i in 1..2 {
   append(ps, new p { n: 0 })
   append(ms, {"a": 0})
@@ -27,7 +27,7 @@ print(ms)
 let l = [1, 2, 3]
 let part = l[0..1]
 let sum = l + [4]
-let comp = [v for each v in l]
+let comp = [v for v in l]
 part[0] = 9
 sum[0] = 9
 comp[0] = 9

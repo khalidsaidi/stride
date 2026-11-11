@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define line(who: text, n: number = 2) {
-  ask name: text "Name {who}"
+function line(who: string, n: number = 2) {
+  ask name: string "Name {who}"
   fill "Name{n}" = name
 }
 line("spouse")

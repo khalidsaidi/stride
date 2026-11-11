@@ -1,5 +1,5 @@
-ask name: text "Your name"
-define greet(who: text) -> text {
+ask name: string "Your name"
+function greet(who: string) -> string {
   return "hello {who}"
 }
 print(greet(name))

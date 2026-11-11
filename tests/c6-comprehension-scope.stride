@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let l = [1]
-let d = [n for each n in l]
+let d = [n for n in l]
 print("{n}{count(d)}")
 
 # rule 6.12 S201
