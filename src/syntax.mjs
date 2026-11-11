@@ -743,29 +743,29 @@ class Parser {
 
   fill() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.string("the box's name, in quotes");
     this.expect("punct", "=", '"=" and what goes into the box');
     return this.node("fill", start, { box, value: this.expr() });
   }
 
   tick() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.string("the box's name, in quotes");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("tick", start, { box, condition: this.condition() });
   }
 
   pick() {
     const start = this.take();
-    const box = this.boxName("the radio group's name, in quotes, or a constant that holds it");
-    const button = this.boxName("the button's name, in quotes, or a constant that holds it");
+    const box = this.string("the radio group's name, in quotes");
+    const button = this.string("the button's name, in quotes");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("pick", start, { box, button, condition: this.condition() });
   }
 
   skip() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.string("the box's name, in quotes");
     this.expect("keyword", "because", '"because" and the reason');
     return this.node("skip", start, { box, reason: this.string("the reason, in quotes") });
   }
@@ -1132,13 +1132,6 @@ class Parser {
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.
-  // A box's or a button's name (§7.6): words in quotes, or the name of a constant that holds them.
-  boxName(what) {
-    if (!this.is("name")) return this.string(what);
-    const t = this.take();
-    return { kind: "name", name: t.value, span: t.span };
-  }
-
   string(what = "words in quotes") {
     if (!this.is("string")) throw this.mistake(what);
     const t = this.take();

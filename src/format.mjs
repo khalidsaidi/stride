@@ -208,16 +208,16 @@ export function format(text, name = "program.stride") {
         put(s, indent, `${s.kind} ${s.name}${s.type ? `: ${type(s.type)}` : ""}${s.value ? ` = ${expr(s.value)}` : ""}`);
         return trailing(s.span.endLine);
       case "fill":
-        put(s, indent, `fill ${expr(s.box)} = ${expr(s.value)}`);
+        put(s, indent, `fill ${str(s.box)} = ${expr(s.value)}`);
         return trailing(s.span.endLine);
       case "tick":
-        put(s, indent, `tick ${expr(s.box)} when ${expr(s.condition)}`);
+        put(s, indent, `tick ${str(s.box)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "pick":
-        put(s, indent, `pick ${expr(s.box)} ${expr(s.button)} when ${expr(s.condition)}`);
+        put(s, indent, `pick ${str(s.box)} ${str(s.button)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "skip":
-        put(s, indent, `skip ${expr(s.box)} because ${str(s.reason)}`);
+        put(s, indent, `skip ${str(s.box)} because ${str(s.reason)}`);
         return trailing(s.span.endLine);
       case "if":
         return ifChain(s, indent, "if");

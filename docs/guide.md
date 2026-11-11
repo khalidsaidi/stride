@@ -100,14 +100,6 @@ ask agrees: yes-no "I agree to the terms"
 tick "agree" when agrees
 ```
 
-A PDF's own names for its boxes are often a machine's (`topmostSubform[0].Page1[0].f1_05[0]`). Give such a box
-a name of your own once, as a constant, and use that name wherever the box goes (§7.9.1):
-
-```
-const exempt_code_box = "f1_05[0]"
-fill exempt_code_box = exempt_code
-```
-
 Then the one path from here to a workflow someone fills:
 
 1. **The form's header**, which `stride new` wrote from the PDF (`consent.boxes.json`): every box and its kind. The
