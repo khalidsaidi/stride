@@ -11,7 +11,7 @@ here names its section (§x.y).
 One program per form, `<form>.stride`, written against one exact PDF. Beside it:
 
 - `<form>.boxes.json`, the header: the PDF's boxes, as the PDF gives them, written by
-  `stride header <form>.pdf`; and, where whoever prepared the form added them, the words printed beside each. A program is checked against it, as a C program is against its headers.
+  `stride header <form>.pdf`. A program is checked against it, as a C program is against its headers.
 - `<form>.tests/*.json`: the program's tests.
 
 Libraries are in `lib/`; the standard library is `lib/std.stride`. A test file `<name>.test.stride`
@@ -93,23 +93,20 @@ define label(r: representative) -> text {
   return "{r.name} ({r.caf})"
 }
 
-define money(n: number, places: number = 2) -> text {  # a parameter may have a default, known before the
-  return grouped(n, places)                            # form opens; defaults come last (§9.2)
+define money(n: number, places: number = 2) -> text {  # a parameter may have a default, worked out by the
+  return grouped(n, places)                            # compiler; defaults come last (§9.2)
 }
 ```
 
 A call gives its arguments by position, then by name: `money(total, places: 0)` (§9.4).
 
 A function may be generic: `define first_of<t>(l: list of t) -> t` takes a list of any type and gives one of
-its items; each call works out what `t` is from its arguments (§9.5). A parameter's list may leave out its most
-(`list of t`): it takes a list of any length. A function that returns a value and does not write its result's
-type has the join of its returns' types (§3.9, §9.6); when that is a list whose most is not known, it must write
-its result type (§9.5.2).
+its items; each call works out what `t` is from its arguments (§9.5). A function that returns a value and does not write its result's
+type has the join of its returns' types (§3.9, §9.6).
 
 A function sees its parameters, its own names, and its file's declarations; it does not see the program's
-answers: what it needs is passed. A function may not call itself, directly or through others, so every program
-ends. A function that asks a question, writes a box, collects a list, calls `today`, `print` or `fail`, or calls
-a function that does, has effects; any other is pure (§9.9).
+answers: what it needs is passed. A function may call itself. A function is a value too: its name can be passed,
+kept and called through (§9.10).
 
 `r.label()` calls `label(r)`: any function can be called on its first argument. A library kept under a name
 lends its functions to such calls.
@@ -133,12 +130,13 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is yes |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
-| `const b = "box"`, then `fill b = e` | a box named once: where words in quotes must be known (a box's name, a question's words, a reason), a constant that holds them goes too (§7.9) |
+| `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value (or words) |
 | `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |
 | `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 1 |
-| `break`, `continue` | end the innermost `for` or `for each`, or go to its next turn; not in a collect (§7.12) |
+| `while c { }` | its block as long as the condition is yes (§7.11.1) |
+| `break`, `continue` | end the innermost `for`, `for each` or `while`, or go to its next turn; not in a collect (§7.12) |
 | `collect x in list "Add another…?" { }`, `collect n, x in list any "Any…?" another "Another…?" { }` | asks for the items of a list one at a time (below) |
 | `return`, `return e` | ends a function (with its value), or the program |
 | `f(…)` | calls a function for what it does |
@@ -175,7 +173,7 @@ for each n, r in representatives {
 ```
 
 `collect` asks the first item, then the quoted yes-no question; a yes asks the next item, up to the list's
-most, where it stops without asking (Docassemble's gathering loop, bounded by the rows the PDF has). An item
+most, where it stops without asking. An item
 enters the list when its block ends (§8.5.1). A list that may stay empty (trips abroad, arrests) asks first
 whether there are any:
 
@@ -196,19 +194,18 @@ Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `==
 `[a..b]` and calls; then values: numbers, `"words"`, `yes`, `no`, `empty`, names, `[a, b]`,
 `[e for each x in l if c]`, `new record { field: e, … }`, `( … )`.
 
-- `+` adds numbers, joins words, or joins two lists (the most is the sum, §6.5.1); `- * / // %` are for
+- `+` adds numbers, joins words, or joins two lists (§6.5.1); `- * / // %` are for
   numbers. `//` is floor division and `%` its remainder, both exact (§6.4.1). Dividing by zero is a fault.
 - `< <= > >=` compare two numbers, two dates, or two words by code points (§6.7).
 - `==` and `!=` compare values of one type; an option is compared with one of its own values, checked.
 - `"x" in s` asks whether an option is among those of a set of options, or a value among a list's items.
 - `and` and `or` decide on the left when they can; the right is then not worked out. They always give yes or no.
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
-- `l[a..b]` is the items a to b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list; it may not
-  ask, write boxes or collect (§6.12).
+- `l[a..b]` is the items a to b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list (§6.12).
 - `"Line {n + 1}"` puts any value's words into words. `\"`, `\\`, `\{`, `\}`, `\n`, `\t` and `\u{h…}` stand
   for themselves (§2.6).
 
-## Known before the form opens
+## What is worked out when
 
 A box's name, a button's name, a question's printed words and a loop's bounds are ordinary
 expressions, worked out as the program runs (§11.2). The compiler works out only a constant's value, a parameter's
@@ -216,8 +213,7 @@ default and an option's printed words.
 
 Loops, collects, for eaches and calls run in the machine as they are written. A question's key is worked out
 as it runs, from where it is asked (§8.6): its name, with the turn of each loop it is in (`other_act[1]`), on the
-item of a list it answers (`representatives[2].name`), or after the call it is in (`line_2(n=2).name`, the
-call's key holding, by name, the parameters that name boxes or questions).
+item of a list it answers (`representatives[2].name`), or after the call it is in (`line_2.name`; a second call is `line_2#2.name`).
 
 ## The standard library
 
@@ -252,13 +248,11 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
 - **Flow:** a let
   or var read where not every path has given it a value; a function with a result that does not return one on
   every path; a statement after a return, break or continue; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
-- **The PDF** (against the header): a box the PDF does not have (with the nearest one); a statement of the wrong
-  kind for its box; a button a radio group does not have; a question asked twice on one
-  path through the program; a question's printed words not among those
-  the header lists beside the boxes its answer goes into; an option's not among those beside the box it ticks or picks; a list box filled
-  with an entry it does not have; a program written for another PDF.
+- **The form** (against the header): a box written out that the PDF does not have (with the nearest one); a
+  statement of the wrong kind for its box; a button a radio group does not have; a list box filled with an entry,
+  written out, that it does not have; a program written for another PDF.
 
-Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's most 1000, 1 to 1000 options in a set,
+Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's 1000 items, 1 to 1000 options in a set,
 words of 100,000 characters, numbers of 34 significant digits.
 
 Warnings do not stop the compiler: a match with no else that misses options; a function, a constant, an answer,
@@ -279,7 +273,7 @@ Version 4 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, th
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),
-natives, functions (name, parameters, locals' names, code range, pure), code, places (the line and column of
+natives, functions (name, parameters, locals' names, code range), code, places (the line and column of
 each instruction that can fault or ask), links (for each question whose key is written out: the boxes its answer goes into). Integers are LEB128 varints; jump
 addresses 4 bytes.
 

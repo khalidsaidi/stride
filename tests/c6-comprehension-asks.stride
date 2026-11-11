@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define age_of(who: text) -> number {
+  ask age: number "{who}'s age"
+  return age
+}
+let ages = [age_of(n) for each n in ["Ada", "Bo"]]
+print(sum(ages))
+# rule 6.12 8.6.2
+# run both
+# answers {"age_of.age": "30", "age_of#2.age": "12"}
+# prints ["42"]

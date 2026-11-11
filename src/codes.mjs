@@ -733,10 +733,6 @@ export const CODES = {
     "when": "a slice bound that is not a number",
     "explanation": "`l[a..b]`, numbers."
   },
-  "S398": {
-    "when": "a comprehension that asks, writes boxes or collects",
-    "explanation": "A comprehension makes a value; use for each."
-  },
   "S399": {
     "when": "`sorted(l, by: \"f\")` with f not a field of l's records, not written out, or not a number, date or words",
     "explanation": "`by` names a field of the list's record type, in plain words, whose values can be ordered."

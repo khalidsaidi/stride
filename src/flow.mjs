@@ -148,17 +148,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   }
   const hasEffects = (body) => directEffects(body) || callsIn(body).some((c) => c.callee.effects);
 
-  // A comprehension makes a value: what it works out for each item may not ask, write boxes or collect (S398).
-  for (const { body } of bodies) {
-    for (const s of statements(body)) {
-      for (const e of expressionsOf(s)) {
-        if (e.kind !== "comprehension") continue;
-        const effect = [e.value, e.condition].flatMap((x) => [...subexpressions(x)]).find((x) => x.kind === "call" && x.callee?.effects);
-        if (effect) err("S398", effect, `a comprehension makes a value, and ${effect.callee.name} asks, writes boxes or collects; use for each`);
-      }
-    }
-  }
-
   // Loops and collects with effects: their questions are named by turn (§8.6).
   for (const { body } of bodies) {
     for (const s of statements(body)) {

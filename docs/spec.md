@@ -349,7 +349,7 @@ is S352.
 yes, the value of e, in order. Its type is `list of` e's type `most` l's most when l is a list, and, when l is a set, the number of options its
 option set declares (a set of `options s { "a" "A"  "b" "B" }` with one chosen gives a list of most 2 holding
 one item). An option set declares at most 1000 options (S235), so this most is always 1–1000. x and n are known only inside it.
-A comprehension may not ask, write boxes or collect (S398, at the call in it that does).
+A comprehension may call any function, one that asks included: each call's questions are named apart (§8.6.2).
 
 6.13. **Conditional** `if c then a else b`: c yes-no (S310); its type is the join (§3.9) of a's and b's (S394 when
 they have none): `if c then "x" else an_option` is text; `if c then [empty, empty] else [1]` is `list of number most 2`.
@@ -1207,7 +1207,6 @@ its call: the function's name in the call.
 | S393 | a default the compiler cannot work out | Defaults are made of known values. |
 | S394 | a conditional whose two values' types have no join | `if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none. |
 | S396 | a slice bound that is not a number | `l[a..b]`, numbers. |
-| S398 | a comprehension that asks, writes boxes or collects | A comprehension makes a value; use for each. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
 | S406 | a statement after return, break or continue | It never runs; remove it. |
