@@ -10,6 +10,6 @@ for each n, f in folks {
   fill "N{n}" = f.full()
 }
 fill "Rows" = p.ROWS
-# answers {"folks[1].first": "Ada", "folks[1].last": "L", "folks[1]#another": "no"}
-# boxes {"N1": "Ada L", "Rows": "2"}
+# answers {"folks[0].first": "Ada", "folks[0].last": "L", "folks[0]#another": "no"}
+# boxes {"N0": "Ada L", "Rows": "2"}
 # rule 4.5 9.8 8.5

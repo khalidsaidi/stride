@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 var l: list of number = [1, 2]
 var n = 0
 for each x in l {
-  l[3] = x
+  l[2] = x
   n = n + 1
 }
 print(n)

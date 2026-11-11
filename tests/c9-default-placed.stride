@@ -9,7 +9,7 @@ define f(i: number, xs: list of number = [1]) -> number {
   return xs[i]
 }
 define e(i: number, xs: list of number = empty) -> number {
-  return xs[i]
+  return count(xs) + i
 }
 define w(who: text, k: set of s = ["a", "b"]) {
   ask v: text "V {who} {join(k)}"
@@ -21,6 +21,6 @@ print(f(i))
 print(e(i))
 w("x")
 # rule 9.2 3.6 3.8 3.7.1
-# answers {"i": "3"}
+# answers {"i": "0"}
 # asked ["i", "w.v"]
-# prints ["b, a", "b", "", "", ""]
+# prints ["b, a", "b", "1", "0", ""]

@@ -16,8 +16,9 @@ expect last([3, 4]) == 4
 expect first(no_items) is empty
 expect first(x) == "b"
 expect filled([empty, 1, empty, 2]) == [1, 2]
-expect index_of(["a", "b", "a"], "a") == 1
-expect index_of([1, 2], 3) == 0
+expect index_of(["a", "b", "a"], "a") == 0
+expect index_of(["a", "b", "b"], "b") == 1
+expect index_of([1, 2], 3) == -1
 expect without([1, 2, 1], 1) == [2]
 expect reversed([1, 2, 3]) == [3, 2, 1]
 expect sorted([3, empty, 1, 2]) == [1, 2, 3, empty]

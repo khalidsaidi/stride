@@ -11,7 +11,7 @@ define f() -> number {
 ask z: number "Z"
 fill "A" = new r { a: f(), b: 2 }.b
 fill "B" = new r { a: 1 / z, b: 2 }.b
-fill "C" = [1 / z, 2][2]
+fill "C" = [1 / z, 2][1]
 # rule 19.1 6.2 9.9 F001
 # run faults
 # answers {"z": "0"}

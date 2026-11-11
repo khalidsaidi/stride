@@ -8,7 +8,7 @@ collect n, k in kids "Another?" {
   pick "K{n}" "B" when k.age <= 5
 }
 # rule 10.3
+# box K0 radio:A near Age Another?
+# box K0 radio:B near Age Another?
 # box K1 radio:A near Age Another?
 # box K1 radio:B near Age Another?
-# box K2 radio:A near Age Another?
-# box K2 radio:B near Age Another?

@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask b: number "B"
+let l = [1, 2, 3]
+print(join(l[0..<b], ","))
+print(join(l[..<b], ","))
+print("abc"[1..<b])
+# rule 6.9.3 F004
+# run whole
+# answers {"b": 2}
+# prints ["1,2", "1,2", "b"]
+# run beyond
+# answers {"b": 9}
+# prints ["1,2,3", "1,2,3", "bc"]
+# run below
+# answers {"b": -4}
+# prints ["", "", ""]
+# run not-whole
+# answers {"b": 1.5}
+# fault F004 at 5:13
+# run empty
+# answers {}
+# fault F004 at 5:13

@@ -45,11 +45,11 @@ export native define remove_prefix(t: text, prefix: text) -> text
 export native define remove_suffix(t: text, suffix: text) -> text
 # example: length("héllo") gives 5
 export native define length(t: any) -> number
-# example: chars("123-45-6789", 4, 5) gives 45
+# example: chars("123-45-6789", 3, 4) gives 45
 export native define chars(t: text, from: number, to: number) -> text
-# example: character("A1-B2", 3) gives B
+# example: character("A1-B2", 2) gives B
 export native define character(t: text, n: number) -> text
-# example: slice("Hello", 2, 4) gives ell
+# example: slice("Hello", 1, 3) gives ell
 export native define slice(t: text, from: number, to: number) -> text
 # example: digits("(555) 123-4567") gives 5551234567
 export native define digits(t: text) -> text
@@ -68,19 +68,20 @@ export native define contains(t: text, part: text) -> yes-no
 export native define starts_with(t: text, part: text) -> yes-no
 # example: ends_with("Hello", "lo") gives yes
 export native define ends_with(t: text, part: text) -> yes-no
-# example: find("banana", "an") gives 2
+# example: find("banana", "an") gives 1
+# example: find("banana", "x") gives -1
 export native define find(t: text, part: text) -> number
 # example: occurrences("banana", "an") gives 2
 export native define occurrences(t: text, part: text) -> number
 # example: split("a,b,,c", ",") gives [a, b, , c]
 export native define split(t: text, separator: text) -> list of text
-# example: line("one\n  two  ", 2) gives two
+# example: line("one\n  two  ", 1) gives two
 export native define line(t: text, n: number) -> text
 # example: line_count("a\n") gives 2
 export native define line_count(t: text) -> number
 # example: replace(rest_lines("Name\n 12 Main St\nTown "), "\n", " / ") gives 12 Main St / Town
 export native define rest_lines(t: text) -> text
-# example: word("John  Q Public", 2) gives Q
+# example: word("John  Q Public", 1) gives Q
 export native define word(t: text, n: number) -> text
 # example: word_count(" a  b c ") gives 3
 export native define word_count(t: text) -> number
@@ -171,7 +172,8 @@ export native define first(l: any) -> element
 export native define last(l: any) -> element
 # example: filled(["a", "", "b"]) gives [a, b]
 export native define filled(l: any) -> any
-# example: index_of([5, 6, 7], 6) gives 2
+# example: index_of([5, 6, 7], 6) gives 1
+# example: index_of([5, 6, 7], 8) gives -1
 export native define index_of(l: any, x: any) -> number
 # example: append(filled(["a", "", ""]), "b") gives [a, b]
 export native define append(l: any, x: any) -> any
@@ -205,5 +207,5 @@ export native define difference(a: any, b: any) -> any
 export native define either(a: any, b: any) -> any
 # example: fail("stop") faults F013
 export native define fail(message: text)
-# example: print(people[1]) prints person { name: Bo, age: 40 }
+# example: print(people[0]) prints person { name: Bo, age: 40 }
 export native define print(v: any)

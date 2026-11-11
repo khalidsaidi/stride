@@ -2,12 +2,13 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person { name: text, kids: list of text }
 ask i: number "I"
-var ps: list of person = [new person { name: "a", kids: ["k"] }]
+var ps: list of person = [new person { name: "a", kids: ["k"] }, empty]
 var q: person
-print(ps[i].kids[1])
-print(q.kids[2])
+print(count(ps[i].kids))
 print(count(q.kids))
-print(ps[1].kids[1])
+print(ps[0].kids[0])
+print(q.kids[0])
 # rule 6.9.1 6.9.2
-# answers {"i": "2"}
-# prints ["", "", "0", "k"]
+# answers {"i": "1"}
+# prints ["0", "0", "k"]
+# fault F004 at 10:13 position 0 is outside the list: it holds 0

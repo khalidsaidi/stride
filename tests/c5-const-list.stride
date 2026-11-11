@@ -5,16 +5,16 @@ const DAYS = ["Mon", "Tue", "Wed"]
 const PRIMES: list of number = [2, 3, 5]
 const WARM: set of color = ["r"]
 const NESTED = [[1, 2], [3]]
-print(DAYS[2])
+print(DAYS[1])
 print(count(PRIMES))
 print("r" in WARM)
-print(NESTED[1][2])
+print(NESTED[0][1])
 for each d in DAYS { print(d) }
-define f() -> text { return DAYS[3] }
+define f() -> text { return DAYS[2] }
 print(f())
 var l = DAYS
-l[1] = "Sun"
-print(DAYS[1])
-print(l[1])
+l[0] = "Sun"
+print(DAYS[0])
+print(l[0])
 # rule 5.3
 # prints ["Tue", "3", "yes", "2", "Mon", "Tue", "Wed", "Wed", "Mon", "Sun"]

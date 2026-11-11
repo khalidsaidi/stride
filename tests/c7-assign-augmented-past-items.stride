@@ -1,9 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 var l: list of number = [1]
-l[2] += 5
+l[0] += 5
+print(join(l, ","))
+l[1] += 5
 print(join(l, ","))
 
 # rule 7.5.1
 # run
-# prints ["1,5"]
+# prints ["6"]
+# fault F004 at 6:2 position 1 is outside the list: it holds 1

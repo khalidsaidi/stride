@@ -10,7 +10,7 @@ var later: number
 define bump(by: number) {
   total += by
   b.n = total
-  log[count(log) + 1] = "bumped {by}"
+  log[count(log)] = "bumped {by}"
   later = 5
 }
 bump(1)

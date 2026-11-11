@@ -13,6 +13,6 @@ collect k in kids "Another kid?" {
 }
 print(kids)
 # rule 8.6.2
-# answers {"kids[1]": "A", "kids[1].note": "n1", "kids[1].who.age": "4", "kids[1]#another": "yes", "kids[2]": "B", "kids[2].note": "n2", "kids[2].who.age": "6"}
-# asked ["kids[1]", "kids[1].note", "kids[1].who.age", "kids[1]#another", "kids[2]", "kids[2].note", "kids[2].who.age", "kids[2]#another"]
+# answers {"kids[0]": "A", "kids[0].note": "n1", "kids[0].who.age": "4", "kids[0]#another": "yes", "kids[1]": "B", "kids[1].note": "n2", "kids[1].who.age": "6"}
+# asked ["kids[0]", "kids[0].note", "kids[0].who.age", "kids[0]#another", "kids[1]", "kids[1].note", "kids[1].who.age", "kids[1]#another"]
 # prints ["n1", "4", "n2", "6", "[A, B]"]

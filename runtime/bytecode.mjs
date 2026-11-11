@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 5;
+export const VERSION = 6;
 
 export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, LINKS: 11 };
 
@@ -42,7 +42,7 @@ export const OP = {
   GET_FIELD: 11, // v field: pop a record, push its field (empty of an empty record; F006 of anything else)
   SET_FIELD: 12, // v field: pop a value, pop a record, set the field to a copy of the value
   NEW_LIST: 13, // v count: pop that many values, push a list of them
-  GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004, empty past the items)
+  GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004)
   SET_ITEM: 15, // pop a value, pop a position, pop a list, set the item (§7.5.1: F005)
   APPEND: 16, // v local: pop a value, append it to the list in the local
   ADD: 17,

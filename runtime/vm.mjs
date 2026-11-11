@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, whole, sliced, outside, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -216,10 +216,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
     if (i === undefined) fault("F016", `the program writes the box "${words(name)}", which it does not know`);
     return i;
   };
-  // A list position read (§6.9.2): F004 unless a whole number of 1 or more; past the items, empty.
+  // A list position read (§6.9.2): F004 unless a whole number of 0 or more.
   const readPosition = (l, i) => {
     const n = whole(i);
-    if (n === null || n < 1) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number of 1 or more`);
+    if (n === null || n < 0) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number of 0 or more`);
     return n;
   };
   const record = (r) => {
@@ -324,7 +324,9 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const n = readPosition(l, i);
-          stack.push((typeof l === "string" ? [...l][n - 1] : l?.[n - 1]) ?? null);
+          const items = typeof l === "string" ? [...l] : l ?? [];
+          if (n >= items.length) fault("F004", outside(i, items.length, typeof l === "string"));
+          stack.push(items[n] ?? null);
           break;
         }
         case OP.GET_ITEM_THERE: {
@@ -336,8 +338,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const n = readPosition(l, i);
-          if (n > l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
-          stack.push(l[n - 1]);
+          if (n >= l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
+          stack.push(l[n]);
           break;
         }
         case OP.SET_ITEM: {
@@ -350,8 +352,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 1 || n > l.length + 1) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
-          l[n - 1] = copy(v);
+          if (n === null || n < 0 || n > l.length) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
+          l[n] = copy(v);
           break;
         }
         case OP.CHECK_SLOT: {
@@ -363,7 +365,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 1 || n > l.length + 1) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
+          if (n === null || n < 0 || n > l.length) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
           break;
         }
         case OP.ENSURE_RECORD: {
@@ -395,10 +397,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const n = readPosition(l, i);
-          if (n > l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
-          if (isEmpty(l[n - 1])) {
+          if (n >= l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
+          if (isEmpty(l[n])) {
             const t = p.records[ins.a];
-            l[n - 1] = emptyRecord(t.name, t.lists, t.fields);
+            l[n] = emptyRecord(t.name, t.lists, t.fields);
           }
           break;
         }
@@ -415,13 +417,11 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const l = pop();
           const x = whole(a), y = whole(b);
           if (x === null || y === null) fault("F004", "a slice's bounds are whole numbers");
-          const from = Math.max(1, x);
           if (typeof l === "string") {
-            stack.push([...l].slice(from - 1, Math.max(from - 1, y)).join("") || null);
+            stack.push(sliced([...l], x, y).join("") || null);
             break;
           }
-          const to = Math.min(Array.isArray(l) ? l.length : 0, y);
-          stack.push(from > to ? [] : l.slice(from - 1, to).map(copy));
+          stack.push(sliced(Array.isArray(l) ? l : [], x, y).map(copy));
           break;
         }
         case OP.TO_BOOL:

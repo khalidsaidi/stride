@@ -7,14 +7,20 @@ print(join(l, ","))
 
 # rule 7.5 F005
 # run replace
-# answers {"i": 1}
-# prints ["z,b"]
-# run append
-# answers {"i": 3}
-# prints ["a,b,z"]
-# run zero
 # answers {"i": 0}
+# prints ["z,b"]
+# run replace last
+# answers {"i": 1}
+# prints ["a,z"]
+# run append
+# answers {"i": 2}
+# prints ["a,b,z"]
+# run below zero
+# answers {"i": -1}
+# fault F005 at 5:2
+# run past the count
+# answers {"i": 3}
 # fault F005 at 5:2
 # run not whole
-# answers {"i": 1.5}
+# answers {"i": 0.5}
 # fault F005 at 5:2

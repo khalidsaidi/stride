@@ -4,12 +4,12 @@ ask i: number "I"
 ask z: number "Z"
 var xs: list of number = [1]
 xs[i] = 1 / z
-print("{xs[1]}")
+print("{xs[0]}")
 
 # rule 7.5.1
 # run place faults first
-# answers {"i": 0, "z": 0}
+# answers {"i": -1, "z": 0}
 # fault F005 at 6:3
 # run then the value
-# answers {"i": 1, "z": 0}
+# answers {"i": 0, "z": 0}
 # fault F001 at 6:11

@@ -96,11 +96,16 @@ export function generate(seed) {
         const l = r.pick(lists);
         choices.push(
           () => `count(${use(l)})`,
-          () => `${use(l)}[${r.int(1, 3)}]`,
+          // An item read where the list holds it; now and then wherever, which may fault (F004).
+          () => {
+            const at = r.int(0, 2);
+            return r.chance(0.9) ? `(if count(${use(l)}) > ${at} then ${use(l)}[${at}] else 0)` : `${use(l)}[${at}]`;
+          },
           () => `either(smallest(${use(l)}), 0)`,
           () => `either(largest(${use(l)}), 0)`,
           () => `index_of(${use(l)}, ${sub()})`,
-          () => `count(${use(l)}[${r.int(1, 2)}..${r.int(1, 3)}])`,
+          () => `count(${use(l)}[${r.int(0, 1)}${r.pick(["..", "..<"])}${r.int(0, 3)}])`,
+          () => `count(${use(l)}${r.pick([`[${r.int(0, 2)}..]`, `[..${r.int(0, 2)}]`, `[..<${r.int(0, 3)}]`])})`,
           () => `count(${use(l)} + [${sub()}])`,
         );
       }
@@ -117,7 +122,7 @@ export function generate(seed) {
           () => `length(character("abc", ${a()}))`,
           () => `year(add_days(date_of(2000, 1, 1), ${a()} * 1000000))`,
           () => `fact(${a()})`,
-          () => `count([${a()}, 2][1..${a()}])`,
+          () => `count([${a()}, 2][0${r.pick(["..", "..<"])}${a()}])`,
         );
       }
       const fns = functions.filter((f) => f.result === "number" && !f.asks && f.ready);
@@ -139,20 +144,20 @@ export function generate(seed) {
         () => `(${sub()} + ${sub()})`,
         () => `"<{${sub()}}|{${num(sc, d - 1)}}>"`,
         () => `${r.pick(["upper", "lower", "trim", "title", "capitalize", "digits", "letters"])}(${sub()})`,
-        () => `slice(${sub()}, ${r.int(1, 3)}, ${r.int(1, 5)})`,
+        () => `slice(${sub()}, ${r.int(0, 2)}, ${r.int(0, 4)})`,
         () => `replace(${sub()}, "a", ${sub()})`,
         () => `pad_left(${sub()}, ${r.int(0, 8)}, "*")`,
         () => `pad_left(${sub()}, ${r.int(0, 8)})`,
         () => `remove_prefix(${sub()}, "a")`,
-        () => `character(${sub()}, ${r.int(1, 4)})`,
-        () => `line(${sub()}, ${r.int(1, 2)})`,
+        () => `character(${sub()}, ${r.int(0, 3)})`,
+        () => `line(${sub()}, ${r.int(0, 1)})`,
         () => `text_of(${num(sc, d - 1)})`,
         () => `fixed(${num(sc, d - 1)}, ${r.int(0, 2)})`,
         () => `grouped(${num(sc, d - 1)})`,
         () => `format(${date(sc, d - 1)}, "${r.pick(["YYYY-MM-DD", "DD/MM/YY", "M-D"])}")`,
         () => `either(${sub()}, "none given")`,
         () => `(if ${bool(sc, d - 1)} then ${sub()} else ${sub()})`,
-        () => `word(${sub()}, ${r.int(1, 2)})`,
+        () => `word(${sub()}, ${r.int(0, 1)})`,
         () => `either(pick_one(${sub()}, ${sub()}), "")`,
       );
       const lists = all(sc).filter((n) => n.type.t === "list");
@@ -226,7 +231,7 @@ export function generate(seed) {
       choices.push(() => use(v), () => `${r.pick(["sorted", "reversed", "filled"])}(${use(v)})`);
       if (d > 0) {
         choices.push(() => `[${type.of === "number" ? "x * 2" : "upper(x)"} for each x in ${use(v)}]`);
-        choices.push(() => `[${type.of === "number" ? "x + k" : "x + text_of(k)"} for each k, x in ${use(v)} if k ${r.pick([">", "<", "!="])} ${r.int(1, 2)}]`);
+        choices.push(() => `[${type.of === "number" ? "x + k" : "x + text_of(k)"} for each k, x in ${use(v)} if k ${r.pick([">", "<", "!="])} ${r.int(0, 1)}]`);
         if (type.of === "number") choices.push(() => `doubled(${use(v)})`);
       }
     }
@@ -305,7 +310,7 @@ export function generate(seed) {
         // A list made longer by +.
         const name = fresh("grow");
         const more = fresh("grow");
-        return [`${i}var ${name}: list of number = [${num(sc, 1)}]`, `${i}${name}[2] = ${num(sc, 1)}`, `${i}let ${more}: list of number = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[1..3])`, `${i}print(${name})`];
+        return [`${i}var ${name}: list of number = [${num(sc, 1)}]`, `${i}${name}[1] = ${num(sc, 1)}`, `${i}let ${more}: list of number = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[${r.pick(["0..2", "0..<3", "1..", "..<2"])}])`, `${i}print(${name})`];
       }
       case "loopfill":
         return [`${i}fill "${ctx.inLoop.box}_{${ctx.inLoop.counter}}_${++counter}" = ${expr(sc, r.pick([N, T]), d)}`];
@@ -341,9 +346,9 @@ export function generate(seed) {
         const v = r.pick(all(sc).filter((n) => n.kind === "var"));
         if (v.type.t === "record") return [`${i}${v.name}.label = ${text(sc, d)}`];
         if (v.type.t === "list") {
-          // Known positions from 1 (one below is S360); a position past the items may fault as the program runs.
+          // Known positions from 0 (one below is S360); a position past the count may fault as the program runs.
           const answers = all(sc).filter((n) => n.kind === "answer" && n.type.t === "number");
-          const at = answers.length && r.chance(0.3) ? `whole(either(${use(r.pick(answers))}, 1))` : r.int(1, 3);
+          const at = answers.length && r.chance(0.3) ? `whole(either(${use(r.pick(answers))}, 0))` : r.pick([0, 0, 1, 2]);
           return [`${i}${v.name}[${at}] = ${num(sc, d)}`];
         }
         if (v.type.t === "number" && r.chance(0.5)) return [`${i}${v.name} ${r.pick(["+=", "-=", "*="])} ${num(sc, d)}`];
@@ -384,9 +389,9 @@ export function generate(seed) {
         declare(inner, c, N, "counter");
         const loop = { counter: c, box: box("L") };
         boxes.pop();
-        const from = r.int(1, 2), to = r.int(0, 3);
-        const out = [`${i}for ${c} in ${from}..${to} {`, `${i}  fill "${loop.box}_{${c}}" = ${c}`];
-        for (let k = from; k <= to; k++) boxes.push(`${loop.box}_${k}`);
+        const from = r.int(0, 2), to = r.int(0, 3), before = r.chance(0.5);
+        const out = [`${i}for ${c} in ${from}${before ? "..<" : ".."}${to} {`, `${i}  fill "${loop.box}_{${c}}" = ${c}`];
+        for (let k = from; before ? k < to : k <= to; k++) boxes.push(`${loop.box}_${k}`);
         if (r.chance(0.4)) {
           const q = fresh("q");
           out.push(`${i}  ask ${q}: number "Turn {${c}}"`, `${i}  print(${q})`);
@@ -423,7 +428,7 @@ export function generate(seed) {
         if (r.chance(0.5)) out.push(`${i}ask ${name}.done: yes-no "Done?"`);
         else out.push(`${i}${name}.done = ${bool(sc, d)}`);
         if (r.chance(0.5)) out.push(`${i}${name}.amount = ${num(sc, d)}`);
-        if (r.chance(0.5)) out.push(`${i}${name}.tags[${r.int(1, 2)}] = ${text(sc, d)}`, `${i}print(${name}.tags)`);
+        if (r.chance(0.5)) out.push(`${i}${name}.tags[${r.int(0, 1)}] = ${text(sc, d)}`, `${i}print(${name}.tags)`);
         out.push(`${i}print(${use(n)})`, `${i}print(${name}.done)`);
         return out;
       }
@@ -465,7 +470,10 @@ export function generate(seed) {
     "  return count([x * 2 for each x in xs if x != 0])",
     "}",
     "define second(xs: list of number) -> number {",
-    "  return xs[2]",
+    "  if count(xs) < 2 {",
+    "    return empty",
+    "  }",
+    "  return xs[1]",
     "}",
     "define doubled(xs: list of number) -> list of number {",
     "  var out: list of number",

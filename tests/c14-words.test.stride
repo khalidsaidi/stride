@@ -12,13 +12,14 @@ expect remove_prefix("mr Smith", "Mr ") == "mr Smith"
 expect remove_suffix("report.pdf", ".pdf") == "report"
 expect length("😀a") == 2
 expect length(empty) == 0
-expect chars("123-45-6789", 4, 5) == "45"
-expect chars("12.3", 3, 2) is empty
-expect chars("12", 2, 9) == "2"
-expect character("A-B", 2) == "B"
+expect chars("123-45-6789", 3, 4) == "45"
+expect chars("12.3", 2, 1) is empty
+expect chars("12", 1, 9) == "2"
+expect character("A-B", 1) == "B"
+expect character("A-B", 0) == "A"
 expect character("ab", 5) is empty
-expect slice("a-b", 1, 2) == "a-"
-expect slice("abc", 3, 1) is empty
+expect slice("a-b", 0, 1) == "a-"
+expect slice("abc", 2, 0) is empty
 expect digits("(555) 123") == "555123"
 expect letters("a1é2") == "aé"
 expect is_digits("123")
@@ -32,10 +33,11 @@ expect contains("ABC", "B")
 expect contains("abc", "")
 expect starts_with("Hello", "He")
 expect ends_with("Hello", "lo")
-expect find("Hello", "l") == 3
-expect find("ABC", "B") == 2
-expect find("abc", "z") == 0
-expect find("abc", "") == 0
+expect find("Hello", "l") == 2
+expect find("Hello", "He") == 0
+expect find("ABC", "B") == 1
+expect find("abc", "z") == -1
+expect find("abc", "") == -1
 expect occurrences("aaaa", "aa") == 2
 expect occurrences("AbAb", "Ab") == 2
 expect occurrences("abc", "") == 0
@@ -44,12 +46,12 @@ expect count(split("", ",")) == 0
 expect split("abc", "") == ["a", "b", "c"]
 expect split("aXbxc", "x") == ["aXb", "c"]
 expect count(split(pad_left("", 999, ","), ",")) == 1000
-expect line("a\n b \u{d}\nc", 2) == "b"
-expect line("a\u{d}b", 2) == "b"
+expect line("a\n b \u{d}\nc", 1) == "b"
+expect line("a\u{d}b", 1) == "b"
 expect line_count("a\nb") == 2
 expect line_count(empty) == 0
 expect rest_lines("a\nb\nc") == "b\nc"
-expect word("  a  b\tc", 3) == "c"
+expect word("  a  b\tc", 2) == "c"
 expect word_count("a  b") == 2
 expect word_count(empty) == 0
 expect pad_left("7", 3, "0") == "007"
@@ -61,11 +63,12 @@ expect text_of(yes) == "yes"
 expect number_of("$1,234.50") == 1234.5
 expect number_of("0x10") is empty
 expect number_of("1e5") is empty
-expect character("abc", 0) faults "F007"
+expect character("abc", -1) faults "F007"
 expect character("abc", 2.5) faults "F007"
 expect character("abc", empty) faults "F007"
-expect slice("abc", 0, 1) faults "F007"
-expect line("a", 0) faults "F007"
+expect slice("abc", -1, 1) faults "F007"
+expect line("a", 0) == "a"
+expect line("a", -1) faults "F007"
 expect word("a", -1) faults "F007"
 expect pad_left("7", -1, "0") faults "F009"
 expect pad_left("7", 3, "ab") faults "F009"

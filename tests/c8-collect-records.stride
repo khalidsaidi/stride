@@ -17,14 +17,14 @@ for each n, p in people {
 # asked ["people#any"]
 # boxes {"Count": "0"}
 # run two
-# answers {"people#any": "yes", "people[1].name": "A", "people[1]#another": "yes", "people[2].name": "B", "people[2]#another": "no"}
-# asked ["people#any", "people[1].name", "people[1]#another", "people[2].name", "people[2]#another"]
-# boxes {"Count": "2", "Name1": "A", "Name2": "B"}
+# answers {"people#any": "yes", "people[0].name": "A", "people[0]#another": "yes", "people[1].name": "B", "people[1]#another": "no"}
+# asked ["people#any", "people[0].name", "people[0]#another", "people[1].name", "people[1]#another"]
+# boxes {"Count": "2", "Name0": "A", "Name1": "B"}
 # run three
-# answers {"people#any": "yes", "people[1].name": "A", "people[1]#another": "yes", "people[2].name": "B", "people[2]#another": "yes", "people[3].name": "C", "people[3]#another": "no"}
-# asked ["people#any", "people[1].name", "people[1]#another", "people[2].name", "people[2]#another", "people[3].name", "people[3]#another"]
-# boxes {"Count": "3", "Name1": "A", "Name2": "B", "Name3": "C"}
+# answers {"people#any": "yes", "people[0].name": "A", "people[0]#another": "yes", "people[1].name": "B", "people[1]#another": "yes", "people[2].name": "C", "people[2]#another": "no"}
+# asked ["people#any", "people[0].name", "people[0]#another", "people[1].name", "people[1]#another", "people[2].name", "people[2]#another"]
+# boxes {"Count": "3", "Name0": "A", "Name1": "B", "Name2": "C"}
 # run another not answered yet
-# answers {"people#any": "yes", "people[1].name": "A"}
-# asked ["people#any", "people[1].name", "people[1]#another"]
-# boxes {"Count": "1", "Name1": "A"}
+# answers {"people#any": "yes", "people[0].name": "A"}
+# asked ["people#any", "people[0].name", "people[0]#another"]
+# boxes {"Count": "1", "Name0": "A"}

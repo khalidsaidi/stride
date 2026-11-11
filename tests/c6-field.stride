@@ -3,9 +3,9 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person {
   name: text
 }
-var xs: list of person = [new person { name: "Ada" }]
-print(xs[1].name)
-print(xs[2].name is empty)
+var xs: list of person = [new person { name: "Ada" }, empty]
+print(xs[0].name)
+print(xs[1].name is empty)
 
 # rule 6.9.1
 # run

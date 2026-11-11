@@ -8,5 +8,5 @@ collect k in kids "Another child?" {
 }
 fill "A" = join([k.name for each k in sorted(kids, by: "born")], ",")
 # rule 14.4
-# answers {"kids[1].name": "A", "kids[1].born": 2, "kids[1]#another": true, "kids[2].name": "B", "kids[2]#another": true, "kids[3].name": "C", "kids[3].born": 1, "kids[3]#another": false}
+# answers {"kids[0].name": "A", "kids[0].born": 2, "kids[0]#another": true, "kids[1].name": "B", "kids[1]#another": true, "kids[2].name": "C", "kids[2].born": 1, "kids[2]#another": false}
 # boxes {"A": "C,A,B"}

@@ -6,6 +6,6 @@ collect x in names "Another?" {
 }
 fill "All" = join(names, ";")
 # rule 8.6.2 8.6.4
-# answers {"names[1]": "A", "names[1]#another": "yes", "names[2]": "B", "names[2]#another": "no"}
-# asked ["names[1]", "names[1]#another", "names[2]", "names[2]#another"]
+# answers {"names[0]": "A", "names[0]#another": "yes", "names[1]": "B", "names[1]#another": "no"}
+# asked ["names[0]", "names[0]#another", "names[1]", "names[1]#another"]
 # boxes {"All": "A;B"}

@@ -3,11 +3,11 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record p { tags: list of text }
 var r = new p { tags: ["a"] }
 var s = r
-s.tags[1] = "z"
-print(r.tags[1])
+s.tags[0] = "z"
+print(r.tags[0])
 var outer: list of list of number = [[1]]
-var inner = outer[1]
-inner[1] = 5
-print(outer[1][1])
+var inner = outer[0]
+inner[0] = 5
+print(outer[0][0])
 # rule 3.4
 # prints ["a", "1"]

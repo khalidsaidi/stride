@@ -14,11 +14,11 @@ export const CODES = {
     "explanation": ""
   },
   "F004": {
-    "when": "a list position or a loop bound not a whole number, or a position below 1",
+    "when": "a list position or a loop bound not a whole number, or a position read that is below 0 or the number of items or more",
     "explanation": ""
   },
   "F005": {
-    "when": "a list item set outside 1 to (items + 1)",
+    "when": "a list item set outside 0 to the number of items",
     "explanation": ""
   },
   "F006": {
@@ -26,7 +26,7 @@ export const CODES = {
     "explanation": ""
   },
   "F007": {
-    "when": "a native given a position that is not a whole number of 1 or more",
+    "when": "a native given a position that is not a whole number of 0 or more",
     "explanation": ""
   },
   "F008": {
@@ -74,7 +74,7 @@ export const CODES = {
     "explanation": ""
   },
   "F020": {
-    "when": "an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[3].name = v` when xs holds 2): a program fault",
+    "when": "an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[2].name = v` when xs holds 2): a program fault",
     "explanation": ""
   },
   "S001": {
@@ -367,7 +367,7 @@ export const CODES = {
   },
   "S309": {
     "when": "`fill` with a list or record",
-    "explanation": "Fill a box with one value: `l[1].name`, `join(…)`."
+    "explanation": "Fill a box with one value: `l[0].name`, `join(…)`."
   },
   "S310": {
     "when": "a condition of words or an option",
@@ -555,15 +555,15 @@ export const CODES = {
   },
   "S358": {
     "when": "a list position that is not a number",
-    "explanation": "Items are chosen by number, from 1."
+    "explanation": "Items are chosen by number, from 0."
   },
   "S359": {
     "when": "a position into something not a list",
     "explanation": "Only lists have items."
   },
   "S360": {
-    "when": "a known position that is not a whole number of 1 or more",
-    "explanation": "A list's positions are whole numbers from 1."
+    "when": "a known position that is not a whole number of 0 or more",
+    "explanation": "A list's positions are whole numbers from 0."
   },
   "S361": {
     "when": "a list literal whose items' types have no join",
@@ -691,7 +691,7 @@ export const CODES = {
   },
   "S396": {
     "when": "a slice bound that is not a number",
-    "explanation": "`l[a..b]`, numbers."
+    "explanation": "`l[a..b]`, `l[a..<b]`, numbers."
   },
   "S399": {
     "when": "`sorted(l, by: \"f\")` with f not a field of l's records, not written out, or not a number, date or words",
@@ -876,7 +876,7 @@ export const LIBRARY = [
     "names": [
       "chars"
     ],
-    "gives": "characters from..to (positions) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: 0 is F007), then to < from: empty"
+    "gives": "characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty"
   },
   {
     "section": "14.1 Words",
@@ -886,7 +886,7 @@ export const LIBRARY = [
     "names": [
       "character"
     ],
-    "gives": "the n-th character of t, the same separators left out"
+    "gives": "the character at position n of t, the same separators left out"
   },
   {
     "section": "14.1 Words",
@@ -896,7 +896,7 @@ export const LIBRARY = [
     "names": [
       "slice"
     ],
-    "gives": "characters from..to of t as written; the positions are checked first (§14.0.4: 0 is F007), then to < from: empty; list slices keep their own rule (§6.9.3)"
+    "gives": "characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty; list slices keep their own rule (§6.9.3)"
   },
   {
     "section": "14.1 Words",
@@ -978,7 +978,7 @@ export const LIBRARY = [
     "names": [
       "find"
     ],
-    "gives": "the position of the first part in t; 0 when it is not there or part is empty"
+    "gives": "the position of the first part in t; -1 when it is not there or part is empty"
   },
   {
     "section": "14.1 Words",
@@ -1008,7 +1008,7 @@ export const LIBRARY = [
     "names": [
       "line"
     ],
-    "gives": "line n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays"
+    "gives": "the line at position n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays"
   },
   {
     "section": "14.1 Words",
@@ -1038,7 +1038,7 @@ export const LIBRARY = [
     "names": [
       "word"
     ],
-    "gives": "word n of t, words split on runs of spaces and tabs"
+    "gives": "the word at position n of t, words split on runs of spaces and tabs"
   },
   {
     "section": "14.1 Words",
@@ -1326,7 +1326,7 @@ export const LIBRARY = [
     "names": [
       "index_of"
     ],
-    "gives": "the position of the first item equal to x (§6.6); 0 when none"
+    "gives": "the position of the first item equal to x (§6.6); -1 when none"
   },
   {
     "section": "14.4 Lists and sets",

@@ -26,7 +26,7 @@
 //   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
 //   if          = "if" expr block ["else" (if | block)]
 //   match       = "match" expr "{" (plain ("," plain)* "=>" block | "else" "=>" block)* "}"
-//   for         = "for" name "in" expr ".." expr block
+//   for         = "for" name "in" expr (".." | "..<") expr block
 //   while       = "while" expr block
 //   try         = "try" block "catch" [name] block
 //   foreach     = "for" "each" [name ","] name "in" expr block
@@ -34,7 +34,7 @@
 //   expr        = or;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
 //   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum | "is" ["not"] "empty"]
 //   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/") unary)*;  unary = "-" unary | postfix
-//   postfix     = primary ("." name | "[" expr "]" | "(" [args] ")")*   (no line break before "[" or "(")
+//   postfix     = primary ("." name | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
 //   primary     = number | string | "yes" | "no" | "empty" | "[" [args] "]" | "new" qname "{" fields "}" | name
 //               | "(" expr ")"
 import { either } from "./source.mjs";
@@ -52,7 +52,7 @@ export const KEYWORDS = new Set([
 // `for each`, `when` and `then`. Anywhere else each is a name like any other.
 const CONTEXTUAL = new Set(["each", "fields", "list", "of", "set", "then", "when"]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
-const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
+const PUNCT = ["..<", "..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
@@ -872,9 +872,12 @@ class Parser {
     const counter = this.name("the loop's counter");
     this.expect("keyword", "in");
     const from = this.sum();
-    this.expect("punct", "..", '".." and where the loop ends');
+    // a..b ends with b, a..<b before it (§7.11).
+    const exclusive = this.sym("..<");
+    if (exclusive) this.take();
+    else this.expect("punct", "..", '".." and where the loop ends');
     const to = this.sum();
-    return this.node("for", start, { counter, from, to, body: this.block() });
+    return this.node("for", start, { counter, from, to, exclusive, body: this.block() });
   }
 
   // `n, item` or `item`.
@@ -1082,14 +1085,14 @@ class Parser {
       } else if (this.sym("[") && !t.broken) {
         const open = this.take();
         // l[..b] starts at the first item, l[a..] goes to the last (§6.9.3).
-        const first = { kind: "number", value: D.fromInt(1), raw: "1", span: open.span };
-        const index = this.sym("..") ? { ...first, open: true } : this.expr();
-        if (this.sym("..")) {
-          // l[a..b] (§6.9.3)
-          this.take();
-          const to = this.sym("]") ? { kind: "number", value: D.fromInt(2147483647), raw: "2147483647", span: this.token.span, open: true } : this.expr();
+        const first = { kind: "number", value: D.fromInt(0), raw: "0", span: open.span };
+        const index = this.sym("..") || this.sym("..<") ? { ...first, open: true } : this.expr();
+        if (this.sym("..") || this.sym("..<")) {
+          // l[a..b] ends with the item b, l[a..<b] before it (§6.9.3)
+          const exclusive = this.take().value === "..<";
+          const to = !exclusive && this.sym("]") ? { kind: "number", value: D.fromInt(2147483647), raw: "2147483647", span: this.token.span, open: true } : this.expr();
           const end = this.expect("punct", "]");
-          e = { kind: "slice", from: index, to, target: e, opSpan: open.span, span: join(e.span, end.span) };
+          e = { kind: "slice", from: index, to, exclusive, target: e, opSpan: open.span, span: join(e.span, end.span) };
           continue;
         }
         const end = this.expect("punct", "]");

@@ -13,7 +13,7 @@ for i in 1..1 {
   print("never")
 }
 let l: list of number = [1]
-print(l[3] is empty)
+print(l[0] is empty)
 print(f())
 # rule 7.13 11.3.3 S406
-# prints ["yes", "1"]
+# prints ["no", "1"]

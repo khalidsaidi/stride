@@ -10,5 +10,5 @@ for each n, x in ["A", "B"] {
 # box A text
 # box B text
 # run all
-# boxes {"A": "1", "B": "2"}
+# boxes {"A": "0", "B": "1"}
 # prints ["1", "2"]

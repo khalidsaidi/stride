@@ -669,7 +669,7 @@ export function check(resolved, diagnostics) {
           e.mapIndex = true;
           return t.value;
         }
-        if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 1), not ${T.describe(i)}`);
+        if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 0), not ${T.describe(i)}`);
         if (T.isError(t)) return T.ERROR;
         // Words are indexed as a list is: one character (§6.9.2).
         if (T.isTextLike(t)) return T.TEXT;
@@ -677,11 +677,11 @@ export function check(resolved, diagnostics) {
           err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; character(words, position) takes one character of words" : ""}`);
           return T.ERROR;
         }
-        // A known position that is not a whole number of 1 or more (§6.9.2).
+        // A known position that is not a whole number of 0 or more (§6.9.2).
         const n = evaluate(e.index);
         if (V.isNumber(n)) {
           const k = V.whole(n);
-          if (k === null || k < 1) err("S360", e.index, `a list's positions are whole numbers from 1; there is no item ${V.words(n)}`);
+          if (k === null || k < 0) err("S360", e.index, `a list's positions are whole numbers from 0; there is no item ${V.words(n)}`);
         }
         return t.element;
       }

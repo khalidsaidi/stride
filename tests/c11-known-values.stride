@@ -11,5 +11,5 @@ collect n, x in l "More?" {
   fill "Item{n}" = x
 }
 # rule 11.1 11.2
-# answers {"l[1]": "a", "l[1]#another": "yes", "l[2]": "b"}
-# boxes {"Row1X": "v", "Row2X": "v", "Item1": "a", "Item2": "b"}
+# answers {"l[0]": "a", "l[0]#another": "yes", "l[1]": "b"}
+# boxes {"Row1X": "v", "Row2X": "v", "Item0": "a", "Item1": "b"}

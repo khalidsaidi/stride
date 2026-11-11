@@ -7,8 +7,8 @@ var rows: list of row
 collect r in rows "More?" {
   ask r.another: text "Another thing"
 }
-fill "A" = rows[1].another
+fill "A" = rows[0].another
 # rule 8.6.2 2.3.1
-# answers {"rows[1].another": "x", "rows[1]#another": "no"}
-# asked ["rows[1].another", "rows[1]#another"]
+# answers {"rows[0].another": "x", "rows[0]#another": "no"}
+# asked ["rows[0].another", "rows[0]#another"]
 # boxes {"A": "x"}

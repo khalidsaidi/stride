@@ -136,8 +136,8 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value, by words, or by a number (`1, 2 => { }`) |
-| `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |
-| `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 1 |
+| `for i in a..b { }`, `for i in a..<b { }` | its block for each whole number from a to b, or with `..<` to before b; a and b worked out once (§7.11) |
+| `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 0 |
 | `while c { }` | its block as long as the condition is yes (§7.11.1) |
 | `try { } catch problem { }` | a fault in the try runs the catch, its message in `problem` (§7.18) |
 | `break`, `continue` | end the innermost `for`, `for each` or `while`, or go to its next turn; not in a collect (§7.12) |
@@ -167,16 +167,16 @@ that defines it; the same name is not defined twice in one function or program.
 var representatives: list of representative
 collect n, r in representatives "Add another representative?" {
   ask r.name: text "Name and address"
-  if n <= 2 {
+  if n < 2 {
     ask r.copies: yes-no "Check if to be sent copies of notices and communications"
   }
 }
 for each n, r in representatives {
-  fill "Page1[0].RepresentativesName{n}[0]" = r.name
+  fill "Page1[0].RepresentativesName{n + 1}[0]" = r.name
 }
 ```
 
-`collect` asks the first item, then the quoted yes-no question; a yes asks the next item, and a no ends it. An item
+`collect` asks the first item (n is 0), then the quoted yes-no question; a yes asks the next item, and a no ends it. An item
 enters the list when its block ends (§8.5.1). A list that may stay empty (trips abroad, arrests) asks first
 whether there are any:
 
@@ -193,8 +193,8 @@ cannot change them. A list is collected once, into a var declared as an empty li
 ## Expressions
 
 Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `== != < <= > >=`, `in`, `not in`,
-`is empty`, `is not empty` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 1),
-`[a..b]` and calls; then values: numbers, `"words"`, `yes`, `no`, `empty`, names, `[a, b]`,
+`is empty`, `is not empty` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 0),
+`[a..b]`, `[a..<b]` and calls; then values: numbers, `"words"`, `yes`, `no`, `empty`, names, `[a, b]`,
 `[e for each x in l if c]`, `new record { field: e, … }`, `( … )`.
 
 - `+` adds numbers, joins words, or joins two lists (§6.5.1); `- * / // %` are for
@@ -204,7 +204,8 @@ Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `==
 - `"x" in s` asks whether an option is among those of a set of options, or a value among a list's items.
 - `and` and `or` decide on the left when they can; the right is then not worked out. They always give yes or no.
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
-- `l[a..b]` is the items a to b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list (§6.12).
+- `l[n]` is the item at position n, the first at 0; a position outside the list is a fault (§6.9.2). `l[a..b]`
+  is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list (§6.12).
 - `"Line {n + 1}"` puts any value's words into words. `\"`, `\\`, `\{`, `\}`, `\n`, `\t` and `\u{h…}` stand
   for themselves (§2.6).
 
@@ -216,7 +217,7 @@ default and an option's printed words.
 
 Loops, collects, for eaches and calls run in the machine as they are written. A question's key is worked out
 as it runs, from where it is asked (§8.6): its name, with the turn of each loop it is in (`other_act[1]`), on the
-item of a list it answers (`representatives[2].name`), or after the call it is in (`line_2.name`; a second call is `line_2#2.name`).
+item of a list it answers (`representatives[0].name` for the first), or after the call it is in (`line_2.name`; a second call is `line_2#2.name`).
 
 ## The standard library
 
@@ -229,7 +230,7 @@ Lists and sets: `count join first last filled index_of append without reversed s
 intersection difference`. Empty, faults and output: `either fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
-one-character boxes. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).
+one-character boxes. Their positions count from 0, as a list's do, and `find` and `index_of` give -1 for none. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).
 `contains`, `starts_with`, `ends_with` and `find` compare words as written; `lower` first to ignore case.
 
 ## What the compiler refuses
@@ -271,7 +272,7 @@ assembler).
 
 ## Bytecode
 
-Version 5 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 6 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),

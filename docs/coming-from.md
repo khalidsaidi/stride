@@ -12,10 +12,12 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is worked out by the compiler |
 | `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`, `either(x, 0)` |
 | `true`, `false` | `yes`, `no` |
-| `list[0]` | `list[1]`: positions count from 1, as on a form |
+| `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
+| `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
 | `"Hello " + name`, f-strings | `"Hello {name}"`; `+` joins words too |
-| `for i := 0; i < n; i++`, `for i in range(n)` | `for i in 1..n { }` |
-| `for x in xs`, `xs.forEach` | `for each x in xs { }`, `for each i, x in xs { }` |
+| `for i := 0; i < n; i++`, `for i in range(n)` | `for i in 0..<n { }`; `for i in 1..n { }` includes n |
+| `for x in xs`, `xs.forEach`, `enumerate(xs)` | `for each x in xs { }`, `for each i, x in xs { }` (i from 0) |
+| `xs.indexOf(x)`, `s.find(part)` | `index_of(xs, x)`, `find(s, part)`: the position, or -1 |
 | `while`, recursion | `while c { }`; a function may call itself |
 | `dict`, `map[K]V`, `Map` | `map of text to number`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for each k, v in m { }` |
 | `lambda`, `func(x) { }`, `x => …` | `function(x: number) -> number { return x * 2 }` |
@@ -38,12 +40,12 @@ and a record are values, like numbers: `var b = a` copies, and a function change
 ```stride
 var a: list of number = [1, 2]
 var b = a
-b[3] = 3
+b[2] = 3
 print(a)
 print(b)
 define add_one(xs: list of number) -> list of number {
   var out = xs
-  out[1] = out[1] + 1
+  out[0] = out[0] + 1
   return out
 }
 print(add_one(a))
@@ -61,7 +63,7 @@ print(a)
 ## Empty instead of null
 
 There is no null that fails when you touch it. Every type has `empty`: an unanswered question, a field never set, a
-position past a list's items. Arithmetic with empty does what a form's empty box needs: `+` gives the other side,
+key a map does not have. Arithmetic with empty does what a form's empty box needs: `+` gives the other side,
 other operations give empty, and empty is `no` in a condition. There is no `NullPointerException`; there is `is empty`.
 
 ```stride
@@ -69,35 +71,53 @@ let price: number = empty
 print(price + 5)
 print(price is empty)
 print(either(price, 0))
-let names: list of text = ["Ada"]
-print(names[2] is empty)
-print(either(names[2], "nobody"))
+let ages: map of text to number = {"Ada": 36}
+print(ages["Bo"] is empty)
+print(either(ages["Bo"], 0))
 ```
 ```output
 5
 yes
 0
 yes
-nobody
+0
 ```
 
-## Positions count from 1
+## Positions count from 0
 
-`xs[1]` is the first item, as row 1 is the first row of a form. A position past the items gives empty; a position
-below 1 stops the run (F004).
+`xs[0]` is the first item and `xs[count(xs) - 1]` the last, as in Go, Java, JavaScript and Python. A position
+outside the list stops the run (F004), as an `IndexError` or a panic does; there are no negative positions from
+the end. A range `a..b` includes both ends, and `a..<b` stops before b, in a slice and in a `for`. Assigning at
+`count(xs)` adds an item.
 
 ```stride
-let xs: list of text = ["a", "b"]
-print(xs[1])
+var xs: list of text = ["a", "b", "c"]
+print(xs[0])
 print(count(xs))
-print(xs[3] is empty)
-print(xs[1..2])
+print(xs[0..1])
+print(xs[1..<3])
+for i in 0..<count(xs) {
+  print("{i}: {xs[i]}")
+}
+xs[count(xs)] = "d"
+print(index_of(xs, "d"))
+print(index_of(xs, "z"))
+print(xs[4])
 ```
 ```output
 a
-2
-yes
+3
 [a, b]
+[b, c]
+0: a
+1: b
+2: c
+3
+-1
+```
+```stderr
+fault F004: position 4 is outside the list: it holds 4
+  at main, guide.stride:12:9
 ```
 
 ## Numbers are exact decimals

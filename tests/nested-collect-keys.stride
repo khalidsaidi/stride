@@ -14,6 +14,6 @@ collect p in parents "Another parent?" {
 for each i, p in parents {
   fill "P{i}" = p.name
 }
-# answers {"parents[1].name": "Ann", "parents[1]#another": "yes", "parents[2].name": "Bo"}
-# boxes {"P1": "Ann", "P2": "Bo"}
+# answers {"parents[0].name": "Ann", "parents[0]#another": "yes", "parents[1].name": "Bo"}
+# boxes {"P0": "Ann", "P1": "Bo"}
 # rule 8.5 8.6.2 5.1

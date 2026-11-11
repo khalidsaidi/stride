@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let s = "héllo"
+print(s[count(s) - 1])
+let none: list of number = []
+for i in 0..<count(none) {
+  print(none[i])
+}
+print(s[count(s)])
+# rule 6.9.2
+# prints ["o"]
+# fault F004 at 9:8 position 5 is outside the words: they hold 5 characters

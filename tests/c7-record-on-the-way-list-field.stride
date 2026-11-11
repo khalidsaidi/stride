@@ -5,18 +5,18 @@ record pt {
   tags: list of text
 }
 var a: pt
-a.tags[1] = "x"
+a.tags[0] = "x"
 print(a.tags)
 var b: pt
 b.name = "y"
-print(b.tags[2] is empty)
+print(count(b.tags))
 print(b.name)
 var rows: list of pt
 collect r in rows "Another?" {
   ask r.name: text "Name"
 }
-print(rows[1].tags[3] is empty)
-print(rows[1].name)
+print(count(rows[0].tags))
+print(rows[0].name)
 # rule 7.5.1 7.4
-# answers {"rows[1].name": "n", "rows[1]#another": "no"}
-# prints ["[x]", "yes", "y", "yes", "n"]
+# answers {"rows[0].name": "n", "rows[0]#another": "no"}
+# prints ["[x]", "0", "y", "0", "n"]

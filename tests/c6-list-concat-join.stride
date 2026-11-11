@@ -6,7 +6,7 @@ let l = [p] + ["x"]
 define mail(m: text) -> text {
   return m
 }
-print(mail(l[1]) + e)
+print(mail(l[0]) + e)
 
 # rule 6.5.1 3.9
 # run

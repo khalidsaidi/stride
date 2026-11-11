@@ -1,0 +1,35 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+let l = ["a", "b", "c"]
+for i in 0..<count(l) {
+  print("{i}{l[i]}")
+}
+for i in 2..<2 {
+  print("never")
+}
+for i in 3..<1 {
+  print("never")
+}
+var stop = 1
+for i in 0..<stop {
+  stop += 1
+}
+print(stop)
+for i in 1..<n {
+  ask q: text "Q"
+  print(either(q, "{i}"))
+}
+# rule 7.11 2.7
+# run whole
+# answers {"n": 3}
+# asked ["n", "q[1]", "q[2]"]
+# prints ["0a", "1b", "2c", "2", "1", "2"]
+# run not-whole
+# answers {"n": 2.5}
+# prints ["0a", "1b", "2c", "2"]
+# fault F004 at 19:14
+# run empty-is-not-zero
+# answers {}
+# prints ["0a", "1b", "2c", "2"]
+# fault F004 at 19:14

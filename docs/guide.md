@@ -52,7 +52,7 @@ its value, and a question is asked as it comes (§17.14). `stride eval "expressi
 ```
 $ stride repl
 stride> let names = ["Ada", "Bo"]
-stride> names[1]
+stride> names[0]
 Ada
 stride> define twice(n: number) -> number {
    ...>   return n * 2
@@ -143,8 +143,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
 | `list of T` | any number of items | `[1, 2, 3]` |
 
-Every type also has **empty**: the value of a question not answered, a field not set, an item past the end of a
-list. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
+Every type also has **empty**: the value of a question not answered, a field not set. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
 the other side, other arithmetic gives empty, an order comparison with empty is `no`, and empty counts as `no` in a
 condition. Test for it with `is empty`, and replace it with `either`:
 
@@ -228,9 +227,9 @@ for i in 1..10 {
 }
 ```
 ```output
-1: child
-2: adult
-3: senior
+0: child
+1: adult
+2: senior
 1
 3
 5
@@ -284,7 +283,10 @@ A function reads the program's own names (an answer, a let, a var), and may chan
 
 ## 7. Lists, records and sets
 
-Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`).
+Lists count from 0: `l[0]` is the first item and `l[count(l) - 1]` the last. A position outside the list is a
+fault (§6.9.2), so check `i < count(l)` where a row may not be there. A list grows as items are added (`l += [x]`,
+`append(l, x)`, `l[count(l)] = x`). `l[a..b]` is the items a to b, and `l[a..<b]` stops before b; `for i in
+0..<count(l)` takes every position.
 Lists and records are values: `var b = a` copies, and `==` compares items:
 
 ```stride
@@ -299,10 +301,10 @@ record person {
 }
 var names: list of text = ["Ada", "Bo"]
 var copy = names
-copy[3] = "Cy"
+copy[2] = "Cy"
 print(names)
 print(copy)
-print(names[3] is empty)
+print(copy[1..<3])
 print(names == ["Ada", "Bo"])
 let p = new person { name: "Ada", age: 36 }
 print(p.name)
@@ -313,7 +315,7 @@ print([upper(x) for each x in copy if x != "Bo"])
 ```output
 [Ada, Bo]
 [Ada, Bo, Cy]
-yes
+[Bo, Cy]
 yes
 Ada
 yes
@@ -642,11 +644,12 @@ write the same boxes.
   }
   # The form calls its rows' boxes "Make", "Make_2", "Make_3" …: a function builds the names.
   define row(n: number) -> text {
-    return if n == 1 then "" else "_{n}"
+    return if n == 0 then "" else "_{n + 1}"
   }
-  for n in 1..5 {
-    fill "Vehicle Identification Number{row(n)}" = vehicles[n].vin
-    fill "Make{row(n)}" = vehicles[n].make
+  # The form has five rows.
+  for each n, v in vehicles[..<5] {
+    fill "Vehicle Identification Number{row(n)}" = v.vin
+    fill "Make{row(n)}" = v.make
   }
   ```
 

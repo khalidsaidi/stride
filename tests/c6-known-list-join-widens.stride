@@ -4,8 +4,8 @@ ask i: number "I"
 let x = [[1]]
 let y = [[1, 2]]
 let lit = x + y
+print(count(lit[0]))
 print(lit[1][i])
-print(lit[2][i])
 # rule 3.9 6.5.1
-# answers {"i": "2"}
-# prints ["", "2"]
+# answers {"i": "1"}
+# prints ["1", "2"]

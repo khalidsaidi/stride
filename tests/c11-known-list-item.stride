@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 const QUESTIONS = ["First?", "Second?"]
 const BOXES = ["A", "B"]
-for i in 1..2 {
+for i in 0..1 {
   ask ok: yes-no QUESTIONS[i]
   tick BOXES[i] when ok
 }
@@ -10,5 +10,5 @@ for i in 1..2 {
 # box A check
 # box B check
 # run second
-# answers {"ok[2]": "yes"}
+# answers {"ok[1]": "yes"}
 # boxes {"B": "Yes"}

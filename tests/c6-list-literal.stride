@@ -5,7 +5,7 @@ let l = [p, "x"]
 define mail(m: text) -> text {
   return m
 }
-print(mail(l[2]))
+print(mail(l[1]))
 print("{count(l)}")
 
 # rule 6.11 3.9

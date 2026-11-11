@@ -1,4 +1,4 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 5) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 6) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
@@ -194,14 +194,14 @@ export function generate(program, pdf, debug = null) {
           emit(OP.STORE, src);
           emit(OP.NEW_LIST, 0);
           emit(OP.STORE, acc);
-          emit(OP.NUMBER, N(D.fromInt(1)));
+          emit(OP.NUMBER, N(D.fromInt(0)));
           emit(OP.STORE, k);
           head.loopHead = true;
           placeLabel(head);
           emit(OP.LOAD, k);
           emit(OP.LOAD, src);
           emit(OP.NATIVE, nativeIndex("count"), 1).quiet = true; // the loop's own work, not a call of the program's
-          emit(OP.LE);
+          emit(OP.LT);
           jumpTo(OP.JUMP_IF_FALSE, end);
           emit(OP.LOAD, src);
           emit(OP.LOAD, k);

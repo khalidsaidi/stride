@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask i: number "I"
+let l = ["a", "b", "c"]
+print(l[i])
+print("xyz"[i])
+# rule F004 6.9.2
+# run first
+# answers {"i": 0}
+# prints ["a", "x"]
+# run last
+# answers {"i": 2}
+# prints ["c", "z"]
+# run the-count
+# answers {"i": 3}
+# fault F004 at 5:8 position 3 is outside the list: it holds 3
+# run below-zero
+# answers {"i": -1}
+# fault F004 at 5:8 position -1 is not a whole number of 0 or more
+# run not-whole
+# answers {"i": 0.5}
+# fault F004 at 5:8
+# run empty
+# answers {}
+# fault F004 at 5:8 an empty position

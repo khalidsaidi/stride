@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 define first_of<t>(l: list of t) -> t {
-  return l[1]
+  return l[0]
 }
 define twice(n: number) {
   return n * 2

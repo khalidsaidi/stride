@@ -16,10 +16,10 @@ const chars = (t) => [...(t ?? "")];
 const text = (t) => (t === null || t === undefined ? "" : typeof t === "string" ? t : words(t));
 const result = (s) => (s === "" ? null : s);
 
-// A position (§14.0.4): a whole number of 1 or more, else F007, empty included. One past every text there can be
+// A position (§14.0.4): a whole number of 0 or more, else F007, empty included. One past every text there can be
 // (beyond JavaScript's safe whole numbers too) is a position all the same: past the end.
 function position(name, v) {
-  if (!isNumber(v) || !D.isWhole(v) || D.sign(v) < 1) throw new StrideFault("F007", `${name}: a position is a whole number of 1 or more, and this is ${isEmpty(v) ? "empty" : words(v)}`);
+  if (!isNumber(v) || !D.isWhole(v) || D.sign(v) < 0) throw new StrideFault("F007", `${name}: a position is a whole number of 0 or more, and this is ${isEmpty(v) ? "empty" : words(v)}`);
   return whole(v) ?? Infinity;
 }
 // Places (§14.2): a whole number 0–10, else F008.
@@ -132,16 +132,16 @@ export const NATIVES = {
     control: [1, 2],
     fn: (t, from, to) => {
       const f = position("chars", from), e = position("chars", to);
-      return result(e < f ? "" : chars(compact(t)).slice(f - 1, e).join(""));
+      return result(e < f ? "" : chars(compact(t)).slice(f, e + 1).join(""));
     },
   },
-  character: { pure: true, control: [1], fn: (t, n) => { const i = position("character", n); return result(chars(compact(t))[i - 1] ?? ""); } },
+  character: { pure: true, control: [1], fn: (t, n) => { const i = position("character", n); return result(chars(compact(t))[i] ?? ""); } },
   slice: {
     pure: true,
     control: [1, 2],
     fn: (t, from, to) => {
       const f = position("slice", from), e = position("slice", to);
-      return result(e < f ? "" : chars(text(t)).slice(f - 1, e).join(""));
+      return result(e < f ? "" : chars(text(t)).slice(f, e + 1).join(""));
     },
   },
   digits: { pure: true, fn: (t) => result(text(t).replace(/[^0-9]/g, "")) },
@@ -163,10 +163,10 @@ export const NATIVES = {
     pure: true,
     fn: (t, part) => {
       const p = text(part);
-      if (p === "") return num(0);
+      if (p === "") return num(-1);
       const s = text(t);
       const at = s.indexOf(p);
-      return num(at < 0 ? 0 : [...s.slice(0, at)].length + 1);
+      return num(at < 0 ? -1 : [...s.slice(0, at)].length);
     },
   },
   occurrences: { pure: true, fn: (t, part) => { const p = text(part); return num(p === "" ? 0 : text(t).split(p).length - 1); } },
@@ -179,11 +179,11 @@ export const NATIVES = {
       return parts.map((p) => (p === "" ? null : p));
     },
   },
-  line: { pure: true, control: [1], fn: (t, n) => { const i = position("line", n); return result(trimmed(lines(t)[i - 1] ?? "")); } },
+  line: { pure: true, control: [1], fn: (t, n) => { const i = position("line", n); return result(trimmed(lines(t)[i] ?? "")); } },
   line_count: { pure: true, fn: (t) => num(text(t) === "" ? 0 : lines(t).length) },
   rest_lines: { pure: true, fn: (t) => result(trimmed(lines(t).slice(1).join("\n"))) },
   // Words split on runs of spaces and tabs (§14.1); nothing else separates them.
-  word: { pure: true, control: [1], fn: (t, n) => { const i = position("word", n); const s = trimmed(text(t)); return result(s === "" ? "" : s.split(/[ \t]+/)[i - 1] ?? ""); } },
+  word: { pure: true, control: [1], fn: (t, n) => { const i = position("word", n); const s = trimmed(text(t)); return result(s === "" ? "" : s.split(/[ \t]+/)[i] ?? ""); } },
   word_count: { pure: true, fn: (t) => { const s = trimmed(text(t)); return num(s === "" ? 0 : s.split(/[ \t]+/).length); } },
   pad_left: {
     pure: true,
@@ -306,7 +306,7 @@ export const NATIVES = {
   first: { pure: true, fn: (l) => asList(l)[0] ?? null },
   last: { pure: true, fn: (l) => { const a = asList(l); return a.length ? a[a.length - 1] : null; } },
   filled: { pure: true, fn: (l) => listLike(asList(l).filter((x) => !isEmpty(x)), l) },
-  index_of: { pure: true, fn: (l, x) => num(asList(l).findIndex((y) => equal(y, x)) + 1) },
+  index_of: { pure: true, fn: (l, x) => num(asList(l).findIndex((y) => equal(y, x))) },
   append: { pure: true, fn: (l, x) => [...asList(l), x] },
   without: { pure: true, fn: (l, x) => listLike(asList(l).filter((y) => !equal(y, x)), l) },
   reversed: { pure: true, fn: (l) => [...asList(l)].reverse() },

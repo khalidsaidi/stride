@@ -6,6 +6,6 @@ l[i] = "z"
 print(join(l, ","))
 
 # rule 7.5 F005
-# run past items + 1
-# answers {"i": 3}
+# run past the count
+# answers {"i": 2}
 # fault F005 at 5:2

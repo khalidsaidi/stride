@@ -8,4 +8,4 @@ print(join(e, ","))
 
 # rule 6.12
 # run
-# prints ["20,30", "1,4,9"]
+# prints ["20,30", "0,2,6"]

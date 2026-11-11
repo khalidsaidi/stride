@@ -30,6 +30,6 @@ while yes {
 }
 # rule 7.11.1 F014
 # run two amounts
-# answers {"amount[1]": "5", "amount[2]": "7"}
+# answers {"amount[0]": "5", "amount[1]": "7"}
 # prints ["111", "1", "2", "4", "5", "12"]
 # fault F014

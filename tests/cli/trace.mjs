@@ -19,9 +19,9 @@ var counter = 1
 counter = 2
 let result = twice(counter)
 var xs: list of number = [1]
-xs[1] = counter
+xs[0] = counter
 print(result)
-print(xs[1])
+print(xs[0])
 `;
   const out = compile(source, "cli-trace.stride", { header: { form: "t", pdf: "0".repeat(64), boxes: [] } });
   if (!out.bytecode) return out.diagnostics.sorted().map((d) => d.format());

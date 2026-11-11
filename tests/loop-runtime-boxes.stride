@@ -7,6 +7,6 @@ collect x in l "Another?" {
 for each n, x in l {
   fill "B{n}" = upper(x)
 }
-# answers {"l[1]": "a", "l[1]#another": "yes", "l[2]": "b", "l[2]#another": "yes", "l[3]": "c"}
-# boxes {"B1": "A", "B2": "B", "B3": "C"}
+# answers {"l[0]": "a", "l[0]#another": "yes", "l[1]": "b", "l[1]#another": "yes", "l[2]": "c"}
+# boxes {"B0": "A", "B1": "B", "B2": "C"}
 # rule 8.5 8.6.2 7.11

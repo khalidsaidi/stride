@@ -32,6 +32,6 @@ print(a)
 print(b)
 print(c)
 # rule 11.1 10.2 8.5
-# answers {"a#any": "yes", "a[1]": "p", "a[1]#another": "no", "b#any": "no", "c[1]": "q", "c[1]#another": "no", "rows[1].label": "First", "rows[1]#another": "yes", "rows[2].label": "Second"}
-# boxes {"Row_1": "First", "Row_2": "Second", "Sorted_1": "Second", "Sorted_2": "First"}
+# answers {"a#any": "yes", "a[0]": "p", "a[0]#another": "no", "b#any": "no", "c[0]": "q", "c[0]#another": "no", "rows[0].label": "First", "rows[0]#another": "yes", "rows[1].label": "Second"}
+# boxes {"Row_0": "First", "Row_1": "Second", "Sorted_0": "Second", "Sorted_1": "First"}
 # prints ["more a", "[p]", "[]", "[q]"]

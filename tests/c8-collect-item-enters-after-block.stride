@@ -5,11 +5,15 @@ collect x in names "Another?" {
   ask x: text "Name"
   print(x)
   print(count(names))
-  print(names[count(names) + 1] is empty)
+  try {
+    print(names[count(names)])
+  } catch e {
+    print(e)
+  }
 }
 fill "N" = join(names, ",")
 # rule 8.5.1
-# answers {"names[1]": "A", "names[1]#another": "yes", "names[2]": "B"}
-# asked ["names[1]", "names[1]#another", "names[2]", "names[2]#another"]
-# prints ["A", "0", "yes", "B", "1", "yes"]
+# answers {"names[0]": "A", "names[0]#another": "yes", "names[1]": "B"}
+# asked ["names[0]", "names[0]#another", "names[1]", "names[1]#another"]
+# prints ["A", "0", "position 0 is outside the list: it holds 0", "B", "1", "position 1 is outside the list: it holds 1"]
 # boxes {"N": "A,B"}

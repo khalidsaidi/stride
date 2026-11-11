@@ -205,6 +205,13 @@ export const truthy = (v) => v === true;
 
 // A whole number from a value, for positions and bounds; null when it is not a whole number.
 export const whole = (v) => (isNumber(v) ? D.toInt(v) : null);
+
+// The items from to to of a list (§6.9.3), both whole: from below 0 counts from 0, to beyond the items stops at
+// the last, from above to gives none.
+export const sliced = (items, from, to) => items.slice(Math.max(0, from), Math.max(0, from, to + 1));
+
+// The words of the fault for a whole position of 0 or more that names no item (§6.9.2).
+export const outside = (i, held, ofWords = false) => `position ${words(i)} is outside the ${ofWords ? `words: they hold ${held} character${held === 1 ? "" : "s"}` : `list: it holds ${held}`}`;
 export const num = (n) => D.fromInt(n);
 
 // An expectation's result (§7.17): `faults` the code or words an `expect … faults` names (null for a plain

@@ -59,7 +59,7 @@ try {
   expect("stride help", stride(["help"]), (x) => x.status === 0 && x.stdout.includes("stride repl") && x.stdout.includes("--terminal") && !x.stdout.includes("preview"));
   expect("no preview command", stride(["preview", "x.stride"]), (x) => x.status === 2 && x.stderr.startsWith("stride: no command preview"));
   expect("the built-in guide", stride(["guide", "coming-from"]), (x) => x.status === 0 && x.stdout.includes("Values are copied, never shared"));
-  expect("a guide topic", stride(["guide", "positions"]), (x) => x.stdout.startsWith("## Positions count from 1"));
+  expect("a guide topic", stride(["guide", "positions"]), (x) => x.stdout.startsWith("## Positions count from 0"));
   expect("the library's docs", stride(["doc", "pad_left"]), (x) => x.stdout.includes('pad_left("7", 3, "0") gives 007'));
   expect("trying an expression", stride(["eval", "1 / 3 * 3"]), (x) => x.stdout === "0.9999999999999999999999999999999999\n");
   expect("a session", stride(["repl"], { input: "let x = 20\nx + 1\n" }), (x) => x.stdout === "21\n");
@@ -70,20 +70,20 @@ try {
   write("bills/split.stride", 'use "shares"\nask total: number "The bill"\nvar people: list of text\ncollect who in people "Another person?" {\n  ask who: text "Name"\n}\nlet part = share(total, count(people))\nfor each name in people {\n  print("{name} owes {fixed(part, 2)}")\n}\n');
   expect("check the program", stride(["check", "-q"]), (x) => x.status === 0 && x.stderr === "");
   // 4. Input, every way.
-  expect("answers as key=value", stride(["run", "bills/split.stride", "total=90", "people[1]=Ada", "people[1]#another=yes", "people[2]=Bo", "people[2]#another=no"]), (x) => x.stdout === "Ada owes 45.00\nBo owes 45.00\n");
-  write("answers.json", JSON.stringify({ total: "100", "people[1]": "Ada", "people[1]#another": "yes", "people[2]": "Bo", "people[2]#another": "yes", "people[3]": "Cy", "people[3]#another": "no" }));
+  expect("answers as key=value", stride(["run", "bills/split.stride", "total=90", "people[0]=Ada", "people[0]#another=yes", "people[1]=Bo", "people[1]#another=no"]), (x) => x.stdout === "Ada owes 45.00\nBo owes 45.00\n");
+  write("answers.json", JSON.stringify({ total: "100", "people[0]": "Ada", "people[0]#another": "yes", "people[1]": "Bo", "people[1]#another": "yes", "people[2]": "Cy", "people[2]#another": "no" }));
   expect("answers from a file", stride(["run", "bills/split.stride", "answers.json"]), (x) => x.stdout === "Ada owes 33.33\nBo owes 33.33\nCy owes 33.33\n");
   expect("answers on stdin", stride(["run", "bills/split.stride", "-"], { input: readFileSync(join(work, "answers.json"), "utf8") }), (x) => x.stdout.split("\n").length === 4);
   expect("answers typed in turn", stride(["run", "bills/split.stride", "--prompt"], { input: "60\nAda\nyes\nBo\nno\n" }), (x) => x.stdout === "Ada owes 30.00\nBo owes 30.00\n" && x.stderr.includes("The bill"));
-  expect("a fault, on stderr", stride(["run", "bills/split.stride", "total=-10", "people[1]=Ada"]), (x) => x.status === 1 && x.stdout === "" && x.stderr.includes("fault F013: a bill is never below zero"));
+  expect("a fault, on stderr", stride(["run", "bills/split.stride", "total=-10", "people[0]=Ada"]), (x) => x.status === 1 && x.stdout === "" && x.stderr.includes("fault F013: a bill is never below zero"));
   // 5. Tests.
-  write("bills/split.tests/two.json", JSON.stringify({ answers: { total: "90", "people[1]": "Ada", "people[1]#another": "yes", "people[2]": "Bo", "people[2]#another": "no" }, prints: ["Ada owes 45.00", "Bo owes 45.00"] }));
-  write("bills/split.tests/nobody.json", JSON.stringify({ answers: { total: "-1", "people[1]": "Ada" }, fault: "F013" }));
+  write("bills/split.tests/two.json", JSON.stringify({ answers: { total: "90", "people[0]": "Ada", "people[0]#another": "yes", "people[1]": "Bo", "people[1]#another": "no" }, prints: ["Ada owes 45.00", "Bo owes 45.00"] }));
+  write("bills/split.tests/nobody.json", JSON.stringify({ answers: { total: "-1", "people[0]": "Ada" }, fault: "F013" }));
   write("lib/shares.test.stride", 'use "shares"\nexpect share(10, 3) == 3.33\nexpect share(-1, 2) faults "F013"\n');
   expect("the project's tests", stride(["test"]), (x) => x.status === 0 && x.stdout.includes("4 tests passed in 2 files"));
   // 6. Debugging.
-  expect("the debugger", stride(["debug", "bills/split.stride", "total=90", "people[1]=Ada", "people[1]#another=no"], { input: "b lib/shares.stride:9\nc\np n\nwhere\nc\n" }), (x) => x.status === 0 && x.stderr.includes("breakpoint at lib/shares.stride:9") && x.stderr.includes("n = 1") && x.stderr.includes("    main  split.stride:7") && x.stdout === "Ada owes 90.00\n");
-  expect("the trace", stride(["run", "bills/split.stride", "total=8", "people[1]=Ada", "--trace"]), (x) => x.stderr.includes("→ share(total = 8, n = 1)") && x.stdout === "Ada owes 8.00\n");
+  expect("the debugger", stride(["debug", "bills/split.stride", "total=90", "people[0]=Ada", "people[0]#another=no"], { input: "b lib/shares.stride:9\nc\np n\nwhere\nc\n" }), (x) => x.status === 0 && x.stderr.includes("breakpoint at lib/shares.stride:9") && x.stderr.includes("n = 1") && x.stderr.includes("    main  split.stride:7") && x.stdout === "Ada owes 90.00\n");
+  expect("the trace", stride(["run", "bills/split.stride", "total=8", "people[0]=Ada", "--trace"]), (x) => x.stderr.includes("→ share(total = 8, n = 1)") && x.stdout === "Ada owes 8.00\n");
   // 7. A PDF workflow: the header from the PDF, the source, the workflow in the browser, its tests, compiled.
   const { tinyPdf } = await import(join(repo, "tests/fixtures/tiny-pdf.mjs"));
   writeFileSync(join(work, "consent-form.pdf"), tinyPdf());
@@ -162,7 +162,7 @@ try {
   mkdirSync(away);
   cpSync(join(work, "split.sbc"), join(away, "split.sbc"));
   cpSync(join(work, "bills/split.tests"), join(away, "split.tests"), { recursive: true });
-  expect("the compiled program, without its source", stride(["run", "split.sbc", "total=9", "people[1]=Ada"], { cwd: away }), (x) => x.stdout === "Ada owes 9.00\n");
+  expect("the compiled program, without its source", stride(["run", "split.sbc", "total=9", "people[0]=Ada"], { cwd: away }), (x) => x.stdout === "Ada owes 9.00\n");
   expect("its tests, without its source", stride(["test", "split.sbc"], { cwd: away }), (x) => x.status === 0 && x.stdout.includes("2 tests passed"));
   // 9. The editor.
   expect("the VS Code extension", stride(["vscode", "-q"]), (x) => x.status === 0 && readdirSync(work).some((f) => f.endsWith(".vsix")));

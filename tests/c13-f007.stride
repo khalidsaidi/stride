@@ -4,13 +4,16 @@ ask n: number "N"
 fill "A" = character("abc", n)
 # rule F007 14.0.4
 # run inside
-# answers {"n": 2}
+# answers {"n": 1}
 # boxes {"A": "b"}
-# run past-the-end
-# answers {"n": 4}
-# boxes {"A": ""}
-# run zero
+# run first
 # answers {"n": 0}
+# boxes {"A": "a"}
+# run past-the-end
+# answers {"n": 3}
+# boxes {"A": ""}
+# run below-zero
+# answers {"n": -1}
 # fault F007 at 4:12
 # run not-whole
 # answers {"n": 1.5}

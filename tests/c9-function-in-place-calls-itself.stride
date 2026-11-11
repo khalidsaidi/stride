@@ -18,8 +18,8 @@ let fact = function(n: number) -> number {
 }
 print(fact(5))
 let xs = [1, 2, 3, 4, 5]
-print(xs[2..])
-print(xs[..2])
-print("hello"[3..])
+print(xs[1..])
+print(xs[..1])
+print("hello"[2..])
 # rule 9.11 6.9.3
 # prints ["55", "120", "[2, 3, 4, 5]", "[1, 2]", "llo"]

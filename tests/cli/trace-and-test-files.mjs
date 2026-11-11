@@ -34,7 +34,7 @@ export function test() {
     writeFileSync(join(dir, "e.stride"), 'for i in 1..3 { }\nfor each i, x in [10, 20, 30] { }\nfor a in 1..2 {\n  for b in 1..0 { }\n}\nprint("done")\n');
     const e = stride("run", "e.stride", "--trace").stderr.split("\n");
     const of = (n) => e.filter((l) => l.startsWith(`e.stride:${n} `)).map((l) => l.replace(/^.*\}?\s{6}/, "").trim());
-    const wantTurns = { 1: ["i = 1", "i = 2", "i = 3"], 2: ["i = 1, x = 10", "i = 2, x = 20", "i = 3, x = 30"], 3: ["a = 1", "a = 2"], 4: [] };
+    const wantTurns = { 1: ["i = 1", "i = 2", "i = 3"], 2: ["i = 0, x = 10", "i = 1, x = 20", "i = 2, x = 30"], 3: ["a = 1", "a = 2"], 4: [] };
     for (const [n, w] of Object.entries(wantTurns)) if (JSON.stringify(of(n)) !== JSON.stringify(w)) problems.push(`empty loops, line ${n}: ${JSON.stringify(of(n))}, expected ${JSON.stringify(w)}`);
     writeFileSync(join(dir, "f.stride"), 'ask n: number "N"\nprint(10 / n)\n');
     mkdirSync(join(dir, "f.tests"));

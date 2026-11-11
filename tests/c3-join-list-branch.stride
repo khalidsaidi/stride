@@ -6,8 +6,8 @@ let xs = if c then [1] else [1, 2]
 print(xs[n])
 # rule 3.9
 # run yes
-# answers {"c": "yes", "n": 2}
-# prints [""]
+# answers {"c": "yes", "n": 1}
+# fault F004 at 6:9 position 1 is outside the list: it holds 1
 # run no
-# answers {"c": "no", "n": 2}
+# answers {"c": "no", "n": 1}
 # prints ["2"]

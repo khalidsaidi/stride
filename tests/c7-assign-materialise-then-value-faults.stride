@@ -10,8 +10,8 @@ record person {
 }
 ask z: number "Z"
 var xs: list of person = [empty]
-xs[1].age = 1 / z
-print("{xs[1].age}")
+xs[0].age = 1 / z
+print("{xs[0].age}")
 
 # rule 7.5.1
 # run

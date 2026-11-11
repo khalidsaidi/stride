@@ -1,7 +1,8 @@
 expect character("abc", 9007199254740992) is empty
-expect slice("abc", 1, 9007199254740992) == "abc"
-expect chars("abc", 2, 99999999999999999999999999) == "bc"
+expect slice("abc", 0, 9007199254740992) == "abc"
+expect chars("abc", 1, 99999999999999999999999999) == "bc"
 expect line("a", 9007199254740993) is empty
-expect character("abc", 0) faults "F007"
+expect character("abc", 0) == "a"
+expect character("abc", -1) faults "F007"
 expect character("abc", 1.5) faults "F007"
 # rule 14.0.4 14.1 F007

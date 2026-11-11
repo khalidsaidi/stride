@@ -8,6 +8,6 @@ print(join(names, ","))
 
 # rule 7.15 7.16
 # run
-# answers {"names[1]": "Ada", "names[1]#another": true, "names[2]": "Bob"}
-# asked ["names[1]", "names[1]#another", "names[2]", "names[2]#another"]
+# answers {"names[0]": "Ada", "names[0]#another": true, "names[1]": "Bob"}
+# asked ["names[0]", "names[0]#another", "names[1]", "names[1]#another"]
 # prints ["Ada,Bob"]

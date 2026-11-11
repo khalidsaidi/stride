@@ -66,7 +66,7 @@ export function test() {
     check("its tests, elsewhere", r.status === 0 && /2 tests passed/.test(r.stdout), r);
 
     // The session.
-    const session = 'let names = ["Ada", "Bo"]\nnames[2]\ndefine twice(n: number) -> number {\n  return n * 2\n}\ntwice(21)\nprint("printed once")\nnosuch\n1 / 0\nask age: number "Your age"\n40\nage + 1\n:list\n';
+    const session = 'let names = ["Ada", "Bo"]\nnames[1]\ndefine twice(n: number) -> number {\n  return n * 2\n}\ntwice(21)\nprint("printed once")\nnosuch\n1 / 0\nask age: number "Your age"\n40\nage + 1\n:list\n';
     r = stride(["repl"], { cwd: top, input: session });
     const outLines = r.stdout.split("\n");
     check("the session's values", r.status === 0 && outLines[0] === "Bo" && outLines[1] === "42" && outLines[2] === "printed once" && outLines[3] === "41", r);

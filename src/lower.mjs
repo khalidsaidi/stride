@@ -386,10 +386,10 @@ export function lower(resolved, diagnostics, options = {}) {
   // A counted loop: its head tests the counter, its body runs, the counter goes up, back to the head. A loop
   // with effects gives each turn's questions the turn in their key: other_act[1].
   // while c { … } (§7.11.1): the condition before each turn. A loop that asks or writes boxes counts its turns, so
-  // each turn's questions have their own keys (name[1], name[2], …).
+  // each turn's questions have their own keys (name[0], name[1], …).
   function lowerWhile(s, ctx) {
     const turn = s.unroll ? ctx.fn.local("while#turn", { t: "number" }) : null;
-    if (turn) emit(ctx, { op: "set", dst: turn, value: IR.constant(V.num(1)), node: s });
+    if (turn) emit(ctx, { op: "set", dst: turn, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
     const body = ctx.fn.block();
@@ -420,7 +420,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const step = ctx.fn.block();
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
-    head.term = { op: "branch", cond: IR.binary("<=", IR.local(counter), IR.local(last)), yes: body, no: exit, node: s };
+    head.term = { op: "branch", cond: IR.binary(s.exclusive ? "<" : "<=", IR.local(counter), IR.local(last)), yes: body, no: exit, node: s };
     const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     inner.locals.set(s.symbol, counter);
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(counter), IR.constant("]")));
@@ -438,7 +438,7 @@ export function lower(resolved, diagnostics, options = {}) {
     return it ? it.base : join(ctx.prefix, IR.constant(listExpr.name));
   }
 
-  // For each item of a list (or option of a set): its number counts from 1 to the list's length.
+  // For each item of a list (or option of a set): its number counts from 0 to below the list's length.
   function lowerEach(s, ctx) {
     // Over a map: its keys, in their order; with two names, each key and the value under it.
     const overMap = s.list.type?.t === "map";
@@ -447,14 +447,14 @@ export function lower(resolved, diagnostics, options = {}) {
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [expr(s.list, ctx)]) : expr(s.list, ctx), node: s });
-    emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
+    emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
     const body = ctx.fn.block();
     const step = ctx.fn.block();
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
-    head.term = { op: "branch", cond: IR.binary("<=", IR.local(k), IR.native("count", [IR.local(listLocal)])), yes: body, no: exit, node: s };
+    head.term = { op: "branch", cond: IR.binary("<", IR.local(k), IR.native("count", [IR.local(listLocal)])), yes: body, no: exit, node: s };
     const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     const itemLocal = ctx.fn.local(s.item, s.itemSymbol.type);
     if (overMap && s.indexSymbol) {
@@ -495,7 +495,7 @@ export function lower(resolved, diagnostics, options = {}) {
       ctx.block = first;
     }
     const k = ctx.fn.local(s.index ?? "k", null);
-    emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
+    emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
     jumpTo(ctx, head, s);
@@ -626,7 +626,8 @@ export function lower(resolved, diagnostics, options = {}) {
       case "index":
         return withAt(IR.item(expr(e.target, ctx), expr(e.index, ctx)), placeOf(e));
       case "slice":
-        return withAt(IR.slice(expr(e.target, ctx), expr(e.from, ctx), expr(e.to, ctx)), placeOf(e));
+        // l[a..<b] ends before b: at b - 1.
+        return withAt(IR.slice(expr(e.target, ctx), expr(e.from, ctx), e.exclusive ? IR.binary("-", expr(e.to, ctx), IR.constant(V.num(1))) : expr(e.to, ctx)), placeOf(e));
       case "comprehension": {
         // [e for each n, x in l if c]: its own loop, inside the expression (§6.12).
         const inner = child(ctx);

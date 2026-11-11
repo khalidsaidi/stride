@@ -11,7 +11,7 @@ record person {
 ask go: yes-no "Go?"
 var xs: list of person = [empty]
 if go {
-  xs[2].name = "Ada"
+  xs[1].name = "Ada"
 }
 print("{count(xs)}")
 

@@ -7,7 +7,7 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as textOf, isEmpty, num, whole, copy, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as textOf, isEmpty, num, whole, sliced, outside, copy, set, isSet } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.7.1, §3.8): empty where a list goes made
 // a list with no items, a list of options made the set.
@@ -124,27 +124,26 @@ function value(e, env, visiting) {
       return faultOf(e, () => native.fn(...(e.joined ? args.map((v) => placed(v, e.joined)) : args)));
     }
     case "slice": {
-      // l[a..b] (§6.9.3): bounds whole numbers, else F004; then the items a to b.
+      // l[a..b], l[a..<b] (§6.9.3): bounds whole numbers, else F004; then the items a to b, or to before b.
       const l = value(e.target, env, visiting);
       const a = value(e.from, env, visiting), b = value(e.to, env, visiting);
       if (l === undefined || a === undefined || b === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const x = whole(a), y = whole(b);
         if (x === null || y === null) throw new StrideFault("F004", "a slice's bounds are whole numbers");
-        const from = Math.max(1, x), to = Math.min(l?.length ?? 0, y);
-        return from > to ? [] : l.slice(from - 1, to).map(copy);
+        return sliced(l ?? [], x, e.exclusive ? y - 1 : y).map(copy);
       });
     }
     case "index": {
-      // An item of a known list (§6.9.2): F004 unless the position is a whole number of 1 or more; past the
-      // items, empty.
+      // An item of a known list (§6.9.2): F004 unless the position is a whole number from 0 to below the count.
       const l = value(e.target, env, visiting);
       const i = value(e.index, env, visiting);
       if (l === undefined || i === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const n = whole(i);
-        if (n === null || n < 1) throw new StrideFault("F004", `${i === null ? "an empty position" : `position ${textOf(i)}`} is not a whole number of 1 or more`);
-        return l?.[n - 1] ?? null;
+        if (n === null || n < 0) throw new StrideFault("F004", `${i === null ? "an empty position" : `position ${textOf(i)}`} is not a whole number of 0 or more`);
+        if (n >= (l?.length ?? 0)) throw new StrideFault("F004", outside(i, l?.length ?? 0));
+        return l[n] ?? null;
       });
     }
     case "list": {

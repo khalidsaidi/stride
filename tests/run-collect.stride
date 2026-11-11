@@ -11,7 +11,7 @@ for each n, x in l {
   fill "N{n}" = x.name
 }
 fill "C" = "{count(l)}"
-# answers {"l[1].name": "a", "l[1]#another": "yes", "l[2].name": "b", "l[2]#another": "no"}
-# boxes {"N1": "a", "N2": "b", "C": "2"}
-# asked ["l[1].name", "l[1]#another", "l[2].name", "l[2]#another"]
+# answers {"l[0].name": "a", "l[0]#another": "yes", "l[1].name": "b", "l[1]#another": "no"}
+# boxes {"N0": "a", "N1": "b", "C": "2"}
+# asked ["l[0].name", "l[0]#another", "l[1].name", "l[1]#another"]
 # rule 8.5 8.5.1 8.6.2

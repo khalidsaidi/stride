@@ -6,7 +6,7 @@ ask k: one-of "K" {
   option "a" "A"
 }
 print(t)
-print(l[1])
+print(l[0])
 print(k)
 # rule 2.2
 # answers {"k": "a"}
