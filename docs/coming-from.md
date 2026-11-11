@@ -23,7 +23,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `class`, `struct` | `record person { name: text }`; `new person { name: "Ada" }`; `p.f(x)` calls `f(p, x)` |
 | `enum` | `options colour { "red" "Red" … }` |
 | `import x`, `require` | `use "x"`, `use "x" as m` (a file in `lib/`); `export define …` |
-| `try`/`catch`, exceptions | none: guard before, `fail("why")` to stop; a fault stops the run |
+| `try`/`catch`, exceptions | `try { } catch problem { }`; `fail("why")` raises a fault; one not caught stops the run |
 | `print`, `console.log`, `fmt.Println` | `print(x)` |
 | `input()`, `args`, `stdin` | `ask name: text "Your name"`; answered at the terminal, as `name=Ada`, or from JSON |
 | `# comment`, `// comment` | `# comment` |
@@ -149,9 +149,10 @@ print(sorted([3, 1, 2], descending: yes))
 
 ## Errors: guard, or stop
 
-There is no `try` and no `catch`. Mistakes the compiler can see (a misspelt name, a wrong type, a box the form
-does not have) are found before anything runs. At run time a fault stops the run and says where; a
-program avoids faults by checking first, and stops itself with `fail` when it must:
+Mistakes the compiler can see (a misspelt name, a wrong type, a box the form
+does not have) are found before anything runs. At run time a fault stops the run and says where, unless
+a `try { … } catch problem { … }` around it catches it (§7.18); a program avoids faults by checking first, and
+stops itself with `fail` when it must:
 
 ```stride answers={"n":"0"}
 ask n: number "How many people"

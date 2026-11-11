@@ -442,6 +442,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.RETURN_NONE: {
           const v = op === OP.RETURN ? pop() : null;
           if (watch) watch({ kind: "return", fn: debug.fns[f.index], value: v, locals: view(f) });
+          // A return out of a try: the try is over.
+          while (subruns.length && subruns.at(-1).catch !== undefined && subruns.at(-1).frames === frames.length) subruns.pop();
           frames.pop();
           if (!frames.length) return { steps, writes, results, links, fault: null };
           stack.push(v);
@@ -483,6 +485,12 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           if (step) step.failed.push(message);
           break;
         }
+        case OP.TRY:
+          subruns.push({ frames: frames.length, stack: stack.length, catch: ins.a, into: ins.b });
+          break;
+        case OP.TRY_DONE:
+          subruns.pop();
+          break;
         case OP.EXPECT:
           subruns.push({ frames: frames.length, stack: stack.length, prints: prints.length, steps: steps.length, writes: new Map(writes), at: ins.at, after: ins.a, faults: ins.b ? p.texts[ins.b - 1] : null });
           break;
@@ -543,6 +551,19 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
   } catch (e) {
     const f = e instanceof StrideFault ? faultOf(e.code, e.message, current) : faultOf("F019", `the machine stopped: ${e.message}`, current);
     // A fault in an expectation stops only it (§7.17.1): undone, judged, and the file goes on after it.
+    // A fault in a try goes on at its catch (§7.18); running too long is not one a program catches.
+    if (e instanceof StrideFault && e.code === "F014") while (subruns.at(-1)?.catch !== undefined) subruns.pop();
+    if (subruns.length && e instanceof StrideFault && subruns.at(-1).catch !== undefined) {
+      const h = subruns.pop();
+      while (frames.length > h.frames) {
+        const gone = frames.pop();
+        if (watch) watch({ kind: "return", fn: debug.fns[gone.index], value: null, locals: view(gone) });
+      }
+      stack.length = h.stack;
+      frames[frames.length - 1].locals[h.into] = e.message;
+      frames[frames.length - 1].ip = h.catch;
+      continue;
+    }
     if (subruns.length && e instanceof StrideFault) {
       const h = subruns.pop();
       undo(h);

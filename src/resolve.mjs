@@ -271,7 +271,7 @@ export function resolve(loaded, diagnostics) {
   function givesValue(body) {
     for (const s of body) {
       if (s.kind === "return" && s.value) return true;
-      const inner = s.kind === "if" ? [...s.then, ...s.otherwise] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect", "while"].includes(s.kind) ? s.body : [];
+      const inner = s.kind === "if" || s.kind === "try" ? [...s.then, ...s.otherwise] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect", "while"].includes(s.kind) ? s.body : [];
       if (givesValue(inner)) return true;
     }
     return false;
@@ -483,6 +483,19 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(s.condition, scope, unit);
         inBranch(s, 0, () => s.then.forEach((t) => resolveStatement(t, scope, unit)));
         inBranch(s, 1, () => s.otherwise.forEach((t) => resolveStatement(t, scope, unit)));
+        return;
+      case "try":
+        // Its two blocks are paths, as an if's; the fault's words are a let of the catch.
+        inBranch(s, 0, () => s.then.forEach((t) => resolveStatement(t, scope, unit)));
+        inBranch(s, 1, () => {
+          if (s.caught) {
+            const sym = new Sym("let", s.caught.name, s.caught, unit);
+            sym.type = T.TEXT;
+            s.caught.symbol = sym;
+            declare(scope, sym, unit);
+          }
+          s.otherwise.forEach((t) => resolveStatement(t, scope, unit));
+        });
         return;
       case "match":
         resolveExpr(s.subject, scope, unit);

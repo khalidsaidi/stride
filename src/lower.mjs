@@ -165,6 +165,8 @@ export function lower(resolved, diagnostics, options = {}) {
         return lowerIf(s, ctx);
       case "match":
         return lowerMatch(s, ctx);
+      case "try":
+        return lowerTry(s, ctx);
       case "while":
         return lowerWhile(s, ctx);
       case "for":
@@ -181,9 +183,11 @@ export function lower(resolved, diagnostics, options = {}) {
         if (s.call.kind === "call") emit(ctx, { op: "eval", value: expr(s.call, ctx), node: s });
         return;
       case "break":
+        leaveTries(s, ctx);
         terminate(ctx, { op: "jump", to: ctx.loop.exit, node: s });
         return;
       case "continue":
+        leaveTries(s, ctx);
         terminate(ctx, { op: "jump", to: ctx.loop.next, node: s });
         return;
       case "expect":
@@ -314,6 +318,31 @@ export function lower(resolved, diagnostics, options = {}) {
   }
 
 
+  // A break or continue out of the tries the loop holds: each is over.
+  function leaveTries(s, ctx) {
+    for (let i = ctx.loop.tries ?? 0; i < (ctx.tries ?? 0); i++) emit(ctx, { op: "endtry", node: s });
+  }
+
+  // try { … } catch name { … } (§7.18): a fault in the try, or in what it calls, goes on at the catch, the
+  // fault's words in the name.
+  function lowerTry(s, ctx) {
+    const body = ctx.fn.block();
+    const handler = ctx.fn.block();
+    const join = ctx.fn.block();
+    const caught = ctx.fn.local(s.caught?.name ?? "fault", { t: "text" });
+    if (s.caught?.symbol) ctx.locals.set(s.caught.symbol, caught);
+    terminate(ctx, { op: "try", body, handler, dst: caught, node: s });
+    ctx.block = body;
+    ctx.tries = (ctx.tries ?? 0) + 1;
+    lowerBlock(s.then, ctx);
+    ctx.tries -= 1;
+    if (!ctx.block.term) emit(ctx, { op: "endtry", node: s });
+    jumpTo(ctx, join, s);
+    ctx.block = handler;
+    lowerBlock(s.otherwise, ctx);
+    jumpTo(ctx, join, s);
+  }
+
   function lowerIf(s, ctx) {
     const yes = ctx.fn.block();
     const no = ctx.fn.block();
@@ -364,7 +393,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const at = child(ctx, { block: head });
     const cond = expr(s.condition, at);
     at.block.term = { op: "branch", cond, yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     if (turn) inner.suffixes.push(join(IR.constant("["), IR.local(turn), IR.constant("]")));
     lowerBlock(s.body, inner);
     jumpTo(inner, step, s);
@@ -386,7 +415,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
     head.term = { op: "branch", cond: IR.binary("<=", IR.local(counter), IR.local(last)), yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     inner.locals.set(s.symbol, counter);
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(counter), IR.constant("]")));
     lowerBlock(s.body, inner);
@@ -416,7 +445,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
     head.term = { op: "branch", cond: IR.binary("<=", IR.local(k), IR.native("count", [IR.local(listLocal)])), yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     const itemLocal = ctx.fn.local(s.item, s.itemSymbol.type);
     emit(inner, { op: "set", dst: itemLocal, value: IR.item(IR.local(listLocal), IR.local(k)), node: s });
     inner.locals.set(s.itemSymbol, itemLocal);

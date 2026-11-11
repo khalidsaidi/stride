@@ -236,6 +236,9 @@ export function check(resolved, diagnostics) {
         return block(s.otherwise, ctx);
       case "match":
         return match(s, ctx);
+      case "try":
+        block(s.then, ctx);
+        return block(s.otherwise, ctx);
       case "while":
         condition(s.condition, ctx, "while");
         return block(s.body, ctx);

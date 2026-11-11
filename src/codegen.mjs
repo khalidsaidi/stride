@@ -318,6 +318,8 @@ export function generate(program, pdf, debug = null) {
     function statement(s) {
       at(s.node);
       switch (s.op) {
+        case "endtry":
+          return emit(OP.TRY_DONE);
         case "set":
           expr(s.value);
           return emit(OP.STORE, local(s.dst));
@@ -423,6 +425,10 @@ export function generate(program, pdf, debug = null) {
       if (t?.node && ["if", "match", "return"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
       at(t?.node);
       switch (t?.op) {
+        case "try":
+          emit(OP.TRY, local(t.dst)).to = labels.get(t.handler);
+          go(b, t.body);
+          break;
         case "jump":
           // What starts here and has no instruction yet (an if's end, an empty turn) is given one, so a debugger is
           // told of it on this way through only.

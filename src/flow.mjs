@@ -32,6 +32,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const childStatements = (s) => {
     switch (s.kind) {
       case "if":
+      case "try":
         return [...s.then, ...s.otherwise];
       case "match":
         return s.arms.flatMap((a) => a.body);
@@ -67,6 +68,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       pick: () => [s.box, s.button, s.condition],
       if: () => [s.condition],
       while: () => [s.condition],
+      try: () => [],
       match: () => [s.subject],
       for: () => [s.from, s.to],
       "for-each": () => [s.list],
@@ -170,7 +172,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // S406 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
   // condition passes over is not one: it is unreachable code (§11.3.3), checked but not refused.
   for (const { body } of bodies) {
-    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
+    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" || s.kind === "try" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
     for (const block of blocks) {
       const k = block.findIndex((s) => s.kind === "return" || s.kind === "break" || s.kind === "continue");
       if (k >= 0 && k + 1 < block.length) err("S406", block[k + 1], "this never runs: a return, break or continue comes before it");
@@ -225,8 +227,11 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "assign":
           if (s.target.kind === "name" && s.target.symbol) unset.delete(s.target.symbol);
           break;
+        case "try":
         case "if": {
-          const known = know(s.condition, env);
+          // A try's two blocks are two paths: all of the try, or the catch, with nothing of the try certain.
+          const known = s.kind === "try" ? undefined : know(s.condition, env);
+          if (s.kind === "try" && s.caught?.symbol) unset.delete(s.caught.symbol);
           if (known === true || known === false) {
             const r = walkFlow(known ? s.then : s.otherwise, new Set(unset), fn, exits, new Map(env));
             // What only the branch never taken declares is never there after it (§12.1.1).

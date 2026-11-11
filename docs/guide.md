@@ -428,6 +428,24 @@ fault F001: division by zero
   called from main, guide.stride:5:7
 ```
 
+A `try` catches a fault: the catch runs, with the fault's message, and the program goes on (§7.18).
+
+```stride
+define share(total: number, n: number) -> number {
+  return total / n
+}
+try {
+  print(share(100, 0))
+} catch problem {
+  print("could not share: {problem}")
+}
+print("still running")
+```
+```output
+could not share: division by zero
+still running
+```
+
 ## 12. What stops a program, and what does not
 
 | | When | What happens |

@@ -138,6 +138,7 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |
 | `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 1 |
 | `while c { }` | its block as long as the condition is yes (§7.11.1) |
+| `try { } catch problem { }` | a fault in the try runs the catch, its message in `problem` (§7.18) |
 | `break`, `continue` | end the innermost `for`, `for each` or `while`, or go to its next turn; not in a collect (§7.12) |
 | `collect x in list "Add another…?" { }`, `collect n, x in list any "Any…?" another "Another…?" { }` | asks for the items of a list one at a time (below) |
 | `return`, `return e` | ends a function (with its value), or the program |

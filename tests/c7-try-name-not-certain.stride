@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var x: number
+try {
+  x = 1
+} catch {
+  print("no value")
+}
+print(x)
+# rule 7.18 S407
+# mistake 9:7 S407

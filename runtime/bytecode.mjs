@@ -91,6 +91,8 @@ export const OP = {
   //            else the index of the fault's code or words plus one
   LOAD_MAIN: 66, // v local: push the value of the program's own local (a function reading the program's name)
   KEEP: 67, // v count: pop that many values and a function value; push the function keeping them (§9.11)
+  TRY: 68, // a catch, v local: a fault from here to TRY_DONE goes on at the catch, its words in the local (§7.18)
+  TRY_DONE: 69, // the try is over
   FN: 64, // v function, v text: push the function as a value, by the name its questions' keys use
   CALL_VALUE: 65, // v count: pop that many values, the turns, the key and a function value; call it (§9.10)
   FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
@@ -103,7 +105,7 @@ export const OPERANDS = {
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
-  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
+  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.TRY]: "av", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
 };
 
 export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
@@ -411,6 +413,9 @@ export function verify(p) {
           check(args[0] < p.boxes.length, "box");
           check(args[1] < p.texts.length, "button");
           break;
+        case OP.TRY:
+          check(args[1] < fn.localNames.length, "local");
+          break;
         case OP.EXPECT:
           check(args[1] <= p.texts.length, "fault words");
           check(i === 0, "function");
@@ -459,7 +464,7 @@ function stackEffect(op, args) {
       return [1, 1];
     case OP.ENSURE_ITEM: case OP.CHECK_SLOT:
       return [2, 2];
-    case OP.ENSURE_RECORD: case OP.EXPECT: case OP.FROM:
+    case OP.ENSURE_RECORD: case OP.EXPECT: case OP.FROM: case OP.TRY: case OP.TRY_DONE:
       return [0, 0];
     case OP.EXPECT_DONE:
       return [args[0] ? 1 : 2, 0];
@@ -526,7 +531,7 @@ function verifyStack(p, fn) {
       case OP.JUMP: case OP.LOOP:
         reach(args[0], after, at);
         break;
-      case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.EXPECT:
+      case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.EXPECT: case OP.TRY:
         reach(args[0], after, at);
         reach(next, after, at);
         break;

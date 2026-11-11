@@ -39,6 +39,7 @@ export class Block {
     const t = this.term;
     if (!t) return [];
     if (t.op === "jump") return [t.to];
+    if (t.op === "try") return [t.body, t.handler];
     if (t.op === "branch") return t.yes === t.no ? [t.yes] : [t.yes, t.no];
     return [];
   }

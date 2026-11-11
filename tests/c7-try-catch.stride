@@ -1,0 +1,42 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define risky(n: number) -> number {
+  return 10 / n
+}
+define guarded(n: number) -> number {
+  try {
+    return risky(n)
+  } catch {
+    return 0 - 1
+  }
+}
+var total = 0
+for i in 0..3 {
+  try {
+    if i == 2 {
+      continue
+    }
+    total = total + risky(i)
+    print("ok {i}")
+  } catch problem {
+    print("caught: {problem}")
+  }
+}
+print(guarded(0))
+print(guarded(5))
+var x: number
+try {
+  x = risky(0)
+} catch {
+  x = 7
+}
+print(x)
+try {
+  fill "A" = "kept"
+  fail("stop here")
+} catch why {
+  print(why)
+}
+# rule 7.18
+# prints ["caught: division by zero", "ok 1", "ok 3", "-1", "2", "7", "stop here"]
+# boxes {"A": "kept"}

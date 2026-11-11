@@ -28,6 +28,7 @@
 //   match       = "match" expr "{" (plain ("," plain)* "=>" block | "else" "=>" block)* "}"
 //   for         = "for" name "in" expr ".." expr block
 //   while       = "while" expr block
+//   try         = "try" block "catch" [name] block
 //   foreach     = "for" "each" [name ","] name "in" expr block
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = or;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
@@ -658,6 +659,20 @@ class Parser {
 
   statement() {
     const t = this.token;
+    // try { … } catch problem { … }: what a fault inside stops is the try, not the run (§7.18).
+    if (this.is("name", "try") && this.peek().type === "punct" && this.peek().value === "{") {
+      const start = this.take();
+      const then = this.block();
+      const catchLine = this.token.span.line;
+      if (!this.is("name", "catch")) this.expect("keyword", "catch", '"catch"');
+      else this.take();
+      let caught = null;
+      if (this.token.type === "name") {
+        const n = this.token;
+        caught = this.node("caught", n, { name: this.name("the name the fault's words go by") });
+      }
+      return this.node("try", start, { then, caught, catchLine, otherwise: this.block() });
+    }
     if (t.type === "keyword") {
       switch (t.value) {
         case "ask":
@@ -702,7 +717,7 @@ class Parser {
     const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["yes", "no", "empty", "not", "new"].includes(t.value));
     const prevTok = this.tokens[this.at - 1];
     if (value && (t.broken || !prevTok || (prevTok.type === "punct" && prevTok.value === "{"))) return this.node("call-statement", t, { call: this.expr() });
-    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, collect, return, break, continue)", "a call"]);
+    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, try, collect, return, break, continue)", "a call"]);
   }
 
   // expect e ["words"]   expect e faults "code or words"   (§7.17)

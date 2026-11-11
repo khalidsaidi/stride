@@ -494,6 +494,12 @@ without a fault, or with another fault, the expectation fails and the file goes 
 faults fails, and the file goes on. A fault outside any `expect` (in a `let`) stops the file: the expectations
 after it are reported as not run. Every expectation's result is reported, in order.
 
+7.18. **try.** `try { … } catch name { … }`: the try's statements run; a fault in them, or in a function they
+call, ends the try there and runs the catch, with the fault's message in `name`, a text (the name may be left
+out). With no fault the catch does not run. What the try did before the fault stays done: a box written, a
+question asked, a var changed. A name the try gives a value has one after it only when the catch gives it one
+too (§12.1.1). Running too long (F014) is not caught.
+
 ## 8. Questions
 
 8.1. Question types: `text long-text number date phone email yes-no one-of any-of`. The answer's type: `text`
@@ -790,7 +796,7 @@ words given to `print`, and a fault or none.
 
 13.3. `today()` is the device's date, or the date the host fixes for a run.
 
-13.4. **Faults.** A fault stops the run; nothing it wrote counts. A fault has a code, a message, and the place
+13.4. **Faults.** A fault outside a `try` (§7.18) stops the run; nothing it wrote counts. A fault has a code, a message, and the place
 (file, line, column) and function of the faulting operation and of every call that led there (§16.3).
 
 | Code | Fault |

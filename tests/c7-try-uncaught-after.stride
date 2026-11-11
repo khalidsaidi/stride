@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+try {
+  print(1 / 0)
+} catch {
+  print("caught")
+}
+for i in 1..2 {
+  try {
+    break
+  } catch {
+    print("no")
+  }
+}
+print(1 / 0)
+# rule 7.18 13.4
+# fault F001
