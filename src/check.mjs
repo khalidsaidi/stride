@@ -457,6 +457,11 @@ export function check(resolved, diagnostics) {
     const target = s.target;
     let wanted = T.ERROR;
     // A function reads the program's names, and does not change them (§9.1).
+    if (rootOf(target)?.symbol?.kept) {
+      const name = rootOf(target).symbol.name;
+      err("S204", target, `${name} is kept as it was when the function was made: the function reads it, and does not change it; give the new value back with return`);
+      return;
+    }
     if (ctx.fn && rootOf(target)?.symbol?.program) {
       const name = rootOf(target).symbol.name;
       err("S204", target, `${name} is the program's: a function reads it, and does not change it; give the new value back with return`);
@@ -586,6 +591,21 @@ export function check(resolved, diagnostics) {
           if (["record", "list", "none"].includes(t.t)) err("S352", p, `{…} puts words, a number, a date or an option into words; this is ${T.describe(t)}`);
         }
         return T.TEXT;
+      case "lambda": {
+        // A function written in place (§9.11): what it keeps has the type it has here.
+        const sym = e.symbol;
+        for (const k of e.keeps) {
+          const t = expr(k, ctx);
+          sym.keeps.find((x) => x.kept === k.symbol && !x.type).type = t;
+        }
+        checkFunction(sym);
+        if (!sym.result) {
+          err("S353", e, "the function's result cannot be worked out here; write it: -> type");
+          return T.ERROR;
+        }
+        e.functionValue = sym;
+        return T.fn(sym.params.map((p) => p.type), sym.result);
+      }
       case "name": {
         const sym = e.symbol;
         if (!sym) return T.ERROR;
@@ -616,7 +636,7 @@ export function check(resolved, diagnostics) {
         }
         // The program's own name, read in a function called before the line that defines it.
         if (ctx.fn && sym.program && !sym.type) {
-          err("S202", e, `${sym.name} is read in ${ctx.fn.name}, which is called before the program defines ${sym.name}, on line ${sym.line ?? sym.node?.span?.line}`);
+          err("S202", e, `${sym.name} is read in ${ctx.fn.lambda ? "a function made" : `${ctx.fn.name}, which is called`} before the program defines ${sym.name}, on line ${sym.line ?? sym.node?.span?.line}`);
           return T.ERROR;
         }
         return sym.type ?? T.ERROR;
@@ -760,16 +780,17 @@ export function check(resolved, diagnostics) {
     for (const a of e.args) expr(a.kind === "named-arg" ? a.value : a, ctx, { allowNone: true });
     for (const a of e.args) if (a.kind === "named-arg") a.type = a.value.type;
     const sym = e.target.symbol;
-    if (!sym) return T.ERROR;
-    // A call of a function a name holds (§9.10): its values in order, each of its parameter's type.
+    if (!sym && !e.valueCall) return T.ERROR;
+    // A call of a function a value holds (§9.10): its values in order, each of its parameter's type.
     if (e.valueCall) {
+      const called = e.target.kind === "name" ? e.target.name : "the function";
       const t = expr(e.target, ctx);
       if (T.isError(t)) return T.ERROR;
-      if (t.t !== "function") return (err("S228", e.target, `${e.target.name} is ${T.describe(t)}, not a function`), T.ERROR);
+      if (t.t !== "function") return (err("S228", e.target, `${e.target.kind === "name" ? e.target.name : "this"} is ${T.describe(t)}, not a function`), T.ERROR);
       if (e.args.some((a) => a.kind === "named-arg")) return (err("S388", e, `a function held in a name takes its values in order, without names`), T.ERROR);
-      if (e.args.length !== t.params.length) return (err("S365", e, `${e.target.name} takes ${t.params.length} ${t.params.length === 1 ? "value" : "values"}, and is given ${e.args.length}`), T.ERROR);
+      if (e.args.length !== t.params.length) return (err("S365", e, `${called} takes ${t.params.length} ${t.params.length === 1 ? "value" : "values"}, and is given ${e.args.length}`), T.ERROR);
       e.args.forEach((a, i) => {
-        if (a.type && !T.isError(a.type) && !fitsAt(a, a.type, t.params[i])) err("S367", a, `${e.target.name}'s value ${i + 1} is ${T.describe(t.params[i])}, and this is ${T.describe(a.type)}`);
+        if (a.type && !T.isError(a.type) && !fitsAt(a, a.type, t.params[i])) err("S367", a, `${called}'s value ${i + 1} is ${T.describe(t.params[i])}, and this is ${T.describe(a.type)}`);
       });
       e.valueType = t;
       return t.result;

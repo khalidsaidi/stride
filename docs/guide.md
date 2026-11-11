@@ -341,6 +341,23 @@ print(f(4))
 8
 ```
 
+A function can be written where it is used, without a name (§9.11). It reads the names around it, as they were
+when it was made:
+
+```stride
+define adder(k: number) -> function(number) -> number {
+  return function(n: number) -> number { return n + k }
+}
+let add5 = adder(5)
+print(add5(1))
+let less = function(n: number) -> number { return n - 1 }
+print(less(10))
+```
+```output
+6
+9
+```
+
 For the common cases there are shorter ways: keeping some items or changing each is a comprehension
 (`[upper(x) for each x in names if x is not empty]`), and ordering records is `sorted(l, by: "field")`.
 

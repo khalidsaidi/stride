@@ -144,6 +144,10 @@ export function generate(program, pdf, debug = null) {
           const k = l ? mainSlots.get(l) : undefined;
           return k === undefined ? emit(OP.EMPTY) : emit(OP.LOAD_MAIN, k);
         }
+        case "closure":
+          emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
+          for (const k of x.kept) expr(k);
+          return emit(OP.KEEP, x.kept.length);
         case "fnref":
           return emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
         case "callv":

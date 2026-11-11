@@ -88,9 +88,10 @@ export const isNumber = (v) => v instanceof D.Decimal;
 
 // A function as a value (§9.10): its name, and what an engine calls it by.
 export class StrideFunction {
-  constructor(name, target) {
+  constructor(name, target, kept = []) {
     this.name = name;
     this.target = target;
+    this.kept = kept; // what a function made in place keeps (§9.11)
   }
   toJSON() {
     return `function ${this.name}`;
@@ -138,7 +139,7 @@ export function equal(a, b) {
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
   if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && a.fields.every((x, i) => equal(x, b.fields[i]));
-  if (a instanceof StrideFunction && b instanceof StrideFunction) return a.name === b.name;
+  if (a instanceof StrideFunction && b instanceof StrideFunction) return a.target === b.target && a.kept.length === b.kept.length && a.kept.every((k, i) => equal(k, b.kept[i]));
   return a === b;
 }
 

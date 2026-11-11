@@ -127,6 +127,8 @@ export const native = (name, args) => ({ e: "native", name, args });
 // The program's own name, read in a function (§9.1).
 export const outer = (sym) => ({ e: "outer", sym });
 export const fnref = (fn) => ({ e: "fnref", fn });
+// A function made in place, with the values it keeps (§9.11).
+export const closure = (fn, kept) => ({ e: "closure", fn, kept });
 export const callv = (args) => ({ e: "callv", args });
 export const field = (a, i, name) => ({ e: "field", a, i, name });
 export const item = (a, i) => ({ e: "item", a, i });
@@ -217,6 +219,8 @@ export function showExpr(x) {
       return `${x.fn.name}(${x.args.map(showExpr).join(", ")})`;
     case "fnref":
       return `function ${x.fn.name}`;
+    case "closure":
+      return `function ${x.fn.name} keeping (${x.kept.map(show).join(", ")})`;
     case "outer":
       return `program %${x.sym.name}`;
     case "callv":

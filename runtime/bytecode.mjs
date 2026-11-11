@@ -90,6 +90,7 @@ export const OP = {
   //            undoes the sub-run, is judged, and the run goes on at `after`. `faults` is 0 for a plain expect,
   //            else the index of the fault's code or words plus one
   LOAD_MAIN: 66, // v local: push the value of the program's own local (a function reading the program's name)
+  KEEP: 67, // v count: pop that many values and a function value; push the function keeping them (§9.11)
   FN: 64, // v function, v text: push the function as a value, by the name its questions' keys use
   CALL_VALUE: 65, // v count: pop that many values, the turns, the key and a function value; call it (§9.10)
   FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
@@ -102,7 +103,7 @@ export const OPERANDS = {
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
-  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
+  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
 };
 
 export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
@@ -478,6 +479,8 @@ function stackEffect(op, args) {
       return [0, 1];
     case OP.CALL_VALUE:
       return [args[0] + 3, 1];
+    case OP.KEEP:
+      return [args[0] + 1, 1];
     case OP.HALT: case OP.RETURN_NONE: case OP.JUMP: case OP.LOOP:
       return [0, 0];
     default:

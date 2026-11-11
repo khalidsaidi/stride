@@ -108,6 +108,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         return e.fields.map((f) => f.value);
       case "named-arg":
         return [e.value];
+      case "lambda":
+        return e.keeps; // the names around it that it reads, read where it is made
       case "cond":
         return [e.condition, e.yes, e.no];
       case "slice":

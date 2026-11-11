@@ -420,11 +420,18 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.FN:
           stack.push(new StrideFunction(p.texts[ins.b], ins.a));
           break;
+        case OP.KEEP: {
+          const kept = stack.splice(stack.length - ins.a, ins.a).map(copy);
+          const made = pop();
+          stack.push(new StrideFunction(made.name, made.target, kept));
+          break;
+        }
         case OP.CALL_VALUE: {
           // A call of a function a value holds (§9.10): one that asks is given the key of this call (§8.6.2).
-          const given = stack.splice(stack.length - ins.a, ins.a).map(copy);
+          let given = stack.splice(stack.length - ins.a, ins.a).map(copy);
           const turns = words(pop()), before = words(pop()), f = pop();
           if (!(f instanceof StrideFunction)) fault("F022", "a function was called through a name that holds none");
+          if (f.kept.length) given = [...f.kept.map(copy), ...given];
           const args = p.functions[f.target].keyed ? [`${NATIVES.call_key.fn(before + f.name + turns)}.`, "", ...given] : given;
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(f.target, args));

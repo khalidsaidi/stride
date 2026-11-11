@@ -70,6 +70,7 @@ export function format(text, name = "program.stride") {
   let next = 0; // the next comment not printed yet
   const lines = [];
   let lastLine = 0; // the last source line printed
+  let at = { indent: "", line: 0 }; // the statement being printed, for a function written in place inside it
 
   // Comments before a source line, each on its own line.
   function leading(beforeLine, indent) {
@@ -176,6 +177,7 @@ export function format(text, name = "program.stride") {
   }
 
   function statement(s, indent) {
+    at = { indent, line: s.span.line };
     switch (s.kind) {
       case "ask": {
         const q = s.question.set ? `${s.question.form} ${s.question.set}` : s.question.form;
@@ -343,6 +345,22 @@ export function format(text, name = "program.stride") {
   function expr(e, outer = 0) {
     const wrap = (p, s) => (p < outer ? `(${s})` : s);
     switch (e.kind) {
+      case "lambda": {
+        // A function written in place: its body as a block, inside the statement it stands in.
+        const mine = at;
+        leading(mine.line, mine.indent);
+        if (mine.line > lastLine + 1 && lines.length && lines[lines.length - 1] !== "") lines.push("");
+        const head = `function(${e.params.map(param).join(", ")})${e.result ? ` -> ${type(e.result)}` : ""}`;
+        const from = lines.length;
+        lastLine = e.span.line;
+        block(e.body, `${mine.indent}  `);
+        leading(e.span.endLine, `${mine.indent}  `);
+        const body = lines.splice(from);
+        at = mine;
+        lastLine = Math.max(lastLine, e.span.endLine);
+        if (e.span.line === e.span.endLine && body.length === 1) return `${head} { ${body[0].trim()} }`;
+        return `${head} {\n${body.join("\n")}\n${mine.indent}}`;
+      }
       case "number":
         return e.raw ?? String(e.value);
       case "yes-no":
@@ -375,7 +393,6 @@ export function format(text, name = "program.stride") {
       case "slice":
         return `${expr(e.target, 8)}[${expr(e.from)}..${expr(e.to)}]`;
       case "call":
-        // A callee in brackets stays so: it is a mistake (S229), not the same call.
         return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}(${e.args.map((a) => expr(a)).join(", ")})`;
       case "named-arg":
         return `${e.name}: ${expr(e.value)}`;

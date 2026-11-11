@@ -56,6 +56,8 @@ and `faults` are words of the language only where the grammar uses them, and nam
 | `list of T`, `list of T most N` | values of type T, up to 1000, or up to N when a most is stated |
 | `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
 
+A function written in place, where a value goes: `function(n: number) -> number { return n * 2 }` (§9.11).
+
 Numbers are exact: `0.1 + 0.2 == 0.3` is yes; `+ - *` round to 34 digits only past them, and `/` rounds its
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;
 an id with leading zeros is words in quotes, §2.5).

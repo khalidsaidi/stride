@@ -333,10 +333,6 @@ export const CODES = {
     "when": "a call of something that is not a function",
     "explanation": "Only functions are called."
   },
-  "S229": {
-    "when": "a call of an expression",
-    "explanation": "Functions are called by their names."
-  },
   "S230": {
     "when": "a method call with no such function",
     "explanation": "`r.f()` calls `f(r)`; a record's fields are read without `()`."

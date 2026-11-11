@@ -110,7 +110,8 @@ export function lower(resolved, diagnostics, options = {}) {
       ctx.prefix = IR.local(fn.param("key", null));
       ctx.suffixes = [IR.local(fn.param("turns", null))];
     }
-    for (const p of sym.params) ctx.locals.set(p, fn.param(p.name, p.type));
+    // What a function made in place keeps comes first, then what it is given.
+    for (const p of [...(sym.keeps ?? []), ...sym.params]) ctx.locals.set(p, fn.param(p.name, p.type));
     lowerBlock(sym.node.body, ctx);
     if (!ctx.block.term) ctx.block.term = { op: "return", value: null };
     return fn;
@@ -538,6 +539,10 @@ export function lower(resolved, diagnostics, options = {}) {
         if (parts.length === 0) return IR.constant("");
         if (parts.length === 1 && parts[0].e === "const" && typeof parts[0].v === "string") return parts[0];
         return withAt(IR.concat(parts), placeOf(e, e.span));
+      }
+      case "lambda": {
+        const fn = functionOf(e.symbol);
+        return e.keeps.length ? IR.closure(fn, e.keeps.map((k) => expr(k, ctx))) : IR.fnref(fn);
       }
       case "name": {
         if (e.functionValue) return IR.fnref(e.functionValue.kind === "native" ? nativeOf(e.functionValue) : functionOf(e.functionValue));

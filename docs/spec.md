@@ -683,13 +683,20 @@ function wrapping `today()` gives the run's date at each run, not the date it wa
 9.10. **Functions as values.** A function's name where a value goes is the function itself: it may be given to a
 parameter, kept in a `let` or a `var`, held in a record's field or a list, and returned. Its type is written
 `function(T, …) -> R`, or `function(T, …)` for one that gives no value; two function types are the same when
-their parameters' types and their results are. A name that holds a function is called as a function is, its
-values given in order: `f(x)` (the wrong number of values is S365, a value of another type S367, a name that
-holds no function S228). A function that asks questions may be passed like any other; its questions are named
+their parameters' types and their results are. A value that holds a function is called as a function is, its
+values given in order: `f(x)`, `fs[1](x)`, `make(2)(x)` (the wrong number of values is S365, a value of another
+type S367, a value that holds no function S228). A function that asks questions may be passed like any other; its questions are named
 by it (§8.6.2). One of the standard library's functions is passed the same way (`apply(upper, t)`). A function
 with a type parameter, and a library function that takes values of any type (`count`, `print`), is called, not
 passed (S353).
 Calling through a name that holds no function when the program runs stops the run with F022.
+
+9.11. **A function written in place.** `function(n: number) -> number { return n * 2 }` is a function with no name,
+written where a value goes; its result's type may be left out, as a named function's (§9.6), and its parameters
+have no defaults. It reads the program's top-level names as any function does (§9.1). A name of the function or
+loop around it is kept as it was when the function was made: the function reads it, and does not change it (S204).
+One put straight into a `let` or `var` names its questions by that name, another by `function` (§8.6.2). Two
+function values are equal when they are the same function keeping equal values.
 
 ## 10. Boxes
 
@@ -1112,7 +1119,6 @@ its call: the function's name in the call.
 | S226 | a record or option set used as a value | A record is made with `new R { … }`; an option set is a type. |
 | S227 | a call of a function not defined | The message gives the nearest function. |
 | S228 | a call of something that is not a function | Only functions are called. |
-| S229 | a call of an expression | Functions are called by their names. |
 | S230 | a method call with no such function | `r.f()` calls `f(r)`; a record's fields are read without `()`. |
 | S231 | one name for an item and its number | `for each n, x in l` needs two names. |
 | S232 | a value on its own as a statement | A statement asks, writes, gives a value or calls. |

@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let asker = function(what: text) -> text {
+  ask a: text what
+  return a
+}
+print(asker("name"))
+print(asker("city"))
+# rule 9.11 8.6.2
+# answers {"asker.a": "Ann", "asker#2.a": "Oslo"}
+# prints ["Ann", "Oslo"]

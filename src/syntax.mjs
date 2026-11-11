@@ -1102,6 +1102,18 @@ class Parser {
     const t = this.token;
     if (t.type === "number") return (this.take(), { kind: "number", value: t.value, raw: t.raw, span: t.span });
     if (t.type === "string") return this.string();
+    // A function written in place (§9.11): function(n: number) -> number { return n * 2 }
+    if (this.is("name", "function") && this.peek().type === "punct" && this.peek().value === "(") {
+      const start = this.take();
+      const params = this.params();
+      let result = null;
+      if (this.sym("->")) {
+        this.take();
+        result = this.type();
+      }
+      const body = this.block();
+      return this.node("lambda", start, { params, result, body, typeParams: [] });
+    }
     if (t.type === "keyword") {
       if (t.value === "yes" || t.value === "no") return (this.take(), { kind: "yes-no", value: t.value === "yes", span: t.span });
       if (t.value === "empty") return (this.take(), { kind: "empty", span: t.span });

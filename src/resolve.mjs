@@ -72,6 +72,7 @@ export class Scope {
   }
 }
 
+const LOCAL_KINDS = new Set(["let", "var", "answer", "param", "counter", "item", "index"]);
 const DECLARATION_KINDS = new Set(["record", "options", "const", "define", "native"]);
 const SYM_KIND = { record: "record", options: "options", const: "const", define: "function", native: "native" };
 const WHAT = {
@@ -139,7 +140,7 @@ export function resolve(loaded, diagnostics) {
     }
 
     const scope = new Scope(imports, "module");
-    const result = { unit, scope, functions: [], natives: [], records: [], options: [], consts: [], main: [] };
+    const result = { unit, scope, functions: [], lambdas: [], natives: [], records: [], options: [], consts: [], main: [] };
     results.set(unit, result);
 
     // Declarations first, so they may be used anywhere in the file.
@@ -261,6 +262,7 @@ export function resolve(loaded, diagnostics) {
       resolveBlock(statements, main, unit);
     }
     for (const sym of result.functions) resolveBlock(sym.node.body, sym.scope, unit);
+    result.functions.push(...result.lambdas);
   }
 
   // ----- types
@@ -448,6 +450,8 @@ export function resolve(loaded, diagnostics) {
       case "let":
       case "var": {
         if (s.type) s.declaredType = resolveType(s.type, scope, unit);
+        // A function written in place into a let or var goes by that name (its questions' keys, §8.6.2).
+        if (s.value?.kind === "lambda") s.value.called = s.name;
         if (s.value) resolveExpr(s.value, scope, unit);
         // The same let or var declared in arms that exclude each other is one name (§12.4).
         const existing = scope.own(s.name);
@@ -640,7 +644,38 @@ export function resolve(loaded, diagnostics) {
     for (const m of s.modifiers) if (m.kind === "check") (resolveExpr(m.condition, scope, unit), resolveExpr(m.message, scope, unit));
   }
 
+  // A name a function written in place reads from around it (§9.11): the program's top-level names as they are
+  // when it runs, as any function reads them; a name of the function or the block around it as it was when the
+  // function was made.
+  function around(name, node, scope, unit) {
+    let inner = null;
+    for (let s = scope; s; s = s.parent) {
+      if (s.names.has(name)) return inner ? { sym: s.names.get(name), inner } : null;
+      if (s.kind === "function" && !inner) {
+        if (!s.owner?.lambda) return null;
+        inner = s;
+      }
+    }
+    return null;
+  }
+
   function lookupName(name, node, scope, unit) {
+    const found = around(name, node, scope, unit);
+    if (found && LOCAL_KINDS.has(found.sym.kind)) {
+      const { inner } = found;
+      // As the scope around the function sees it (a function in place inside another captures through it).
+      const outer = lookupName(name, node, inner.parent, unit);
+      if (!outer) return null;
+      if (outer.program || (results.get(unit)?.mainScope?.own(name) === outer && ["let", "var", "answer"].includes(outer.kind))) {
+        outer.program = true;
+        return outer;
+      }
+      const kept = new Sym("param", name, outer.node, unit);
+      kept.kept = outer;
+      inner.owner.keeps.push(kept);
+      inner.names.set(name, kept);
+      return kept;
+    }
     const sym = scope.lookup(name);
     if (sym) return sym;
     const later = findLater(scope, name);
@@ -704,6 +739,38 @@ export function resolve(loaded, diagnostics) {
   function resolveExpr(e, scope, unit) {
     if (!e || typeof e !== "object") return;
     switch (e.kind) {
+      case "lambda": {
+        // A function written in place: a function of the file with no name of its own, resolved where it stands.
+        const r = results.get(unit);
+        const sym = new Sym("function", e.called ?? "function", e, unit);
+        sym.lambda = true;
+        sym.keeps = []; // the names around it that it reads, kept as they were when it was made
+        sym.referenced = true;
+        const fnScope = new Scope(scope, "function", sym);
+        sym.scope = fnScope;
+        sym.params = [];
+        sym.typeParams = [];
+        for (const p of e.params) {
+          const param = new Sym("param", p.name, p, unit);
+          param.type = resolveType(p.type, scope, unit, false, true);
+          if (p.default) err("S392", unit.file, p.span, "a function written in place is called through a value, so its parameters have no defaults");
+          p.symbol = param;
+          if (fnScope.own(p.name)) err("S219", unit.file, p.span, `the function has two parameters called ${p.name}`);
+          else fnScope.names.set(p.name, param);
+          sym.params.push(param);
+        }
+        sym.result = e.result ? resolveType(e.result, scope, unit) : T.NONE;
+        if (!e.result && givesValue(e.body)) {
+          sym.inferResult = true;
+          sym.result = null;
+        }
+        resolveBlock(e.body, fnScope, unit);
+        e.symbol = sym;
+        // What it keeps, read where it stands.
+        e.keeps = sym.keeps.map((k) => ({ kind: "name", name: k.name, symbol: k.kept, span: e.span, file: e.file }));
+        r.lambdas.push(sym);
+        return;
+      }
       case "name":
         e.symbol = lookupName(e.name, e, scope, unit);
         if (e.symbol) e.symbol.referenced = true;
@@ -747,9 +814,10 @@ export function resolve(loaded, diagnostics) {
         return;
       case "call":
         if (e.args.length > 255) err("S601", unit.file, e.span, `this call gives ${e.args.length} arguments; a call gives at most 255`);
-        // Functions are called by their names (S229): not a name in brackets, which is a value.
-        if (e.target.parenthesised) {
-          err("S229", unit.file, e.target.span, "only a function can be called, by its name: write it without brackets");
+        // What is called is a function's name, or any value that holds a function (§9.10): fs[1](2), (f)(2).
+        if (e.target.parenthesised || !["name", "field"].includes(e.target.kind)) {
+          e.valueCall = true;
+          resolveExpr(e.target, scope, unit);
           for (const a of e.args) resolveExpr(a, scope, unit);
           return;
         }
@@ -794,10 +862,7 @@ export function resolve(loaded, diagnostics) {
           for (const a of e.args) resolveExpr(a, scope, unit);
           return;
         }
-        if (e.target.kind !== "name") {
-          resolveExpr(e.target, scope, unit);
-          err("S229", unit.file, e.target.span, "only a function can be called, by its name");
-        } else {
+        {
           const sym = scope.lookup(e.target.name);
           if (!sym && typeNamed.has(e.target.name)) {
             // a declaration refused by S208

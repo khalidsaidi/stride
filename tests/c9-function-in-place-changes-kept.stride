@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define counter(k: number) -> function() -> number {
+  return function() -> number {
+    k = k + 1
+    return k
+  }
+}
+print(counter(1)())
+# rule 9.11 S204
+# mistake 5:5 S204
