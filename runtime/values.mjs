@@ -105,7 +105,6 @@ export class StrideMap {
     const was = this.entries.get(w);
     if (was) was[1] = v;
     else {
-      if (this.entries.size >= 1000) throw new StrideFault("F017", "the map holds its most, 1000, and cannot take one more key");
       this.entries.set(w, [k, v]);
     }
   }
@@ -129,6 +128,9 @@ export class Cell {
     return this.v;
   }
 }
+
+// A list or a map with no most stated holds as many as there is room for: the most a list can count.
+export const NO_MOST = 2147483647;
 
 // A function as a value (§9.10): its name, and what an engine calls it by.
 export class StrideFunction {

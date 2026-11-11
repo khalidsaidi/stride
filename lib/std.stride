@@ -73,7 +73,7 @@ export native define find(t: text, part: text) -> number
 # example: occurrences("banana", "an") gives 2
 export native define occurrences(t: text, part: text) -> number
 # example: split("a,b,,c", ",") gives [a, b, , c]
-export native define split(t: text, separator: text) -> list of text most 1000
+export native define split(t: text, separator: text) -> list of text
 # example: line("one\n  two  ", 2) gives two
 export native define line(t: text, n: number) -> text
 # example: line_count("a\n") gives 2

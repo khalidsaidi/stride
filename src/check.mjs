@@ -154,8 +154,8 @@ export function check(resolved, diagnostics) {
       }
       // A worked-out list result with no most stated anywhere.
       const unbounded = (t) => t.t === "list" && (!Number.isFinite(t.most) || unbounded(t.element));
-      const bounded = (t) => (t.t === "list" ? T.list(bounded(t.element), Number.isFinite(t.most) ? t.most : 1000) : t);
-      if (unbounded(result)) result = bounded(result); // no most written anywhere: it holds up to 1000 (§3.7)
+      const bounded = (t) => (t.t === "list" ? T.list(bounded(t.element), Number.isFinite(t.most) ? t.most : T.NO_MOST) : t);
+      if (unbounded(result)) result = bounded(result); // no most written anywhere (§3.7)
       sym.result = result;
       sym.type = { t: "function", params: sym.params.map((p) => p.type), result };
     }
@@ -725,9 +725,8 @@ export function check(resolved, diagnostics) {
           if (!j) err("S361", item, `a list's items join into one type; this is ${T.describe(t)}, and the items before are ${T.describe(element)}`);
           else element = j;
         }
-        // A literal's most is its number of items, at most 1000 (§3.7, §3.7.1).
-        if (e.items.length > 1000) err("S213", e, `this list has ${e.items.length} items; a list holds at most 1000`);
-        return T.list(element, Math.min(1000, Math.max(1, e.items.length)));
+        // A literal's most is its number of items (§3.7, §3.7.1).
+        return T.list(element, Math.max(1, e.items.length));
       }
       case "cond": {
         condition(e.condition, ctx, "if … then");
@@ -767,7 +766,7 @@ export function check(resolved, diagnostics) {
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
           else e.itemSymbol.type = l.key;
           e.overMap = true;
-          most = 1000;
+          most = T.NO_MOST;
         } else if (l.t === "empty") {
           e.itemSymbol.type = T.EMPTY; // no items (§3.6)
           most = 0;
@@ -1038,8 +1037,7 @@ export function check(resolved, diagnostics) {
           // No join stands at the second value (§3.9 rule 5).
           if (!element) return (err("S373", e.b, `+ joins lists whose items join into one type; these hold ${T.describe(x.element)} and ${T.describe(y.element)}`), T.ERROR);
           const most = x.most + y.most;
-          // A list holds at most 1000 (§3.7): more than that when the program runs is F017.
-          return T.list(element, Math.min(most, 1000));
+          return T.list(element, Math.min(most, T.NO_MOST));
         }
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";

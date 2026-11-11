@@ -66,7 +66,7 @@ export const CODES = {
     "explanation": ""
   },
   "F017": {
-    "when": "a list given more than its most items; `split` giving more than 1000; mosts known only at run time adding to more than 1000, or placed where a smaller most is expected (§3.7.7)",
+    "when": "a list given more than its most items; or placed where a smaller most is expected (§3.7.7)",
     "explanation": ""
   },
   "F018": {
@@ -270,8 +270,8 @@ export const CODES = {
     "explanation": "`most 4`, or a constant."
   },
   "S213": {
-    "when": "a `most` above 1000, or a list literal of more than 1000 items",
-    "explanation": "A list holds at most 1000."
+    "when": "a `most` too large to count",
+    "explanation": "A most is a whole number a list can count to."
   },
   "S214": {
     "when": "`any` or `element` outside the natives",
@@ -354,8 +354,8 @@ export const CODES = {
     "explanation": "A collect ends when the person says there is no other."
   },
   "S235": {
-    "when": "an option set of no options or of more than 1000",
-    "explanation": "An option set declares 1 to 1000 options, as a list holds at most 1000 items."
+    "when": "an option set of no options",
+    "explanation": "An option set declares at least one option."
   },
   "S236": {
     "when": "`expect` in a program, in a library, or inside a function",
@@ -1029,7 +1029,7 @@ export const LIBRARY = [
   {
     "section": "14.1 Words",
     "signatures": [
-      "split(t: text, separator: text) -> list of text most 1000"
+      "split(t: text, separator: text) -> list of text"
     ],
     "names": [
       "split"

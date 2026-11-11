@@ -443,7 +443,7 @@ export function lower(resolved, diagnostics, options = {}) {
     // Over a map: its keys, in their order; with two names, each key and the value under it.
     const overMap = s.list.type?.t === "map";
     const mapLocal = overMap ? ctx.fn.local("map", s.list.type) : null;
-    const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key, most: 1000 } : s.list.type);
+    const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key, most: 2147483647 } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : expr(s.list, ctx), node: s });

@@ -389,7 +389,7 @@ export function verify(p) {
           check(args[0] < widest, "field");
           break;
         case OP.NEW_LIST:
-          check(args[1] <= 1000 && args[0] <= Math.max(args[1], 1), "list most");
+          check(args[1] <= 2147483647 && args[0] <= Math.max(args[1], 1), "list most");
           break;
         case OP.FN:
           check(args[0] < p.functions.length, "function");

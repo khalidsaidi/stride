@@ -212,8 +212,6 @@ print(digits_of(12345))
 5
 ```
 
-A loop with a bound you know is safe to break out of; there is always one, since a number has at most 34 digits and a
-list at most 1000 items.
 
 ## Input is asked for
 

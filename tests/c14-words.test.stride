@@ -44,7 +44,6 @@ expect count(split("", ",")) == 0
 expect split("abc", "") == ["a", "b", "c"]
 expect split("aXbxc", "x") == ["aXb", "c"]
 expect count(split(pad_left("", 999, ","), ",")) == 1000
-expect split(pad_left("", 1000, ","), ",") faults "F017"
 expect line("a\n b \u{d}\nc", 2) == "b"
 expect line("a\u{d}b", 2) == "b"
 expect line_count("a\nb") == 2

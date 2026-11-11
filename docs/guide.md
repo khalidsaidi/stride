@@ -141,7 +141,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | an option set | one of its options | `"red"` where one is expected |
 | `set of` an option set | some of its options | `["red", "blue"]` where one is expected |
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
-| `list of T` | any number of items up to 1000; `list of T most N` holds at most N | `[1, 2, 3]` |
+| `list of T` | any number of items; `list of T most N` holds at most N | `[1, 2, 3]` |
 
 Every type also has **empty**: the value of a question not answered, a field not set, an item past the end of a
 list. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
@@ -284,8 +284,8 @@ A function reads the program's own names (an answer, a let, a var), and may chan
 
 ## 7. Lists, records and sets
 
-Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`), up to
-1000 items, or to the `most` its type states. Lists and records are values: `var b = a` copies, and `==` compares items:
+Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`), or
+up to the `most` its type states. Lists and records are values: `var b = a` copies, and `==` compares items:
 
 ```stride
 options colour {
@@ -709,5 +709,5 @@ Linux. Other platforms are outside this release's scope.
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |
 | the PDF | never changed; only its boxes are filled |
 | a run | at most 2,000,000 instructions (F014) and calls 200 deep (F015) |
-| values | lists at most 1000 items, words at most 100,000 characters, numbers below 10^34 with 34 digits |
+| values | words at most 100,000 characters, numbers below 10^34 with 34 digits |
 | errors | at most 20 mistakes shown; the rest are counted |

@@ -91,7 +91,7 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 | an option set `S` | one option of `S` (its value, words) | `"value"` where an option of S is expected |
 | `set of S` | several options of `S`, without repeats, always in S's declaration order (§3.8) | from `any-of` answers, `["a", "b"]` where expected |
 | a record `R` | a value for each field of `R` | `new R { field: e, … }` |
-| `list of T most N` | 0 to N values of type T, in order; N a whole number 1–1000 | `[a, b]` |
+| `list of T most N` | 0 to N values of type T, in order; N a whole number of 1 or more | `[a, b]` |
 
 3.2. **Empty.** Every type also has the empty value, `empty`: an answer not given yet, a field not set. Words of no
 characters are empty; a list or set with no items is empty. There is one empty: `empty == ""` and `empty == []`
@@ -134,13 +134,12 @@ joined by `, `; empty as no words. A list or a record has no words (mistake S309
 - B is an option set S and the value is words in quotes that are one of S's values (checked: S386);
 - B is `set of S` and the value is a list of words in quotes, each one of S's values (checked: S386).
 
-3.7. **How many a list holds.** A list holds any number of items up to 1000, and grows as items are added:
+3.7. **How many a list holds.** A list holds any number of items, and grows as items are added:
 `var l: list of number`, then `l += [x]` or `l = append(l, x)`. A list type may state a smaller most, `list of
 text most 4`: a var, a field or a result declared so holds at most that many.
-- 3.7.1. A list literal of more than 1000 items is S213.
+- 3.7.1. A list literal's most is its number of items.
 - 3.7.2. How many items a list holds is checked where it is placed, as the program runs: a list of more items
-  than the most of the var, field, parameter or result it is given to stops the run with F017 at that place. So
-  does a list that would hold more than 1000 items (`l + m`, `append`). The compiler does not compare mosts.
+  than the most of the var, field, parameter or result it is given to stops the run with F017 at that place. The compiler does not compare mosts.
 - 3.7.3. A parameter `list of T` takes a list of any length. The bare word `empty` where a list is expected is a
   list with no items.
 - 3.7.7. A `collect` into a list asks for items until the person says there are no more, or the list holds its
@@ -169,7 +168,7 @@ gives a list of most 2 whichever branch runs, and an item of a list literal is w
 type. The join never depends on which value comes first.
 
 3.10. **Maps.** `map of K to V` holds values of type V, each under its own key of type K: words, a number, a date,
-a yes-no or an option (another type of key is S209). It holds up to 1000 keys (F017), in the order they were first
+a yes-no or an option (another type of key is S209). It holds any number of keys, in the order they were first
 given. A map is a value, as a list is: placing it copies it, `==` compares keys and values, and one with no keys
 is empty. A `var` of a map type declared without a value starts with no keys.
 
@@ -226,7 +225,7 @@ is there).
 hold itself through its fields, directly or through other records (S217); through a list it may not either.
 
 5.2. **options**: `"options" name "{" (["option"] plain string)* "}"`. Values unique (S215), not empty (S216); at
-least 1 and at most 1000 options (S235), the same bound as a list's. A question's own options obey the same. The
+least 1 option (S235). A question's own options obey the same. The
 printed words are the form's own, as its writer reads them.
 
 5.3. **const**: `"const" name [":" type] "=" expr`. Its value is worked out by the compiler (§11): words, a
@@ -241,7 +240,7 @@ text)`, `native define print(v: any)`. A native's parameters may have defaults (
 native with as many parameters (S301, S302).
 
 5.6. **Types written**: `text number date yes-no`, an option set's name, `set of` an option
-set's name, a record's name, `list of T`, `list of T most N` (N a whole number 1–1000 the compiler works out: S212, S213), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
+set's name, a record's name, `list of T`, `list of T most N` (N a whole number of 1 or more the compiler works out: S212, S213), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
 markers `any` and `element` (S214 elsewhere). A name that is not a type is S209. Unless §14 specifies otherwise,
 an `any` result has the first argument's type after binding and conversion; an `element` result has its list-item
 type, or its option type for a set. `either` returns the join of both argument types (§3.9, §14.5).
@@ -315,7 +314,7 @@ and, for r, rounded.
 `text`. A number and words is S372 (write `"…{n}…"`). The result longer than 100,000 characters is F012.
 
 6.5.1. **Lists.** `l + m`, with l and m lists whose item types have a join (§3.9; S373 otherwise), is a new list:
-l's items, then m's. A list of more than 1000 items is F017 (§3.7.2). `l += m` is `l = l + m`.
+l's items, then m's. `l += m` is `l = l + m`.
 
 6.6. **Equality** `==`, `!=`: of two values of one type, or words with words, or an option with words (the words
 checked against the set's values: S386), or two options of different sets (their words compared); else S378 (yes-no with words S376; a set with `==` against words S377).
@@ -361,7 +360,7 @@ the record under a new key (§7.5.1). `for each k in m` goes through m's keys in
 6.12. **Comprehension** `[e for each [n,] x in l if c]` (l a list or a set): for each item x of l (n counting from 1) for which c is
 yes, the value of e, in order. Its type is `list of` e's type `most` l's most when l is a list, and, when l is a set, the number of options its
 option set declares (a set of `options s { "a" "A"  "b" "B" }` with one chosen gives a list of most 2 holding
-one item). An option set declares at most 1000 options (S235), so this most is always 1–1000. x and n are known only inside it.
+one item). x and n are known only inside it.
 A comprehension may call any function, one that asks included: each call's questions are named apart (§8.6.2).
 
 6.13. **Conditional** `if c then a else b`: c yes-no (S310); its type is the join (§3.9) of a's and b's (S394 when
@@ -832,7 +831,7 @@ words given to `print`, and a fault or none.
 | F014 | more than 2,000,000 instructions in one run |
 | F015 | calls deeper than 200 |
 | F016 | a box name, worked out as the program runs, that the program does not know (a compiler fault) |
-| F017 | a list given more than its most items; `split` giving more than 1000; mosts known only at run time adding to more than 1000, or placed where a smaller most is expected (§3.7.7) |
+| F017 | a list given more than its most items; or placed where a smaller most is expected (§3.7.7) |
 | F018 | an operator given values it does not take (a compiler fault) |
 | F019 | the machine stopped on something else (a machine fault) |
 | F022 | a function called through a name that holds none |
@@ -891,7 +890,7 @@ words given to `print`, and a fault or none.
 | `starts_with(t: text, part: text) -> yes-no`, `ends_with(t: text, part: text) -> yes-no` | the same at the start, at the end |
 | `find(t: text, part: text) -> number` | the position of the first part in t; 0 when it is not there or part is empty |
 | `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping; 0 when part is empty |
-| `split(t: text, separator: text) -> list of text most 1000` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017 |
+| `split(t: text, separator: text) -> list of text` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017 |
 | `line(t: text, n: number) -> text` | line n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
 | `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |
 | `rest_lines(t: text) -> text` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
@@ -978,8 +977,6 @@ entry says "or a set" (its items are then options).
 |---|---|
 | nesting of blocks, brackets and expressions | 200 (S019) |
 | arguments of a call, parameters of a function | 255 (S601) |
-| a list's most | 1000 (S213) |
-| options in an option set | 1 to 1000 (S235) |
 | words | 100,000 characters (F012) |
 | significant digits of a number | 34 (S009; §3.3) |
 | instructions in one run | 2,000,000 (F014) |
@@ -1134,7 +1131,7 @@ its call: the function's name in the call.
 | S209 | a type that is not one | Types are §5.6; the message gives the nearest. |
 | S210 | `set of` something that is not an option set | `set of` takes an option set's name. |
 | S212 | a `most` that is not a whole number of 1 or more, known | `most 4`, or a constant. |
-| S213 | a `most` above 1000, or a list literal of more than 1000 items | A list holds at most 1000. |
+| S213 | a `most` too large to count | A most is a whole number a list can count to. |
 | S214 | `any` or `element` outside the natives | Write the type. |
 | S215 | an option value twice | Values in a set are unique. |
 | S216 | an empty option value | An option's value is words. |
@@ -1155,7 +1152,7 @@ its call: the function's name in the call.
 | S232 | a value on its own as a statement | A statement asks, writes, gives a value or calls. |
 | S233 | `break` or `continue` outside a loop | They belong in `for` or `for each`. |
 | S234 | `break` or `continue` in a collect | A collect ends when the person says there is no other. |
-| S235 | an option set of no options or of more than 1000 | An option set declares 1 to 1000 options, as a list holds at most 1000 items. |
+| S235 | an option set of no options | An option set declares at least one option. |
 | S236 | `expect` in a program, in a library, or inside a function | Expectations stand at the top level of a test file, `<name>.test.stride` (§4.3). |
 | S301 | a native the machine does not have | The standard library declares only what the machine provides. |
 | S302 | a native declared with other parameters | As many as the machine's. |

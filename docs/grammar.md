@@ -53,7 +53,7 @@ and `faults` are words of the language only where the grammar uses them, and nam
 | an option set's name | one of its options |
 | `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
-| `list of T`, `list of T most N` | values of type T, up to 1000, or up to N when a most is stated |
+| `list of T`, `list of T most N` | values of type T, as many as are added, or up to N when a most is stated |
 | `map of K to V` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
 | `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
 
@@ -256,8 +256,7 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
   statement of the wrong kind for its box; a button a radio group does not have; a list box filled with an entry,
   written out, that it does not have; a program written for another PDF.
 
-Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's 1000 items, 1 to 1000 options in a set,
-words of 100,000 characters, numbers of 34 significant digits.
+Limits (§15): nesting 200 deep, 255 arguments or parameters, words of 100,000 characters, numbers of 34 significant digits.
 
 Warnings do not stop the compiler: a match with no else that misses options; a function, a constant, an answer,
 a let or a var never used; a field asked and never read. Stride is no stricter than the form (§10.4).

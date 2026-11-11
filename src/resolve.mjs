@@ -315,8 +315,8 @@ export function resolve(loaded, diagnostics) {
       case "type-list": {
         const element = resolveType(node.element, scope, unit, native, param);
         if (!node.most) {
-          // No most written: a parameter takes a list of any length; anywhere else it holds up to 1000 (§3.7).
-          return T.list(element, param ? Infinity : 1000);
+          // No most written: a parameter takes a list of any length; anywhere else it grows as items are added (§3.7).
+          return T.list(element, param ? Infinity : T.NO_MOST);
         }
         const before = diagnostics.count;
         resolveExpr(node.most, scope, unit);
@@ -327,9 +327,9 @@ export function resolve(loaded, diagnostics) {
           err("S212", unit.file, node.most.span, "a list's most is a whole number of 1 or more, written out or a constant");
           return T.list(element, 1);
         }
-        if (most > 1000) {
-          err("S213", unit.file, node.most.span, "a list holds at most 1000 items");
-          return T.list(element, 1000);
+        if (most > T.NO_MOST) {
+          err("S213", unit.file, node.most.span, "a list's most is too large a number");
+          return T.list(element, T.NO_MOST);
         }
         return T.list(element, most);
       }
@@ -351,9 +351,9 @@ export function resolve(loaded, diagnostics) {
       if (o.value === "") err("S216", unit.file, o.span, "an option's value cannot be empty");
       set.options.push({ value: o.value, printed: o.printed, node: o });
     }
-    // 1 to 1000 options, as a list holds at most 1000 (§5.2).
+    // At least one option (§5.2).
     // A question's own options obey the same (§5.2).
-    if (set.options.length < 1 || set.options.length > 1000) err("S235", unit.file, anonymous ? (node[1000] ?? node[0])?.span ?? null : node.span, anonymous ? `the question declares ${set.options.length} options; it declares 1 to 1000` : `the option set ${name} declares ${set.options.length} options; it declares 1 to 1000`);
+    if (set.options.length < 1) err("S235", unit.file, anonymous ? (node[1000] ?? node[0])?.span ?? null : node.span, anonymous ? `the question declares ${set.options.length} options; it declares at least one` : `the option set ${name} declares ${set.options.length} options; it declares 1 to 1000`);
     return set;
   }
 

@@ -30,6 +30,8 @@ export const SCALARS = { text: TEXT, number: NUMBER, date: DATE, "yes-no": YES_N
 export const option = (set) => ({ t: "option", set });
 export const options = (set) => ({ t: "options", set });
 export const record = (decl) => ({ t: "record", decl });
+// A list with no most stated holds as many as there is room for (runtime/values.mjs).
+export const NO_MOST = 2147483647;
 export const list = (element, most) => ({ t: "list", element, most });
 // map of K to V: values of one type, each under its own key (§3.10).
 export const map = (key, value) => ({ t: "map", key, value });
@@ -153,7 +155,7 @@ export function describe(type) {
     case "record":
       return type.decl.name;
     case "list":
-      return type.most >= 1000 ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
+      return type.most >= NO_MOST ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
     case "map":
       return `a map of ${describe(type.key)} to ${describe(type.value)}`;
     case "function":

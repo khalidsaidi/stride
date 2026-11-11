@@ -7,7 +7,7 @@
 // is wrong, whether or not its main argument is empty (§14.0.3.1); only then does an empty main argument give its
 // empty result (§14.0.3). A value a person gives never faults; a program's own mistake that the compiler cannot see
 // does.
-import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, NO_MOST, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isEmpty };
 export const textOf = words;
@@ -179,10 +179,9 @@ export const NATIVES = {
     pure: true,
     fn: (t, sep) => {
       const s = text(t);
-      if (s === "") return list([], 1000);
+      if (s === "") return list([], NO_MOST);
       const parts = text(sep) === "" ? chars(s) : s.split(text(sep));
-      if (parts.length > 1000) throw new StrideFault("F017", `split gives ${parts.length} pieces, more than 1000`);
-      return list(parts.map((p) => (p === "" ? null : p)), 1000);
+      return list(parts.map((p) => (p === "" ? null : p)), NO_MOST);
     },
   },
   line: { pure: true, control: [1], fn: (t, n) => { const i = position("line", n); return result(trimmed(lines(t)[i - 1] ?? "")); } },
