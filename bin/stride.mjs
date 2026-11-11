@@ -482,7 +482,7 @@ async function main(argv) {
       return 0;
     }
     case "map": {
-      // The program against its form, as the PDF check reads it (§10.6): each question and the boxes its answer
+      // The program against its form (form.mjs): each question and the boxes its answer
       // goes into, the boxes written from no answer, the boxes not written. It reads the source.
       if (args[0].endsWith(".sbc")) return usage("map", `${args[0]} is compiled: map reads the program's .stride source`);
       const warnings = json ? [] : null;

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Programs made at random, run in both engines and through the PDF check (docs/spec.md §19.2):
+// Programs made at random, run in both engines (docs/spec.md §19.2):
 // node scripts/fuzz.mjs [runs] [seed] [--show]. A disagreement, a crash, or a mistake on a valid program is a bug.
 import { fuzz } from "../src/fuzz.mjs";
 

@@ -10,8 +10,8 @@
 //   - a function gives a value of its declared type, and one with no result gives none;
 //   - a list is collected once, into a var, and holds records or plain values.
 //
-// What depends on the order things happen in (a name read before it can have a value, a function that reaches
-// itself, what must be known before the form opens) is the flow check's (flow.mjs).
+// What depends on the order things happen in (a name read before it can have a value) is the flow check's
+// (flow.mjs).
 import * as V from "../runtime/values.mjs";
 import { KIND, didYouMean, either } from "./source.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
@@ -76,7 +76,7 @@ export function check(resolved, diagnostics) {
       // Made of known values, and its working out faults: a fault certain before the form opens (§11.3.1), which the
       // flow phase reports (§11.3.5).
       sym.fault = faultIn(sym.node.value);
-    } else if (value === undefined) err("S304", sym.node.value, `a constant's value must be known before the form opens; ${sym.name} depends on something that is not`);
+    } else if (value === undefined) err("S304", sym.node.value, `a constant's value is worked out by the compiler, from words, numbers and other constants; ${sym.name} depends on something that is not`);
     else {
       sym.value = value;
       sym.known = true;
@@ -151,7 +151,7 @@ export function check(resolved, diagnostics) {
         err("S344", sym.node, `${sym.name} returns only empty, so its type cannot be worked out; write it: -> text`);
         result = T.ERROR;
       }
-      // A worked-out list result whose most is not known before the form opens (§9.5.2).
+      // A worked-out list result with no most stated anywhere.
       const unbounded = (t) => t.t === "list" && (!Number.isFinite(t.most) || unbounded(t.element));
       const bounded = (t) => (t.t === "list" ? T.list(bounded(t.element), Number.isFinite(t.most) ? t.most : 1000) : t);
       if (unbounded(result)) result = bounded(result); // no most written anywhere: it holds up to 1000 (§3.7)
@@ -162,7 +162,7 @@ export function check(resolved, diagnostics) {
     sym.checked = true;
   }
 
-  // Parameters with defaults come last; each default is known before the form opens and of its parameter's type
+  // Parameters with defaults come last; each default is worked out by the compiler and is of its parameter's type
   // (§9.2).
   function checkDefaults(sym) {
     let optional = false;
@@ -180,7 +180,7 @@ export function check(resolved, diagnostics) {
       const v = evaluate(d);
       // Made of known values, and its working out faults: S413 at the operation, in the flow phase (§11.3.3, §11.3.5).
       if (v === undefined && faultIn(d)) p.fault = faultIn(d);
-      else if (v === undefined) err("S393", d, `a default must be known before the form opens: words, numbers and constants`);
+      else if (v === undefined) err("S393", d, `a default is worked out by the compiler: words, numbers and constants`);
       else {
         // Placed as the parameter's type, as an argument is (§9.2, §3.7.2): words for a set become the set, a list
         // takes the parameter's most, a bare empty a list's (§3.7.3.1).
@@ -928,7 +928,7 @@ export function check(resolved, diagnostics) {
         else {
           const v = sortBy.value.kind === "string" && sortBy.value.parts.length <= 1 && sortBy.value.parts.every((p) => typeof p === "string") ? (sortBy.value.parts[0] ?? "") : null;
           const field = v === null ? null : element.decl.fields.findIndex((f) => f.name === v);
-          if (v === null) err("S399", sortBy.value, "by names a field in plain words in quotes, known before the form opens");
+          if (v === null) err("S399", sortBy.value, "by names a field in plain words in quotes");
           else if (field < 0) err("S399", sortBy.value, `the record ${element.decl.name} has no field ${v}${didYouMean(v, element.decl.fields.map((f) => f.name))}`);
           else if (!T.orderable(element.decl.fields[field].type)) err("S399", sortBy.value, `${element.decl.name}'s ${v} is ${T.describe(element.decl.fields[field].type)}, which cannot be ordered`);
           else e.sortField = field;

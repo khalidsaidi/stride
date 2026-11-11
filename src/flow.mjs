@@ -1,12 +1,7 @@
 // Phase 5: check the flow. What depends on the order a program runs in, over every function and the program:
 //
-//   - no function reaches itself, directly or through others, so every program ends;
 //   - effects: a function that asks a question, writes a box or collects a list (itself or through a function it
-//     calls) has effects; one that does none is pure;
-//   - known before the form opens: a box's name, a button's, a question's printed words, a loop's bounds when the
-//     loop has effects. Such a value is made of constants, the counters of loops with effects, and parameters
-//     that every call gives a known value; a parameter is known when it is used where a known value is needed,
-//     and then every call must give it one;
+//     calls) has effects;
 //   - a var is read only where every path to it has given it a value;
 //   - a function with a result returns one on every path; nothing stands after a return;
 //   - every answer is used, and every field a question answers is read somewhere.
@@ -28,8 +23,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const declaredOn = new Set(); // the lets and vars declared on the path being walked (§12.1.1)
   // Why a let or var may have no value: the latest construct that leaves it so on some path, for S407's words.
   const cause = new Map(); // symbol -> { kind: "declared" | "if" | "match" | "loop", node }
-  // What is known before the form opens (§11.1) of a condition, a bound, a subject, a list or an argument: never
-  // a call of a Stride function, even one standing alone, whose value the run gives.
+  // What a condition or a subject written out is (`if yes`, §11.3.3): never a call of a Stride function, whose
+  // value the run gives.
   const know = (e, env) => (e?.kind === "call" && e.callee?.kind === "function" ? undefined : evaluate(e, env));
   const bodies = [...functions.map((f) => ({ fn: f, body: f.node.body })), ...resolved.units.filter((r) => !r.unit.library).map((r) => ({ fn: null, body: r.main }))];
 
@@ -185,7 +180,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     }
   }
 
-  // Loops and collects with effects are unrolled: their counter, index and turns are known before the form opens.
+  // Loops and collects with effects: their questions are named by turn (§8.6).
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       if (s.kind === "collect") s.unroll = true;
@@ -320,7 +315,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "for-each":
         case "while":
         case "collect": {
-          // Turns not known before the form opens: it may run none, and what it gives a value is not certain
+          // A loop may run no turns, and what it gives a value is not certain
           // after it. Its body is still checked, once, with what it does not know left unknown.
           const r = walkFlow(s.body, new Set(unset), fn, { breaks: [], continues: [] }, new Map(env));
           // What only its body gives a value is left without one when it runs no turns.

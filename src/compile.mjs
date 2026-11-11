@@ -4,13 +4,11 @@
 //   2 load       load.mjs      the libraries the program uses, and the standard library
 //   3 resolve    resolve.mjs   every name tied to its declaration, through scopes
 //   4 check      check.mjs     every expression's type, and what each statement may do
-//   5 flow       flow.mjs      what depends on order: recursion, effects, what is known before the form opens,
-//                              vars read before they have a value, returns, unused answers
+//   5 flow       flow.mjs      what depends on order: vars read before they have a value, returns, which
+//                              functions ask or write, unused answers
 //   6 lower      lower.mjs     the intermediate form: functions of basic blocks
 //   7 form       form.mjs      the boxes the program names, looked up in the form's header
 //   8 generate   codegen.mjs   the bytecode, read back by the machine's own loader before it is given out
-//
-// The program is compiled as it is written: there is no optimiser, so a program has one compiled form.
 //
 // A phase runs only when those before it found no mistake: a mistake in a name would make every type after it
 // wrong, and the person would read a cascade instead of the cause.
@@ -43,11 +41,11 @@ export const stdSource = () => {
 
 // Compiles a program. `source` is its text, `name` how it is shown in mistakes, `dir` where its lib/ is.
 // Options:
-//   header      the form's header ({ form, pdf, boxes }); without it the PDF check is not run, and no bytecode
-//               is written (a program is only ever compiled against its PDF)
+//   header      the form's header ({ form, pdf, boxes }); without it no bytecode is written (a program
+//               is only ever compiled against its PDF)
 //   read        how files are read (the disk, by default)
 //   stdPath     the standard library (lib/std.stride)
-//   until       the last phase to run: "flow" stops before lowering, "lower" before the PDF check
+//   until       the last phase to run: "flow" stops before lowering, "lower" before the form's boxes are looked up
 // Gives { diagnostics, program (the intermediate form), questions, bytecode, phases }.
 // The language's version (spec §21): what a program written for it can count on.
 export const LANGUAGE = "1.0.0";

@@ -1,6 +1,6 @@
-// Values known before the form opens: a constant's value, a list's most, a loop's bounds, the words of a box
-// name with a loop's counter put in. This is the compiler's evaluator for them; it works on the syntax tree,
-// before anything is lowered, and gives a value or null (not known before the form opens).
+// What the compiler works out itself (docs/spec.md §11.1): a constant's value, a parameter's default, a list
+// type's most, an option's printed words. This is its evaluator for them; it works on the syntax tree, before
+// anything is lowered, and gives a value, or undefined for what only a run can work out.
 //
 // The values are the machine's (runtime/values.mjs): words, exact decimals, dates, yes or no, null for
 // empty. A fault met on known values (dividing by zero, a native given what it cannot take) gives no value and is

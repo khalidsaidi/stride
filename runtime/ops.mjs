@@ -1,5 +1,5 @@
 // What Stride's operators mean (docs/spec.md §6), on the values of runtime/values.mjs. The machine
-// runs them on answers, the interpreter and the compiler on what is known before the form opens: one definition.
+// runs them on answers, and the compiler on a constant's value: one definition.
 // An operator given values it does not take is
 // F018: the checker refuses such a program, so reaching it is a compiler fault, never silently empty.
 import { D, StrideFault, equal, order, truthy, isEmpty, isNumber, words, list, mostOf } from "./values.mjs";

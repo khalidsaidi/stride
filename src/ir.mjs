@@ -1,5 +1,5 @@
-// The intermediate form: what the checked syntax tree is lowered into, the PDF check
-// walks and the code generator turns into bytecode. Each function is a graph of basic blocks; a block is a list
+// The intermediate form: what the checked syntax tree is lowered into, and the code
+// generator turns into bytecode. Each function is a graph of basic blocks; a block is a list
 // of statements and one terminator; statements hold expression trees.
 //
 //   Statements                                   Terminators
@@ -8,7 +8,7 @@
 //     append dst <- e                              return [e]
 //     ask q -> dst[.path] [default e]              halt
 //     check q e                 (a check's condition, after its ask)
-//     fill "box" = e | tick "box" when e | pick "box" "button" when e | skip "box"
+//     fill "box" = e | tick "box" when e | pick "box" "button" when e
 //     eval e                    (a call kept for what it does)
 //
 //   Expressions
@@ -133,7 +133,6 @@ export const record = (decl, fields) => ({ e: "record", decl, fields });
 export const list = (items, most) => ({ e: "list", items, most });
 export const cond = (c, yes, no) => ({ e: "cond", cond: c, yes, no });
 export const slice = (a, from, to) => ({ e: "slice", a, from, to });
-export const key = (a) => ({ e: "key", a });
 
 export const isConst = (x) => x.e === "const";
 
@@ -162,8 +161,6 @@ export function children(x) {
       return [x.cond, x.yes, x.no];
     case "slice":
       return [x.a, x.from, x.to];
-    case "key":
-      return [x.a];
     case "comp":
       return [x.list, ...(x.cond ? [x.cond] : []), x.value];
     default:
@@ -235,8 +232,6 @@ export function showExpr(x) {
       return `(if ${showExpr(x.cond)} then ${showExpr(x.yes)} else ${showExpr(x.no)})`;
     case "slice":
       return `${showExpr(x.a)}[${showExpr(x.from)}..${showExpr(x.to)}]`;
-    case "key":
-      return `key(${showExpr(x.a)})`;
     case "comp":
       return `[${showExpr(x.value)} for each %${x.index.name}, %${x.item.name} in ${showExpr(x.list)}${x.cond ? ` if ${showExpr(x.cond)}` : ""}]`;
     default:

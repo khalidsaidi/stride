@@ -42,8 +42,7 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // ----- contexts
 
-  // Where lowering stands: the function being built and its current block; what each name is (a local, or a
-  // value known before the form opens); the key prefix of the questions asked here (an expression), the turns of
+  // Where lowering stands: the function being built and its current block; what each name is (a local); the key prefix of the questions asked here (an expression), the turns of
   // the loops around them (expressions, outermost first), and the items of lists being asked about.
   const context = (fn, extra = {}) => ({ fn, block: fn.entry, locals: new Map(), prefix: IR.constant(""), suffixes: [], items: new Map(), ...extra });
   const child = (ctx, extra = {}) => ({ ...ctx, locals: new Map(ctx.locals), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
@@ -63,11 +62,11 @@ export function lower(resolved, diagnostics, options = {}) {
     ctx.block = target;
   }
 
-  // A value known before the form opens (a constant), for what must be one: an option's printed words.
+  // A value the compiler works out (§11.1), for what must be one: an option's printed words.
   function knownText(ctx, e, why) {
     const v = evaluate(e);
     if (v === undefined) {
-      if (diagnostics.empty) err("S412", e, `${why} must be known before the form opens: words, or constants`);
+      if (diagnostics.empty) err("S412", e, `${why} are worked out by the compiler: words, or constants`);
       return "";
     }
     return textOf(v);

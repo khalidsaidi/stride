@@ -1140,7 +1140,7 @@ class Parser {
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.
-  // Words a statement needs known before the form opens (§11.2): in quotes, or an expression that starts with a
+  // Words a statement takes (§7.9): in quotes, or an expression that starts with a
   // name and gives them (a constant, an item of a constant list).
   wordsOrName(what) {
     if (!this.is("name")) return this.string(what);

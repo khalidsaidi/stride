@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, encode, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -354,9 +354,6 @@ function execute(p, answers, limit, depth, trace, prints) {
           stack.push(list(from > to ? [] : l.slice(from - 1, to).map(copy), mostOf(l)));
           break;
         }
-        case OP.KEY:
-          stack.push(encode(pop(), p.recordNames));
-          break;
         case OP.TO_BOOL:
           stack.push(truthy(pop()));
           break;

@@ -12,7 +12,7 @@
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, pure
 //    9 code       the instructions
 //   10 places     the place (file, line, column) of every instruction that can fault or ask
-//   11 links      for each question key the PDF check found, the boxes its answer goes into
+//   11 links      for each question whose key is written out, the boxes its answer goes into
 //
 // Integers are unsigned LEB128 varints; a text is its UTF-8 length, then its bytes; jump addresses are 4 bytes,
 // little-endian, counted from the start of the code.
@@ -84,7 +84,6 @@ export const OP = {
   ENSURE_FIELD: 55, // v field, v record type: an empty field of the record on top becomes an empty record
   ENSURE_ITEM: 56, // v record type: an empty item at the position on top (of the list below it) becomes a record
   SLICE: 57, // pop b, pop a, pop a list: push its items a to b (§6.9.3)
-  KEY: 58, // pop a value, push its key encoding (§8.6.3)
   TO_BOOL: 59, // pop a value, push yes when it is yes, else no (§6.15.1)
   CHECK_SLOT: 60, // with a list and a position on top, fault F005 unless the item can be set there (§7.5.1)
   EXPECT: 61, // a after, v faults: a test file's expectation starts, its own sub-run (§7.17.1); a fault in it
@@ -449,7 +448,7 @@ function stackEffect(op, args) {
       return [1, 2];
     case OP.STORE: case OP.POP: case OP.APPEND: case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.CHECK_FAILED: case OP.FILL: case OP.TICK: case OP.PICK: case OP.RETURN:
       return [1, 0];
-    case OP.GET_FIELD: case OP.NEG: case OP.NOT: case OP.KEY: case OP.TO_BOOL:
+    case OP.GET_FIELD: case OP.NEG: case OP.NOT: case OP.TO_BOOL:
       return [1, 1];
     case OP.ENSURE_FIELD:
       return [1, 1];

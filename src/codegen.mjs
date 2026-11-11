@@ -35,7 +35,7 @@ export function generate(program, pdf) {
   // Every record type the program declares is in the records section, so the loader can tell that each field an
   // instruction names is one some record has (§18.3).
   for (const r of program.records) if (r.decl) recordIndex(r.decl);
-  // The questions the PDF check found; one it never met stands in code that never runs (§11.3.3) and is added.
+  // Every question the program asks.
   const questions = [...pdf.questions];
   const known = new Map(questions.map((q, i) => [q, i]));
   const questionIndex = { has: (q) => known.has(q), get: (q) => (known.has(q) ? known.get(q) : (known.set(q, questions.push(q) - 1), questions.length - 1)) };
@@ -150,9 +150,6 @@ export function generate(program, pdf) {
           expr(x.to);
           atExpr(x);
           return emit(OP.SLICE);
-        case "key":
-          expr(x.a);
-          return emit(OP.KEY);
         case "comp": {
           // An inline loop (§6.12): the list once into a hidden local, the result built item by item.
           const src = local({ name: "comp.list" });
@@ -345,8 +342,6 @@ export function generate(program, pdf) {
           emit(OP.CHECK_FAILED, questionIndex.get(s.q));
           return placeLabel(passes);
         }
-        // A box the PDF check never met stands in code that never runs (§11.3.3): it is written by its name, which
-        // would be F016 if it ran.
         // A box named by known words is written by its number; one whose name is worked out as the program runs
         // (Name{n} in a loop) by its name, found when it runs.
         // Before each write, the questions whose answers it is made of (form.mjs): the run says which box an

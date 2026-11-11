@@ -287,14 +287,14 @@ export function generate(seed) {
         if (w === 0) return [`${i}fill "${box("F")}" = ${expr(sc, r.pick([N, T, D]), d)}`];
         if (w === 1) return [`${i}tick "${box("C")}" when ${bool(sc, d)}`];
         // One radio group is picked at most once on a path (§10.4.2): its buttons on conditions that exclude
-        // each other, which the PDF check follows both ways (§10.4.1).
+        // each other, so either may run.
         const g = box("G");
         const on = `${g.toLowerCase()}_on`;
         return [`${i}let ${on} = ${bool(sc, d)}`, `${i}pick "${g}" "x" when ${on}`, `${i}pick "${g}" "y" when not ${on}`];
       }
       case "leave":
         // break or continue under a condition: the loop's turns are what the run decides (§7.13).
-        // On the counter, so it is not known before the form opens: a known one leaves what follows unreachable (S406).
+        // On the counter, so it is not written out: one written out leaves what follows unreachable (S406).
         return [`${i}if (${ctx.inLoop.counter} == ${r.int(1, 3)}) and ${bool(sc, d)} {`, `${i}  ${r.pick(["break", "continue"])}`, `${i}}`];
       case "rows": {
         // A collect of records: each item's fields asked, then the list read field by field.
@@ -491,7 +491,7 @@ export function generate(seed) {
     const ps = params.map((p, j) => declare(sc, `a${j}`, p, "param"));
     const body = [];
     if (r.chance(0.5)) {
-      // A condition on a parameter: one known before the form opens would leave the last return unreachable (S406).
+      // A condition on a parameter: one written out would leave the last return unreachable (S406).
       body.push(`  if (text_of(${use(ps[0])}) == "1") or ${bool(sc, 2)} {`, `    return ${expr(sc, result === "number" ? N : T, 2)}`, `  }`);
     }
     body.push(`  return ${expr(sc, result === "number" ? N : T, 2)}`);

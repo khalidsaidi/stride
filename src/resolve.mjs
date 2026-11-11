@@ -213,7 +213,7 @@ export function resolve(loaded, diagnostics) {
       for (const p of sym.node.params) {
         const param = new Sym("param", p.name, p, unit);
         param.type = resolveType(p.type, fnScope, unit, sym.kind === "native", true);
-        // A default is known before the form opens: made of words, numbers and the file's constants (§9.2).
+        // A default is worked out by the compiler: made of words, numbers and the file's constants (§9.2).
         if (p.default) {
           // Seen from the function (a program's name is S204 here, as in its body), with no parameter in sight.
           resolveExpr(p.default, new Scope(scope, "function", sym), unit);
@@ -316,7 +316,7 @@ export function resolve(loaded, diagnostics) {
         // A most whose own names are already refused says nothing more (§16.1).
         if (diagnostics.count > before) return T.list(element, 1);
         if (most === null || most < 1) {
-          err("S212", unit.file, node.most.span, "a list's most is a whole number of 1 or more, known before the form opens");
+          err("S212", unit.file, node.most.span, "a list's most is a whole number of 1 or more, written out or a constant");
           return T.list(element, 1);
         }
         if (most > 1000) {
@@ -624,8 +624,7 @@ export function resolve(loaded, diagnostics) {
       if (existing?.kind === "item" && existing.collected) {
         s.target.symbol = existing; // a collect's item that is not a record: the answer is the item
       } else if (existing?.kind === "answer" && scope.own(head) === existing && existing.branches.every((b) => exclusive(b, branch))) {
-        // The same question in another branch of an if or match (worded for that branch): the same answer. The
-        // PDF check still refuses one asked twice on one path.
+        // The same question in another branch of an if or match (worded for that branch): the same answer.
         existing.branches.push(branch);
         s.symbol = existing;
         s.target.symbol = existing;

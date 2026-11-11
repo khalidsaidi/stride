@@ -2,19 +2,18 @@
 // bytecode, from the same values (runtime/values.mjs), operators (runtime/ops.mjs) and natives.
 // Two uses:
 //
-//   - the debugger and --trace follow a program here, line by line, and the PDF check runs a pure function here
-//     on known arguments;
+//   - the debugger and --trace follow a program here, line by line;
 //   - the conformance suite runs every test here and in the machine, and they must agree on
 //     every question, box, print and fault (docs/spec.md §19.1): generated code that does not do what the
 //     intermediate form says is a fault in the compiler, caught where it starts.
 import { NATIVES, setToday, setPrinter, resetCalls } from "../runtime/natives.mjs";
 import { binary, unary, truthy } from "../runtime/ops.mjs";
 import { convert } from "../runtime/vm.mjs";
-import { StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, whole, encode, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
+import { StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, whole, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
 
 const DEPTH = 200;
 
-// Runs `fn` with `args`. `answers` is { key: answer } as the machine takes them; `boxes` the PDF check's box map
+// Runs `fn` with `args`. `answers` is { key: answer } as the machine takes them; `boxes` the form's box map (form.mjs)
 // (full name -> { kind, on }) for the export value a tick writes. Gives { value, steps, writes, prints } with
 // writes keyed by the box's full name, as the machine's boxValues gives them. A fault is thrown as a StrideFault
 // with its logical stack in `trail`.
@@ -358,8 +357,6 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         const to = Math.min(Array.isArray(l) ? l.length : 0, b);
         return list(from > to ? [] : l.slice(from - 1, to).map(copy), mostOf(l));
       }
-      case "key":
-        return encode(expr(x.a, locals), recordNames);
       case "comp": {
         const l = expr(x.list, locals);
         const items = Array.isArray(l) ? l : [];

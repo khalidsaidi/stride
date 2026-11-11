@@ -137,9 +137,9 @@ function sortItems(l, key, descending) {
   return list(items.map((x) => x.v), mostOf(l));
 }
 
-// Each native: its function, whether it is pure (only a pure native is worked out before the form opens), and
+// Each native: its function, whether it is pure (only a pure native is worked out by the compiler, in a constant), and
 // whether its call is a statement (no result). `control`: the arguments it checks before anything else (§14.0.3.1),
-// so a wrong one known before the form opens faults whatever the others hold.
+// so a wrong one faults whatever the others hold.
 export const NATIVES = {
   // ----- words (§14.1)
   upper: { pure: true, fn: (t) => result(text(t).toUpperCase()) },
