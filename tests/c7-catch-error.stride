@@ -1,0 +1,38 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function risky(n: number) -> number {
+  return 10 / n
+}
+try {
+  print(risky(0))
+} catch e {
+  print(e.code)
+  print(e.message)
+  print(e)
+  print("caught {e}")
+}
+try {
+  let l = [1]
+  print(l[4])
+} catch e {
+  print("{e.code}: {e.message}")
+}
+try {
+  try {
+    print(risky(0))
+  } catch inner {
+    print("inner {inner.code}")
+    print(upper(null))
+  }
+} catch outer {
+  print("outer {outer.code}")
+}
+try {
+  print(risky(0))
+} catch e {
+  print(risky(0) + 1)
+}
+print("not reached")
+# rule 7.18.1 7.18
+# prints ["F001", "division by zero", "division by zero", "caught division by zero", "F004: position 4 is outside the list: it holds 1", "inner F001", "outer F023"]
+# fault F001 at 4:13

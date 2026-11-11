@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function limit(n: number) {
+  if n > 2 {
+    throw "too many: {n}"
+  }
+}
+limit(1)
+limit(3)
+# rule 7.19 16.3
+# fault F013 at 5:5 too many: 3
+# stack ["limit c7-throw-place.stride:5:5", "main c7-throw-place.stride:9:1"]

@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function pick_one() -> string {
+  try {
+    ask first: string "First"
+    if first == "stop" {
+      return "stopped"
+    }
+    throw error("not {first}", code: "OTHER")
+  } catch e {
+    ask why: string "Why {e.code}"
+    return why ?? "no reason"
+  } finally {
+    ask last: string "Last"
+    fill "L" = last
+  }
+}
+fill "A" = pick_one()
+# rule 7.18.2 8.6
+# run stopped
+# answers {"pick_one.first": "stop", "pick_one.last": "z"}
+# asked ["pick_one.first", "pick_one.last"]
+# boxes {"A": "stopped", "L": "z"}
+# run thrown
+# answers {"pick_one.first": "go", "pick_one.why": "because", "pick_one.last": "y"}
+# asked ["pick_one.first", "pick_one.why", "pick_one.last"]
+# boxes {"A": "because", "L": "y"}

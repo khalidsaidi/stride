@@ -102,6 +102,9 @@ export function resolve(loaded, diagnostics) {
   const refusedAliases = new Set(); // use … as names refused by S110: their library's calls say nothing more
   const results = new Map(); // unit -> result
   let branch = []; // where resolution stands among ifs and matches (inBranch)
+  // The scope whose finally block is being resolved, or null: a return there, or a break or continue of a loop
+  // around the try, is refused (§7.18.2, S721).
+  let finallyOf = null;
 
   for (const unit of loaded.units.concat([loaded.main])) {
     const imports = new Scope(null, "imports");
@@ -268,7 +271,7 @@ export function resolve(loaded, diagnostics) {
   function givesValue(body) {
     for (const s of body) {
       if (s.kind === "return" && s.value) return true;
-      const inner = s.kind === "if" || s.kind === "try" ? [...s.then, ...s.otherwise] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect", "while"].includes(s.kind) ? s.body : [];
+      const inner = s.kind === "if" ? [...s.then, ...s.otherwise] : s.kind === "try" ? [...s.then, ...s.otherwise, ...(s.final ?? [])] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect", "while"].includes(s.kind) ? s.body : [];
       if (givesValue(inner)) return true;
     }
     return false;
@@ -288,6 +291,7 @@ export function resolve(loaded, diagnostics) {
         if (sym?.kind === "record") return sym.type ?? T.record(sym.decl);
         if (sym?.kind === "enum") return sym.type;
         if (sym?.kind === "typevar") return sym.type;
+        if (node.name === "error") return T.CAUGHT;
         if (node.name === "element") {
           err("S214", unit.file, node.span, "element is only for the natives of the standard library");
           return T.ERROR;
@@ -363,6 +367,17 @@ export function resolve(loaded, diagnostics) {
 
   // Where resolution stands among the branches of ifs and matches: [{ node, arm }], outermost first. Two places
   // are on different paths when they part at some if or match into different arms.
+  function leavesFinally(s, scope, unit) {
+    for (let x = scope; x && finallyOf; x = x.parent) {
+      if (x === finallyOf) {
+        err("S721", unit.file, s.span, `${s.kind} cannot leave a finally block: the block runs to its end, and what the try was doing goes on after it`);
+        return true;
+      }
+      if (x.kind !== "block" || (s.kind !== "return" && x.loop && x.loop !== "collect")) return false;
+    }
+    return false;
+  }
+
   function inBranch(node, arm, f) {
     const saved = branch;
     branch = [...branch, { node, arm }];
@@ -444,18 +459,27 @@ export function resolve(loaded, diagnostics) {
         inBranch(s, 1, () => s.otherwise.forEach((t) => resolveStatement(t, scope, unit)));
         return;
       case "try":
-        // Its two blocks are paths, as an if's; the fault's words are a let of the catch.
+        // Its two blocks are paths, as an if's; the error is a let of the catch.
         inBranch(s, 0, () => s.then.forEach((t) => resolveStatement(t, scope, unit)));
         inBranch(s, 1, () => {
           if (s.caught) {
             const sym = new Sym("let", s.caught.name, s.caught, unit);
-            sym.type = T.STRING;
+            sym.type = T.CAUGHT;
             s.caught.symbol = sym;
             declare(scope, sym, unit);
           }
           s.otherwise.forEach((t) => resolveStatement(t, scope, unit));
         });
+        if (s.final) {
+          // The finally block's statements are the scope's own; what leaves it is refused (S721).
+          const saved = finallyOf;
+          finallyOf = scope;
+          s.final.forEach((t) => resolveStatement(t, scope, unit));
+          finallyOf = saved;
+        }
         return;
+      case "throw":
+        return resolveExpr(s.value, scope, unit);
       case "match":
         resolveExpr(s.subject, scope, unit);
         s.arms.forEach((a, i) => inBranch(s, i, () => a.body.forEach((t) => resolveStatement(t, scope, unit))));
@@ -529,9 +553,11 @@ export function resolve(loaded, diagnostics) {
       }
       case "return":
         if (s.value) resolveExpr(s.value, scope, unit);
+        leavesFinally(s, scope, unit);
         return;
       case "break":
       case "continue": {
+        if (leavesFinally(s, scope, unit)) return;
         // In the innermost for or while, not across a collect or a function (§7.12).
         let inLoop = false;
         for (let x = scope; x && x.kind === "block"; x = x.parent) {

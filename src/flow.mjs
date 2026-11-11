@@ -34,8 +34,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const childStatements = (s) => {
     switch (s.kind) {
       case "if":
-      case "try":
         return [...s.then, ...s.otherwise];
+      case "try":
+        return [...s.then, ...s.otherwise, ...(s.final ?? [])];
       case "match":
         return s.arms.flatMap((a) => a.body);
       case "for":
@@ -71,6 +72,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       if: () => [s.condition],
       while: () => [s.condition],
       try: () => [],
+      throw: () => [s.value],
       match: () => [s.subject],
       for: () => [s.from, s.to],
       "for-each": () => [s.list],
@@ -175,10 +177,10 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // S406 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
   // condition passes over is not one: it is unreachable code (§11.3.3), checked but not refused.
   for (const { body } of bodies) {
-    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" || s.kind === "try" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
+    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" ? [s.then, s.otherwise] : s.kind === "try" ? [s.then, s.otherwise, s.final ?? []] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
     for (const block of blocks) {
-      const k = block.findIndex((s) => s.kind === "return" || s.kind === "break" || s.kind === "continue");
-      if (k >= 0 && k + 1 < block.length) err("S406", block[k + 1], "this never runs: a return, break or continue comes before it");
+      const k = block.findIndex((s) => s.kind === "return" || s.kind === "break" || s.kind === "continue" || s.kind === "throw");
+      if (k >= 0 && k + 1 < block.length) err("S406", block[k + 1], `this never runs: a ${block[k].kind === "throw" ? "throw" : "return, break or continue"} comes before it`);
     }
   }
 
@@ -198,6 +200,21 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     const message = declared ? `${sym.name} may not be declared here: ${what ?? `its declaration on line ${sym.line} is skipped on some path`}` : what ? `${sym.name} may have no value here: ${what}` : `${sym.name} has no value here: it is declared without one on line ${sym.line}, and nothing before this gives it one`;
     const notes = c ? [{ file: c.node.file, span: { ...c.node.span, endLine: c.node.span.line, endCol: c.node.span.col + c.node.kind.length }, message: c.kind === "loop" ? "may run no turns" : c.kind === "declared" ? "declared without a value" : "a way through here leaves it unset" }] : [];
     err("S407", e, message, notes);
+  }
+
+  // A try with a finally block (§7.18.2, §12.1.1). The finally block runs after any part of the try and of the
+  // catch, so in it a name has a value only when it had one before the try; after the statement a name has one
+  // when the try and the catch both gave it one, or the finally block did.
+  function walkTry(s, unset, fn, exits, env) {
+    const before = new Set(unset);
+    const end = s.hasCatch ? walkFlow([{ ...s, final: null }], new Set(unset), fn, exits, env) : walkFlow(s.then, new Set(unset), fn, exits, new Map(env));
+    const entry = new Set(before);
+    for (const x of [...declaredBy(s.then), ...declaredBy(s.otherwise)]) entry.add(x);
+    for (const x of entry) if (!before.has(x) || !end.unset.has(x)) cause.set(x, { kind: "try", node: s });
+    const c = walkFlow(s.final, new Set(entry), fn, null, new Map(env));
+    unset.clear();
+    for (const x of c.unset) if (end.unset.has(x) || !entry.has(x)) unset.add(x);
+    return end.falls && c.falls;
   }
 
   function walkFlow(list, unset, fn, exits = null, env = new Map()) {
@@ -230,7 +247,16 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "assign":
           if (s.target.kind === "name" && s.target.symbol) unset.delete(s.target.symbol);
           break;
+        case "throw":
+          // The error leaves the block: nothing after it runs on this path (§7.19).
+          falls = false;
+          break;
         case "try":
+          if (s.final || !s.hasCatch) {
+            falls = walkTry(s, unset, fn, exits, env);
+            break;
+          }
+        // falls through
         case "if": {
           // A try's two blocks are two paths: all of the try, or the catch, with nothing of the try certain.
           const known = s.kind === "try" ? undefined : know(s.condition, env);

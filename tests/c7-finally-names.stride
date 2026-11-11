@@ -1,0 +1,26 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var x: number
+var y: number
+let before = 1
+try {
+  x = before + 1
+} finally {
+  print(before)
+  y = 5
+}
+print(x + y)
+function f(n: number) -> number {
+  var r: number
+  try {
+    r = 10 / n
+  } catch e {
+    throw error("no result", code: "NONE")
+  } finally {
+    print("worked")
+  }
+  return r
+}
+print(f(5))
+# rule 12.1.2
+# prints ["1", "7", "worked", "2"]

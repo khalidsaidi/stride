@@ -474,7 +474,8 @@ fault F001: division by zero
   called from main, guide.stride:5:7
 ```
 
-A `try` catches a fault: the catch runs, with the fault's message, and the program goes on (§7.18).
+A `try` catches a fault: the catch runs, with the error, and the program goes on (§7.18). The error has a
+`code` and a `message`, and its words are the message.
 
 ```stride
 function share(total: number, n: number) -> number {
@@ -484,12 +485,53 @@ try {
   print(share(100, 0))
 } catch problem {
   print("could not share: {problem}")
+  print(problem.code)
 }
 print("still running")
 ```
 ```output
 could not share: division by zero
+F001
 still running
+```
+
+`throw` raises an error of the program's own: `throw "why"`, or `throw error("why", code: "CODE")` to give it a
+code a catch can tell it by; `throw problem` in a catch raises the caught error again. A `finally` block runs
+after the try and its catch however they end: with or without a fault, and when they leave by `return`, `break`
+or `continue` (§7.18.2, §7.19).
+
+```stride
+function withdraw(balance: number, amount: number) -> number {
+  if amount > balance {
+    throw error("only {balance} left", code: "SHORT")
+  }
+  return balance - amount
+}
+function attempt(amount: number) {
+  try {
+    print(withdraw(100, amount))
+  } catch problem {
+    if problem.code != "SHORT" {
+      throw problem
+    }
+    print("refused: {problem.message}")
+  } finally {
+    print("asked for {amount}")
+  }
+}
+attempt(30)
+attempt(300)
+throw "nothing more to do"
+```
+```output
+70
+asked for 30
+refused: only 100 left
+asked for 300
+```
+```stderr
+fault F013: nothing more to do
+  at main, guide.stride:21:1
 ```
 
 ## 12. What stops a program, and what does not
@@ -502,7 +544,7 @@ still running
 | an answer that is not a number or a date | as it runs | it is null, and marked unreadable |
 | computing with null (`total + 1`, `upper(name)` before the question is answered) | as it runs | fault F023; `total ?? 0`, `name ?? ""` or `if name != null` gives it a value |
 
-A program can also guard against faults before they happen (`if n != 0`, `??`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
+A program can also guard against faults before they happen (`if n != 0`, `??`), and stops itself with `throw "why"` (or `fail("why")`, the same) when it must. A test can say a fault is expected (`expect …
 faults`, below).
 
 ## 13. Tests

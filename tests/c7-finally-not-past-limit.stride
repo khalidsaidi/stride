@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var n = 0
+try {
+  while n >= 0 {
+    n = n + 1
+  }
+} catch {
+  print("caught")
+} finally {
+  print("finally")
+}
+# rule 7.18.2 7.18 F014
+# engines vm
+# prints []
+# fault F014

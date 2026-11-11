@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+try {
+  print(1 / 0)
+} catch e {
+  e.code = "X"
+  print(e.codes)
+}
+# rule 3.11 S722 S318
+# mistake 6:3 S722
+# mistake 7:9 S318

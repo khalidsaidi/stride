@@ -1,0 +1,21 @@
+function withdraw(balance: number, amount: number) -> number {
+  if amount > balance {
+    throw error("only {balance} left", code: "SHORT")
+  }
+  return balance - amount
+}
+function attempt(amount: number) -> string {
+  try {
+    return string_of(withdraw(100, amount))
+  } catch e {
+    return e.code
+  } finally {
+    print("asked")
+  }
+}
+expect withdraw(100, 30) == 70
+expect withdraw(100, 300) faults "SHORT"
+expect attempt(300) == "SHORT"
+expect attempt(30) == "70"
+expect fail("x") faults "F013"
+# rule 7.19 7.17

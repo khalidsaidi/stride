@@ -1,0 +1,52 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function open(name: string) -> string {
+  if name == "" {
+    throw error("no name given", code: "NONAME")
+  }
+  if name == "x" {
+    throw "x is not a file"
+  }
+  return "file {name}"
+}
+function first(names: list<string>) -> string {
+  for n in names {
+    try {
+      return open(n)
+    } catch e {
+      print("{n}: {e.code} {e.message}")
+      if e.code == "F013" {
+        throw e
+      }
+    }
+  }
+  return "none"
+}
+print(first(["", "a"]))
+try {
+  print(first(["", "x", "a"]))
+} catch e {
+  print("again {e.code} {e.message}")
+}
+try {
+  throw null
+} catch e {
+  print("[{e.message}] {e.code}")
+}
+let words: string = "said"
+try {
+  throw words
+} catch e {
+  print(e)
+}
+try {
+  fail("by fail")
+} catch e {
+  print("{e.code} {e}")
+}
+let throw = 3
+print(throw + 1)
+throw "the end"
+# rule 7.19 13.4 F013
+# prints [": NONAME no name given", "file a", ": NONAME no name given", "x: F013 x is not a file", "again F013 x is not a file", "[] F013", "said", "F013 by fail", "4"]
+# fault F013 at 49:1 the end

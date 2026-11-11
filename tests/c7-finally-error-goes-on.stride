@@ -1,0 +1,88 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function risky(n: number) -> number {
+  return 10 / n
+}
+function cleanup(n: number) -> number {
+  try {
+    return risky(n)
+  } finally {
+    print("cleanup {n}")
+  }
+}
+try {
+  print(cleanup(0))
+} catch e {
+  print("after the finally: {e.code}")
+}
+try {
+  try {
+    print(risky(0))
+  } catch e {
+    print(upper(null))
+  } finally {
+    print("the catch faulted")
+  }
+} catch e {
+  print(e.code)
+}
+try {
+  try {
+    throw error("first", code: "ONE")
+  } catch e {
+    throw e
+  } finally {
+    print("thrown again")
+  }
+} catch e {
+  print(e.code)
+}
+try {
+  try {
+    try {
+      throw "deep"
+    } finally {
+      print("inner")
+    }
+  } finally {
+    print("outer")
+  }
+} catch e {
+  print(e)
+}
+function nested() -> string {
+  for i in 0..2 {
+    try {
+      try {
+        if i == 0 {
+          continue
+        }
+        return "at {i}"
+      } finally {
+        print("in {i}")
+      }
+    } finally {
+      print("out {i}")
+    }
+  }
+  return "none"
+}
+print(nested())
+try {
+  try {
+    throw "first"
+  } finally {
+    print(risky(0))
+  }
+} catch e {
+  print("the finally's own: {e.code}")
+}
+try {
+  print(risky(0))
+} finally {
+  print("last words")
+}
+print("not reached")
+# rule 7.18.2 7.18.1
+# prints ["cleanup 0", "after the finally: F001", "the catch faulted", "F023", "thrown again", "ONE", "inner", "outer", "deep", "in 0", "out 0", "in 1", "out 1", "at 1", "the finally's own: F001", "last words"]
+# fault F001 at 4:13

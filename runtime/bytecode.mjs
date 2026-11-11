@@ -1,4 +1,4 @@
-// Stride's bytecode, version 9 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 10 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 9;
+export const VERSION = 10;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];
@@ -93,7 +93,8 @@ export const OP = {
   //            else the index of the fault's code or words plus one
   LOAD_MAIN: 66, // v local: push the value of the program's own local (a function reading the program's name)
   KEEP: 67, // v count: pop that many values and a function value; push the function keeping them (§9.11)
-  TRY: 68, // a catch, v local: a fault from here to TRY_DONE goes on at the catch, its words in the local (§7.18)
+  TRY: 68, // a catch, v local: a fault from here to TRY_DONE goes on at the catch, the error in the local (§7.18)
+  THROW: 90, // pop an error, or the words of one, and raise it (§7.19)
   TRY_DONE: 69, // the try is over
   STORE_MAIN: 70, // v local: pop a value into the program's own local (a function changing the program's var)
   ENSURE_MAIN: 71, // v local, v record: ENSURE_RECORD on the program's own local
@@ -384,8 +385,10 @@ export function verify(p) {
           check(args[0] < widest, "field");
           check(args[1] < p.records.length, "record type");
           break;
-        // A field is one some record has: below the most fields any record type holds.
+        // A field is one some record has: below the most fields any record type holds. An error has two (§3.11).
         case OP.GET_FIELD:
+          check(args[0] < Math.max(widest, 2), "field");
+          break;
         case OP.SET_FIELD:
           check(args[0] < widest, "field");
           break;
@@ -436,7 +439,7 @@ export function verify(p) {
     }
     if (r.at !== fn.end) throw new BytecodeError(`function ${fn.name}'s last instruction runs past its end`);
     verifyStack(p, fn);
-    if (![OP.HALT, OP.RETURN, OP.RETURN_NONE, OP.LOOP, OP.JUMP].includes(last)) throw new BytecodeError(`function ${fn.name} does not end with a return`);
+    if (![OP.HALT, OP.RETURN, OP.RETURN_NONE, OP.LOOP, OP.JUMP, OP.THROW].includes(last)) throw new BytecodeError(`function ${fn.name} does not end with a return`);
     if (i === 0 && fn.params !== 0) throw new BytecodeError("the main function takes no parameters");
     for (const j of jumps) {
       if (!starts.has(j.to) && j.to !== fn.end) throw new BytecodeError(`${OP_NAME[j.op]} at ${j.at} in ${fn.name} jumps to ${j.to}, which is not an instruction of the function`);
@@ -461,7 +464,7 @@ function stackEffect(op, args) {
       return [3, 0];
     case OP.DUP:
       return [1, 2];
-    case OP.STORE: case OP.CELL: case OP.POP: case OP.APPEND: case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.CHECK_FAILED: case OP.FILL: case OP.TICK: case OP.PICK: case OP.RETURN:
+    case OP.STORE: case OP.CELL: case OP.POP: case OP.APPEND: case OP.JUMP_IF_FALSE: case OP.JUMP_IF_TRUE: case OP.CHECK_FAILED: case OP.FILL: case OP.TICK: case OP.PICK: case OP.RETURN: case OP.THROW:
       return [1, 0];
     case OP.GET_FIELD: case OP.NEG: case OP.NOT: case OP.TO_BOOL:
       return [1, 1];
@@ -534,6 +537,8 @@ function verifyStack(p, fn) {
         break;
       case OP.HALT:
         if (after !== 0) throw new BytecodeError(`in ${fn.name}, HALT at ${at} leaves ${after} values on the stack`);
+        break;
+      case OP.THROW:
         break;
       case OP.JUMP: case OP.LOOP:
         reach(args[0], after, at);

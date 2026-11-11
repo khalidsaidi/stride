@@ -32,7 +32,7 @@ function prepare(file) {
   const lines = new Map();
   for (const fn of out.program.functions)
     for (const b of fn.blocks)
-      for (const s of [...b.stmts, ...(b.term && ["if", "match", "return"].includes(b.term.node?.kind) ? [b.term] : [])]) {
+      for (const s of [...b.stmts, ...(b.term && ["if", "match", "return", "throw"].includes(b.term.node?.kind) ? [b.term] : [])]) {
         const n = s.node;
         if (!n?.span?.line || !n.file) continue;
         const path = paths.get(n.file.name);

@@ -6,7 +6,7 @@
 // A native given null where it needs a value faults (F023, §14.0.3) before anything else: `takes` names each
 // parameter and the kind of value it needs. Then it checks its control arguments — positions, places, widths,
 // paddings, patterns — and faults when one is wrong (§14.0.3.1).
-import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideError, StrideMap, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isNull };
 export const stringOf = words;
@@ -376,6 +376,8 @@ export const NATIVES = {
   // ----- null, faults and output (§14.5)
   either: { pure: true, takes: "a:V b:V", fn: (a, b) => (isNull(a) ? b : a) },
   fail: { pure: false, statement: true, takes: "message:T", fn: (message) => { throw new StrideFault("F013", text(message)); } },
+  // An error value (§14.5): its code F013 when none is given.
+  error: { pure: false, takes: "message:T code:T", fn: (message, code) => new StrideError(text(code) || "F013", text(message)) },
   print: { pure: false, statement: true, takes: "v:V", fn: (v) => { printer(v); return null; } },
   // The key of a call that can reach questions (§8.6.2): its name where it stands; a second call there, name#2.
   call_key: {

@@ -6,6 +6,8 @@
 //   options(set)                     several options of one set (an any_of answer)
 //   record(decl)                     a record's named fields
 //   list(element)                    values of one type, in order
+//   caught                           an error value (§3.11): what a catch holds, `error(…)` makes and `throw` raises;
+//                                    written `error`
 //   null                            the type of `null`: fits every type
 //   any                              only in a native function's parameters: takes any value
 //   none                             what a function with no result gives
@@ -24,6 +26,9 @@ export const ANY = { t: "any" };
 export const ELEMENT = { t: "element" };
 export const NONE = { t: "none" };
 export const ERROR = { t: "error" };
+export const CAUGHT = { t: "caught" };
+// An error value's fields (§3.11), in the order the machine holds them.
+export const CAUGHT_FIELDS = ["code", "message"];
 
 export const SCALARS = { string: STRING, number: NUMBER, date: DATE, bool: BOOL };
 
@@ -166,6 +171,8 @@ export function describe(type) {
       return "nothing (the function gives no value)";
     case "error":
       return "(a type already reported)";
+    case "caught":
+      return "an error";
     default:
       return type.t;
   }

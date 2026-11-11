@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function g() {
+  throw "stop"
+  print("never")
+}
+g()
+# rule 7.19 S406
+# mistake 5:3 S406

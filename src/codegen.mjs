@@ -1,4 +1,4 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 9) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 10) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
@@ -448,7 +448,7 @@ export function generate(program, pdf, debug = null) {
       }
       const t = b.term;
       // An if's, a match's and a return's line are statements of the program too (§17.7, §17.15).
-      if (t?.node && ["if", "match", "return"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
+      if (t?.node && ["if", "match", "return", "throw"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
       at(t?.node);
       switch (t?.op) {
         case "try":
@@ -481,6 +481,11 @@ export function generate(program, pdf, debug = null) {
           break;
         case "halt":
           emit(OP.HALT);
+          break;
+        case "throw":
+          expr(t.value);
+          at(t.node);
+          emit(OP.THROW);
           break;
         default:
           throw new Error(`block b${b.id} of ${fn.name} has no end`);
