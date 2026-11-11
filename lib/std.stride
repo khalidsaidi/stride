@@ -88,6 +88,10 @@ export native function rest_lines(t: string) -> string
 export native function word(t: string, n: number) -> string
 # example: word_count(" a  b c ") gives 3
 export native function word_count(t: string) -> number
+# example: pad_right("7", 3, "0") gives 700
+export native function pad_right(t: string, width: number, padding: string = " ") -> string
+# example: repeat("ab", 3) gives ababab
+export native function repeat(t: string, times: number) -> string
 # example: pad_left("7", 3, "0") gives 007
 export native function pad_left(t: string, width: number, padding: string = " ") -> string
 # example: string_of(date_of(2026, 1, 2)) gives 2026-01-02

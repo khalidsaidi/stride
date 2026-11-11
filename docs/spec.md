@@ -436,7 +436,7 @@ and works out both.
 7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
 continue | return | assign | call | expect;` A block is `{ statement* }`. Nested blocks, brackets and expressions
 deeper than 200 levels are S019, at the place. Each operator in an expression chain adds one level of nesting,
-including unary operators and postfix field access, indexing, slicing and calls. A statement starts on a line of its own (S024); a block's closing
+including unary operators and postfix field access, indexing, slicing and calls. A statement starts on a line of its own, or after a `;` (S024); a block's closing
 brace may follow its last statement on the same line (`if c { print(1) }`).
 
 7.2. **ask** `ask target ":" qtype "printed words" [options-block] modifier*` asks a question (§8). The target is
@@ -876,7 +876,7 @@ words given to `print`, and a fault or none.
 | F006 | a field read or set on a value that is not a record and not null, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program |
 | F007 | a native given a position that is not a whole number of 0 or more |
 | F008 | a native given places that are not a whole number from 0 to 10 |
-| F009 | `pad_left` given a width that is not a whole number of 0 or more, or padding that is not one character |
+| F009 | `pad_left`, `pad_right` or `repeat` given a width or times that is not a whole number of 0 or more, or padding that is not one character |
 | F010 | a date pattern with none of YYYY YY MM DD M D |
 | F011 | a date outside 0001-01-01 to 9999-12-31 |
 | F013 | `fail(message)`: the program's own fault |
@@ -955,6 +955,8 @@ words given to `print`, and a fault or none.
 | `rest_lines(t: string) -> string` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
 | `word(t: string, n: number) -> string` | the word at position n of t, words split on runs of spaces and tabs; n past the last word: null |
 | `word_count(t: string) -> number` | how many words; no characters: 0 |
+| `pad_right(t: string, width: number, padding: string = " ") -> string` | padding put after t until it is width characters; t at least width long: t. width and padding as `pad_left`'s (F009) |
+| `repeat(t: string, times: number) -> string` | t written times times; times a whole number of 0 or more (F009) |
 | `pad_left(t: string, width: number, padding: string = " ") -> string` | padding put before t until it is width characters; t at least width long: t. width a whole number of 0 or more and padding exactly one character, else F009 |
 | `string_of(v: any) -> string` | v's words (§3.5); null: no characters; a list or record is S367 |
 | `number_of(t: string) -> number` | the number t holds by §8.7, or null when it holds none |
@@ -1168,7 +1170,7 @@ its call: the function's name in the call.
 | S021 | a `\u{…}` out of range | A character is `\u{0}` to `\u{10FFFF}`, not D800–DFFF. |
 | S022 | an option of a question's own without `option` | A question's own options are written `option "value" "printed words"`. |
 | S023 | `==` where a statement is meant | `x == 1` on its own does nothing; to give a value, `x = 1`. |
-| S024 | two statements on one line | A statement starts on a line of its own; a block may close on the same line. |
+| S024 | two statements on one line with nothing between | A statement starts on a line of its own, or after a `;`; a block may close on the same line. |
 | S101 | `import "std"` | The standard library is in every file already. |
 | S102 | a library path that is not one | Small letters, digits, `-`, `_`, with `/` between folders. |
 | S103 | libraries importing each other in a circle | A library cannot import, through others, a library that imports it. |

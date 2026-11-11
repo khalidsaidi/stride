@@ -34,7 +34,7 @@ export const CODES = {
     "explanation": ""
   },
   "F009": {
-    "when": "`pad_left` given a width that is not a whole number of 0 or more, or padding that is not one character",
+    "when": "`pad_left`, `pad_right` or `repeat` given a width or times that is not a whole number of 0 or more, or padding that is not one character",
     "explanation": ""
   },
   "F010": {
@@ -170,8 +170,8 @@ export const CODES = {
     "explanation": "`x == 1` on its own does nothing; to give a value, `x = 1`."
   },
   "S024": {
-    "when": "two statements on one line",
-    "explanation": "A statement starts on a line of its own; a block may close on the same line."
+    "when": "two statements on one line with nothing between",
+    "explanation": "A statement starts on a line of its own, or after a `;`; a block may close on the same line."
   },
   "S101": {
     "when": "`import \"std\"`",
@@ -1053,6 +1053,26 @@ export const LIBRARY = [
       "word_count"
     ],
     "gives": "how many words; no characters: 0"
+  },
+  {
+    "section": "14.1 Words",
+    "signatures": [
+      "pad_right(t: string, width: number, padding: string = \" \") -> string"
+    ],
+    "names": [
+      "pad_right"
+    ],
+    "gives": "padding put after t until it is width characters; t at least width long: t. width and padding as `pad_left`'s (F009)"
+  },
+  {
+    "section": "14.1 Words",
+    "signatures": [
+      "repeat(t: string, times: number) -> string"
+    ],
+    "names": [
+      "repeat"
+    ],
+    "gives": "t written times times; times a whole number of 0 or more (F009)"
   },
   {
     "section": "14.1 Words",

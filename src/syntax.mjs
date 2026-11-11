@@ -112,6 +112,7 @@ const spanOf = (from, to) => ({ line: from.line, col: from.col, endLine: to.line
 export function lex(text, cursor = new Cursor(text), until = null) {
   const tokens = [];
   let broken = true;
+  let semi = false; // the next token follows a `;`
   for (;;) {
     // Whitespace and comments.
     while (cursor.at < text.length) {
@@ -119,7 +120,9 @@ export function lex(text, cursor = new Cursor(text), until = null) {
       // Inside {…} in words in quotes, the words are still on one line (§2.6): a line end is S002, and a # is no
       // comment there.
       if (until && (c === "\n" || c === "\r")) throw new SyntaxMistake("these words in quotes have no closing quote on their line", spanOf(cursor.here, cursor.here), "S002");
+      // A line end, or a `;`, ends a statement (§7.1).
       if (c === "\n") (broken = true), cursor.next();
+      else if (c === ";" && !until) (broken = true), (semi = true), cursor.next();
       else if (c === " " || c === "\t" || c === "\r") cursor.next();
       else if (c === "#" && !until) while (cursor.at < text.length && cursor.peek() !== "\n") cursor.next();
       else break;
@@ -182,7 +185,8 @@ export function lex(text, cursor = new Cursor(text), until = null) {
       if (until && p === "}") until.depth--;
       token = { type: "punct", value: p };
     }
-    tokens.push({ ...token, span: spanOf(from, cursor.here), broken });
+    tokens.push({ ...token, span: spanOf(from, cursor.here), broken, semi });
+    semi = false;
     broken = false;
   }
 }
@@ -394,7 +398,7 @@ class Parser {
     if (!last || next.type === "end" || (next.type === "punct" && next.value === "}")) return;
     // Only where another statement plainly starts: anything else is the mistake the statement itself reports.
     const starts = next.type === "name" || (next.type === "keyword" && STARTS.has(next.value));
-    if (starts && next.span.line === last.span.endLine) this.mistakes.push(new SyntaxMistake("a statement starts on a line of its own", next.span, "S024"));
+    if (starts && !next.semi && next.span.line === last.span.endLine) this.mistakes.push(new SyntaxMistake("a statement starts on a line of its own", next.span, "S024"));
   }
 
   // On to the next statement or declaration: at the start of a line, a word that starts one, or a name (an

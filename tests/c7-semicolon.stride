@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var a = 1; var b = 2;
+let f = function() -> number { a += 1; return a }
+print(f() + b); print(pad_right("7", 3, "0")); print(repeat("ab", 2))
+# rule 7.1 14.1
+# prints ["4", "700", "abab"]

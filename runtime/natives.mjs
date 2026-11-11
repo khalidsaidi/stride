@@ -179,6 +179,27 @@ export const NATIVES = {
   // Words split on runs of spaces and tabs (§14.1); nothing else separates them.
   word: { pure: true, takes: "t:t n:n", fn: (t, n) => { const i = position("word", n); const s = trimmed(text(t)); return s === "" ? null : s.split(/[ \t]+/)[i] ?? null; } },
   word_count: { pure: true, takes: "t:t", fn: (t) => { const s = trimmed(text(t)); return num(s === "" ? 0 : s.split(/[ \t]+/).length); } },
+  pad_right: {
+    pure: true,
+    takes: "t:t width:n padding:t",
+    fn: (t, width, padding) => {
+      const w = whole(width);
+      if (w === null || w < 0) throw new StrideFault("F009", `pad_right: the width is a whole number of 0 or more, and this is ${words(width)}`);
+      const p = padding === undefined ? [" "] : chars(text(padding));
+      if (p.length !== 1) throw new StrideFault("F009", "pad_right: the padding is exactly one character");
+      const s = chars(text(t));
+      return s.length >= w ? s.join("") : s.join("") + p[0].repeat(w - s.length);
+    },
+  },
+  repeat: {
+    pure: true,
+    takes: "t:t times:n",
+    fn: (t, times) => {
+      const n = whole(times);
+      if (n === null || n < 0) throw new StrideFault("F009", `repeat: the times is a whole number of 0 or more, and this is ${words(times)}`);
+      return text(t).repeat(n);
+    },
+  },
   pad_left: {
     pure: true,
     takes: "t:t width:n padding:t",
