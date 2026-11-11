@@ -233,10 +233,6 @@ export const CODES = {
     "when": "a name defined in a loop used after it",
     "explanation": "A loop's names are known only inside it; collect into a var declared before."
   },
-  "S204": {
-    "when": "a program's name in a parameter's default",
-    "explanation": "A parameter's default is worked out by the compiler, so it reads none of the program's names; pass the value."
-  },
   "S205": {
     "when": "a name defined twice",
     "explanation": "One name, one thing, in a function or program; rename one."
@@ -712,10 +708,6 @@ export const CODES = {
   "S392": {
     "when": "a required parameter after one with a default",
     "explanation": "Defaults come last."
-  },
-  "S393": {
-    "when": "a default the compiler cannot work out",
-    "explanation": "Defaults are made of known values."
   },
   "S394": {
     "when": "a conditional whose two values' types have no join",

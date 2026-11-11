@@ -25,7 +25,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // What a condition or a subject written out is (`if yes`, §11.3.3): never a call of a Stride function, whose
   // value the run gives.
   const know = (e, env) => (e?.kind === "call" && e.callee?.kind === "function" ? undefined : evaluate(e, env));
-  const bodies = [...functions.map((f) => ({ fn: f, body: f.node.body })), ...resolved.units.filter((r) => !r.unit.library).map((r) => ({ fn: null, body: r.main }))];
+  // A parameter's default worked out at the call (§9.2) is read as a statement at the head of its function.
+  const defaultsOf = (f) => (f.params ?? []).filter((p) => p.defaultExpr).map((p) => ({ kind: "call-statement", call: p.defaultExpr, span: p.defaultExpr.span, file: p.defaultExpr.file }));
+  const bodies = [...functions.map((f) => ({ fn: f, body: [...defaultsOf(f), ...f.node.body] })), ...resolved.units.filter((r) => !r.unit.library).map((r) => ({ fn: null, body: r.main }))];
 
   // ----- walking a body's statements and expressions
 

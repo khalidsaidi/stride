@@ -174,14 +174,14 @@ export function check(resolved, diagnostics) {
         continue;
       }
       optional = true;
-      const t = expr(d, { fn: null });
+      const t = expr(d, { fn: null, defaultOf: sym });
       // A default for a parameter of a type parameter is one more candidate at each call that leaves it out
       // (§9.5.1), checked there; any other default fits its parameter here.
       if (!T.hasTypevar(p.type) && !fitsAt(d, t, p.type)) err("S367", d, `${p.name} is ${T.describe(p.type)}, and its default is ${T.describe(t)}`);
       const v = evaluate(d);
       // Made of known values, and its working out faults: S413 at the operation, in the flow phase (§11.3.3, §11.3.5).
       if (v === undefined && faultIn(d)) p.fault = faultIn(d);
-      else if (v === undefined) err("S393", d, `a default is worked out by the compiler: words, numbers and constants`);
+      else if (v === undefined) p.defaultExpr = d; // worked out at each call that leaves it out (§9.2)
       else {
         // Placed as the parameter's type, as an argument is (§9.2, §3.7.2): words for a set become the set, a list
         // takes the parameter's most, a bare empty a list's (§3.7.3.1).
@@ -634,8 +634,9 @@ export function check(resolved, diagnostics) {
           return T.fn(sym.params.map((p) => p.type), sym.result);
         }
         // The program's own name, read in a function called before the line that defines it.
-        if (ctx.fn && sym.program && !sym.type) {
-          err("S202", e, `${sym.name} is read in ${ctx.fn.lambda ? "a function made" : `${ctx.fn.name}, which is called`} before the program defines ${sym.name}, on line ${sym.line ?? sym.node?.span?.line}`);
+        if ((ctx.fn || ctx.defaultOf) && sym.program && !sym.type) {
+          const f = ctx.fn ?? ctx.defaultOf;
+          err("S202", e, `${sym.name} is read in ${f.lambda ? "a function made" : `${f.name}, which is called`} before the program defines ${sym.name}, on line ${sym.line ?? sym.node?.span?.line}`);
           return T.ERROR;
         }
         return sym.type ?? T.ERROR;

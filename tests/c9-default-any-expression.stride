@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var rate = 2
+define twice(n: number) -> number {
+  return n * 2
+}
+define scaled(n: number, by: number = rate, extra: number = twice(rate)) -> number {
+  return n * by + extra
+}
+define wrapper() -> number {
+  return scaled(1)
+}
+print(scaled(10))
+rate = 5
+print(scaled(10))
+print(wrapper())
+print(scaled(10, 1, 0))
+# rule 9.2
+# prints ["24", "60", "15", "10"]

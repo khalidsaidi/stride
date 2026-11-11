@@ -96,8 +96,8 @@ define label(r: representative) -> text {
   return "{r.name} ({r.caf})"
 }
 
-define money(n: number, places: number = 2) -> text {  # a parameter may have a default, worked out by the
-  return grouped(n, places)                            # compiler; defaults come last (§9.2)
+define money(n: number, places: number = 2) -> text {  # a parameter may have a default, any expression,
+  return grouped(n, places)                            # worked out at the call; defaults come last (§9.2)
 }
 ```
 

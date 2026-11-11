@@ -140,7 +140,7 @@ export function resolve(loaded, diagnostics) {
     }
 
     const scope = new Scope(imports, "module");
-    const result = { unit, scope, functions: [], lambdas: [], natives: [], records: [], options: [], consts: [], main: [] };
+    const result = { unit, scope, functions: [], lambdas: [], defaults: [], natives: [], records: [], options: [], consts: [], main: [] };
     results.set(unit, result);
 
     // Declarations first, so they may be used anywhere in the file.
@@ -216,8 +216,9 @@ export function resolve(loaded, diagnostics) {
         param.type = resolveType(p.type, fnScope, unit, sym.kind === "native", true);
         // A default is worked out by the compiler: made of words, numbers and the file's constants (§9.2).
         if (p.default) {
-          // Seen from the function (a program's name is S204 here: a default is worked out by the compiler), with no parameter in sight.
-          resolveExpr(p.default, new Scope(scope, "function", sym), unit);
+          // Seen from the function, with no parameter in sight; resolved after the program's statements, whose
+          // names it may read (§9.2).
+          result.defaults.push([p.default, new Scope(scope, "function", sym)]);
           param.hasDefault = true;
         }
         p.symbol = param;
@@ -261,6 +262,7 @@ export function resolve(loaded, diagnostics) {
       result.main = statements;
       resolveBlock(statements, main, unit);
     }
+    for (const [d, s] of result.defaults) resolveExpr(d, s, unit);
     for (const sym of result.functions) resolveBlock(sym.node.body, sym.scope, unit);
     result.functions.push(...result.lambdas);
   }
@@ -710,8 +712,7 @@ export function resolve(loaded, diagnostics) {
       const outer = results.get(unit).mainScope.own(name);
       outer.program = true;
       return outer;
-    } else if (fn && mainNames(unit).has(name)) err("S204", unit.file, node.span, `${name} is not seen in ${fn.name}: a parameter's default is worked out by the compiler, and ${name} is the program's; pass ${name} to ${fn.name}`);
-    else err("S201", unit.file, node.span, `nothing called ${name} is defined here${didYouMean(name, scope.visible())}`);
+    } else err("S201", unit.file, node.span, `nothing called ${name} is defined here${didYouMean(name, scope.visible())}`);
     return null;
   }
 

@@ -668,7 +668,7 @@ export function lower(resolved, diagnostics, options = {}) {
         const params = sym.params ?? [];
         const bound = e.bound ?? e.args;
         // Every argument bound to its parameter (defaults filled in, §9.4.1), each placed as its parameter's type.
-        const args = bound.map((a, i) => (a.kind === "default-of" ? IR.constant(a.param.defaultValue ?? null) : placeAs(expr(a, ctx), e.placedAs?.[i] ?? params[i]?.type, a.type, a)));
+        const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), e.placedAs?.[i] ?? params[i]?.type, a.param.defaultExpr.type, a.param.defaultExpr) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), e.placedAs?.[i] ?? params[i]?.type, a.type, a)));
         // Arguments are worked out as written, left to right, whatever parameters they bind (§9.4.1).
         const written = (x) => e.args.findIndex((a) => a === x || a.value === x);
         const order = bound.map((_, i) => i).sort((i, j) => (written(bound[i]) < 0 ? Infinity : written(bound[i])) - (written(bound[j]) < 0 ? Infinity : written(bound[j])));

@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(d: date = today()) -> date {
-  return d
-}
-fill "A" = f()
-# rule S393 16.4 9.2
-# mistake 3 S393

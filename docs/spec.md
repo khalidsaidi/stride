@@ -645,8 +645,9 @@ its top level (an answer, a let, a var), with the value each has when the functi
 program's var a new value, as the program itself does; a name defined inside a loop is known only there (§12.2). A function used before the line
 that defines a name it reads is S202.
 
-9.2. **Parameters** with a default `name: type = e`: e worked out by the compiler (S393), of the parameter's type;
-a required parameter after one with a default is S392.
+9.2. **Parameters** with a default `name: type = e`: e is any expression of the parameter's type, made of what
+the file declares and the program's top-level names (not the other parameters), and worked out at each call
+that leaves the argument out; a required parameter after one with a default is S392.
 
 9.3. A parameter's `list of T` without `most` takes a list of any most.
 
@@ -741,7 +742,7 @@ F016, and anything else goes in as it is.
 11.1. The compiler works out, before the program runs: a constant's value (§5.3), a parameter's default (§9.2), a
 list type's most, an option's printed words and the words after `faults`. Such a value is made of words, numbers,
 dates, `yes`, `no`, `empty`, other constants, lists of them, an item of a constant list, and pure natives of
-them. One that is not is S304 (a constant), S393 (a default), S212 (a most) or S412 (an option's words, the
+them. One that is not is S304 (a constant), S212 (a most) or S412 (an option's words, the
 words after `faults`).
 
 11.2. **Everything else is worked out as the program runs.** A box's name and a button's, a question's printed
@@ -1119,7 +1120,6 @@ its call: the function's name in the call.
 | S201 | a name not defined | The message gives the nearest name visible here. |
 | S202 | a name used before the line that defines it | Statements run in order; move the use after the definition. |
 | S203 | a name defined in a loop used after it | A loop's names are known only inside it; collect into a var declared before. |
-| S204 | a program's name in a parameter's default | A parameter's default is worked out by the compiler, so it reads none of the program's names; pass the value. |
 | S205 | a name defined twice | One name, one thing, in a function or program; rename one. |
 | S206 | a local name hiding its file's declaration | Rename the local. |
 | S207 | two declarations of one name | Rename one; the note shows the other. |
@@ -1239,7 +1239,6 @@ its call: the function's name in the call.
 | S389 | a parameter given twice | Once, positionally or by name. |
 | S390 | a positional argument after a named one | Positional first. |
 | S392 | a required parameter after one with a default | Defaults come last. |
-| S393 | a default the compiler cannot work out | Defaults are made of known values. |
 | S394 | a conditional whose two values' types have no join | `if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none. |
 | S396 | a slice bound that is not a number | `l[a..b]`, numbers. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
