@@ -4,7 +4,7 @@ ask o: one-of "O" {
   option "a" "Apple"
 }
 tick "C" when o == "a"
-# rule 10.6 S517 S518
+# rule 10.3
 # A header that lists no words beside a box says nothing of them: neither the question's words nor the option's
 # are checked there.
 # box C check

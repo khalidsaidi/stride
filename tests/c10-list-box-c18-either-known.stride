@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-options st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
-ask o: one-of st "State"
-fill "State" = either(o, "TX")
-# mistake 5:16 S514
-# rule 10.3 S514
-# box State choice:NY,CA near State New York California Texas

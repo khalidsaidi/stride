@@ -5,4 +5,4 @@ ask o: one-of k "Kind"
 ask b: yes-no "Joint"
 if o == "a" { tick "J" when b }
 # box J check near Joint
-# rule 10.6 S518 S517
+# rule 10.3

@@ -781,10 +781,6 @@ export const CODES = {
     "when": "a skip of a box the PDF lacks",
     "explanation": "The message gives the nearest."
   },
-  "S507": {
-    "when": "a question asked twice on one path",
-    "explanation": "The notes show where."
-  },
   "S508": {
     "when": "a box the PDF lacks",
     "explanation": "The message gives the nearest."
@@ -800,14 +796,6 @@ export const CODES = {
   "S514": {
     "when": "a list box entry it lacks",
     "explanation": "The list box's entries."
-  },
-  "S517": {
-    "when": "printed words not beside the boxes of their answer",
-    "explanation": "The question's words are the form's own: they must be among the words the header lists beside a box the answer goes into. If the form does print them there, add them to that box's `near` in the header; if not, the answer is going into the wrong box."
-  },
-  "S518": {
-    "when": "an option's printed words not beside its box",
-    "explanation": "The same, for an option and the box it ticks or picks."
   },
   "S601": {
     "when": "more than 255 arguments or parameters",
@@ -844,10 +832,6 @@ export const CODES = {
   "W007": {
     "when": "a let or var never used",
     "explanation": "Warning: Remove it."
-  },
-  "W008": {
-    "when": "a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1)",
-    "explanation": "Warning: The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`."
   },
   "W009": {
     "when": "a box neither written nor skipped",

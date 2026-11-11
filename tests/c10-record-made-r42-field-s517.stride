@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text }
-var p: person
-ask p.name: text "Spouse"
-fill "X" = p.name
-# rule 10.6 S517
-# box X text near Name of the taxpayer
-# mistake 5:18 S517

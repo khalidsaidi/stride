@@ -575,6 +575,8 @@ export function fuzzOne(seed) {
   for (let round = 0; round < 4; round++) {
     const results = {};
     try {
+      // The boxes these answers reach are the form's for this run (a name worked out as the program runs).
+      build = compile(source, "fuzz.stride", { header: autoHeader(source, "fuzz.stride", {}, [answers]) });
       for (const [mode, b] of [["vm", build], ["ir", build]]) {
         if (mode.startsWith("vm")) {
           const p = load(b.bytecode);

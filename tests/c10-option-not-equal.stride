@@ -5,5 +5,5 @@ ask o: one-of "Kind" {
   option "b" "Banana"
 }
 tick "C" when o != "b"
-# rule 10.6 S518
+# rule 10.3
 # box C check near Kind Apple

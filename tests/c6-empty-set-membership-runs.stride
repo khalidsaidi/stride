@@ -6,7 +6,7 @@ ask s: any-of "S" {
 }
 print("a" in s)
 print("a" not in s)
-# rule 10.4.1 6.8
+# rule 6.8
 # run empty
 # answers {"s": []}
 # prints ["no", "yes"]

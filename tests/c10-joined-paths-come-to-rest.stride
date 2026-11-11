@@ -49,7 +49,7 @@ for each n, row in sorted(rows5, by: "amount") {
   fill "R5_{n}" = row.label
   print(row.amount)
 }
-# rule 10.4.0 15.1
+# rule 15.1
 # box R1_1 text near Label Amount
 # box R1_2 text near Label Amount
 # box R1_3 text near Label Amount

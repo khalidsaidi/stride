@@ -372,7 +372,7 @@ pad_left(t: text, width: number, padding: text = " ") -> text    14.1 Words
 ## 11. Mistakes and faults
 
 A **mistake** is found by the compiler, before anything runs: it has a code, the place, and labels on the related
-code; `stride explain W008` says what the code means and what to do. `--json` gives them all in the command's one JSON document (§16.2).
+code; `stride explain W009` says what the code means and what to do. `--json` gives them all in the command's one JSON document (§16.2).
 
 ```stride form mistake=S508
 form consent

@@ -9,4 +9,4 @@ for each n, x in l {
 }
 # answers {"l[1]": "a", "l[1]#another": "yes", "l[2]": "b", "l[2]#another": "yes", "l[3]": "c"}
 # boxes {"B1": "A", "B2": "B", "B3": "C"}
-# rule 8.5 8.6.2 7.11 10.7
+# rule 8.5 8.6.2 7.11

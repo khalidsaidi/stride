@@ -5,4 +5,4 @@ ask o: one-of k "Kind"
 match o { "a" => { pick "R" "1" when yes } "b" => { pick "R" "2" when yes } }
 # box R radio:1 near Kind Alpha
 # box R radio:2 near Kind Beta
-# rule 10.6 S518
+# rule 10.3

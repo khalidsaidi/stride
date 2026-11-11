@@ -33,6 +33,6 @@ if x14 {
   pick "R" "A" when c
   pick "R" "B" when not c
 }
-# rule 15.1 10.4.1 10.4.2
+# rule 15.1
 # box R radio:A near P1 C
 # box R radio:B near P1 C

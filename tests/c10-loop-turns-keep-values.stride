@@ -6,7 +6,7 @@ for i in 1..n {
   x = "CA"
 }
 fill "ST" = x
-# rule 10.4.0 10.3
+# rule 10.3
 # box ST choice:CA,NY near N
 # run three
 # answers {"n": 3}

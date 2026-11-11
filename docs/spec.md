@@ -766,93 +766,29 @@ items, or changing each, is a comprehension (`[upper(x) for each x in names if x
 records is `sorted(l, by: "field")` (§14.4); anything else is a function that takes the list and loops over it.
 So every call the program can make is written in it, and the compiler follows each one (§10, §11).
 
-## 10. Boxes and the PDF check
+## 10. Boxes
 
 10.1. A box's name is the PDF field's full name, after the program's `fields` prefix.
 
-10.2. The program is checked against the form's header: the PDF's boxes and, for the boxes it lists them for, the
-words printed beside each. The header is input: the check takes what it says and works nothing out about the form.
-The header's PDF and form must be the program's (S501, S502).
+10.2. The form's header lists the PDF's boxes: each one's name, its kind, a check box's or a radio button's export
+value, a list box's entries. The header is input: the compiler takes what it says and works nothing out about the
+form. The header's PDF and form must be the program's (S501, S502).
 
-10.3. Every box written exists (S508, with the nearest name), and is written by the statement of its kind: `fill`
-a text or list box, `tick` a check box, `pick` a radio group (S509); a button the group has (S511); a list box's
-entry it has (S514). A choice box accepts empty, or one of its entries. Words the PDF check can work
-out for a path and that are not an entry are S514: a one-of answer is tried for every option still allowed on the
-path, and for empty, and expressions made from it are worked out for each. Words it cannot work out beforehand
-(made from words a person types, or from a date) are not a mistake: they go into the box as they are. Stride is
-no stricter than the form. A value chosen by `if … then … else` is proved arm by arm: each arm's words are those its condition
-allows, for an answer of any type, as a branch's condition restricts the code it guards (`fill "L" = if n > 5 then
-"high" else "low"` puts "high" or "low", never both). A set placed straight in a choice box is S308; words made
-from a set (`join(s, ", ")`) are proved like any others, each set its options allow. A question's `check`
-does not restrict its possible words: a failed check does not stop the run. Empty clears the box and is always
-allowed.
+10.3. **What the compiler looks up.** A box's name written out in the program is looked up in the header, as a
+name is looked up among the declarations: it is one of the form's boxes (S508; S503 for a `skip`; with the nearest
+name), and it is written by the statement of its kind: `fill` a text or list box, `tick` a check box, `pick` a
+radio group (S509); a button written out is one the group has (S511); words written out for a list box are one of
+its entries (S514). That is all: the compiler follows no path and proves nothing about what a program does with
+its boxes.
 
-10.4. Following every path through the program with every answer unknown: a question is asked at most once on
-each path (S507); a box written twice on one path is a warning (W008), and the later write is the one that
-stays. **Stride is no stricter than the form**: a form lets a person leave a box empty or write over it, so
-these are warnings, and the program compiles.
-- 10.4.0. **Which paths.** The PDF check tracks current var values and uses pure-call results it can determine
-  independently of answers and impure operations. A determined condition follows its selected branch; an
-  undetermined condition follows both. These additional facts do not make values known under §11.1.
-  Impure calls, including today, remain unknown. Paths may be combined only while preserving the information
-  required by the remaining checks. This includes live values' types, carried list limits (§3.7), answer
-  dependencies and predicate meanings. Each earlier write, ask, skip and pick retains the conditions under which it
-  occurred. Values irrelevant to all remaining checks may be discarded. Ordinary `==` is not the test: it leaves a
-  list's most out (§6.6). The conditions of two combined paths become the one path's or the other's. A determined
-  value is never forgotten to save work: when the check would keep more paths apart than §15.1 allows, it stops with
-  S602.
-  An undetermined turn count does not itself erase determined values. Assignments update the state normally, and
-  values proved invariant across possible iterations remain determined. Include zero turns when possible. If the
-  required analysis exceeds its budget, compilation stops with S602. So `var x = "CA"` followed by `for i in 1..n
-  { x = "CA" }` still leaves x as "CA" whenever execution reaches the following statement; a var a turn may give
-  another value (`x = "NY"`), and the loop's counter, are undetermined from the turn where they may differ.
-- 10.4.1. **What counts as a write on a path.** `fill` and `tick` always write their box; `pick` writes only when
-  its condition is yes — a condition known to be no selects nothing, and one that depends on an answer is followed
-  both ways, the path that takes it as yes knowing the answer that makes it so (`c`, `not c`, `o == "a"`). So
-  picks whose conditions exclude each other, as `pick "K" "A" when o == "a"` and `pick "K" "B" when o == "b"`, are
-  allowed.
-  **What the check can prove.** Two conditions are proved to exclude each other only through these forms: an
-  answer compared with a known value (`==`, `!=`, `<`, `<=`, `>`, `>=`); an answer's empty test (`== empty`, `is
-  empty`); an answer's membership in a known list or set (`in`, `not in`); a known option's membership in an any-of
-  answer (`"a" in s`, `"a" not in s`), the two opposites, each option's independent of every other's (`"a" in s`
-  and `"b" in s` may both be yes); when s is empty, `"a" in s` is no and `"a" not in s` is yes; a yes-no answer itself; and
-  `and`, `or` and `not` of these, with their facts kept through lets and through the branches (`if`, `match`) a
-  path has taken. Every other condition is an unknown of its own, which may be yes or no whatever the others are.
-  The same expression written twice is one unknown only when it is deterministic (no impure call: not `today`,
-  not a call with effects) and nothing it reads has changed between the two; separate impure calls are never
-  taken to give the same value. The search over the unknowns is complete: there is no size past which a possible
-  double selection is accepted.
-- 10.4.2. **Radio groups.** Selection is per group: two picks that write one radio group on one execution are W008,
-  whatever their buttons. W008 for two picks means a double selection is possible, or that the check could not
-  prove the picks exclude each other by §10.4.1; it does not claim a run that picks twice was found. A choice the
-  check cannot read is written so it can: each pick in its own branch of one `if … else` or `match`. Coverage (§10.5) is per button: each button is covered by a reachable `pick` of it, or by
-  a `skip` of its group. A reachable `pick` covers its button whatever its condition: `pick "K" "A" when no`
-  selects nothing and covers A, and is not W009. A `pick` in code that never runs (§11.3.3) covers nothing.
-- 10.4.3. **Write and skip.** A box (a radio group as one) written and skipped on one path is W008, at the later of
-  the two; paths that exclude each other may write it on one and skip it on another. A box skipped again is
-  harmless.
+10.4. **Stride is no stricter than the form.** A form lets a person leave a box empty, or write over one. A
+program may write a box more than once: the later write is the one that stays. A name, a button or words worked
+out as the program runs are not looked up beforehand (§11.2): a box the form does not have stops the run with
+F016, and anything else goes in as it is.
 
-10.5. A box of the PDF that the program neither writes nor skips anywhere is a warning (W009, W010): the form
-lets it stay empty, and the warning says which boxes the program has not got to. `skip` says a box is left
-empty on purpose.
-
-10.6. A question's printed words are the form's own. Which printed words stand beside a box is not in a PDF: the
-header lists them (a box's `near`) when whoever prepared it gave them. Where it does, a question's printed words
-are printed beside at least one of the boxes its answer goes into, within one normalised string of the words near
-that box; when none matches, it is S517. An option's printed words are beside the box its own button ticks or picks
-(S518). Boxes the header lists no words for are not checked: of them the program's word is taken. "Printed beside" is decided on normalised words, for both: each
-text is lowercased; `‐ ‑ ‒ – — ― −` become `-`, `“ ” « »` become `"`, and `‘ ’` become `'`; every run of
-characters other than Unicode letters, numbers and `( ) ' " $ % / & -` becomes one space; the ends are trimmed.
-The normalised printed words must occur within one normalised string of the words near the box. So `A-B` does not
-match `A B`.
-An answer goes into a box when it is in the value of the box's `fill`, or in the condition of its `tick` or
-`pick`, through lets too; and, for a `tick` or `pick` whose own condition is yes on its path, in the conditions of
-the branches (`if`, `match`) taken to reach it: `if y { tick "T" when yes }` sends y into T as `tick "T" when y`
-does. An option's button is found the same way: `match o { "a" => { tick "A" when yes } }`, `if o == "a" { … }`
-and `let isa = o == "a"` with `tick "A" when isa` each make A option a's box. S517 asks for at least one of an
-answer's boxes, as above.
-
-10.7. Box names, button names, question keys and printed words are worked out as the program runs (§11.2).
+10.5. A box of the PDF that the program names nowhere is a warning (W009, W010), said when every name the program
+writes is written out: the form lets it stay empty, and the warning says which boxes the program has not got to.
+`skip "box" because "reason"` names a box left empty on purpose.
 
 ## 11. Known before the form opens
 
@@ -1396,13 +1332,10 @@ its call: the function's name in the call.
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
 | S503 | a skip of a box the PDF lacks | The message gives the nearest. |
-| S507 | a question asked twice on one path | The notes show where. |
 | S508 | a box the PDF lacks | The message gives the nearest. |
 | S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group. |
 | S511 | a radio button the group lacks | The message lists its buttons. |
 | S514 | a list box entry it lacks | The list box's entries. |
-| S517 | printed words not beside the boxes of their answer | The question's words are the form's own: they must be among the words the header lists beside a box the answer goes into. If the form does print them there, add them to that box's `near` in the header; if not, the answer is going into the wrong box. |
-| S518 | an option's printed words not beside its box | The same, for an option and the box it ticks or picks. |
 | S601 | more than 255 arguments or parameters | Use a record. |
 | S602 | compiler analysis limit exceeded (§15.1) | The message names the check and the budget. Split the work: fewer turns, fewer vars that differ between paths, a smaller working out. |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
@@ -1412,7 +1345,6 @@ its call: the function's name in the call.
 | W005 | a field asked and never read | Warning: Use it, or do not ask it. |
 | W006 | a collected item asked and never read | Warning: The same. |
 | W007 | a let or var never used | Warning: Remove it. |
-| W008 | a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1) | Warning: The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`. |
 | W009 | a box neither written nor skipped | Warning: Write it, or `skip "box" because "…"`. |
 | W010 | more such boxes | Warning: Counted after the first 40. |
 | F001–F020 | §13.4 | |

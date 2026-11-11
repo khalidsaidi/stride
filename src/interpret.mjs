@@ -25,7 +25,7 @@ const fieldMosts = (decl) => decl.fields.map((f) => (f.type?.t === "list" && Num
 // library and each turn of a loop (`stride run --trace`, §17.7): { kind: "call", fn, args } | { kind: "line", fn,
 // node, locals } | { kind: "return", fn, value } | { kind: "native", name, args, value } | { kind: "turn", fn,
 // node, locals } | { kind: "print", text }: a line the run prints, as it prints it.
-export function interpret(program, fn, args = [], { answers = {}, boxes = new Map(), limit = 2_000_000, depth = DEPTH, watch = null } = {}) {
+export function interpret(program, fn, args = [], { answers = {}, boxes = new Map(), limit = 2_000_000, depth = DEPTH, watch = null, onWrite = null } = {}) {
   const steps = [];
   const writes = new Map();
   const prints = [];
@@ -248,12 +248,14 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
       case "fill": {
         const name = words(expr(s.box, locals));
         const w = words(expr(s.value, locals));
+        onWrite?.(program.prefix + name, "fill", null);
         writes.set(boxAt(name), w);
         return;
       }
       case "tick": {
         const name = words(expr(s.box, locals));
         const on = truthy(expr(s.cond, locals));
+        onWrite?.(program.prefix + name, "tick", null);
         const box = boxAt(name);
         writes.set(box, on ? boxes.get(box)?.on ?? "Yes" : "Off");
         return;
@@ -262,6 +264,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         const name = words(expr(s.box, locals));
         const button = words(expr(s.button, locals));
         const cond = truthy(expr(s.cond, locals));
+        onWrite?.(program.prefix + name, "pick", button);
         const box = boxAt(name);
         if (cond) writes.set(box, button);
         return;
@@ -385,11 +388,11 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
 
 // Runs a whole program on answers: what the machine's run gives, from the intermediate form. A fault is given
 // back, as the machine gives it, not thrown; nothing the run wrote counts.
-export function interpretProgram(program, answers, boxes, { today = null, limit = 2_000_000, watch = null } = {}) {
+export function interpretProgram(program, answers, boxes, { today = null, limit = 2_000_000, watch = null, onWrite = null } = {}) {
   setToday(today);
   const collected = { steps: [], prints: [] };
   try {
-    const r = interpret(program, program.main, [], { answers, boxes, limit, watch });
+    const r = interpret(program, program.main, [], { answers, boxes, limit, watch, onWrite });
     return { ...r, fault: null };
   } catch (e) {
     if (e instanceof StrideFault) {

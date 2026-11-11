@@ -7,7 +7,7 @@
 //   5 flow       flow.mjs      what depends on order: recursion, effects, what is known before the form opens,
 //                              vars read before they have a value, returns, unused answers
 //   6 lower      lower.mjs     the intermediate form: functions of basic blocks
-//   7 pdf        pdf.mjs       the program against its PDF's header
+//   7 form       form.mjs      the boxes the program names, looked up in the form's header
 //   8 generate   codegen.mjs   the bytecode, read back by the machine's own loader before it is given out
 //
 // The program is compiled as it is written: there is no optimiser, so a program has one compiled form.
@@ -23,7 +23,7 @@ import { resolve } from "./resolve.mjs";
 import { check } from "./check.mjs";
 import { flow } from "./flow.mjs";
 import { lower } from "./lower.mjs";
-import { checkPdf } from "./pdf.mjs";
+import { checkForm } from "./form.mjs";
 import { generate } from "./codegen.mjs";
 import { load as loadBytecode } from "../runtime/vm.mjs";
 import { fileURLToPath } from "node:url";
@@ -97,7 +97,7 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
   let pdf = null;
   // A script has no form either (§4.6): its header is empty, whatever file is beside it.
   if (header || program.test || program.script) {
-    pdf = checkPdf(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics);
+    pdf = checkForm(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics, { open: !program.test && !program.script && header.open === true });
     out.questions = pdf.questions;
     out.boxes = pdf.boxes;
     out.written = pdf.written ?? new Set(pdf.boxes.keys());

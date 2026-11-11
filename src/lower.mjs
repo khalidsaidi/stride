@@ -11,8 +11,7 @@
 //     answers (representatives[2].name);
 //   - a box's name, a button's and a question's printed words are expressions like any other ("Name{n}").
 //
-// The PDF check (pdf.mjs) then follows every path through the lowered program, with what is known before the form
-// opens worked out as it goes, and proves each box name names a box and each box is written once on any path.
+// The names written out are then looked up in the form's header (form.mjs).
 //
 // Two values every function with effects is given besides its parameters: the key of the call it is in (the
 // prefix of its questions' keys) and the turns of the loops it was called in (their suffix).

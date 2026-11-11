@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask k: one-of "Kind" {
-  option "ind" "Business"
-}
-pick "Kind" "ind" when k == "ind"
-# rule 10.6 S518
-# box Kind radio:ind near Kind Individual
-# mistake 4 S518

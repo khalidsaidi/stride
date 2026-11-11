@@ -11,7 +11,7 @@ if not a {
   fill "X" = "2"
 }
 print(t)
-# rule 10.4.0 10.4.3
+# rule 10.3
 # box X text near A
 # run yes
 # answers {"a": "yes"}

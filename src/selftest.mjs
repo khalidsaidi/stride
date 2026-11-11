@@ -44,7 +44,6 @@ import { compile } from "./compile.mjs";
 import { load, run, boxValues } from "../runtime/vm.mjs";
 import { interpretProgram } from "./interpret.mjs";
 import { parseDigits, expectResults } from "./test.mjs";
-import { checkPdf } from "./pdf.mjs";
 import { Diagnostics, SourceFile } from "./source.mjs";
 import { parse } from "./parse.mjs";
 import { format, comments } from "./format.mjs";
@@ -163,22 +162,38 @@ export function expectations(text) {
   return out;
 }
 
-// A header made from the program itself: every box it writes (found by the PDF check's analysis, run with no
-// header), each with every question's printed words beside it.
-export function autoHeader(source, name, options = {}) {
-  const first = compile(source, name, { dir: TESTS, until: "lower", ...options });
+// A header made from the program itself, for a test that lists no boxes: every box it names written out, and every
+// box it writes on the answers given (a name worked out as it runs), each of the kind its statement writes.
+export function autoHeader(source, name, options = {}, runs = [{}]) {
+  const first = compile(source, name, { dir: TESTS, header: { form: null, pdf: PDF, boxes: [], open: true }, ...options });
   if (!first.program) return { form: "test", pdf: PDF, boxes: [] };
-  let found;
-  try {
-    found = checkPdf(first.program, { form: null, pdf: first.program.pdf, boxes: [] }, new Diagnostics(), { discover: true });
-  } catch (e) {
-    if (e instanceof AnalysisLimit) return { form: null, pdf: first.program.pdf, boxes: [] }; // the compile reports it: S602
-    throw e;
+  const found = new Map(); // full name (and a radio's button) -> a header's box
+  const skipped = []; // boxes only skipped: a text box each, unless something writes them
+  const add = (field, kind, button) => {
+    if (kind === "pick") found.set(`${field}\t${button}`, { field, kind: "radio", on: button, page: 1 });
+    else if (!found.has(field)) found.set(field, kind === "tick" ? { field, kind: "check", on: "Yes", page: 1 } : { field, kind: "text", page: 1 });
+  };
+  for (const fn of first.program.functions) {
+    for (const b of fn.blocks) {
+      for (const s of b.stmts) {
+        if (!["fill", "tick", "pick", "skip"].includes(s.op) || !IR.isConst(s.box)) continue;
+        if (s.op === "skip") skipped.push(first.program.prefix + textOf(s.box.v));
+        else if (s.op !== "pick") add(first.program.prefix + textOf(s.box.v), s.op, null);
+        else if (IR.isConst(s.button)) add(first.program.prefix + textOf(s.box.v), "pick", textOf(s.button.v));
+      }
+    }
   }
-  const printed = [];
-  for (const fn of first.program.functions) for (const b of fn.blocks) for (const s of b.stmts) if (s.op === "ask") printed.push(...(IR.isConst(s.printed) ? [String(s.printed.v)] : []), ...s.q.options.map((o) => o.printed));
-  for (const k of found.keys.values()) printed.push(k.printed);
-  return { form: first.program.form, pdf: first.program.pdf, boxes: found.discovered.map((b) => ({ ...b, page: 1, near: printed })) };
+  if (first.diagnostics.empty && !first.program.test && !first.program.script) {
+    for (const answers of runs) {
+      try {
+        interpretProgram(first.program, answers, new Map(), { onWrite: add });
+      } catch {
+        // What it reached is what is known of it.
+      }
+    }
+  }
+  for (const field of skipped) if (![...found.values()].some((b) => b.field === field)) found.set(field, { field, kind: "text", page: 1 });
+  return { form: first.program.form, pdf: first.program.pdf, boxes: [...found.values()] };
 }
 
 // One run in one mode, as the comparisons see it.
@@ -290,7 +305,7 @@ export function runOne(path) {
   const want = expectations(text);
   const problems = [];
   if (!want.rules.length) problems.push("the test names no rule (# rule 6.4.1)");
-  const header = want.header.length ? { form: null, pdf: (text.match(/^\s*pdf\s+([0-9a-f]{64})/m) ?? [])[1] ?? PDF, boxes: want.header } : autoHeader(bytes, name);
+  const header = want.header.length ? { form: null, pdf: (text.match(/^\s*pdf\s+([0-9a-f]{64})/m) ?? [])[1] ?? PDF, boxes: want.header } : autoHeader(bytes, name, {}, want.runs.map((r) => r.answers ?? {}));
   if (want.headerPdf) header.pdf = want.headerPdf;
   if (want.headerForm) header.form = want.headerForm;
   const std = want.std ? { stdPath: join(TESTS, "lib", want.std) } : {};

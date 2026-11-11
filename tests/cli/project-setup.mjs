@@ -1,4 +1,4 @@
-// rule 17.6 4.6 17.4 10.6
+// rule 17.6 4.6 17.4
 // `stride new` without a PDF makes a script and a test of it that pass; with a PDF it makes the form's header, a
 // program that compiles against it and a test that passes; nothing is written over. `stride header` reads a PDF's
 // boxes and the words beside them; a file that is not a PDF is said so. `stride map` says which box each question's

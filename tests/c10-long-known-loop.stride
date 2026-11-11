@@ -4,5 +4,5 @@ for i in 1..1100 {
   fill "a{i}" = "x"
 }
 print("done")
-# rule 10.4 10.7 11.1
+# rule 10.4 11.1
 # prints ["done"]

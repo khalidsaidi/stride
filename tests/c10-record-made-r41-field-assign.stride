@@ -5,7 +5,7 @@ ask n: number "Age"
 var p: person
 p.age = n
 pick "K" "A" when p.age > 5
-# rule 10.4.0 19.3
+# rule 19.3
 # box K radio:A near Age
 # answers {"n": 7}
 # boxes {"K": "A"}
