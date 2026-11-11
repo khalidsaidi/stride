@@ -45,11 +45,10 @@ export class Block {
 }
 
 export class Fn {
-  constructor(name, { source = null, result = null, pure = false } = {}) {
+  constructor(name, { source = null, result = null } = {}) {
     this.name = name; // as shown: main, upper_line, representative(2)
     this.source = source; // the function symbol, or null for main
     this.result = result;
-    this.pure = pure;
     this.params = []; // Locals
     this.locals = []; // Locals, parameters first
     this.blocks = [];
@@ -275,7 +274,7 @@ export function showStatement(s) {
 }
 
 export function showFunction(fn) {
-  const out = [`function ${fn.name}(${fn.params.map((p) => `%${p.name}`).join(", ")})${fn.pure ? " pure" : ""}`];
+  const out = [`function ${fn.name}(${fn.params.map((p) => `%${p.name}`).join(", ")})`];
   for (const b of fn.order()) {
     out.push(`  b${b.id}:${b.loopHead ? "  (loop)" : ""}`);
     for (const s of b.stmts) out.push(`    ${showStatement(s)}`);

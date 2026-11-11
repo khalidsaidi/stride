@@ -3,7 +3,7 @@
 // mistakes it states or fills the boxes it states, in both engines; with no name, every rule of the specification
 // must have a test that passes, and `stride explain`'s words must be the specification's.
 import { readFileSync } from "node:fs";
-import { selftest, coverage, testNames } from "../src/selftest.mjs";
+import { selftest, coverage, testNames } from "../tests/support/selftest.mjs";
 import { CODES, LIBRARY } from "../src/codes.mjs";
 import { codesOf, libraryOf, SPEC_PATH } from "../src/gen-codes.mjs";
 

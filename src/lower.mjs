@@ -18,7 +18,7 @@
 import * as V from "../runtime/values.mjs";
 import { KIND } from "./source.mjs";
 import { evaluate } from "./constant.mjs";
-import { textOf, NATIVES } from "../runtime/natives.mjs";
+import { textOf } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
 export function lower(resolved, diagnostics, options = {}) {
@@ -91,7 +91,7 @@ export function lower(resolved, diagnostics, options = {}) {
   // Each function once. One with effects takes the key prefix and the loop turns of its call first.
   function functionOf(sym) {
     if (functions.has(sym)) return functions.get(sym);
-    const fn = new IR.Fn(sym.name, { source: sym, result: sym.result, pure: !sym.impure });
+    const fn = new IR.Fn(sym.name, { source: sym, result: sym.result });
     fn.keyed = !!sym.effects; // it takes the key of its call and the turns around it (§8.6.2)
     fn.keyName = keyName(sym);
     functions.set(sym, fn);
@@ -111,7 +111,7 @@ export function lower(resolved, diagnostics, options = {}) {
   // One of the standard library's functions as a value (§9.10): a function that calls it with what it is given.
   function nativeOf(sym) {
     if (functions.has(sym)) return functions.get(sym);
-    const fn = new IR.Fn(sym.name, { result: sym.result, pure: !!NATIVES[sym.name]?.pure });
+    const fn = new IR.Fn(sym.name, { result: sym.result });
     fn.keyName = sym.name;
     functions.set(sym, fn);
     program.functions.push(fn);

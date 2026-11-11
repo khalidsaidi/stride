@@ -9,9 +9,9 @@
 // declared and every answer and let read. Expressions are made by type, to a depth, from what is in scope.
 //
 // A run the machine exhausts (F014, F015) is not compared (§19.1.1).
-import { compile } from "./compile.mjs";
-import { load, run, boxValues } from "../runtime/vm.mjs";
-import { interpretProgram } from "./interpret.mjs";
+import { compile } from "../../src/compile.mjs";
+import { load, run, boxValues } from "../../runtime/vm.mjs";
+import { interpretProgram } from "../../src/interpret.mjs";
 import { autoHeader } from "./selftest.mjs";
 
 const PDF = "0".repeat(64);

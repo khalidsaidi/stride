@@ -675,8 +675,7 @@ is worked out) gives no value: its call is a statement, and used as a value it i
 9.8. `r.f(args)` is `f(r, args)`. A library kept under a name lends its functions to such calls; two such
 libraries with the same function is S113.
 
-9.9. A function that asks, writes boxes, collects, calls an impure native (`today`, `print`, `fail`), or calls a
-function that does, has effects; else it is pure. A call runs exactly as often as the program says: a
+9.9. A call runs exactly as often as the program says, and when it says: a
 function wrapping `today()` gives the run's date at each run, not the date it was compiled.
 
 9.10. **Functions as values.** A function's name where a value goes is the function itself: it may be given to a

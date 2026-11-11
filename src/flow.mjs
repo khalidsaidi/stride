@@ -10,7 +10,6 @@
 // named by turn).
 import { KIND, nameSpan } from "./source.mjs";
 import { describeExpr } from "./check.mjs";
-import { NATIVES } from "../runtime/natives.mjs";
 import { evaluate } from "./constant.mjs";
 import * as V from "../runtime/values.mjs";
 
@@ -156,26 +155,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         if (e.kind !== "comprehension") continue;
         const effect = [e.value, e.condition].flatMap((x) => [...subexpressions(x)]).find((x) => x.kind === "call" && x.callee?.effects);
         if (effect) err("S398", effect, `a comprehension makes a value, and ${effect.callee.name} asks, writes boxes or collects; use for each`);
-      }
-    }
-  }
-
-  // Purity (§9.9): a function that has effects, calls an impure native (today, print, fail), or calls a function that
-  // is impure, is impure; only a pure one is worked out before the form opens.
-  const nativeCallsIn = (body) => {
-    const out = [];
-    for (const st of statements(body)) for (const e of expressionsOf(st)) if (e.kind === "call" && e.callee?.kind === "native") out.push(e);
-    return out;
-  };
-  const impureNative = (c) => !NATIVES[c.callee.name]?.pure;
-  for (const f of functions) f.impure = f.effects || nativeCallsIn(f.node.body).some(impureNative);
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (const f of functions) {
-      if (f.impure) continue;
-      if ((calls.get(f) ?? []).some((c) => c.callee.impure)) {
-        f.impure = true;
-        changed = true;
       }
     }
   }

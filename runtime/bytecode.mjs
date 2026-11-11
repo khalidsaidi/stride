@@ -9,7 +9,7 @@
 //    5 records    each record type: its name and its fields' names
 //    6 questions  each question as written: its name, type, option set, options, flags, line, file
 //    7 natives    the natives the code calls: name and how many values each takes
-//    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, pure
+//    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, whether it takes its call's key
 //    9 code       the instructions
 //   10 places     the place (file, line, column) of every instruction that can fault or ask
 //   11 links      for each question whose key is written out, the boxes its answer goes into
@@ -301,7 +301,7 @@ export function load(input) {
         p.natives = list(() => ({ name: t(s), params: s.varint() }));
         break;
       case SECTION.FUNCTIONS:
-        p.functions = list(() => ({ name: t(s), file: t(s), params: s.varint(), localNames: list(() => t(s)), start: s.varint(), end: s.varint(), flags: s.u8() })).map((f) => ({ ...f, pure: !!(f.flags & 1), keyed: !!(f.flags & 2) }));
+        p.functions = list(() => ({ name: t(s), file: t(s), params: s.varint(), localNames: list(() => t(s)), start: s.varint(), end: s.varint(), flags: s.u8() })).map((f) => ({ ...f, keyed: !!(f.flags & 1) }));
         for (const f of p.functions) f.locals = f.localNames.length;
         break;
       case SECTION.CODE:
@@ -593,7 +593,7 @@ export function disassemble(p) {
   out.push(`${p.texts.length} texts, ${p.numbers.length} numbers, ${p.boxes.length} boxes, ${p.questions.length} questions, ${p.functions.length} functions, ${p.code.length} bytes of code`);
   for (const [i, fn] of p.functions.entries()) {
     out.push("");
-    out.push(`function ${i} ${fn.name} (${fn.params} parameters; locals ${fn.localNames.join(", ") || "none"})${fn.pure ? " pure" : ""}`);
+    out.push(`function ${i} ${fn.name} (${fn.params} parameters; locals ${fn.localNames.join(", ") || "none"})`);
     const r = new Reader(p.code, fn.start, fn.end);
     let lastPlace = null;
     while (r.at < fn.end) {

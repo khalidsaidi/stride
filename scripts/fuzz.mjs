@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Programs made at random, run in both engines (docs/spec.md §19.2):
 // node scripts/fuzz.mjs [runs] [seed] [--show]. A disagreement, a crash, or a mistake on a valid program is a bug.
-import { fuzz } from "../src/fuzz.mjs";
+import { fuzz } from "../tests/support/fuzz.mjs";
 
 const args = process.argv.slice(2).filter((a) => a !== "--show");
 const show = process.argv.includes("--show");

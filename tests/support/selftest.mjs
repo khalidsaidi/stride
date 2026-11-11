@@ -39,23 +39,23 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
-import { compile } from "./compile.mjs";
-import { load, run, boxValues } from "../runtime/vm.mjs";
-import { interpretProgram } from "./interpret.mjs";
-import { parseDigits, expectResults } from "./test.mjs";
-import { Diagnostics, SourceFile } from "./source.mjs";
-import { parse } from "./parse.mjs";
-import { format, comments } from "./format.mjs";
-import { textOf } from "../runtime/natives.mjs";
-import * as IR from "./ir.mjs";
+import { compile } from "../../src/compile.mjs";
+import { load, run, boxValues } from "../../runtime/vm.mjs";
+import { interpretProgram } from "../../src/interpret.mjs";
+import { parseDigits, expectResults } from "../../src/test.mjs";
+import { Diagnostics, SourceFile } from "../../src/source.mjs";
+import { parse } from "../../src/parse.mjs";
+import { format, comments } from "../../src/format.mjs";
+import { textOf } from "../../runtime/natives.mjs";
+import * as IR from "../../src/ir.mjs";
 import { fileURLToPath } from "node:url";
 
 const PDF = "0".repeat(64);
 const here = fileURLToPath(new URL(".", import.meta.url));
 // Beside this file when run from the repository; from the one executable, the repository's own, from where it is
 // run.
-export const TESTS = existsSync(join(here, "../tests")) ? join(here, "../tests") : join(process.cwd(), "tests");
-export const SPEC = existsSync(join(here, "../docs/spec.md")) ? join(here, "../docs/spec.md") : join(process.cwd(), "docs/spec.md");
+export const TESTS = existsSync(join(here, "..")) ? join(here, "..") : join(process.cwd(), "tests");
+export const SPEC = existsSync(join(here, "../../docs/spec.md")) ? join(here, "../../docs/spec.md") : join(process.cwd(), "docs/spec.md");
 export const MODES = ["vm", "ir"];
 
 // JSON with every number kept as the digits written, as words: what a run's boxes and steps are compared with.

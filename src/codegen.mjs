@@ -443,7 +443,7 @@ export function generate(program, pdf) {
     }
     const names = [];
     for (const [l, k] of slot) names[k] = l.name ?? `t${k}`;
-    functions.push({ name: fn.name, file: fn.file ?? program.file ?? "", params: fn.params.length, localNames: names.map((n) => n ?? ""), start, end: code.length, pure: fn.pure, keyed: !!fn.keyed });
+    functions.push({ name: fn.name, file: fn.file ?? program.file ?? "", params: fn.params.length, localNames: names.map((n) => n ?? ""), start, end: code.length, keyed: !!fn.keyed });
   }
 
   // ----- the file
@@ -527,7 +527,7 @@ export function generate(program, pdf) {
       f.localNames.forEach((n) => s.varint(T(n)));
       s.varint(f.start);
       s.varint(f.end);
-      s.u8((f.pure ? 1 : 0) | (f.keyed ? 2 : 0));
+      s.u8(f.keyed ? 1 : 0);
     }
   });
   section(SECTION.CODE, (s) => (s.varint(code.length), s.raw(code.bytes)));
