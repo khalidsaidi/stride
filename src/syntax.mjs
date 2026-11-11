@@ -42,11 +42,14 @@ import * as D from "../runtime/decimal.mjs";
 // The keywords (§2.3). `option`, `any`, `another` and `faults` are contextual (§2.3.1): names everywhere but the one
 // place the grammar uses them.
 export const KEYWORDS = new Set([
-  "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "define", "each", "else",
-  "empty", "expect", "export", "fields", "fill", "for", "form", "if", "in", "is", "let", "list", "match", "most",
-  "native", "new", "no", "not", "of", "options", "or", "pdf", "pick", "record", "return", "set", "then", "tick",
-  "use", "var", "when", "while", "yes",
+  "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "define", "else",
+  "empty", "expect", "export", "fill", "for", "form", "if", "in", "is", "let", "match",
+  "native", "new", "no", "not", "options", "or", "pdf", "pick", "record", "return", "tick",
+  "use", "var", "while", "yes",
 ]);
+// Words the grammar uses in one place only (§2.3.1): a type's `list`, `set`, `of` and `most`, the header's `fields`,
+// `for each`, `when` and `then`. Anywhere else each is a name like any other.
+const CONTEXTUAL = new Set(["each", "fields", "list", "most", "of", "set", "then", "when"]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
 const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "/=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
@@ -272,7 +275,7 @@ class Parser {
   }
 
   word(value) {
-    return this.is("keyword", value);
+    return this.is("keyword", value) || (CONTEXTUAL.has(value) && this.is("name", value));
   }
 
   sym(value) {
@@ -287,7 +290,7 @@ class Parser {
 
   // The token, of this type and value, or a mistake naming what was wanted.
   expect(type, value, what) {
-    if (this.is(type, value)) return this.take();
+    if (this.is(type, value) || (type === "keyword" && this.word(value))) return this.take();
     throw this.mistake(what ?? (value ? `"${value}"` : type));
   }
 
@@ -661,7 +664,8 @@ class Parser {
         case "match":
           return this.match();
         case "for":
-          return this.peek().type === "keyword" && this.peek().value === "each" ? this.forEach() : this.forLoop();
+          // for each x in …: `each`, then the item's name; a counter may itself be called each (for each in 1..3).
+          return this.peek().value === "each" && this.peek().type === "name" && !(this.peek(2).type === "keyword" && this.peek(2).value === "in") ? this.forEach() : this.forLoop();
         case "while": {
           // while c { … }: the body again and again, as long as c is yes (§7.11.1).
           const start = this.take();
@@ -1104,7 +1108,7 @@ class Parser {
       const start = this.take();
       const items = this.args("]");
       // [e for each [n,] x in l if c] (§6.12)
-      if (items.length === 1 && this.word("for") && this.peek().type === "keyword" && this.peek().value === "each") {
+      if (items.length === 1 && this.word("for") && this.peek().type === "name" && this.peek().value === "each") {
         this.take();
         this.take();
         const [index, item] = this.indexAndItem();

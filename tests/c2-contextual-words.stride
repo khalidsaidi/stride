@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let list = [1, 2, 3]
+let set = "x"
+let fields = count(list)
+let most = 2
+let of = 1
+let when = "now"
+let then = "later"
+var total = 0
+for each x in list {
+  total += x
+}
+for each in 1..2 {
+  print(each)
+}
+var names: list of text most 3
+names += [set, when, then]
+print(if fields > most then join(names, ",") else "no")
+print(of + total)
+# rule 2.3.1
+# prints ["1", "2", "x,now,later", "7"]

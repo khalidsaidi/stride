@@ -38,9 +38,9 @@ Whitespace and line breaks are free between tokens, except that a line break bef
 expression before it, and a `return`'s value is on its line (§1.4); `#` starts a comment to the end of the line.
 Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`)
 (§2.1). Keywords cannot be names (§2.3): `and as ask break check collect const continue default define
-each else empty export expect fields fill for form if in is let list match most native new no not of options or
-pdf pick record return set then tick use var when yes`. `option`, `any`, `another` and `faults` are keywords
-only where the grammar uses them (§2.3.1).
+else empty export expect fill for form if in is let match native new no not options or pdf pick record return
+tick use var while yes`. `list`, `set`, `of`, `most`, `fields`, `each`, `when`, `then`, `option`, `any`, `another`
+and `faults` are words of the language only where the grammar uses them, and names everywhere else (§2.3.1).
 
 ## Types
 

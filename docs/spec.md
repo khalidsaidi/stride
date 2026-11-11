@@ -37,15 +37,17 @@ one column, a tab is one column, a character outside the Basic Multilingual Plan
 
 2.2. **Hyphenated words**: `long-text`, `yes-no`, `one-of`, `any-of` are each one token, a type name.
 
-2.3. **Keywords** cannot be names: `and as ask because break check collect const continue default define each
-else empty export expect fields fill for form if in is let list match most native new no not of options or pdf
-pick record return set then tick use var when while yes`.
+2.3. **Keywords** cannot be names: `and as ask break check collect const continue default define else empty
+expect export fill for form if in is let match native new no not options or pdf pick record return tick use var
+while yes`.
 
 2.3.1. **Contextual words** are keywords only in the one place the grammar uses them, and names everywhere else:
 `option` at the start of an entry of a question's own options (§8.3), where it is required, and of an option set's
 declaration (§5.2), where it may be left out; `any` and `another` after a collect's list
 (§8.5), and `any` as a type in a native's parameters or result (§5.6); `faults` after an `expect` statement's expression
-(§7.17). So `any(answers)` (§14.4) is a call of the function `any`, and a var may be called `option`.
+(§7.17); `list`, `set`, `of` and `most` in a type (§5.6); `fields` in the header (§4.1); `each` after `for`; `when`
+in `tick` and `pick`; `then` in `if … then … else`. So `any(answers)` (§14.4) is a call of the function `any`, and a
+var may be called `option`, `list`, `set` or `fields`.
 
 2.5. **Numbers**: `digits [ "." digits ]`. Digits are `0`–`9`. A number with a leading zero followed by another
 digit (`0755`) is mistake S008 (an id with leading zeros is words in quotes). A number's significant digits run from its first
