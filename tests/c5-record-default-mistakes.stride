@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function one() -> number {
+  return 1
+}
+record person {
+  name: string = 5
+  age: number = one()
+  half: number = 1 / 0
+  function greet(self) -> string {
+    return self.name
+  }
+}
+record thing {
+  size: number
+}
+let p = new person { name: "a" }
+print(p.greet())
+print(new thing { size: 1 }.greet())
+# rule 5.1.1 9.8.1 S762 S763 S230
+# mistake 7:18 S762 person's name is string, and its default is number
+# mistake 8:17 S763 person's age depends on something that is not
+# mistake 9:18 S763 this one faults: division by zero
+# mistake 19:29 S230 there is no function called greet to call on this

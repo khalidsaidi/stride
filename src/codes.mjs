@@ -749,6 +749,26 @@ export const CODES = {
     "when": "more than 255 arguments or parameters",
     "explanation": "Use a record."
   },
+  "S760": {
+    "when": "a short function `(x) => …` where nothing tells a parameter's type",
+    "explanation": "A short function takes its parameters' types from the function type wanted where it stands (§9.12): an argument, a typed let, a field, a return. Elsewhere write them, `(x: number) => …`, or the long form `function(x: number) -> number { … }`."
+  },
+  "S761": {
+    "when": "a short function with another number of parameters than the function type wanted",
+    "explanation": "Give it as many parameters as the function wanted takes values."
+  },
+  "S762": {
+    "when": "a record field's default of another type than the field",
+    "explanation": "The default is a value of the field's type (§5.1.1)."
+  },
+  "S763": {
+    "when": "a record field's default the compiler cannot work out",
+    "explanation": "A default is words, a number, a date, true or false, null or a list of them, made of constants; give any other value in `new`."
+  },
+  "S764": {
+    "when": "a record's method named as another of its methods or as one of its fields",
+    "explanation": "A record's fields and methods have each their own name (§5.1.2)."
+  },
   "W001": {
     "when": "a match on an option missing options, without else",
     "explanation": "Warning: nothing happens for those."
@@ -1258,7 +1278,27 @@ export const LIBRARY = [
     "names": [
       "format"
     ],
-    "gives": "pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010"
+    "gives": "the pattern (§14.3.1) with d's parts put in; a pattern with none of them, or with a quote not closed, F010"
+  },
+  {
+    "section": "14.3 Dates",
+    "signatures": [
+      "weekday(d: date) -> number"
+    ],
+    "names": [
+      "weekday"
+    ],
+    "gives": "the day of the week: 0 for Monday, 1 for Tuesday, to 6 for Sunday"
+  },
+  {
+    "section": "14.3 Dates",
+    "signatures": [
+      "parse_date(t: string, pattern: string) -> date"
+    ],
+    "names": [
+      "parse_date"
+    ],
+    "gives": "the day t writes in the pattern (§14.3.1), or null when t is not written so or there is no such day; a pattern without a year, a month and a day, or one `format` refuses, F010"
   },
   {
     "section": "14.3 Dates",
@@ -1549,6 +1589,96 @@ export const LIBRARY = [
       "count"
     ],
     "gives": "the number of keys"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "map(l: list<T>, f: function(T) -> R) -> list<R>"
+    ],
+    "names": [
+      "map"
+    ],
+    "gives": "a new list of what f gives for each item, in order"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "filter(l: list<T>, f: function(T) -> bool) -> list<T>"
+    ],
+    "names": [
+      "filter"
+    ],
+    "gives": "a new list of the items f gives true for, in order"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "reduce(l: list<T>, start: A, f: function(A, T) -> A) -> A"
+    ],
+    "names": [
+      "reduce"
+    ],
+    "gives": "every item folded into one value: start, then for each item in order f of the value so far and the item; no items: start"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "sorted(l: list<T>, key: function(T) -> K, descending: bool = false) -> list<T>"
+    ],
+    "names": [
+      "sorted"
+    ],
+    "gives": "`key` is given by its name. K a number, a date or words (else S367): a new list of the items in the order of what key gives for each (§6.7), equal ones keeping their order; key is called once for each item; a null it gives is F023"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "sorted(l: list<T>, compare: function(T, T) -> number, descending: bool = false) -> list<T>"
+    ],
+    "names": [
+      "sorted"
+    ],
+    "gives": "`compare` is given by its name: a new list of the items in the order compare says, which gives a number below 0 when its first value comes first, above 0 when its second does, and 0 when either may; equal ones keep their order"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "any(l: list<T>, test: function(T) -> bool) -> bool"
+    ],
+    "names": [
+      "any"
+    ],
+    "gives": "true when test gives true for some item (it is not called for the items after it); no items: false"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "all(l: list<T>, test: function(T) -> bool) -> bool"
+    ],
+    "names": [
+      "all"
+    ],
+    "gives": "true when test gives true for every item (it is not called after the first it does not); no items: true"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "unique(l: list<T>) -> list<T>"
+    ],
+    "names": [
+      "unique"
+    ],
+    "gives": "a new list of the items that equal (§6.6) none before them, in order"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "flatten(l: list<list<T>>) -> list<T>"
+    ],
+    "names": [
+      "flatten"
+    ],
+    "gives": "a new list of the items of every list in l, in order; a null list in l is F023"
   },
   {
     "section": "14.5 Null, faults and output",

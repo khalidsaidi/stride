@@ -421,7 +421,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   }
   for (const r of resolved.units) {
     if (r.unit.library) continue;
-    for (const f of r.functions) if (!called.has(f)) warn("W002", { file: f.node.file, span: nameSpan(f.node.file, f.node.span, f.name) }, `${f.name} is defined, and never called`);
+    for (const f of r.functions) if (!called.has(f)) warn("W002", { file: f.node.file, span: f.node.nameSpan ?? nameSpan(f.node.file, f.node.span, f.name) }, `${f.name} is defined, and never called`);
     // A constant may be used where no statement is: in another constant.
     for (const c of r.consts) if (!usedConsts.has(c) && !c.referenced) warn("W003", c.node, `the constant ${c.name} is never used`);
   }

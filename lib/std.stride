@@ -146,7 +146,24 @@ export native function month(d: date) -> number
 # example: day(date_of(2026, 7, 4)) gives 4
 export native function day(d: date) -> number
 # example: format(date_of(2026, 7, 4), "MM/DD/YYYY") gives 07/04/2026
+# example: format(date_of(2026, 7, 4), "dddd, D MMMM YYYY") gives Saturday, 4 July 2026
+# example: format(date_of(2026, 7, 4), "ddd D MMM YY") gives Sat 4 Jul 26
+# example: format(date_of(2026, 7, 4), "'Day' D 'of' MMMM, 'o''clock'") gives Day 4 of July, o'clock
+# example: format(date_of(2026, 7, 4), "'Day D") faults F010
 export native function format(d: date, pattern: string) -> string
+# The day of the week: 0 for Monday to 6 for Sunday.
+# example: weekday(date_of(2026, 11, 9)) gives 0
+# example: weekday(date_of(2026, 7, 4)) gives 5
+export native function weekday(d: date) -> number
+# The day that words write in a pattern, or null.
+# example: parse_date("07/04/2026", "MM/DD/YYYY") gives 2026-07-04
+# example: parse_date("Saturday, 4 July 2026", "dddd, D MMMM YYYY") gives 2026-07-04
+# example: parse_date("4 jul 26", "D MMM YY") gives 2026-07-04
+# example: parse_date("Day 4 of 7, 2026", "'Day' D 'of' M, YYYY") gives 2026-07-04
+# example: parse_date("31/02/2026", "DD/MM/YYYY") == null gives true
+# example: parse_date("Sunday 4 July 2026", "dddd D MMMM YYYY") == null gives true
+# example: parse_date("2026-07", "YYYY-MM") faults F010
+export native function parse_date(t: string, pattern: string) -> date
 # example: days_between(date_of(2026, 1, 1), date_of(2026, 3, 1)) gives 59
 export native function days_between(from: date, to: date) -> number
 # example: years_between(date_of(2000, 2, 29), date_of(2001, 2, 28)) gives 1
@@ -219,7 +236,54 @@ export native function reversed(l: any) -> any
 # example: sorted([3, 1, 2]) gives [1, 2, 3]
 # example: sorted([3, null, 2]) faults F023
 # example: join([p.name for p in sorted(people, by: "age")]) gives Al, Bo
+# example: sorted(["ccc", "a", "bb"], key: (t) => length(t)) gives [a, bb, ccc]
+# example: join([p.name for p in sorted(people, key: (p) => p.age, descending: true)]) gives Bo, Al
+# example: sorted([3, 1, 2], compare: (a, b) => b - a) gives [3, 2, 1]
+# example: sorted(["b", null], key: (t) => t) faults F023
 export native function sorted(l: any, descending: bool = false) -> any
+native function sort_by_keys(l: any, keys: any, descending: bool) -> any
+# sorted(l, key: f): the items in the order of what f gives for each.
+function sorted_by_key<t, k>(l: list<t>, key: function(t) -> k, descending: bool = false) -> list<t> {
+  return sort_by_keys(l, [key(x) for x in l], descending)
+}
+# sorted(l, compare: f): a merge sort, so equal items keep their order.
+function sorted_by_compare<t>(l: list<t>, compare: function(t, t) -> number, descending: bool = false) -> list<t> {
+  var runs: list<list<t>> = [[x] for x in l]
+  while count(runs) > 1 {
+    let merged: list<list<t>> = []
+    var i = 0
+    while i < count(runs) {
+      if i + 1 == count(runs) {
+        append(merged, runs[i])
+      } else {
+        let a = runs[i]
+        let b = runs[i + 1]
+        let out: list<t> = []
+        var j = 0
+        var k = 0
+        while j < count(a) and k < count(b) {
+          let c = compare(a[j], b[k])
+          if (if descending then c < 0 else c > 0) {
+            append(out, b[k])
+            k += 1
+          } else {
+            append(out, a[j])
+            j += 1
+          }
+        }
+        out += a[j..]
+        out += b[k..]
+        append(merged, out)
+      }
+      i += 2
+    }
+    runs = merged
+  }
+  if count(runs) == 0 {
+    return [x for x in l]
+  }
+  return runs[0]
+}
 # example: sum([1, 2.5, null]) faults F023
 # example: sum(filled([1, 2.5, null])) gives 3.5
 export native function sum(l: any) -> number
@@ -228,9 +292,90 @@ export native function smallest(l: any) -> element
 # example: largest([3, 1, 2]) gives 3
 export native function largest(l: any) -> element
 # example: any([false, true]) gives true
+# example: any([1, 2, 3], (n) => n > 2) gives true
+# example: any(filter([1], (n) => n > 1), (n) => n > 2) gives false
 export native function any(l: list<bool>) -> bool
+function any_where<t>(l: list<t>, test: function(t) -> bool) -> bool {
+  for x in l {
+    if test(x) {
+      return true
+    }
+  }
+  return false
+}
 # example: all([true, false]) gives false
+# example: all([1, 2, 3], (n) => n > 0) gives true
+# example: all(people, (p) => p.age > 35) gives false
 export native function all(l: list<bool>) -> bool
+function all_where<t>(l: list<t>, test: function(t) -> bool) -> bool {
+  for x in l {
+    if not test(x) {
+      return false
+    }
+  }
+  return true
+}
+
+# ----- lists and functions (§14.4.2)
+
+# A new list of what f gives for each item.
+# example: map([1, 2, 3], (n) => n * 2) gives [2, 4, 6]
+# example: join(map(people, (p) => p.name)) gives Bo, Al
+# example: map(["a", "b"], upper) gives [A, B]
+export function map<t, r>(l: list<t>, f: function(t) -> r) -> list<r> {
+  let out: list<r> = []
+  for x in l {
+    append(out, f(x))
+  }
+  return out
+}
+# A new list of the items f gives true for.
+# example: filter([1, 2, 3, 4], (n) => n % 2 == 0) gives [2, 4]
+# example: count(filter(people, (p) => p.age > 35)) gives 1
+export function filter<t>(l: list<t>, f: function(t) -> bool) -> list<t> {
+  let out: list<t> = []
+  for x in l {
+    if f(x) {
+      append(out, x)
+    }
+  }
+  return out
+}
+# Every item folded into one value: f is given the value so far and the next item.
+# example: reduce([1, 2, 3], 10, (total, n) => total + n) gives 16
+# example: reduce(["a", "b"], "", (words, t) => words + t) gives ab
+# example: reduce(filter([1], (n) => n > 1), 0, (total, n) => total + n) gives 0
+export function reduce<t, a>(l: list<t>, start: a, f: function(a, t) -> a) -> a {
+  var out = start
+  for x in l {
+    out = f(out, x)
+  }
+  return out
+}
+# A new list of the items that equal none before them.
+# example: unique([1, 2, 1, 3, 2]) gives [1, 2, 3]
+# example: unique(["a", null, "a", null]) gives [a, ]
+export function unique<t>(l: list<t>) -> list<t> {
+  let out: list<t> = []
+  for x in l {
+    if index_of(out, x) < 0 {
+      append(out, x)
+    }
+  }
+  return out
+}
+# A new list of the items of every list in l, in order.
+# example: flatten([[1, 2], [], [3]]) gives [1, 2, 3]
+# example: flatten([[1], null]) faults F023
+export function flatten<t>(l: list<list<t>>) -> list<t> {
+  let out: list<t> = []
+  for inner in l {
+    for x in inner {
+      append(out, x)
+    }
+  }
+  return out
+}
 # example: join(union(warm, cool)) gives red, green, blue
 export native function union(a: any, b: any) -> any
 # example: join(intersection(warm, cool)) gives green

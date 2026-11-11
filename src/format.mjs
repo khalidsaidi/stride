@@ -130,9 +130,14 @@ export function format(text, name = "program.stride") {
       case "record":
         put(n, indent, `${exp(n)}record ${n.name} {`);
         opening(n);
-        for (const f of n.fields) {
-          put(f, `${indent}  `, `${f.name}: ${type(f.type)}`);
-          if (n.span.line !== n.span.endLine) trailing(f.span.line);
+        // Fields and methods in the order written (§5.1).
+        for (const f of [...n.fields, ...(n.methods ?? [])].sort((a, b) => a.span.start - b.span.start)) {
+          if (f.kind === "function") {
+            item_(f, `${indent}  `);
+            continue;
+          }
+          put(f, `${indent}  `, `${f.name}: ${type(f.type)}${f.default ? ` = ${expr(f.default)}` : ""}`);
+          if (n.span.line !== n.span.endLine) trailing(f.span.endLine);
         }
         return close(n, indent);
       case "enum":
@@ -150,7 +155,7 @@ export function format(text, name = "program.stride") {
         put(n, indent, `${exp(n)}native function ${n.name}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""}`);
         return trailing(n.span.line);
       case "function":
-        put(n, indent, `${exp(n)}function ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""} {`);
+        put(n, indent, `${exp(n)}function ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}(${n.params.filter((p) => !p.self || n.selfWritten).map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""} {`);
         trailing(n.span.line);
         block(n.body, `${indent}  `);
         return close(n, indent);
@@ -331,7 +336,7 @@ export function format(text, name = "program.stride") {
   }
 
   function param(p) {
-    return `${p.name}: ${type(p.type)}${p.default ? ` = ${expr(p.default)}` : ""}`;
+    return `${p.name}${p.type ? `: ${type(p.type)}` : ""}${p.default ? ` = ${expr(p.default)}` : ""}`;
   }
 
   function type(t) {
@@ -358,11 +363,13 @@ export function format(text, name = "program.stride") {
     const wrap = (p, s) => (p < outer ? `(${s})` : s);
     switch (e.kind) {
       case "lambda": {
+        // A short function of one value (§9.12): (x) => x * 2.
+        if (e.valueBody) return wrap(0.4, `(${e.params.map(param).join(", ")}) => ${expr(e.body[0].value ?? e.body[0].call)}`);
         // A function written in place: its body as a block, inside the statement it stands in.
         const mine = at;
         leading(mine.line, mine.indent);
         if (mine.line > lastLine + 1 && lines.length && lines[lines.length - 1] !== "") lines.push("");
-        const head = `function(${e.params.map(param).join(", ")})${e.result ? ` -> ${type(e.result)}` : ""}`;
+        const head = e.short ? `(${e.params.map(param).join(", ")}) =>` : `function(${e.params.map(param).join(", ")})${e.result ? ` -> ${type(e.result)}` : ""}`;
         const from = lines.length;
         lastLine = e.span.line;
         block(e.body, `${mine.indent}  `);

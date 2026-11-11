@@ -23,10 +23,12 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `xs.indexOf(x)`, `s.find(part)` | `index_of(xs, x)`, `find(s, part)`: the position, or -1 |
 | `while`, recursion | `while c { }`; a function may call itself |
 | `dict`, `map[K]V`, `Map` | `map<string, number>`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for k, v in m { }` |
-| `lambda`, `func(x) { }`, `x => …` | `function(x: number) -> number { return x * 2 }` |
+| `lambda`, `func(x) { }`, `x => …` | `(x) => x * 2`, `(a, b) => { … }` (§9.12); `function(x: number) -> number { return x * 2 }` |
 | `def f(a, b=2):`, `func f(a int) int` | `function f(a: number, b: number = 2) -> number { }` |
-| `xs.map(f)`, `filter`, list comprehensions | `[f(x) for x in xs if x > 0]` |
-| `sorted(xs, key=...)` | `sorted(xs)`, `sorted(people, by: "age")` |
+| `xs.map(f)`, `filter`, list comprehensions | `[f(x) for x in xs if x > 0]`; `map(xs, f)`, `filter(xs, (x) => x > 0)`, `reduce(xs, 0, (a, x) => a + x)`, `unique(xs)`, `flatten(xs)` |
+| `sorted(xs, key=...)`, `xs.sort((a, b) => …)` | `sorted(xs)`, `sorted(people, by: "age")`, `sorted(xs, key: (x) => …)`, `sorted(xs, compare: (a, b) => a - b)` |
+| methods, `self`/`this`, field defaults | `record p { name: string, age: number = 0, function greet(self) -> string { return self.name } }`; `p.greet()` (§5.1.2) |
+| `strftime`, `strptime`, `date.weekday()` | `format(d, "ddd, D MMM YYYY 'at' …")`, `parse_date(t, "DD/MM/YYYY")`, `weekday(d)` (0 for Monday) (§14.3.1) |
 | `class`, `struct` | `record person { name: string }`; `new person { name: "Ada" }`; `p.f(x)` calls `f(p, x)` |
 | `enum` | `enum colour { "red" "Red" … }`: each option its value and the words a person reads |
 | `import x`, `require` | `import "x"`, `import "x" as m` (a file in `lib/`); `export function …` |

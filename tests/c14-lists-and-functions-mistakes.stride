@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: string
+  tags: list<string>
+}
+let people = [new person { name: "Bo", tags: [] }]
+print(sorted(people, key: (p) => p.tags))
+print(sorted(people, compare: (a, b) => a.name))
+print(map([1], (a, b) => a))
+print(filter([1], (n) => n + 1))
+print(sorted(people, key: (p) => p.name, by: "name"))
+print(any([1], 2))
+# rule 14.4.2 S761
+# mistake 8:27 S367 sorted orders numbers, dates or words, and key gives a list of string
+# mistake 9:41 S342
+# mistake 10:7 S368
+# mistake 10:16 S761
+# mistake 11:26 S342
+# mistake 12:42 S388 sorted has no parameter by
+# mistake 13:16 S367 any's test is a function (number) -> bool, and this is number
