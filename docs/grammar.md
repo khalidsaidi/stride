@@ -56,6 +56,8 @@ A field's name may be any word, a keyword among them: `r.default` (§2.3.2).
 | a record's name | a record of that type |
 | `list<T>` | values of type T, as many as are added |
 | `range` | the whole numbers between two bounds: `1..5`, `0..<n`; `for i in r`, `x in r`, `count(r)`, `[n * 2 for n in r]` (§6.17) |
+| `set<T>`, T `string`, `number`, `date` or `bool` | values of type T, each once: `set([1, 2])`, `add(s, 3)`, `remove(s, 1)`, `2 in s`, `union(a, b)` (§3.13) |
+| `(T1, T2)` | a tuple: `(1, "a")`, `t.0`, `t.1`, `let (a, b) = t`, `(a, b) = (b, a)`, `for (a, b) in pairs { }` (§3.12) |
 | `map<K, V>` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
 | `function(T, …) -> R` | a function as a value: `function apply(f: function(number) -> number, n: number)` |
 
@@ -139,6 +141,8 @@ string`. A native's parameter may be `any`; its result may be `any` (the type of
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value, by words, or by a number (`1, 2 => { }`) |
+| `let s = match e { 1 => "one", 2, 3 => "few", else => "many" }` | a match that gives a value (§6.20); arms' values are any expressions the compiler works out: `true`, a date, `(1, 2)` |
+| `[x * y for x in a for y in b if c]`, `{k: v for x in l if c}` | a comprehension with several `for`s; a map made by one (§6.12.1, §6.12.2) |
 | `for i in a..b { }`, `for i in a..<b { }` | its block for each whole number from a to b, or with `..<` to before b; a and b worked out once (§7.11) |
 | `for x in list { }`, `for n, x in list { }` | its block for each item of a list or option of a set, n counting from 0 |
 | `while c { }` | its block as long as the condition is true (§7.11.1) |

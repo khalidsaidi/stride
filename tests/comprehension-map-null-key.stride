@@ -1,0 +1,3 @@
+print({k: 1 for k in ["a", null]})
+# rule 6.12.2 F023
+# fault F023

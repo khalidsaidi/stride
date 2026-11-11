@@ -1,0 +1,38 @@
+function pair(n: number) -> (number, string) {
+  return (n, "n{n}")
+}
+let t = (1, "a")
+print(t)
+print(t.0 + 1)
+print(t.1)
+let nested = ((1, 2), 3)
+print(nested.0.1)
+print((1, 2) == (1, 2))
+print((1, 2) == (2, 1))
+print((1, "a") != t)
+let (a, b) = pair(3)
+print("{a} {b}")
+var (x, y) = (1, 2)
+(x, y) = (y, x)
+print((x, y))
+x += 10
+print(x)
+let l = [0, 0]
+(l[0], l[1]) = (7, 8)
+print(l)
+let ps = [(1, "one"), (2, "two")]
+for (k, v) in ps {
+  print("{k}={v}")
+}
+let typed: (number, list<string>) = (1, [])
+print(typed)
+let empty: (number, string) = null
+print(empty == null)
+print((x) + 1)
+let c = copy(typed)
+append(c.1, "z")
+print(count(typed.1))
+const ORIGIN = (0, 0)
+print(ORIGIN.0)
+# rule 3.12 6.19 7.3.1 7.5.2 7.11.3
+# prints ["(1, a)", "2", "a", "2", "true", "false", "false", "3 n3", "(2, 1)", "12", "[7, 8]", "1=one", "2=two", "(1, [])", "true", "13", "0", "0"]

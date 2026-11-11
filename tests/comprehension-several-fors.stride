@@ -1,0 +1,15 @@
+print([x * y for x in [1, 2] for y in [10, 20]])
+print([x * y for x in [1, 2, 3] if x != 2 for y in [10, 20] if y > x * 5])
+print([(x, y, z) for x in [1, 2] for y in ["a"] for z in [true, false]])
+print([y for x in [[1, 2], [], [3]] for y in x])
+print([c for w in ["ab", "c"] for c in w])
+let m = {"a": 1, "b": 2}
+print({v: k for k, v in m})
+print({w: length(w) for w in ["a", "bb", "ccc"] if length(w) > 1})
+print({x: y for x in [1, 2] for y in [10, 20]})
+print({"{x}{y}": x + y for x in [1, 2] for y in [10, 20]})
+let none: map<string, number> = {k: 1 for k in ["a"] if k == "z"}
+print(none)
+print(count({n: n for n in [1, 1, 2]}))
+# rule 6.12.1 6.12.2
+# prints ["[10, 20, 20, 40]", "[10, 20, 60]", "[(1, a, true), (1, a, false), (2, a, true), (2, a, false)]", "[1, 2, 3]", "[a, b, c]", "{1: a, 2: b}", "{bb: 2, ccc: 3}", "{1: 20, 2: 20}", "{110: 11, 120: 21, 210: 12, 220: 22}", "{}", "2"]

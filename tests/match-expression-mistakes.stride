@@ -1,0 +1,21 @@
+let n = 2
+var v = 1
+let a = match n { 1 => "one", 2 => 2 }
+let b = match n { v => "var", else => "other" }
+let c = match n { "x" => 1, else => 2 }
+let d = match n { 1 => "a", 1 + 0 => "b", else => "c" }
+let e = match n { else => 1, 2 => 2 }
+match n {
+  true => {
+    print("x")
+  }
+}
+print("{a}{b}{c}{d}{e}")
+v = 2
+# rule S745 S744 S329 S331 S330 6.20 7.10.1
+# mistake 3 S745
+# mistake 4 S744
+# mistake 5 S329
+# mistake 6 S331
+# mistake 7 S330
+# mistake 9 S329

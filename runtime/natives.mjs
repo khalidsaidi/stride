@@ -6,7 +6,7 @@
 // A native given null where it needs a value faults (F023, §14.0.3) before anything else: `takes` names each
 // parameter and the kind of value it needs. Then it checks its control arguments — positions, places, widths,
 // paddings, patterns — and faults when one is wrong (§14.0.3.1).
-import { D, StrideFault, StrideRecord, StrideMap, StrideRange, StrideError, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside, dayNumber, fromDayNumber } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, StrideRange, StrideError, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside, dayNumber, fromDayNumber, StrideTuple, StrideSet } from "./values.mjs";
 import { power } from "./ops.mjs";
 
 export { StrideFault, StrideRecord, isNull };
@@ -109,7 +109,7 @@ export const NATIVES = {
   trim_end: { pure: true, takes: "t:t", fn: (t) => text(t).trimEnd() },
   remove_prefix: { pure: true, takes: "t:t prefix:t", fn: (t, p) => (text(p) && text(t).startsWith(text(p)) ? text(t).slice(text(p).length) : text(t)) },
   remove_suffix: { pure: true, takes: "t:t suffix:t", fn: (t, s) => (text(s) && text(t).endsWith(text(s)) ? text(t).slice(0, text(t).length - text(s).length) : text(t)) },
-  length: { pure: true, takes: "t:v", fn: (t) => num(Array.isArray(t) ? t.length : t instanceof StrideMap ? t.entries.size : chars(text(t)).length) },
+  length: { pure: true, takes: "t:v", fn: (t) => num(Array.isArray(t) ? t.length : t instanceof StrideMap || t instanceof StrideSet ? t.entries.size : chars(text(t)).length) },
   each_character: { pure: true, internal: true, fn: (t) => chars(text(t)) },
   chars: {
     pure: true,
@@ -296,10 +296,21 @@ export const NATIVES = {
       return out;
     },
   },
-  count: { pure: true, takes: "l:l", fn: (l) => (l instanceof StrideRange ? l.count : num(l instanceof StrideMap ? l.entries.size : typeof l === "string" ? chars(l).length : l.length)) },
+  count: { pure: true, takes: "l:l", fn: (l) => (l instanceof StrideRange ? l.count : num(l instanceof StrideMap || l instanceof StrideSet ? l.entries.size : typeof l === "string" ? chars(l).length : l.length)) },
   // Maps (§14.4.1).
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
   map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, v), m) }, // a map being written out: its next key
+  // A map comprehension's pairs made a map (§6.12.2): each a tuple of a key and the value under it.
+  map_from: { pure: true, internal: true, fn: (pairs) => new StrideMap(pairs.map((p) => p.items)) },
+  // A comprehension with several `for`s (§6.12.1): the lists its inner turns gave, as one list.
+  flat: { pure: true, internal: true, fn: (lists) => lists.flat(1) },
+  // A tuple written out (§6.17), from its values in order.
+  tuple_of: { pure: true, internal: true, fn: (items) => new StrideTuple(items) },
+  // Sets of any type (§14.4.2). `add` and `remove` change the set they are given, and give it.
+  set: { takes: "items:l", fn: (items) => new StrideSet(items) },
+  add: { changes: true, takes: "s:s x:V", fn: (s, x) => (s.add(x), s) },
+  // What a for or a comprehension over a set goes through: its values, in the order first added.
+  set_items: { pure: true, internal: true, fn: (s) => s.items },
   keys: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([key]) => key) },
   values: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([, x]) => x) },
   has: { pure: true, takes: "m:m key:V", fn: (m, k) => m.has(k) },
@@ -333,7 +344,7 @@ export const NATIVES = {
       return l.splice(n, 1)[0];
     },
   },
-  clear: { pure: true, changes: true, takes: "l:l", fn: (l) => { if (l instanceof StrideMap) l.entries.clear(); else l.length = 0; return l; } },
+  clear: { pure: true, changes: true, takes: "l:l", fn: (l) => { if (l instanceof StrideMap || l instanceof StrideSet) l.entries.clear(); else l.length = 0; return l; } },
   // l += m (§6.5.1): m's items added to l itself.
   extend: { pure: true, internal: true, fn: (l, m) => { if (isNull(l)) needed("a list is", "the left side of +="); if (isNull(m)) needed("a list is", "the right side of +="); l.push(...m); return l; } },
   copy: { pure: true, takes: "x:V", fn: (x) => copy(x) },
@@ -353,9 +364,9 @@ export const NATIVES = {
   largest: { pure: true, takes: "l:l", fn: (l) => valued(l, "an item largest compares").reduce((a, b) => (a === null || order(b, a) > 0 ? b : a), null) },
   any: { pure: true, takes: "l:l", fn: (l) => l.some((x) => x === true) },
   all: { pure: true, takes: "l:l", fn: (l) => l.every((x) => x === true) },
-  union: { pure: true, takes: "a:s b:s", fn: (a, b) => set([...a, ...b], a.order ?? b.order ?? []) },
-  intersection: { pure: true, takes: "a:s b:s", fn: (a, b) => set(a.filter((x) => b.includes(x)), a.order ?? b.order ?? []) },
-  difference: { pure: true, takes: "a:s b:s", fn: (a, b) => set(a.filter((x) => !b.includes(x)), a.order ?? b.order ?? []) },
+  union: { pure: true, takes: "a:s b:s", fn: (a, b) => (a instanceof StrideSet ? new StrideSet([...a.items, ...b.items]) : set([...a, ...b], a.order ?? b.order ?? [])) },
+  intersection: { pure: true, takes: "a:s b:s", fn: (a, b) => (a instanceof StrideSet ? new StrideSet(a.items.filter((x) => b.has(x))) : set(a.filter((x) => b.includes(x)), a.order ?? b.order ?? [])) },
+  difference: { pure: true, takes: "a:s b:s", fn: (a, b) => (a instanceof StrideSet ? new StrideSet(a.items.filter((x) => !b.has(x))) : set(a.filter((x) => !b.includes(x)), a.order ?? b.order ?? [])) },
 
   // ----- null, faults and output (§14.5)
   either: { pure: true, takes: "a:V b:V", fn: (a, b) => (isNull(a) ? b : a) },

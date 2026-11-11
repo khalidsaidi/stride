@@ -1,0 +1,4 @@
+let t: (number, string) = null
+print(t.0)
+# rule 6.19 F023
+# fault F023

@@ -210,6 +210,7 @@ export function lower(resolved, diagnostics, options = {}) {
   function initial(type) {
     if (type?.t === "list") return IR.list([]);
     if (type?.t === "map") return IR.native("map_of", []);
+    if (type?.t === "set") return IR.native("set", [IR.list([])]);
     // A record var without a value starts null (§7.4); writing a field makes it (§7.5.1).
     return IR.constant(null);
   }
@@ -445,7 +446,7 @@ export function lower(resolved, diagnostics, options = {}) {
         lowerBlock(arm.body, ctx);
         break;
       }
-      const cond = arm.values.map((v) => IR.binary("==", IR.local(subject), IR.constant(v.value))).reduce((a, b) => IR.binary("or", a, b));
+      const cond = arm.values.map((v) => IR.binary("==", IR.local(subject), armValue(v, ctx))).reduce((a, b) => IR.binary("or", a, b));
       const yes = ctx.fn.block();
       const no = ctx.fn.block();
       terminate(ctx, { op: "branch", cond, yes, no, node: s });
@@ -455,6 +456,11 @@ export function lower(resolved, diagnostics, options = {}) {
       ctx.block = no;
     }
     jumpTo(ctx, join, s);
+  }
+
+  // An arm's value (§7.10): words or a number written out, or an expression the compiler works out.
+  function armValue(v, ctx) {
+    return v.kind === "plain-string" || v.kind === "number" ? IR.constant(v.value) : expr(v, ctx);
   }
 
   // A counted loop: its head tests the counter, its body runs, the counter goes up, back to the head. A loop
@@ -516,11 +522,12 @@ export function lower(resolved, diagnostics, options = {}) {
   function lowerEach(s, ctx) {
     // Over a map: its keys, in their order; with two names, each key and the value under it.
     const overMap = s.list.type?.t === "map";
+    const overSet = s.list.type?.t === "set";
     const mapLocal = overMap ? ctx.fn.local("map", s.list.type) : null;
     const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: eachOf(s.list, ctx), node: s });
-    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "string" ? IR.native("each_character", [eachOf(s.list, ctx)]) : eachOf(s.list, ctx), node: s });
+    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : overSet ? IR.native("set_items", [eachOf(s.list, ctx)]) : s.list.type?.t === "string" ? IR.native("each_character", [eachOf(s.list, ctx)]) : eachOf(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -543,7 +550,7 @@ export function lower(resolved, diagnostics, options = {}) {
     inner.locals.set(s.itemSymbol, itemLocal);
     // An unrolled for over a list adds its turn, the item's number, to the keys inside it (§8.6.2).
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(k), IR.constant("]")));
-    const base = overMap ? null : listKey(s.list, ctx);
+    const base = overMap || overSet ? null : listKey(s.list, ctx);
     if (base) inner.items.set(s.itemSymbol, { base: join(base, IR.constant("["), IR.local(k), IR.constant("]")), suffixes: inner.suffixes.length });
     lowerBlock(s.body, inner);
     jumpTo(inner, step, s);
@@ -698,15 +705,32 @@ export function lower(resolved, diagnostics, options = {}) {
         const key = pairs ? ctx.fn.local(e.index, e.indexSymbol.type) : null;
         inner.locals.set(e.itemSymbol, item);
         if (e.indexSymbol) inner.locals.set(e.indexSymbol, pairs ? key : index);
-        return {
+        const comp = {
           e: "comp",
-          list: e.overMap && !pairs ? IR.native("keys", [eachOf(e.list, ctx)]) : e.overText ? IR.native("each_character", [eachOf(e.list, ctx)]) : eachOf(e.list, ctx),
+          list: e.overSet ? IR.native("set_items", [eachOf(e.list, ctx)]) : e.overMap && !pairs ? IR.native("keys", [eachOf(e.list, ctx)]) : e.overText ? IR.native("each_character", [eachOf(e.list, ctx)]) : eachOf(e.list, ctx),
           key,
           item,
           index,
           cond: e.condition ? expr(e.condition, inner) : null,
           value: expr(e.value, inner),
         };
+        // Several `for`s (§6.12.1): the inner lists as one; {k: v for …} (§6.12.2): the pairs made a map.
+        const all = e.nested ? IR.native("flat", [comp]) : comp;
+        return e.asMap ? IR.native("map_from", [all]) : all;
+      }
+      case "tuple":
+        return IR.native("tuple_of", [IR.list(e.items.map((x) => expr(x, ctx)))]);
+      case "match-expr": {
+        // The subject once, under a hidden local; then the first arm one of whose values equals it (§6.18).
+        const subject = ctx.fn.local("match", e.subject.type);
+        const orElse = e.arms.find((a) => !a.values);
+        let out = orElse ? placeAs(expr(orElse.value, ctx), e.type, orElse.value.type) : IR.constant(null);
+        for (const arm of [...e.arms].reverse()) {
+          if (!arm.values) continue;
+          const cond = arm.values.map((v) => IR.binary("==", IR.local(subject), armValue(v, ctx))).reduce((a, b) => IR.binary("or", a, b));
+          out = IR.cond(cond, placeAs(expr(arm.value, ctx), e.type, arm.value.type), out);
+        }
+        return IR.bind(subject, expr(e.subject, ctx), out);
       }
       case "call": {
         // A call of a function a name holds (§9.10).

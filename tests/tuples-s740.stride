@@ -1,0 +1,9 @@
+let t = (1, "a")
+print(t.2)
+print(t[0])
+let n = 5
+print(n.0)
+# rule S740 6.19
+# mistake 2 S740
+# mistake 3 S740
+# mistake 5 S740

@@ -303,12 +303,22 @@ export function resolve(loaded, diagnostics) {
         return T.ERROR;
       }
       case "type-set": {
+        // Several options of an option set (§3.8), or values of one type, each once (§3.12).
+        if (!node.name) {
+          const element = resolveType(node.element, scope, unit, native);
+          if (!T.isError(element)) err("S210", unit.file, node.span, `a set holds an option set's options, words, numbers, dates or bools, not ${T.describe(element)}`);
+          return T.ERROR;
+        }
+        if (T.SCALARS[node.name]) return T.set(T.SCALARS[node.name]);
         const sym = lookupQualified(scope, node.name);
         if (sym?.kind === "enum") return T.options(sym.type.set);
+        if (sym?.kind === "typevar") return T.set(sym.type);
         const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "enum");
-        err("S210", unit.file, node.span, sym ? `set<…> needs an option set, and ${node.name} is ${what(sym)}` : `there is no option set called ${node.name}${didYouMean(node.name, sets)}`);
+        err("S210", unit.file, node.span, sym ? `a set holds an option set's options, words, numbers, dates or bools, and ${node.name} is ${what(sym)}` : `there is no option set called ${node.name}${didYouMean(node.name, sets)}`);
         return T.ERROR;
       }
+      case "type-tuple":
+        return T.tuple(node.elements.map((x) => resolveType(x, scope, unit, native)));
       case "type-map": {
         const key = resolveType(node.key, scope, unit, native);
         const value = resolveType(node.value, scope, unit, native);
@@ -484,6 +494,7 @@ export function resolve(loaded, diagnostics) {
         return resolveExpr(s.value, scope, unit);
       case "match":
         resolveExpr(s.subject, scope, unit);
+        for (const a of s.arms) for (const v of a.values ?? []) resolveExpr(v, scope, unit);
         s.arms.forEach((a, i) => inBranch(s, i, () => a.body.forEach((t) => resolveStatement(t, scope, unit))));
         return;
       case "while": {
@@ -883,7 +894,15 @@ export function resolve(loaded, diagnostics) {
         for (const a of e.args) resolveExpr(a, scope, unit);
         return;
       case "list":
+      case "tuple":
         for (const x of e.items) resolveExpr(x, scope, unit);
+        return;
+      case "match-expr":
+        resolveExpr(e.subject, scope, unit);
+        for (const a of e.arms) {
+          for (const v of a.values ?? []) resolveExpr(v, scope, unit);
+          resolveExpr(a.value, scope, unit);
+        }
         return;
       case "map":
         for (const x of e.entries) (resolveExpr(x.key, scope, unit), resolveExpr(x.value, scope, unit));

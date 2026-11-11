@@ -7,7 +7,7 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet, equal, StrideTuple } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.6, §3.8): a list of options made the set.
 function placed(v, type) {
@@ -130,6 +130,8 @@ function value(e, env, visiting) {
       // An item of a known list (§6.9.2): F004 unless the position is a whole number from 0 to below the count.
       const l = value(e.target, env, visiting);
       const i = value(e.index, env, visiting);
+      // A known tuple's value at a position written out (§6.17).
+      if (l instanceof StrideTuple) return e.position ? l.items[Number(e.index.raw)] ?? null : undefined;
       if (l === undefined || i === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const n = readPosition(l, i);
@@ -145,6 +147,29 @@ function value(e, env, visiting) {
         items.push(v);
       }
       return items;
+    }
+    case "tuple": {
+      const items = [];
+      for (const x of e.items) {
+        const v = value(x, env, visiting);
+        if (v === undefined) return undefined;
+        items.push(v);
+      }
+      return new StrideTuple(items);
+    }
+    case "match-expr": {
+      // The value of the first arm one of whose values equals the subject; of `else`; or null (§6.18).
+      const s = value(e.subject, env, visiting);
+      if (s === undefined) return undefined;
+      for (const arm of e.arms) {
+        if (!arm.values) return value(arm.value, env, visiting);
+        for (const v of arm.values) {
+          const k = value(v, env, visiting);
+          if (k === undefined) return undefined;
+          if (equal(k, s)) return value(arm.value, env, visiting);
+        }
+      }
+      return null;
     }
     case "cond": {
       const c = value(e.condition, env, visiting);

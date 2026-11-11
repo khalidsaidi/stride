@@ -177,6 +177,7 @@ export function format(text, name = "program.stride") {
   }
 
   function statement(s, indent) {
+    if (s.hidden) return; // a name of `(a, b) = …`, written with the statement it belongs to
     at = { indent, line: s.span.line };
     switch (s.kind) {
       case "ask": {
@@ -207,7 +208,8 @@ export function format(text, name = "program.stride") {
       }
       case "let":
       case "var":
-        put(s, indent, `${s.kind} ${s.name}${s.type ? `: ${type(s.type)}` : ""}${s.value ? ` = ${expr(s.value)}` : ""}`);
+        if (s.destructure) put(s, indent, `${s.destructure.kind === "assign" ? "" : `${s.destructure.kind} `}(${(s.destructure.names ?? s.destructure.targets.map((x) => expr(x))).join(", ")}) = ${expr(s.value)}`);
+        else put(s, indent, `${s.kind} ${s.name}${s.type ? `: ${type(s.type)}` : ""}${s.value ? ` = ${expr(s.value)}` : ""}`);
         return trailing(s.span.endLine);
       case "fill":
         put(s, indent, `fill ${expr(s.box)} = ${expr(s.value)}`);
@@ -224,7 +226,7 @@ export function format(text, name = "program.stride") {
         put(s, indent, `match ${expr(s.subject)} {`);
         opening(s);
         for (const arm of s.arms) {
-          put(arm, `${indent}  `, `${arm.values ? arm.values.map((v) => (v.kind === "number" ? v.raw : plain(v.value))).join(", ") : "else"} => {`);
+          put(arm, `${indent}  `, `${armValues(arm)} => {`);
           trailing(arm.span.line);
           block(arm.body, `${indent}    `);
           close(arm, `${indent}  `);
@@ -263,7 +265,7 @@ export function format(text, name = "program.stride") {
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "for-each":
-        put(s, indent, `for ${s.index ? `${s.index}, ` : ""}${s.item} in ${expr(s.list)} {`);
+        put(s, indent, `for ${s.destructure ? `(${s.destructure.join(", ")})` : `${s.index ? `${s.index}, ` : ""}${s.item}`} in ${expr(s.list)} {`);
         opening(s);
         block(s.body, `${indent}  `);
         return close(s, indent);
@@ -353,7 +355,9 @@ export function format(text, name = "program.stride") {
       case "type-map":
         return `map<${type(t.key)}, ${type(t.value)}>`;
       case "type-set":
-        return `set<${t.name}>`;
+        return `set<${type(t.element)}>`;
+      case "type-tuple":
+        return `(${t.elements.map(type).join(", ")})`;
       case "type-any":
         return "any";
       case "type-function":
@@ -364,6 +368,11 @@ export function format(text, name = "program.stride") {
       default:
         throw new Error(`stride fmt has no layout for the type ${t.kind}`);
     }
+  }
+
+  // An arm's values, or else.
+  function armValues(arm) {
+    return arm.values ? arm.values.map((v) => (v.kind === "number" ? v.raw : v.kind === "plain-string" ? plain(v.value) : expr(v, 1))).join(", ") : "else";
   }
 
   function expr(e, outer = 0) {
@@ -418,7 +427,16 @@ export function format(text, name = "program.stride") {
       case "field":
         return `${expr(e.target, 8)}.${e.name}`;
       case "index":
-        return `${expr(e.target, 8)}[${expr(e.index)}]`;
+        return e.position ? `${expr(e.target, 8)}.${e.index.raw}` : `${expr(e.target, 8)}[${expr(e.index)}]`;
+      case "tuple":
+        return `(${e.items.map((a) => expr(a)).join(", ")})`;
+      case "match-expr":
+        // Written over several lines, an arm a line; else on one, the arms after commas.
+        if (e.span.line !== e.span.endLine) {
+          const indent = at.indent;
+          return `match ${expr(e.subject)} {\n${e.arms.map((a) => `${indent}  ${armValues(a)} => ${expr(a.value)}`).join("\n")}\n${indent}}`;
+        }
+        return `match ${expr(e.subject)} { ${e.arms.map((a) => `${armValues(a)} => ${expr(a.value)}`).join(", ")} }`;
       case "slice":
         return `${expr(e.target, 8)}[${e.from.open ? "" : expr(e.from)}${e.exclusive ? "..<" : ".."}${e.to.open ? "" : expr(e.to)}]`;
       case "call":
@@ -429,8 +447,18 @@ export function format(text, name = "program.stride") {
         return `[${e.items.map((a) => expr(a)).join(", ")}]`;
       case "map":
         return `{${e.entries.map((x) => `${expr(x.key)}: ${expr(x.value)}`).join(", ")}}`;
-      case "comprehension":
-        return `[${expr(e.value)} for ${e.index ? `${e.index}, ` : ""}${e.item} in ${expr(e.list, 1)}${e.condition ? ` if ${expr(e.condition, 1)}` : ""}]`;
+      case "comprehension": {
+        // Every `for`, outermost first, then the value of the last (§6.12.1); a map's as key: value (§6.12.2).
+        const fors = [];
+        let last = e;
+        for (;;) {
+          fors.push(`for ${last.index ? `${last.index}, ` : ""}${last.item} in ${expr(last.list, 1)}${last.condition ? ` if ${expr(last.condition, 1)}` : ""}`);
+          if (!last.nested) break;
+          last = last.value;
+        }
+        const v = last.value;
+        return e.asMap ? `{${expr(v.items[0])}: ${expr(v.items[1])} ${fors.join(" ")}}` : `[${expr(v)} ${fors.join(" ")}]`;
+      }
       case "cond":
         return wrap(0.5, `if ${expr(e.condition)} then ${expr(e.yes)} else ${expr(e.no)}`);
       case "new":
