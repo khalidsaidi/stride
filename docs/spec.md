@@ -856,10 +856,10 @@ words given to `print`, and a fault or none.
 | `is_digits(t: text) -> yes-no` | yes when t is not empty and every character is 0–9 |
 | `is_letters(t: text) -> yes-no` | yes when t is not empty and every character is a letter |
 | `replace(t: text, part: text, with: text) -> text` | every part replaced by with, left to right, not overlapping; part empty: t |
-| `contains(t: text, part: text) -> yes-no` | whether part is in t, case ignored (Unicode simple case folding); part empty: yes |
+| `contains(t: text, part: text) -> yes-no` | whether part is in t, as written (`contains(lower(t), "llc")` to ignore case); part empty: yes |
 | `starts_with(t: text, part: text) -> yes-no`, `ends_with(t: text, part: text) -> yes-no` | the same at the start, at the end |
-| `find(t: text, part: text) -> number` | the position of the first part in t, case ignored; 0 when it is not there or part is empty |
-| `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping, case ignored; 0 when part is empty |
+| `find(t: text, part: text) -> number` | the position of the first part in t; 0 when it is not there or part is empty |
+| `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping; 0 when part is empty |
 | `split(t: text, separator: text) -> list of text most 1000` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017 |
 | `line(t: text, n: number) -> text` | line n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
 | `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |

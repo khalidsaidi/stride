@@ -62,11 +62,11 @@ export native define is_digits(t: text) -> yes-no
 export native define is_letters(t: text) -> yes-no
 # example: replace("a-b-c", "-", "/") gives a/b/c
 export native define replace(t: text, part: text, with: text) -> text
-# example: contains("Hello", "ELL") gives yes
+# example: contains("Hello", "ell") gives yes
 export native define contains(t: text, part: text) -> yes-no
-# example: starts_with("Hello", "he") gives yes
+# example: starts_with("Hello", "He") gives yes
 export native define starts_with(t: text, part: text) -> yes-no
-# example: ends_with("Hello", "LO") gives yes
+# example: ends_with("Hello", "lo") gives yes
 export native define ends_with(t: text, part: text) -> yes-no
 # example: find("banana", "an") gives 2
 export native define find(t: text, part: text) -> number

@@ -28,16 +28,16 @@ expect is_letters("abé")
 expect not is_letters(empty)
 expect replace("aaa", "aa", "b") == "ba"
 expect replace("abc", "", "x") == "abc"
-expect contains("ABC", "b")
+expect contains("ABC", "B")
 expect contains("abc", "")
-expect starts_with("Hello", "he")
-expect ends_with("Hello", "LO")
+expect starts_with("Hello", "He")
+expect ends_with("Hello", "lo")
 expect find("Hello", "l") == 3
-expect find("ABC", "b") == 2
+expect find("ABC", "B") == 2
 expect find("abc", "z") == 0
 expect find("abc", "") == 0
 expect occurrences("aaaa", "aa") == 2
-expect occurrences("AbAb", "ab") == 2
+expect occurrences("AbAb", "Ab") == 2
 expect occurrences("abc", "") == 0
 expect split("a,,b", ",") == ["a", "", "b"]
 expect count(split("", ",")) == 0

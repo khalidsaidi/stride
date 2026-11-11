@@ -37,29 +37,6 @@ function places(name, v) {
 const SEPARATORS = /[ \-–—/.]/gu; // spaces, -, –, —, / and . (§14.1); not tabs, line ends or other spaces
 const compact = (t) => text(t).replace(SEPARATORS, "");
 
-// Case folding for contains, find and the like: Unicode simple case folding (CaseFolding.txt, statuses C and S),
-// one character to one, so positions found in the folded words are positions in the words. Each character is
-// replaced by the smallest character of its folding class, so two characters fold alike exactly when their simple
-// foldings are the same. The classes are the ones JavaScript's /iu matching uses, which is that same folding.
-const folded = new Map();
-function foldChar(c) {
-  let f = folded.get(c);
-  if (f !== undefined) return f;
-  const same = new RegExp(`^\\u{${c.codePointAt(0).toString(16)}}$`, "iu");
-  f = c;
-  const lower = c.toLowerCase(), upper = c.toUpperCase();
-  for (const k of [lower, upper, upper.toLowerCase(), lower.toUpperCase()]) {
-    if ([...k].length === 1 && k.codePointAt(0) < f.codePointAt(0) && same.test(k)) f = k;
-  }
-  folded.set(c, f);
-  return f;
-}
-const fold = (s) => {
-  let out = "";
-  for (const c of s) out += foldChar(c);
-  return out;
-};
-
 // Trimmed (§14.1): spaces and tabs off both ends, as trim takes them off; no other space.
 const trimmed = (s) => s.replace(/^[ \t]+|[ \t]+$/g, "");
 
@@ -184,20 +161,20 @@ export const NATIVES = {
       return result(pieces.join(text(w)));
     },
   },
-  contains: { pure: true, fn: (t, part) => fold(text(t)).includes(fold(text(part))) },
-  starts_with: { pure: true, fn: (t, part) => fold(text(t)).startsWith(fold(text(part))) },
-  ends_with: { pure: true, fn: (t, part) => fold(text(t)).endsWith(fold(text(part))) },
+  contains: { pure: true, fn: (t, part) => text(t).includes(text(part)) },
+  starts_with: { pure: true, fn: (t, part) => text(t).startsWith(text(part)) },
+  ends_with: { pure: true, fn: (t, part) => text(t).endsWith(text(part)) },
   find: {
     pure: true,
     fn: (t, part) => {
-      const p = fold(text(part));
+      const p = text(part);
       if (p === "") return num(0);
-      const s = fold(text(t));
+      const s = text(t);
       const at = s.indexOf(p);
       return num(at < 0 ? 0 : [...s.slice(0, at)].length + 1);
     },
   },
-  occurrences: { pure: true, fn: (t, part) => { const p = fold(text(part)); return num(p === "" ? 0 : fold(text(t)).split(p).length - 1); } },
+  occurrences: { pure: true, fn: (t, part) => { const p = text(part); return num(p === "" ? 0 : text(t).split(p).length - 1); } },
   split: {
     pure: true,
     fn: (t, sep) => {

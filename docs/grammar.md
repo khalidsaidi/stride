@@ -227,7 +227,7 @@ intersection difference`. Empty, faults and output: `either fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
 one-character boxes. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).
-`contains`, `starts_with`, `ends_with` and `find` ignore case.
+`contains`, `starts_with`, `ends_with` and `find` compare words as written; `lower` first to ignore case.
 
 ## What the compiler refuses
 

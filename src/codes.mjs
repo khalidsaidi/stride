@@ -996,7 +996,7 @@ export const LIBRARY = [
     "names": [
       "contains"
     ],
-    "gives": "whether part is in t, case ignored (Unicode simple case folding); part empty: yes"
+    "gives": "whether part is in t, as written (`contains(lower(t), \"llc\")` to ignore case); part empty: yes"
   },
   {
     "section": "14.1 Words",
@@ -1018,7 +1018,7 @@ export const LIBRARY = [
     "names": [
       "find"
     ],
-    "gives": "the position of the first part in t, case ignored; 0 when it is not there or part is empty"
+    "gives": "the position of the first part in t; 0 when it is not there or part is empty"
   },
   {
     "section": "14.1 Words",
@@ -1028,7 +1028,7 @@ export const LIBRARY = [
     "names": [
       "occurrences"
     ],
-    "gives": "how many times part is in t, not overlapping, case ignored; 0 when part is empty"
+    "gives": "how many times part is in t, not overlapping; 0 when part is empty"
   },
   {
     "section": "14.1 Words",
