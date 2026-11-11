@@ -35,6 +35,18 @@ export function check(resolved, diagnostics) {
     return null;
   };
 
+  // The standard library's functions that `sorted`, `any` and `all` are when given a function (§14.4.3): each is
+  // shown by the name it is called by.
+  const stdNames = resolved.units.find((r) => r.unit.std)?.scope.names;
+  const GIVEN_A_FUNCTION = { sorted_by_key: "sorted", sorted_by_compare: "sorted", any_where: "any", all_where: "all" };
+  const givenAFunction = {};
+  for (const [declared, shown] of Object.entries(GIVEN_A_FUNCTION)) {
+    const sym = stdNames?.get(declared);
+    if (sym?.kind !== "function") continue;
+    givenAFunction[declared] = sym;
+    sym.name = shown;
+  }
+
   // ----- declarations
 
   for (const r of resolved.units) {
@@ -45,6 +57,30 @@ export function check(resolved, diagnostics) {
     for (const sym of r.natives) checkDefaults(sym);
     for (const sym of r.consts) constType(sym);
   }
+  // A record's field with a default (§5.1.1): of the field's type, and worked out by the compiler.
+  const fieldDefaults = () => {
+    for (const r of resolved.units) {
+      for (const rec of r.records) {
+        for (const f of rec.decl.fields) {
+          const d = f.node.default;
+          if (!d) continue;
+          const t = expr(d, { fn: null, unit: r.unit }, { want: f.type });
+          if (!fitsAt(d, t, f.type)) {
+            err("S762", d, `${rec.name}'s ${f.name} is ${T.describe(f.type)}, and its default is ${T.describe(t)}`);
+            continue;
+          }
+          optionLiteral(d, f.type);
+          if (T.isError(t)) continue;
+          const v = evaluate(d);
+          if (v === undefined) err("S763", d, `a field's default is worked out by the compiler, from words, numbers and constants${faultIn(d) ? `; this one faults: ${faultIn(d).knownFault.message}` : `; ${rec.name}'s ${f.name} depends on something that is not`}`);
+          else {
+            f.hasDefault = true;
+            f.defaultValue = knownPlaced(d, f.type);
+          }
+        }
+      }
+    }
+  };
 
   // The operation inside an expression whose working out faulted, when one did (constant.mjs marks it).
   function faultIn(e) {
@@ -120,6 +156,7 @@ export function check(resolved, diagnostics) {
 
   // ----- bodies
 
+  fieldDefaults();
   for (const r of resolved.units) {
     // The program first: a function it calls is checked at the call, and may read the names defined before it.
     if (!r.unit.library) block(r.main, { fn: null, unit: r.unit, main: true });
@@ -136,6 +173,8 @@ export function check(resolved, diagnostics) {
   function checkFunction(sym, unit = sym.unit) {
     if (sym.checked || sym.checking) return;
     sym.checking = true;
+    // A short function nothing gave types to (§9.12): S760 where it stands says so.
+    for (const p of sym.params) if (!p.type) p.type = T.ERROR;
     checkDefaults(sym);
     const ctx = { fn: sym, unit, returns: [] };
     block(sym.node.body, ctx);
@@ -356,7 +395,7 @@ export function check(resolved, diagnostics) {
 
   function binding(s, ctx) {
     const sym = s.symbol;
-    let type = s.value ? expr(s.value, ctx, { allowNone: true }) : null;
+    let type = s.value ? expr(s.value, ctx, { allowNone: true, want: s.declaredType }) : null;
     if (type?.t === "none") {
       err("S324", s.value, `${describeExpr(s.value)} gives no value to keep`);
       type = T.ERROR;
@@ -482,6 +521,16 @@ export function check(resolved, diagnostics) {
       if (s.value) err("S338", s.value, "the program gives no value; a bare return ends it");
       return;
     }
+    // A short function's one value (§9.12): a call that gives no value is the function's whole body.
+    if (s.short && s.value?.kind === "call" && (ctx.fn.inferResult || ctx.fn.result.t === "none")) {
+      const type = expr(s.value, ctx, { allowNone: true });
+      if (type.t === "none" || !ctx.fn.inferResult) {
+        s.kind = "call-statement";
+        s.call = s.value;
+        delete s.value;
+      } else ctx.returns.push({ type, node: s.value });
+      return;
+    }
     if (ctx.fn.inferResult) {
       if (!s.value) err("S339", s, `${ctx.fn.name} gives a value on other paths; return needs one here too`);
       else ctx.returns.push({ type: expr(s.value, ctx), node: s.value });
@@ -492,14 +541,14 @@ export function check(resolved, diagnostics) {
       if (result.t !== "none") err("S340", s, `${ctx.fn.name} gives ${T.describe(result)}; return needs a value`);
       return;
     }
-    const type = expr(s.value, ctx);
+    const type = expr(s.value, ctx, { want: result });
     if (result.t === "none") err("S342", s.value, `${ctx.fn.name} is declared with no result; add -> ${T.describe(type)} after its parameters, or return nothing`);
     else if (!fitsAt(s.value, type, result)) err("S342", s.value, `${ctx.fn.name} gives ${T.describe(result)}, and this is ${T.describe(type)}`);
     else optionLiteral(s.value, result);
   }
 
   function assign(s, ctx) {
-    const valueType = s.op ? binary({ kind: "binary", op: s.op, a: s.target, b: s.value, span: s.span, opSpan: s.opSpan, compound: true, file: s.file }, ctx) : expr(s.value, ctx, { allowNone: true });
+    const valueType = s.op ? binary({ kind: "binary", op: s.op, a: s.target, b: s.value, span: s.span, opSpan: s.opSpan, compound: true, file: s.file }, ctx) : expr(s.value, ctx, { allowNone: true, want: s.target.kind === "name" ? s.target.symbol?.type : null });
     const target = s.target;
     let wanted = T.ERROR;
     // A function reads the program's names, and does not change them (§9.1).
@@ -617,9 +666,41 @@ export function check(resolved, diagnostics) {
     return [];
   }
 
+  // A short function whose parameters wait for their types (§9.12).
+  function waits(e) {
+    return e?.kind === "lambda" && e.symbol.params.some((p) => p.untyped);
+  }
+
+  // Gives a short function the types of the function type wanted where it stands (§9.12): its parameters' where
+  // they are not written, and its result. A part of `want` that is null is not told here.
+  function wantAt(e, want) {
+    if (!e || !want) return;
+    if (e.kind === "list" && want.t === "list") return e.items.forEach((x) => wantAt(x, want.element));
+    if (e.kind === "cond") return (wantAt(e.yes, want), wantAt(e.no, want));
+    if (e.kind !== "lambda" || !e.short || want.t !== "function") return;
+    const sym = e.symbol;
+    if (sym.checked || sym.checking) return;
+    if (want.params.length !== sym.params.length) {
+      e.wanted = want;
+      return;
+    }
+    sym.params.forEach((p, i) => {
+      if (!p.untyped || !want.params[i] || T.isError(want.params[i])) return;
+      p.type = want.params[i];
+      p.untyped = false;
+    });
+    if (!want.result || T.isError(want.result) || sym.params.some((p) => p.untyped)) return;
+    // The result wanted is the function's: what it returns is placed as it (§9.4.2).
+    if (want.result.t !== "none" || (e.valueBody && e.body[0].value?.kind === "call")) {
+      sym.result = want.result;
+      sym.inferResult = false;
+    }
+  }
+
   // `how.statement`: the call is a statement; `how.allowNone`: the context says itself what is wrong with a call that
   // gives no value (S324, S350, S366, S371). Anywhere else such a call is S370.
   function expr(e, ctx, how = {}) {
+    if (how.want) wantAt(e, how.want);
     const type = typeOf(e, ctx, how);
     e.type = type;
     // S370 where no more particular code is named (§9.6): the value is then an error, so the context says no more.
@@ -650,11 +731,19 @@ export function check(resolved, diagnostics) {
       case "lambda": {
         // A function written in place (§9.11): what it keeps has the type it has here.
         const sym = e.symbol;
+        const untold = sym.params.filter((p) => p.untyped);
+        if (untold.length) {
+          if (e.wanted) err("S761", e, `this function takes ${sym.params.length} ${sym.params.length === 1 ? "value" : "values"}, and the function wanted here takes ${e.wanted.params.length}`);
+          else err("S760", e, `nothing here tells the type of ${either(untold.map((p) => p.name)).replace(/ or /, " and ")}; write ${untold.length === 1 ? "it" : "them"}: (${sym.params.map((p) => `${p.name}: ${p.untyped ? "number" : T.describe(p.type)}`).join(", ")}) => …`);
+          for (const p of untold) (p.type = T.ERROR), (p.untyped = false);
+        }
         for (const k of e.keeps) {
           const t = expr(k, ctx);
-          sym.keeps.find((x) => x.kept === k.symbol && !x.type).type = t;
+          const kept = sym.keeps.find((x) => x.kept === k.symbol && !x.type);
+          if (kept) kept.type = t;
         }
         checkFunction(sym);
+        if (untold.length) return T.ERROR;
         if (!sym.result) {
           err("S353", e, "the function's result cannot be worked out here; write it: -> type");
           return T.ERROR;
@@ -885,9 +974,9 @@ export function check(resolved, diagnostics) {
         const sym = e.recordSymbol;
         const seen = new Set();
         for (const f of e.fields) {
-          const t = expr(f.value, ctx);
+          const field = sym?.decl.fields.find((x) => x.name === f.name);
+          const t = expr(f.value, ctx, { want: field?.type });
           if (!sym) continue;
-          const field = sym.decl.fields.find((x) => x.name === f.name);
           if (seen.has(f.name)) err("S362", f, `${f.name} is given twice`);
           seen.add(f.name);
           if (!field) err("S363", f, `the record ${sym.name} has no field ${f.name}${didYouMean(f.name, sym.decl.fields.map((x) => x.name))}`);
@@ -902,19 +991,64 @@ export function check(resolved, diagnostics) {
   }
 
   function call(e, ctx, how) {
-    for (const a of e.args) expr(a.kind === "named-arg" ? a.value : a, ctx, { allowNone: true });
+    const result = callOf(e, ctx, how);
+    // A short function the call gave no types to (§9.12): S760 where it stands.
+    for (const a of e.args) {
+      const v = a.kind === "named-arg" ? a.value : a;
+      if (!v.type) expr(v, ctx, { allowNone: true });
+      if (a.kind === "named-arg") a.type = v.type;
+    }
+    // sorted(l, key: f): what f gives is ordered (§14.4.3).
+    const key = e.callee && e.callee === givenAFunction.sorted_by_key ? e.bound?.[1] : null;
+    if (key?.type?.t === "function" && !T.orderable(key.type.result)) err("S367", key, `sorted orders numbers, dates or words, and key gives ${T.describe(key.type.result)}`);
+    return result;
+  }
+
+  function callOf(e, ctx, how) {
+    // r.f(…) where a record somewhere has a method f, or a field f that holds a function (§9.8): what r is says
+    // which is called. The record's own method first, then its field, then a function of the file.
+    let typed = null;
+    if (e.dot) {
+      const receiver = (typed = e.args[0]);
+      const rt = expr(receiver, ctx, { allowNone: true });
+      const decl = rt.t === "record" ? rt.decl : null;
+      const method = decl?.methods?.get(e.dot.name);
+      const field = decl?.fields.find((f) => f.name === e.dot.name);
+      if (method) e.target.symbol = method;
+      else if (field?.type.t === "function") {
+        e.dot.fieldIndex = decl.fields.indexOf(field);
+        e.dot.type = field.type;
+        e.target = e.dot;
+        e.args = e.args.slice(1);
+        e.valueCall = e.fieldCall = true;
+        e.method = false;
+      } else if (e.noFunction) err("S230", e.target, e.noFunction);
+      e.dot = null;
+    }
+    // sorted, any and all given a function are functions of the standard library written in Stride (§14.4.3).
+    if (!e.valueCall && e.target.symbol?.kind === "native" && e.target.symbol.unit?.std) {
+      const named = (n) => e.args.some((a) => a.kind === "named-arg" && a.name === n);
+      const name = e.target.symbol.name;
+      const to = name === "sorted" ? (named("key") ? "sorted_by_key" : named("compare") ? "sorted_by_compare" : null) : (name === "any" || name === "all") && (e.args.length > 1 || named("test")) ? `${name}_where` : null;
+      if (to && givenAFunction[to]) e.target.symbol = givenAFunction[to];
+    }
+    for (const a of e.args) {
+      const v = a.kind === "named-arg" ? a.value : a;
+      if (v !== typed && !waits(v)) expr(v, ctx, { allowNone: true });
+    }
     for (const a of e.args) if (a.kind === "named-arg") a.type = a.value.type;
     const sym = e.target.symbol;
     if (!sym && !e.valueCall) return T.ERROR;
     // A call of a function a value holds (§9.10): its values in order, each of its parameter's type.
     if (e.valueCall) {
       const called = e.target.kind === "name" ? e.target.name : "the function";
-      const t = expr(e.target, ctx);
+      const t = e.fieldCall && e.target.type ? e.target.type : expr(e.target, ctx);
       if (T.isError(t)) return T.ERROR;
       if (t.t !== "function") return (err("S228", e.target, `${e.target.kind === "name" ? e.target.name : "this"} is ${T.describe(t)}, not a function`), T.ERROR);
       if (e.args.some((a) => a.kind === "named-arg")) return (err("S388", e, `a function held in a name takes its values in order, without names`), T.ERROR);
       if (e.args.length !== t.params.length) return (err("S365", e, `${called} takes ${t.params.length} ${t.params.length === 1 ? "value" : "values"}, and is given ${e.args.length}`), T.ERROR);
       e.args.forEach((a, i) => {
+        if (waits(a)) expr(a, ctx, { allowNone: true, want: t.params[i] });
         if (a.type && !T.isError(a.type) && !fitsAt(a, a.type, t.params[i])) err("S367", a, `${called}'s value ${i + 1} is ${T.describe(t.params[i])}, and this is ${T.describe(a.type)}`);
       });
       e.valueType = t;
@@ -979,6 +1113,20 @@ export function check(resolved, diagnostics) {
     if (positional > params.length || params.some((p, i) => !bound[i] && !p.hasDefault)) {
       if (ok || positional > params.length) err("S365", e, `${sym.name} takes ${params.length === 0 ? "no values" : `${params.length} value${params.length === 1 ? "" : "s"} (${params.map((p) => `${p.name}${p.hasDefault ? " = …" : ""}`).join(", ")})`}, and is given ${given}`);
       return sym.result?.t === "any" ? T.ERROR : sym.result ?? T.ERROR;
+    }
+    // A short function takes its parameters' types from its parameter (§9.12), with the type parameters the other
+    // arguments tell put in; one whose type a type parameter not told yet holds is left for the function to tell.
+    if (bound.some(waits)) {
+      const told = new Map();
+      bound.forEach((a, i) => a?.type && T.unify(params[i].type, a.type, told));
+      const open = (t) => (sym.typeParams ?? []).some((tv) => !told.has(tv) && T.typevarIn(t, tv));
+      bound.forEach((a, i) => {
+        if (!waits(a)) return;
+        const p = T.substitute(params[i].type, told);
+        const want = p.t === "function" ? T.fn(p.params.map((x) => (open(x) ? null : x)), open(p.result) ? null : p.result) : null;
+        expr(a, ctx, { allowNone: true, want });
+        if (a.type?.t === "function") T.unify(params[i].type, a.type, told);
+      });
     }
     e.bound = bound.map((a, i) => a ?? { kind: "default-of", param: params[i], span: e.span, file: e.file, type: params[i].type });
     // §9.5.1: each argument whose parameter mentions a type parameter gives it a candidate; the binding is their join.

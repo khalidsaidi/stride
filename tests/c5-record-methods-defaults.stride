@@ -1,0 +1,62 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const START = 18
+enum kind { "new" "New" "old" "Old" }
+record person {
+  name: string
+  age: number = START + 1
+  tags: list<string> = ["a"]
+  state: kind = "new"
+  nick: string = null
+  on_greet: function(string) -> string
+  function greet(self, greeting: string = "hi") -> string {
+    return "{greeting} {self.name}"
+  }
+  function older(by: number) -> person {
+    return new person { name: self.name, age: self.age + by }
+  }
+  function birthday() {
+    self.age += 1
+  }
+  function describe(self) -> string {
+    return "{self.greet()} ({self.age}, {self.state})"
+  }
+  function function_field(self) -> string {
+    return self.on_greet(self.name)
+  }
+}
+record box {
+  function: string = "f"
+}
+function greet(p: person, greeting: string) -> string {
+  return "free"
+}
+function label(p: person) -> string {
+  return "label {p.name}"
+}
+function shout(b: box) -> string {
+  return upper(b.function)
+}
+let a = new person { name: "Ada" }
+let b = new person { name: "Bo", age: 40, tags: [], on_greet: (t) => "yo {t}" }
+append(a.tags, "z")
+print(a.age)
+print(a.tags)
+print(new person { name: "Cy" }.tags)
+print(b.tags)
+print(a.nick == null)
+print(a.greet("hello"))
+print(a.greet())
+print(a.older(2).greet(greeting: "hey"))
+a.birthday()
+print(a.describe())
+print(a.label())
+print(b.on_greet("x"))
+print((b.on_greet)("y"))
+print(b.function_field())
+print(greet(a, "x"))
+print(new box { }.shout())
+var people = [a, b]
+print([p.greet("oi") for p in people])
+# rule 5.1.1 5.1.2 9.8.1 9.8
+# prints ["19", "[a, z]", "[a]", "[]", "true", "hello Ada", "hi Ada", "hey Ada", "hi Ada (20, new)", "label Ada", "yo x", "yo y", "yo Bo", "free", "F", "[oi Ada, oi Bo]"]

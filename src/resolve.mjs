@@ -101,6 +101,7 @@ export function resolve(loaded, diagnostics) {
   const typeNamed = new Set(); // names a declaration was refused for, being a type's (S208)
   const refusedAliases = new Set(); // use … as names refused by S110: their library's calls say nothing more
   const results = new Map(); // unit -> result
+  const callableMembers = new Set(); // the names of records' methods and of their fields that hold a function (§9.8)
   let branch = []; // where resolution stands among ifs and matches (inBranch)
   // The scope whose finally block is being resolved, or null: a return there, or a break or continue of a loop
   // around the try, is refused (§7.18.2, S721).
@@ -191,8 +192,27 @@ export function resolve(loaded, diagnostics) {
         }
         seen.set(f.name, f);
         sym.decl.fields.push({ name: f.name, type: resolveType(f.type, scope, unit), node: f });
+        if (f.type.kind === "type-function") callableMembers.add(f.name);
+        // A default is made of what the file declares (§5.1.1).
+        if (f.default) resolveExpr(f.default, scope, unit);
       }
       sym.type = T.record(sym.decl);
+      // Methods (§5.1.2): functions of the file, each with the record as its first parameter, self.
+      sym.decl.methods = new Map();
+      for (const m of sym.node.methods ?? []) {
+        if (seen.has(m.name) || sym.decl.methods.has(m.name)) {
+          err("S764", unit.file, m.nameSpan, `${sym.name} has ${seen.has(m.name) ? "a field" : "another method"} called ${m.name}`);
+          continue;
+        }
+        const method = new Sym("function", `${sym.name}.${m.name}`, m, unit);
+        method.method = m.name;
+        method.record = sym;
+        method.exported = sym.exported;
+        m.symbol = method;
+        sym.decl.methods.set(m.name, method);
+        callableMembers.add(m.name);
+        result.functions.push(method);
+      }
     }
     for (const sym of result.consts) if (sym.node.type) sym.declaredType = resolveType(sym.node.type, scope, unit);
     for (const sym of [...result.functions, ...result.natives]) {
@@ -216,7 +236,7 @@ export function resolve(loaded, diagnostics) {
       }
       for (const p of sym.node.params) {
         const param = new Sym("param", p.name, p, unit);
-        param.type = resolveType(p.type, fnScope, unit, sym.kind === "native");
+        param.type = p.self ? sym.record.type : resolveType(p.type, fnScope, unit, sym.kind === "native");
         // A default is worked out by the compiler: made of words, numbers and the file's constants (§9.2).
         if (p.default) {
           // Seen from the function, with no parameter in sight; resolved after the program's statements, whose
@@ -767,7 +787,9 @@ export function resolve(loaded, diagnostics) {
         if (e.called) fnScope.names.set(e.called, sym);
         for (const p of e.params) {
           const param = new Sym("param", p.name, p, unit);
-          param.type = resolveType(p.type, scope, unit);
+          // A short function's parameter may leave its type to where the function stands (§9.12).
+          param.type = p.type ? resolveType(p.type, scope, unit) : null;
+          param.untyped = !p.type;
           if (p.default) err("S392", unit.file, p.span, "a function written in place is called through a value, so its parameters have no defaults");
           p.symbol = param;
           if (fnScope.own(p.name)) err("S219", unit.file, p.span, `the function has two parameters called ${p.name}`);
@@ -863,6 +885,10 @@ export function resolve(loaded, diagnostics) {
             }
           }
           e.method = true;
+          // A record's own method, or a field that holds a function, goes before a function of the file (§9.8):
+          // the type phase, which knows what the call is made on, chooses.
+          const member = callableMembers.has(name);
+          if (member) e.dot = e.target;
           // The call's place is the function's name (§16.3.1), not the value it is called on.
           e.target = { kind: "name", name, span: e.target.nameSpan ?? e.target.span, file: e.target.file };
           e.args = [receiver, ...e.args];
@@ -871,7 +897,9 @@ export function resolve(loaded, diagnostics) {
             return;
           } else if (!sym || (sym.kind !== "function" && sym.kind !== "native")) {
             const fns = scope.visible().filter((n) => ["function", "native"].includes(scope.lookup(n)?.kind));
-            err("S230", unit.file, e.target.span, `there is no function called ${name} to call on ${receiver.kind === "name" ? receiver.name : "this"}${didYouMean(name, fns)}; a record's fields are read without ()`);
+            const message = `there is no function called ${name} to call on ${receiver.kind === "name" ? receiver.name : "this"}${didYouMean(name, fns)}; a record's fields are read without ()`;
+            if (member) e.noFunction = message;
+            else err("S230", unit.file, e.target.span, message);
           } else e.target.symbol = sym;
           for (const a of e.args) resolveExpr(a, scope, unit);
           return;

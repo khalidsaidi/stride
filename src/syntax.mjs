@@ -15,7 +15,8 @@
 //   item        = import | declaration | statement
 //   import      = "import" plain ["as" name]
 //   declaration = ["export"] (record | enum | const | native | function)
-//   record      = "record" word "{" (word ":" type [","])* "}"          word = a name or a keyword
+//   record      = "record" word "{" ((word ":" type ["=" expr] | method) [","])* "}"   word = a name or a keyword
+//   method      = "function" name ["<" name ("," name)* ">"] "(" ["self" [","]] [params] ")" ["->" type] block
 //   enum        = "enum" name "{" (["option"] plain string)* "}"
 //   const       = "const" name [":" type] "=" expr
 //   native      = "native" "function" name "(" [params] ")" ["->" type]
@@ -45,6 +46,7 @@
 //               | "[" expr fors "]" | "{" expr ":" expr fors "}" | "{" [expr ":" expr ("," expr ":" expr)*] "}"
 //               | "match" expr "{" ((values | "else") "=>" expr [","])* "}"
 //   fors        = ("for" [name ","] name "in" or ["if" or])+
+//               | "(" [name [":" type] ("," name [":" type])*] ")" "=>" (expr | block)
 import { either } from "./source.mjs";
 import * as D from "../runtime/decimal.mjs";
 
@@ -532,17 +534,47 @@ class Parser {
     const start = this.take();
     const name = this.name();
     this.expect("punct", "{");
-    const fields = [];
+    const fields = [], methods = [];
     while (!this.sym("}")) {
       const f = this.token;
+      // A method (§5.1.2): function name(…) { … }. `function: type` is a field called function.
+      if (this.word("function") && !(this.peek().type === "punct" && this.peek().value === ":")) {
+        methods.push(this.method());
+        if (this.sym(",")) this.take();
+        continue;
+      }
       const fname = this.fieldName();
       this.expect("punct", ":", '":" and the field\'s type');
       const type = this.type();
-      fields.push(this.node("field-decl", f, { name: fname, type }));
+      // A default: name: type = value (§5.1.1).
+      let value = null;
+      if (this.sym("=")) {
+        this.take();
+        value = this.expr();
+      }
+      fields.push(this.node("field-decl", f, { name: fname, type, default: value }));
       if (this.sym(",")) this.take();
     }
     this.take();
-    return this.node("record", start, { name, fields });
+    return this.node("record", start, { name, fields, methods });
+  }
+
+  // A record's method (§5.1.2): a function whose first parameter, self, is the record it is called on. `self` may
+  // be written first, without a type; it is there either way.
+  method() {
+    const start = this.take();
+    const nameTok = this.token;
+    const name = this.name();
+    const typeParams = this.typeParams();
+    const params = this.params(true);
+    params.unshift({ kind: "param", name: "self", type: null, default: null, self: true, span: params.selfSpan ?? nameTok.span });
+    let result = null;
+    if (this.sym("->")) {
+      this.take();
+      result = this.type();
+    }
+    const body = this.block();
+    return this.node("function", start, { name, typeParams, params, result, body, method: true, selfWritten: !!params.selfSpan, nameSpan: nameTok.span });
   }
 
   enum() {
@@ -622,9 +654,14 @@ class Parser {
     return this.node("function", start, { name, typeParams, params, result, body });
   }
 
-  params() {
+  params(method = false) {
     this.expect("punct", "(");
     const out = [];
+    // A method's self, written first without a type (§5.1.2).
+    if (method && this.is("name", "self") && this.peek().type === "punct" && [",", ")"].includes(this.peek().value)) {
+      out.selfSpan = this.take().span;
+      if (this.sym(",")) this.take();
+    }
     while (!this.sym(")")) {
       const p = this.token;
       const name = this.name("a parameter's name");
@@ -1456,6 +1493,7 @@ class Parser {
       this.expect("punct", "]", '"," or "]"');
       return this.node("list", start, { items });
     }
+    if (this.sym("(") && this.shortAhead()) return this.shortFunction();
     if (this.sym("(")) {
       const start = this.take();
       const e = this.expr();
@@ -1504,6 +1542,52 @@ class Parser {
     let node = value;
     for (let i = fors.length - 1; i >= 0; i--) node = this.node("comprehension", start, { value: node, ...fors[i], nested: i < fors.length - 1 });
     return node;
+  }
+
+  // ( … ) => : a short function (§9.12). The bracket that closes this one is followed by "=>".
+  shortAhead() {
+    let depth = 0;
+    for (let i = this.at; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      if (t.type === "end") return false;
+      // Parameters are names and types: a number or words inside is a tuple, as a match's arm writes one.
+      if (t.type === "number" || t.type === "string") return false;
+      if (t.type !== "punct") continue;
+      if (t.value === "(") depth++;
+      if (t.value === ")" && --depth === 0) {
+        const next = this.tokens[i + 1];
+        return next?.type === "punct" && next.value === "=>";
+      }
+    }
+    return false;
+  }
+
+  // (x) => x * 2, (a: number, b: number) => { … }: a function written in place (§9.12); a parameter's type may be
+  // left out, and its body is one value or a block.
+  shortFunction() {
+    const start = this.take();
+    const params = [];
+    while (!this.sym(")")) {
+      const p = this.token;
+      const name = this.name("a parameter's name");
+      let type = null;
+      if (this.sym(":")) {
+        this.take();
+        type = this.type();
+      }
+      params.push(this.node("param", p, { name, type, default: null }));
+      if (!this.sym(")")) this.expect("punct", ",", '"," or ")"');
+    }
+    this.take();
+    this.expect("punct", "=>");
+    if (this.sym("{")) return this.node("lambda", start, { params, result: null, body: this.block(), typeParams: [], short: true });
+    this.enter();
+    try {
+      const value = this.expr();
+      return this.node("lambda", start, { params, result: null, body: [{ kind: "return", value, span: value.span, short: true }], typeParams: [], short: true, valueBody: true });
+    } finally {
+      this.leave();
+    }
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.

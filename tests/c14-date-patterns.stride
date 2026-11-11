@@ -1,0 +1,39 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let d = date_of(2026, 7, 4)
+print(format(d, "dddd, D MMMM YYYY"))
+print(format(d, "ddd DD MMM YY"))
+print(format(d, "'Day' D 'of' MMMM, 'o''clock'"))
+print(format(d, "M/D d dd é"))
+print(format(date_of(2026, 11, 9), "dddd"))
+print([weekday(add_days(date_of(2026, 11, 9), n)) for n in [0, 1, 5, 6, 7]])
+print(weekday(date_of(1, 1, 1)))
+print(parse_date("07/04/2026", "MM/DD/YYYY"))
+print(parse_date("Saturday, 4 July 2026", "dddd, D MMMM YYYY"))
+print(parse_date("sat 4 JUL 26", "ddd D MMM YY"))
+print(parse_date("Day 4 of 7, 2026", "'Day' D 'of' M, YYYY"))
+print(parse_date(format(d, "YYYY-MM-DD"), "YYYY-MM-DD") == d)
+print(parse_date("31/02/2026", "DD/MM/YYYY") == null)
+print(parse_date("Sunday 4 July 2026", "dddd D MMMM YYYY") == null)
+print(parse_date("07/04/2026 ", "MM/DD/YYYY") == null)
+print(parse_date("7/4/2026", "MM/DD/YYYY") == null)
+print(parse_date("", "MM/DD/YYYY") == null)
+try {
+  print(format(d, "'Day D"))
+} catch problem {
+  print(problem)
+}
+try {
+  print(format(d, "'D'"))
+} catch problem {
+  print(problem)
+}
+try {
+  print(parse_date("2026-07", "YYYY-MM"))
+} catch problem {
+  print(problem)
+}
+print(parse_date(null, "YYYY-MM-DD"))
+# rule 14.3.1 14.3
+# fault F023
+# prints ["Saturday, 4 July 2026", "Sat 04 Jul 26", "Day 4 of July, o'clock", "7/4 d dd é", "Monday", "[0, 1, 5, 6, 0]", "0", "2026-07-04", "2026-07-04", "2026-07-04", "2026-07-04", "true", "true", "true", "true", "true", "true", "format: the date pattern \"'Day D\" opens a quote ' and does not close it", "format: the date pattern \"'D'\" has none of YYYY, YY, MMMM, MMM, MM, M, DD, D, dddd, ddd", "parse_date: the date pattern \"YYYY-MM\" has no day: it needs a day (DD, D)"]

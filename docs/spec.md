@@ -281,6 +281,29 @@ is there).
 hold its own type, directly or through a list, a map or other records (a tree, a chain): such a field starts
 null, such a list with no items (§6.14).
 
+5.1.1. **A field's default**: `name: type = e`, as `age: number = 0`. `new R { … }` that leaves the field out gives it
+the default, made anew for each record (a list is its own). The default is a value the compiler works out (§11.1:
+words, a number, a date, true or false, null, a list of them, made of constants; S763 otherwise) of the field's
+type (S762). A record made without `new` (§7.5.1) starts as §6.14 says.
+
+5.1.2. **Methods**: a record's declaration may hold functions, `"function" name ["<" …">"] "(" ["self" [","]] [param
+("," param)*] ")" ["->" type] block`, among its fields. A method is a function whose first parameter, `self`, is
+the record it is called on: `self` is there whether or not it is written first in the parameters (it is written
+without a type), and the record's fields are read and given values through it (`self.name`). It is called
+`r.greet("hi")` (§9.8.1), with defaults and named arguments as any function (§9.2, §9.4), and may call itself and
+the record's other methods. A record has one method of a name, and no method named as one of its fields (S764).
+A library's exported record brings its methods with it.
+
+```
+record person {
+  name: string
+  age: number = 0
+  function greet(self, greeting: string) -> string {
+    return "{greeting} {self.name}"
+  }
+}
+```
+
 5.2. **enum** declares an option set: `"enum" name "{" (["option"] plain string)* "}"`. Values unique (S215), not `""` (S216); at
 least 1 option (S235). A question's own options obey the same. The
 printed words are the form's own, as its writer reads them.
@@ -893,6 +916,11 @@ is worked out) gives no value: its call is a statement, and used as a value it i
 9.8. `r.f(args)` is `f(r, args)`. A library kept under a name lends its functions to such calls; two such
 libraries with the same function is S113.
 
+9.8.1. **What `r.f(args)` calls.** When r is a record with a method f (§5.1.2), the method, with r as its `self`;
+else, when r is a record with a field f that holds a function (§9.10), that function, given args (`(r.f)(args)`
+is the same call); else the function f of the file or its libraries, as `f(r, args)`. So a record's own method
+goes before a function of the same name. When none of the three is there, the call is S230.
+
 9.9. A call runs exactly as often as the program says, and when it says: a
 function wrapping `today()` gives the run's date at each run, not the date it was compiled.
 
@@ -917,6 +945,19 @@ when the function is made: a list, a record or a map kept is the same object (§
 it the other sees. One put straight
 into a `let` or `var` names its questions by that name, another by `function` (§8.6.2). Two function values are
 equal when they are the same function over the same vars and equal values.
+
+9.12. **Short functions.** `(x) => x * 2`, `(a, b) => a + b`, `() => 1`: a function written in place (§9.11) whose
+body is one value, which it returns; or a block, `(x) => { … return … }` (a `{` after `=>` opens a block, so a map
+written out as the one value goes in brackets). A call that gives no value may be the one value: the function
+then gives none (`(x) => print(x)`). A parameter's type may be written, `(x: number) => x * 2`, or left out: it is
+then the type of that parameter in the function type wanted where the short function stands — the parameter it
+is an argument for (with the type parameters the call's other arguments tell put in, §9.5.1), the declared type
+of the `let` or `var` it is put into, of the var it is assigned to, of the record's field it is given to in `new`,
+the result type its function returns, or the element type of such a list it is an item of. The result is the
+wanted function type's too, when it tells one; what the function returns is placed as it (§9.4.2). Where nothing
+tells a parameter's type the short function is S760; where the function type wanted takes another number of
+values, S761. In everything else it is a function written in place: it keeps and shares the names around it as
+§9.11 says.
 
 ## 10. Boxes
 
@@ -1141,11 +1182,22 @@ none. A fault has a code, a message, and the place
 | `today() -> date` | §13.3 |
 | `date_of(year: number, month: number, day: number) -> date` | that day; no such day, or a part not whole: null |
 | `year(d: date) -> number`, `month(d: date) -> number`, `day(d: date) -> number` | its parts |
-| `format(d: date, pattern: string) -> string` | pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010 |
+| `format(d: date, pattern: string) -> string` | the pattern (§14.3.1) with d's parts put in; a pattern with none of them, or with a quote not closed, F010 |
+| `weekday(d: date) -> number` | the day of the week: 0 for Monday, 1 for Tuesday, to 6 for Sunday |
+| `parse_date(t: string, pattern: string) -> date` | the day t writes in the pattern (§14.3.1), or null when t is not written so or there is no such day; a pattern without a year, a month and a day, or one `format` refuses, F010 |
 | `days_between(from: date, to: date) -> number` | days from from to to (negative when to is earlier) |
 | `years_between(from: date, to: date) -> number` | whole years from from to to: an age on a day. When to ≥ from, the number of anniversaries of from that fall on or before to, where an anniversary on a day the year lacks (29 February in a common year) falls on the last day of that month (28 February). When to < from, minus `years_between(to, from)`: the count goes towards zero, and swapping the arguments changes only the sign. 2000-02-29 → 2001-02-28 is 1; 2000-02-29 → 2004-02-29 is 4; 2023-07-01 → 2024-06-30 is 0; 2024-06-30 → 2023-07-01 is 0 (not −1); 2024-07-01 → 2023-07-01 is −1 |
 | `add_days(d: date, n: number) -> date` | the day n days after d, n cut towards zero; outside 0001–9999 F011 |
 | `add_months(d: date, n: number) -> date` | the same day of the month n months after d (12 for a year), n cut towards zero; a month too short for the day ends at its last day; outside 0001–9999 F011 |
+
+14.3.1. **Date patterns.** In a pattern these stand for parts of the date, the longest first: `YYYY` the year in four
+digits, `YY` its last two; `MMMM` the month's name (`January`), `MMM` its first three letters (`Jan`), `MM` its
+number in two digits, `M` its number; `DD` the day in two digits, `D` the day; `dddd` the weekday's name
+(`Monday`), `ddd` its first three letters (`Mon`). The names are English. Words between single quotes are put as
+they are (`'Day' D` writes `Day 4`), and `''` inside them is one quote; every other character is put as it is.
+`parse_date` reads the same patterns: `YYYY` four digits, `YY` two (the year 2000 to 2099), `MM` and `DD` two,
+`M` and `D` one or two, a name in letters of either case; the other characters as they are; nothing may be left
+over, and a weekday read must be the day's own.
 
 ### 14.4 Lists and sets
 
@@ -1197,6 +1249,24 @@ entry says "or a set" (its items are then options).
 | `remove(s: set<T>, x: T) -> set<T>` | takes x out of s itself, when s holds it, and gives s |
 | `count(s: set<T>) -> number` | how many values s holds |
 | `union(a: set<T>, b: set<T>) -> set<T>`, `intersection(a: set<T>, b: set<T>) -> set<T>`, `difference(a: set<T>, b: set<T>) -> set<T>` | a new set of the values of a or b, of both, of a and not b, in a's order then b's; a and b sets of one type (S387) |
+
+### 14.4.3 Lists and functions
+
+These take a function (§9.10), often a short one (§9.12). All but `sorted`, `any` and `all` are written in Stride in
+`lib/std.stride`; a function with a type parameter is called, not passed (§9.10). A null list is F023, as going
+through it is (§7.11); items may be null. No list given is changed.
+
+| Signature | Gives |
+|---|---|
+| `map(l: list<T>, f: function(T) -> R) -> list<R>` | a new list of what f gives for each item, in order |
+| `filter(l: list<T>, f: function(T) -> bool) -> list<T>` | a new list of the items f gives true for, in order |
+| `reduce(l: list<T>, start: A, f: function(A, T) -> A) -> A` | every item folded into one value: start, then for each item in order f of the value so far and the item; no items: start |
+| `sorted(l: list<T>, key: function(T) -> K, descending: bool = false) -> list<T>` | `key` is given by its name. K a number, a date or words (else S367): a new list of the items in the order of what key gives for each (§6.7), equal ones keeping their order; key is called once for each item; a null it gives is F023 |
+| `sorted(l: list<T>, compare: function(T, T) -> number, descending: bool = false) -> list<T>` | `compare` is given by its name: a new list of the items in the order compare says, which gives a number below 0 when its first value comes first, above 0 when its second does, and 0 when either may; equal ones keep their order |
+| `any(l: list<T>, test: function(T) -> bool) -> bool` | true when test gives true for some item (it is not called for the items after it); no items: false |
+| `all(l: list<T>, test: function(T) -> bool) -> bool` | true when test gives true for every item (it is not called after the first it does not); no items: true |
+| `unique(l: list<T>) -> list<T>` | a new list of the items that equal (§6.6) none before them, in order |
+| `flatten(l: list<list<T>>) -> list<T>` | a new list of the items of every list in l, in order; a null list in l is F023 |
 
 ### 14.5 Null, faults and output
 
@@ -1494,6 +1564,11 @@ its call: the function's name in the call.
 | S720 | throw of a value that is not an error and not words | `throw "message"`, or `throw error("message", code: "CODE")` (§7.19). |
 | S721 | a return in a finally block, or a break or continue there of a loop around the try | The finally block runs to its end, and what the try was doing goes on after it; return, break or continue after the try statement, or in the try or the catch (§7.18.2). |
 | S722 | an error's code or message given a value | An error does not change; `error(message, code: "…")` makes another (§3.11). |
+| S760 | a short function `(x) => …` where nothing tells a parameter's type | A short function takes its parameters' types from the function type wanted where it stands (§9.12): an argument, a typed let, a field, a return. Elsewhere write them, `(x: number) => …`, or the long form `function(x: number) -> number { … }`. |
+| S761 | a short function with another number of parameters than the function type wanted | Give it as many parameters as the function wanted takes values. |
+| S762 | a record field's default of another type than the field | The default is a value of the field's type (§5.1.1). |
+| S763 | a record field's default the compiler cannot work out | A default is words, a number, a date, true or false, null or a list of them, made of constants; give any other value in `new`. |
+| S764 | a record's method named as another of its methods or as one of its fields | A record's fields and methods have each their own name (§5.1.2). |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |

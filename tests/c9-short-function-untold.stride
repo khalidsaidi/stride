@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function apply(x: number, f: function(number) -> number) -> number {
+  return f(x)
+}
+function choose<t>(a: t, b: t) -> t {
+  return a
+}
+let double = (x) => x * 2
+let both = (a: number, b) => a + b
+print(apply(1, (a, b) => a + b))
+let g: function(number) -> number = () => 1
+print(choose((x) => x, (y) => y))
+print(count([(x) => x]))
+print(apply(1, (x) => "a"))
+# rule 9.12 S760 S761
+# mistake 9:14 S760 nothing here tells the type of x; write it: (x: number) => …
+# mistake 10:12 S760 nothing here tells the type of b
+# mistake 11:16 S761 this function takes 2 values, and the function wanted here takes 1
+# mistake 12:37 S325
+# mistake 13:14 S760
+# mistake 13:24 S760
+# mistake 14:14 S760
+# mistake 15:23 S342

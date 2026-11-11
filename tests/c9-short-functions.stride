@@ -1,0 +1,61 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record op {
+  name: string
+  run: function(number, number) -> number
+}
+function apply<t, r>(x: t, f: function(t) -> r) -> r {
+  return f(x)
+}
+function each(l: list<number>, f: function(number)) {
+  for x in l {
+    f(x)
+  }
+}
+function adder(k: number) -> function(number) -> number {
+  return (n) => n + k
+}
+function twice(f: function(number) -> number) -> function(number) -> number {
+  return (n) => f(f(n))
+}
+print(apply(3, (x) => x * 2))
+print(apply("a", (t) => upper(t) + "!"))
+print(apply(2, (x) => {
+  let y = x + 1
+  return y * y
+}))
+let add: function(number, number) -> number = (a, b) => a + b
+print(add(1, 2))
+let one = () => 1
+print(one())
+let typed = (x: number) => x + 1
+print(typed(1))
+let mixed: function(number, string) -> string = (n: number, t) => "{t}{n}"
+print(mixed(1, "a"))
+let times = new op { name: "times", run: (a, b) => a * b }
+print(times.run(3, 4))
+print(adder(10)(5))
+print(twice((n) => n * 3)(2))
+var total = 0
+each([1, 2, 3], (x) => print(x))
+each([1, 2, 3], (x) => { total += x })
+print(total)
+function count_up() -> list<number> {
+  var seen = 0
+  let step = 2
+  let bump: function() = () => { seen += step }
+  bump()
+  bump()
+  return [seen]
+}
+print(count_up())
+var f: function(number) -> number = (n) => n
+f = (n) => n - 1
+print(f(1))
+let fs: list<function(number) -> number> = [(n) => n + 1, (n) => n * 10]
+print(fs[1](fs[0](1)))
+print(((a: number, b: number) => a - b)(5, 2))
+let chosen: function(number) -> list<string> = (n) => if n > 0 then ["x"] else []
+print(chosen(1))
+# rule 9.12 9.11
+# prints ["6", "A!", "9", "3", "1", "2", "a1", "12", "15", "18", "1", "2", "3", "6", "[4]", "0", "20", "3", "[x]"]

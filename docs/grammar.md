@@ -62,6 +62,10 @@ A field's name may be any word, a keyword among them: `r.default` (§2.3.2).
 | `function(T, …) -> R` | a function as a value: `function apply(f: function(number) -> number, n: number)` |
 
 A function written in place, where a value goes: `function(n: number) -> number { return n * 2 }` (§9.11).
+A short one: `(x) => x * 2`, `(a, b) => a + b`, `() => 1`, `(x) => { … return … }`; its parameters' types come from where it stands, or are written, `(x: number) => x * 2` (§9.12).
+A record's field may have a default, and a record may hold methods, called `p.greet("hi")`: `record person { name: string, age: number = 0, function greet(self, greeting: string) -> string { return "{greeting} {self.name}" } }` (§5.1.1, §5.1.2); `r.f(x)` also calls a function the field `f` holds (§9.8.1).
+Lists and functions (§14.4.2): `map(l, f)`, `filter(l, f)`, `reduce(l, start, f)`, `any(l, f)`, `all(l, f)`, `sorted(l, key: f)`, `sorted(l, compare: (a, b) => …)`, `unique(l)`, `flatten(l)`.
+Dates in words (§14.3.1): `format(d, "dddd, D MMMM YYYY")`, `'…'` for words as they are; `weekday(d)` (0 for Monday); `parse_date("07/04/2026", "MM/DD/YYYY")`.
 
 Numbers are exact: `0.1 + 0.2 == 0.3` is true; `+ - *` round to 34 digits only past them, and `/` rounds its
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;

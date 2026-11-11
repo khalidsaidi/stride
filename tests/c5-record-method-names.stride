@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: string
+  age: number
+  function greet(self) -> string {
+    return self.name
+  }
+  function greet(self) -> string {
+    return "again"
+  }
+  function age(self) -> number {
+    return 1
+  }
+}
+let p = new person { name: "a", age: 1 }
+print(p.greet())
+# rule 5.1.2 S764
+# mistake 9:12 S764 person has another method called greet
+# mistake 12:12 S764 person has a field called age

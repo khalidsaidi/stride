@@ -1,0 +1,42 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: string
+  age: number
+  born: date
+}
+function name_of(p: person) -> string {
+  return p.name
+}
+let people = [new person { name: "Bo", age: 40, born: date_of(1986, 1, 2) }, new person { name: "Al", age: 30, born: date_of(1996, 3, 4) }, new person { name: "Cy", age: 30, born: date_of(1996, 1, 1) }]
+print(map([1, 2, 3], (n) => n * 2))
+print(map(people, name_of))
+print(map(["a"], upper))
+print(filter([1, 2, 3, 4], (n) => n % 2 == 0))
+print(reduce([1, 2, 3], 10, (total, n) => total + n))
+print(reduce(people, "", (t, p) => t + p.name))
+print(unique([1, 2, 1, 3, 2]))
+print(unique(["a", null, "a", null]) == ["a", null])
+print(flatten([[1, 2], [], [3]]))
+print(any([1, 2, 3], (n) => n > 2))
+print(all([1, 2, 3], test: (n) => n > 2))
+print(any([true, false]))
+print(all([true, false]))
+print(sorted(["ccc", "a", "bb"], key: (t) => length(t)))
+print(map(sorted(people, key: (p) => p.age), name_of))
+print(map(sorted(people, key: (p) => p.age, descending: true), name_of))
+print(map(sorted(people, key: (p) => p.born), name_of))
+print(map(sorted(people, compare: (a, b) => a.age - b.age), name_of))
+print(map(sorted(people, compare: (a, b) => a.age - b.age, descending: true), name_of))
+print(sorted([3, 1, 2], compare: (a, b) => b - a))
+print(sorted(filter([1], (n) => n > 1), compare: (a, b) => a - b))
+print(people.map((p) => p.name).filter((n) => n != "Al"))
+print(count(people))
+var calls = 0
+print(any([1, 2, 3], (n) => {
+  calls += 1
+  return n > 0
+}))
+print(calls)
+# rule 14.4.3
+# prints ["[2, 4, 6]", "[Bo, Al, Cy]", "[A]", "[2, 4]", "16", "BoAlCy", "[1, 2, 3]", "true", "[1, 2, 3]", "true", "false", "true", "false", "[a, bb, ccc]", "[Al, Cy, Bo]", "[Bo, Al, Cy]", "[Bo, Cy, Al]", "[Al, Cy, Bo]", "[Bo, Al, Cy]", "[3, 2, 1]", "[]", "[Bo, Cy]", "3", "true", "1"]

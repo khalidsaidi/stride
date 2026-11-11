@@ -71,6 +71,27 @@ function yearsBetween(a, b) {
   return years;
 }
 
+// A date pattern's parts (§14.3.1): words in single quotes as they are ('' inside them one quote), YYYY YY MMMM MMM
+// MM M DD D dddd ddd (longest first), and every other character as it is.
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DATE_PARTS = ["YYYY", "YY", "MMMM", "MMM", "MM", "M", "DD", "D", "dddd", "ddd"];
+function datePattern(name, pattern) {
+  const p = text(pattern);
+  const parts = [];
+  const re = /'((?:[^']|'')*)'|YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|'|[^]/gu;
+  for (const m of p.matchAll(re)) {
+    if (m[0] === "'") throw new StrideFault("F010", `${name}: the date pattern "${p}" opens a quote ' and does not close it`);
+    if (m[1] !== undefined) parts.push({ words: m[1].replace(/''/g, "'") });
+    else if (DATE_PARTS.includes(m[0])) parts.push({ part: m[0] });
+    else parts.push({ words: m[0] });
+  }
+  if (!parts.some((x) => x.part)) throw new StrideFault("F010", `${name}: the date pattern "${p}" has none of YYYY, YY, MMMM, MMM, MM, M, DD, D, dddd, ddd`);
+  return parts;
+}
+// The day of the week, 0 for Monday to 6 for Sunday: 0001-01-01 is a Monday.
+const weekdayOf = (d) => dayNumber(d) % 7;
+
 const listLike = (items, of) => (isSet(of) ? set(items, of.order) : items);
 
 // The items of a list a function orders or adds up: every one a value (F023).
@@ -239,10 +260,57 @@ export const NATIVES = {
     pure: true,
     takes: "d:d pattern:t",
     fn: (d, pattern) => {
-      const p = text(pattern);
-      if (!/YYYY|YY|MM|DD|M|D/.test(p)) throw new StrideFault("F010", `format: the date pattern "${p}" has none of YYYY, YY, MM, DD, M, D`);
       const pad = (n, w = 2) => String(n).padStart(w, "0");
-      return p.replace(/YYYY|YY|MM|DD|M|D/g, (k) => ({ YYYY: pad(d.y, 4), YY: pad(d.y % 100), MM: pad(d.m), DD: pad(d.d), M: String(d.m), D: String(d.d) })[k]);
+      const put = { YYYY: () => pad(d.y, 4), YY: () => pad(d.y % 100), MMMM: () => MONTHS[d.m - 1], MMM: () => MONTHS[d.m - 1].slice(0, 3), MM: () => pad(d.m), M: () => String(d.m), DD: () => pad(d.d), D: () => String(d.d), dddd: () => WEEKDAYS[weekdayOf(d)], ddd: () => WEEKDAYS[weekdayOf(d)].slice(0, 3) };
+      return datePattern("format", pattern).map((x) => x.words ?? put[x.part]()).join("");
+    },
+  },
+  weekday: { pure: true, takes: "d:d", fn: (d) => num(weekdayOf(d)) },
+  // The day words write in a pattern (§14.3.1), or null: every part read, nothing left over, and a day there is.
+  parse_date: {
+    pure: true,
+    takes: "t:t pattern:t",
+    fn: (t, pattern) => {
+      const parts = datePattern("parse_date", pattern);
+      for (const [need, have] of [["a year", ["YYYY", "YY"]], ["a month", ["MMMM", "MMM", "MM", "M"]], ["a day", ["DD", "D"]]]) {
+        if (!parts.some((x) => have.includes(x.part))) throw new StrideFault("F010", `parse_date: the date pattern "${text(pattern)}" has no ${need.slice(need.indexOf(" ") + 1)}: it needs ${need} (${have.join(", ")})`);
+      }
+      let rest = text(t);
+      let y = null, m = null, d = null, w = null;
+      const digits = (re) => {
+        const got = rest.match(re);
+        if (!got) return null;
+        rest = rest.slice(got[0].length);
+        return Number(got[0]);
+      };
+      const named = (names, length) => {
+        const i = names.findIndex((n) => rest.toLowerCase().startsWith((length ? n.slice(0, length) : n).toLowerCase()));
+        if (i < 0) return null;
+        rest = rest.slice(length || names[i].length);
+        return i;
+      };
+      for (const x of parts) {
+        if (x.words !== undefined) {
+          if (!rest.startsWith(x.words)) return null;
+          rest = rest.slice(x.words.length);
+          continue;
+        }
+        let v;
+        if (x.part === "YYYY") v = y = digits(/^\d{4}/);
+        else if (x.part === "YY") (v = digits(/^\d{2}/)), (y = v === null ? null : 2000 + v);
+        else if (x.part === "MMMM") (v = named(MONTHS, 0)), (m = v === null ? null : v + 1);
+        else if (x.part === "MMM") (v = named(MONTHS, 3)), (m = v === null ? null : v + 1);
+        else if (x.part === "MM") v = m = digits(/^\d{2}/);
+        else if (x.part === "M") v = m = digits(/^\d{1,2}/);
+        else if (x.part === "DD") v = d = digits(/^\d{2}/);
+        else if (x.part === "D") v = d = digits(/^\d{1,2}/);
+        else if (x.part === "dddd") v = w = named(WEEKDAYS, 0);
+        else v = w = named(WEEKDAYS, 3);
+        if (v === null) return null;
+      }
+      if (rest !== "") return null;
+      const out = date(y, m, d);
+      return out && (w === null || weekdayOf(out) === w) ? out : null;
     },
   },
   days_between: { pure: true, takes: "from:d to:d", fn: (a, b) => num(dayNumber(b) - dayNumber(a)) },
@@ -351,6 +419,16 @@ export const NATIVES = {
   without: { pure: true, takes: "l:l x:V", fn: (l, x) => listLike(l.filter((y) => !equal(y, x)), l) },
   reversed: { pure: true, takes: "l:l", fn: (l) => [...l].reverse() },
   sorted: { pure: true, takes: "l:l descending:V", fn: (l, descending) => sortItems(valued(l, "an item sorted puts in order"), (v) => v, descending === true) },
+  // sorted(l, key: f) (§14.4.2): the items in the order of the values f gave for them, one for each item.
+  sort_by_keys: {
+    pure: true,
+    as: "sorted",
+    takes: "l:l keys:l descending:V",
+    fn: (l, keys, descending) => {
+      const k = valued(keys, "the value sorted's key gives for an item");
+      return sortItems(l.map((v, i) => i), (i) => k[i], descending === true).map((i) => l[i]);
+    },
+  },
   // sorted(l, by: "field"): the compiler turns the field's name into its number (§14.4).
   sorted_by: {
     pure: true,
