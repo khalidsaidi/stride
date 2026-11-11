@@ -355,8 +355,8 @@ its values' (S361 when two have none); a key written twice keeps its last value.
 stands. `m[k]` is the value under k, or empty when m has no such key (a key of another type is S358);
 `m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is F004); `m[k].f = v` makes
 the record under a new key (§7.5.1). `for each k in m` goes through m's keys in their order, and
-`for each k, v in m` gives each key and the value under it; a comprehension goes through the keys
-(`[m[k] for each k in m]`).
+`for each k, v in m` gives each key and the value under it; a comprehension does the same
+(`[v for each k, v in m]`).
 
 6.12. **Comprehension** `[e for each [n,] x in l if c]` (l a list or a set): for each item x of l (n counting from 1) for which c is
 yes, the value of e, in order. Its type is `list of` e's type `most` l's most when l is a list, and, when l is a set, the number of options its
@@ -712,10 +712,12 @@ Calling through a name that holds no function when the program runs stops the ru
 
 9.11. **A function written in place.** `function(n: number) -> number { return n * 2 }` is a function with no name,
 written where a value goes; its result's type may be left out, as a named function's (§9.6), and its parameters
-have no defaults. It reads the program's top-level names as any function does (§9.1). A name of the function or
-loop around it is kept as it was when the function was made: the function reads it, and does not change it (S204).
-One put straight into a `let` or `var` names its questions by that name, another by `function` (§8.6.2). Two
-function values are equal when they are the same function keeping equal values.
+have no defaults. It reads and changes the program's top-level names as any function does (§9.1). A `var` of the
+function or loop around it is shared: the function and the code around it read and change the one var, which
+lives as long as either uses it; each run of the var's declaration makes a new one. Another name around it (a
+let, a parameter, a loop's counter or item) does not change, and the function has its value. One put straight
+into a `let` or `var` names its questions by that name, another by `function` (§8.6.2). Two function values are
+equal when they are the same function over the same vars and equal values.
 
 ## 10. Boxes
 
@@ -1124,7 +1126,7 @@ its call: the function's name in the call.
 | S201 | a name not defined | The message gives the nearest name visible here. |
 | S202 | a name used before the line that defines it | Statements run in order; move the use after the definition. |
 | S203 | a name defined in a loop used after it | A loop's names are known only inside it; collect into a var declared before. |
-| S204 | a name a function cannot change | A function written in place keeps the names around it as they were when it was made, and does not change them: return the new value. A parameter's default is worked out by the compiler, so it reads none of the program's names. |
+| S204 | a program's name in a parameter's default | A parameter's default is worked out by the compiler, so it reads none of the program's names; pass the value. |
 | S205 | a name defined twice | One name, one thing, in a function or program; rename one. |
 | S206 | a local name hiding its file's declaration | Rename the local. |
 | S207 | two declarations of one name | Rename one; the note shows the other. |

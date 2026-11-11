@@ -147,7 +147,8 @@ export function lower(resolved, diagnostics, options = {}) {
         // One declared in two branches is a place both write.
         const l = (s.symbol?.branchDeclared && ctx.locals.get(s.symbol)) || ctx.fn.local(s.name, s.symbol?.type);
         ctx.locals.set(s.symbol, l);
-        emit(ctx, { op: "set", dst: l, value: s.value ? placeAs(expr(s.value, ctx), s.symbol?.type, s.value.type, s.value) : initial(s.symbol?.type), node: s });
+        // A var a function made in place shares is a new var each time its declaration runs (§9.11).
+        emit(ctx, { op: "set", dst: l, fresh: !!s.symbol?.shared, value: s.value ? placeAs(expr(s.value, ctx), s.symbol?.type, s.value.type, s.value) : initial(s.symbol?.type), node: s });
         return;
       }
       case "assign":
@@ -589,7 +590,7 @@ export function lower(resolved, diagnostics, options = {}) {
       }
       case "lambda": {
         const fn = functionOf(e.symbol);
-        return e.keeps.length ? IR.closure(fn, e.keeps.map((k) => expr(k, ctx))) : IR.fnref(fn);
+        return e.keeps.length ? IR.closure(fn, e.keeps.map((k) => (k.symbol.shared ? IR.cellref(ctx.locals.get(k.symbol)) : expr(k, ctx)))) : IR.fnref(fn);
       }
       case "name": {
         if (e.functionValue) return IR.fnref(e.functionValue.kind === "native" ? nativeOf(e.functionValue) : functionOf(e.functionValue));
@@ -639,12 +640,16 @@ export function lower(resolved, diagnostics, options = {}) {
         // [e for each n, x in l if c]: its own loop, inside the expression (§6.12).
         const inner = child(ctx);
         const item = ctx.fn.local(e.item, e.itemSymbol.type);
-        const index = ctx.fn.local(e.index ?? "n", null);
+        // Over a map with two names: each key and the value under it.
+        const pairs = e.overMap && e.indexSymbol;
+        const index = ctx.fn.local(pairs ? "n" : e.index ?? "n", null);
+        const key = pairs ? ctx.fn.local(e.index, e.indexSymbol.type) : null;
         inner.locals.set(e.itemSymbol, item);
-        if (e.indexSymbol) inner.locals.set(e.indexSymbol, index);
+        if (e.indexSymbol) inner.locals.set(e.indexSymbol, pairs ? key : index);
         return {
           e: "comp",
-          list: e.overMap ? IR.native("keys", [expr(e.list, ctx)]) : expr(e.list, ctx),
+          list: e.overMap && !pairs ? IR.native("keys", [expr(e.list, ctx)]) : expr(e.list, ctx),
+          key,
           item,
           index,
           cond: e.condition ? expr(e.condition, inner) : null,

@@ -363,8 +363,8 @@ print(f(4))
 8
 ```
 
-A function can be written where it is used, without a name (§9.11). It reads the names around it, as they were
-when it was made:
+A function can be written where it is used, without a name (§9.11). It reads the names around it, and shares
+the vars around it:
 
 ```stride
 define adder(k: number) -> function(number) -> number {

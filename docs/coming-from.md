@@ -126,7 +126,7 @@ yes
 ## Functions as values, comprehensions and sorting by a field
 
 A function can be passed, kept and returned (§9.10): `define apply(f: function(number) -> number, n: number)`.
-A function with no name is written in place, and keeps the names around it as they were (§9.11):
+A function with no name is written in place; it reads the names around it and shares their vars (§9.11):
 `function(n: number) -> number { return n + k }`.
 For the common cases a comprehension or `sorted` is shorter:
 

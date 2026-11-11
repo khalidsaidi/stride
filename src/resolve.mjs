@@ -689,8 +689,11 @@ export function resolve(loaded, diagnostics) {
         outer.program = true;
         return outer;
       }
-      const kept = new Sym("param", name, outer.node, unit);
+      // A var is shared: the function and the code around it read and change the one var. Another name does
+      // not change, so the function keeps its value.
+      const kept = new Sym(outer.kind === "var" ? "var" : "param", name, outer.node, unit);
       kept.kept = outer;
+      if (outer.kind === "var") outer.shared = kept.shared = true;
       inner.owner.keeps.push(kept);
       inner.names.set(name, kept);
       return kept;

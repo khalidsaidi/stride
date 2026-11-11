@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -162,7 +162,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
   const view = (f) => ({
     *[Symbol.iterator]() {
       const slots = debug.slots[f.index];
-      for (let k = 0; k < slots.length; k++) if (slots[k] && (f.locals[k] !== null || f.given?.has(k))) yield [slots[k], f.locals[k]];
+      for (let k = 0; k < slots.length; k++) if (slots[k] && (f.locals[k] !== null || f.given?.has(k))) yield [slots[k], f.locals[k] instanceof Cell ? f.locals[k].v : f.locals[k]];
     },
   });
   const entered = (f, args) => {
@@ -272,9 +272,20 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           stack.push(null);
           break;
         case OP.LOAD:
+          stack.push(f.locals[ins.a] instanceof Cell ? f.locals[ins.a].v : f.locals[ins.a]);
+          break;
+        case OP.CELL:
+          f.locals[ins.a] = new Cell(copy(pop()));
+          f.given?.add(ins.a);
+          break;
+        case OP.LOAD_CELL:
           stack.push(f.locals[ins.a]);
           break;
         case OP.STORE:
+          if (f.locals[ins.a] instanceof Cell) {
+            f.locals[ins.a].v = copy(pop());
+            break;
+          }
           f.locals[ins.a] = copy(pop());
           f.given?.add(ins.a);
           break;
@@ -357,7 +368,9 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           break;
         }
         case OP.ENSURE_RECORD: {
-          if (isEmpty(f.locals[ins.a])) {
+          if (f.locals[ins.a] instanceof Cell) {
+            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].mosts, p.records[ins.b].fields);
+          } else if (isEmpty(f.locals[ins.a])) {
             const r = p.records[ins.b];
             f.locals[ins.a] = emptyRecord(r.name, r.mosts, r.fields);
           }
@@ -451,7 +464,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           break;
         }
         case OP.LOAD_MAIN:
-          stack.push(frames[0].locals[ins.a] ?? null);
+          stack.push((frames[0].locals[ins.a] instanceof Cell ? frames[0].locals[ins.a].v : frames[0].locals[ins.a]) ?? null);
           break;
         case OP.FN:
           stack.push(new StrideFunction(p.texts[ins.b], ins.a));

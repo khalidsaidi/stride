@@ -464,11 +464,6 @@ export function check(resolved, diagnostics) {
     const target = s.target;
     let wanted = T.ERROR;
     // A function reads the program's names, and does not change them (§9.1).
-    if (rootOf(target)?.symbol?.kept) {
-      const name = rootOf(target).symbol.name;
-      err("S204", target, `${name} is kept as it was when the function was made: the function reads it, and does not change it; give the new value back with return`);
-      return;
-    }
     // A function may change the program's var (§9.1): what it holds is then the run's business.
     if (ctx.fn && rootOf(target)?.symbol?.program) rootOf(target).symbol.changedInFunction = true;
     if (target.kind === "name") {
@@ -767,16 +762,17 @@ export function check(resolved, diagnostics) {
         } else if (l.t === "options") {
           e.itemSymbol.type = T.option(l.set);
           most = Math.max(1, l.set.options.length);
-        } else if (l.t === "map" && !e.indexSymbol) {
-          // A map's keys, in their order.
-          e.itemSymbol.type = l.key;
+        } else if (l.t === "map") {
+          // A map's keys, in their order; with two names, each key and the value under it.
+          if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
+          else e.itemSymbol.type = l.key;
           e.overMap = true;
           most = 1000;
         } else if (l.t === "empty") {
           e.itemSymbol.type = T.EMPTY; // no items (§3.6)
           most = 0;
         } else {
-          if (!T.isError(l)) err("S314", e.list, l.t === "map" ? `a comprehension goes through a map's keys, by one name: [… for each k in ${describeExpr(e.list)}], with ${describeExpr(e.list)}[k] for the value` : `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
+          if (!T.isError(l)) err("S314", e.list, `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
         }
         if (e.condition) condition(e.condition, ctx, "a comprehension's if");

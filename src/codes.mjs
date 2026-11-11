@@ -238,8 +238,8 @@ export const CODES = {
     "explanation": "A loop's names are known only inside it; collect into a var declared before."
   },
   "S204": {
-    "when": "a name a function cannot change",
-    "explanation": "A function written in place keeps the names around it as they were when it was made, and does not change them: return the new value. A parameter's default is worked out by the compiler, so it reads none of the program's names."
+    "when": "a program's name in a parameter's default",
+    "explanation": "A parameter's default is worked out by the compiler, so it reads none of the program's names; pass the value."
   },
   "S205": {
     "when": "a name defined twice",

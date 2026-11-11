@@ -120,6 +120,16 @@ export class StrideMap {
   }
 }
 
+// A var shared by the code that declares it and the functions made in place that use it (§9.11).
+export class Cell {
+  constructor(v) {
+    this.v = v;
+  }
+  toJSON() {
+    return this.v;
+  }
+}
+
 // A function as a value (§9.10): its name, and what an engine calls it by.
 export class StrideFunction {
   constructor(name, target, kept = []) {

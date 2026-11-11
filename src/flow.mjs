@@ -215,7 +215,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "var":
           // Declared here, on this path (§12.1.1); a var without a value has none yet.
           unset.delete(s.symbol);
-          if (s.kind === "var" && !s.value && s.symbol && !s.symbol.changedInFunction && !["list", "record", "map"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
+          if (s.kind === "var" && !s.value && s.symbol && !s.symbol.changedInFunction && !s.symbol.shared && !["list", "record", "map"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
           if (s.symbol) declaredOn.add(s.symbol);
           break;
         case "break":

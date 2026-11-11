@@ -148,6 +148,8 @@ export function generate(program, pdf, debug = null) {
           emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
           for (const k of x.kept) expr(k);
           return emit(OP.KEEP, x.kept.length);
+        case "cellref":
+          return emit(OP.LOAD_CELL, local(x.l));
         case "fnref":
           return emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
         case "callv":
@@ -182,7 +184,13 @@ export function generate(program, pdf, debug = null) {
           const head = label();
           const skip = label();
           const end = label();
+          const map = x.key ? local({ name: "comp.map" }) : null;
           expr(x.list);
+          if (map) {
+            emit(OP.STORE, map);
+            emit(OP.LOAD, map);
+            emit(OP.NATIVE, nativeIndex("keys"), 1).quiet = true;
+          }
           emit(OP.STORE, src);
           if (x.most !== null) emit(OP.NEW_LIST, 0, x.most);
           else (emit(OP.LOAD, src), emit(OP.NATIVE, nativeIndex("empty_like"), 1));
@@ -199,6 +207,13 @@ export function generate(program, pdf, debug = null) {
           emit(OP.LOAD, src);
           emit(OP.LOAD, k);
           emit(OP.GET_ITEM);
+          if (map) {
+            // The key, then the value under it.
+            emit(OP.STORE, local(x.key));
+            emit(OP.LOAD, map);
+            emit(OP.LOAD, local(x.key));
+            emit(OP.GET_ITEM);
+          }
           emit(OP.STORE, item);
           if (x.cond) {
             expr(x.cond);
@@ -323,7 +338,7 @@ export function generate(program, pdf, debug = null) {
           return emit(OP.TRY_DONE);
         case "set":
           expr(s.value);
-          return s.outer ? emit(OP.STORE_MAIN, mainSlot(s.outer)) : emit(OP.STORE, local(s.dst));
+          return s.outer ? emit(OP.STORE_MAIN, mainSlot(s.outer)) : emit(s.fresh ? OP.CELL : OP.STORE, local(s.dst));
         case "store":
           navigate(s.dst, s.path, s.outer);
           return setLast(s.path, () => expr(s.value));

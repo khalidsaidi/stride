@@ -127,6 +127,8 @@ export const native = (name, args) => ({ e: "native", name, args });
 // turns around it (for a function that asks, §8.6.2), then what it is given.
 // The program's own name, read in a function (§9.1).
 export const outer = (sym) => ({ e: "outer", sym });
+// A shared var itself, not its value: what a function made in place is given to share it (§9.11).
+export const cellref = (l) => ({ e: "cellref", l });
 export const fnref = (fn) => ({ e: "fnref", fn });
 // A function made in place, with the values it keeps (§9.11).
 export const closure = (fn, kept) => ({ e: "closure", fn, kept });
@@ -220,6 +222,8 @@ export function showExpr(x) {
       return `${x.fn.name}(${x.args.map(showExpr).join(", ")})`;
     case "fnref":
       return `function ${x.fn.name}`;
+    case "cellref":
+      return `shared %${x.l.name}`;
     case "closure":
       return `function ${x.fn.name} keeping (${x.kept.map(show).join(", ")})`;
     case "outer":
