@@ -21,7 +21,7 @@
 //   native      = "native" "define" name "(" [params] ")" "->" type
 //   define      = "define" name ["<" name ("," name)* ">"] "(" [params] ")" ["->" type] block
 //   type        = "list" "of" type ["most" expr] | "set" "of" qname | "any" | qname
-//   statement   = ask | let | var | fill | tick | pick | skip | if | match | for | foreach | collect | return
+//   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
 //   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
 //   if          = "if" expr block ["else" (if | block)]
@@ -41,14 +41,14 @@ import * as D from "../runtime/decimal.mjs";
 // The keywords (§2.3). `option`, `any`, `another` and `faults` are contextual (§2.3.1): names everywhere but the one
 // place the grammar uses them.
 export const KEYWORDS = new Set([
-  "and", "as", "ask", "because", "break", "check", "collect", "const", "continue", "default", "define", "each", "else",
+  "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "define", "each", "else",
   "empty", "expect", "export", "fields", "fill", "for", "form", "if", "in", "is", "let", "list", "match", "most",
-  "native", "new", "no", "not", "of", "options", "or", "pdf", "pick", "record", "return", "set", "skip", "then", "tick",
+  "native", "new", "no", "not", "of", "options", "or", "pdf", "pick", "record", "return", "set", "then", "tick",
   "use", "var", "when", "yes",
 ]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
 const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "/=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
-const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "skip", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
+const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
   constructor(message, span, code = "S010") {
@@ -639,8 +639,6 @@ class Parser {
           return this.tick();
         case "pick":
           return this.pick();
-        case "skip":
-          return this.skip();
         case "if":
           return this.ifStatement();
         case "match":
@@ -665,7 +663,7 @@ class Parser {
     const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["yes", "no", "empty", "not", "new"].includes(t.value));
     const prevTok = this.tokens[this.at - 1];
     if (value && (t.broken || !prevTok || (prevTok.type === "punct" && prevTok.value === "{"))) return this.node("call-statement", t, { call: this.expr() });
-    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, skip, if, match, for, collect, return, break, continue)", "a call"]);
+    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, collect, return, break, continue)", "a call"]);
   }
 
   // expect e ["words"]   expect e faults "code or words"   (§7.17)
@@ -759,13 +757,6 @@ class Parser {
     const button = this.wordsOrName("the button's name, in quotes, or a constant that holds it");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("pick", start, { box, button, condition: this.condition() });
-  }
-
-  skip() {
-    const start = this.take();
-    const box = this.wordsOrName("the box's name, in quotes, or a constant that holds it");
-    this.expect("keyword", "because", '"because" and the reason');
-    return this.node("skip", start, { box, reason: this.wordsOrName("the reason, in quotes, or a constant that holds them") });
   }
 
   condition() {

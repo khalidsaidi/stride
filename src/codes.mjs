@@ -777,10 +777,6 @@ export const CODES = {
     "when": "the header for another form",
     "explanation": "The same."
   },
-  "S503": {
-    "when": "a skip of a box the PDF lacks",
-    "explanation": "The message gives the nearest."
-  },
   "S508": {
     "when": "a box the PDF lacks",
     "explanation": "The message gives the nearest."
@@ -832,14 +828,6 @@ export const CODES = {
   "W007": {
     "when": "a let or var never used",
     "explanation": "Warning: Remove it."
-  },
-  "W009": {
-    "when": "a box neither written nor skipped",
-    "explanation": "Warning: Write it, or `skip \"box\" because \"…\"`."
-  },
-  "W010": {
-    "when": "more such boxes",
-    "explanation": "Warning: Counted after the first 40."
   }
 };
 

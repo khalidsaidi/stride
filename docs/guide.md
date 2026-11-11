@@ -71,7 +71,7 @@ stride new consent --pdf consent.pdf
 ```
 
 writes `consent.boxes.json` (the header), `consent.stride` and a test in `consent.tests/`. The program it writes
-asks one question for the first text box, named after the box, and skips every other box. A PDF does not say which
+asks one question for the first text box, named after the box, and lists every other box in a comment. A PDF does not say which
 printed words stand beside which box: you read the form and write them. `stride run consent.stride` shows the form with
 each box's name on it, so you see which box is which; the compiled workflow (`stride run consent.sbc`) does not. For a PDF with a box "name" beside the
 words "Full name" and a check box "agree" beside "I agree to the terms", the program, with the form's words put in,
@@ -84,11 +84,11 @@ pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 ask full_name: text "Full name"
 fill "name" = full_name
 
-skip "agree" because "not filled yet"
+# tick "agree" when …
 ```
 
-It compiles as it is. It starts by skipping every box but one, so you see every box the form has; replace each
-skip with what fills it. A box the program never mentions is only a warning (§10.5): the form lets it stay empty.
+It compiles as it is. Under it, the starting file lists every other box of the form in a comment, with the
+statement that writes it; write those you need. A box the program never mentions stays empty, as on the form.
 
 ```stride form
 form consent
@@ -101,7 +101,7 @@ tick "agree" when agrees
 ```
 
 A PDF's own names for its boxes are often a machine's (`topmostSubform[0].Page1[0].f1_05[0]`). Give such a box
-a name of your own once, as a constant, and use that name wherever the box goes (§7.9.1):
+a name of your own once, as a constant, and use that name wherever the box goes (§7.9):
 
 ```
 const exempt_code_box = "f1_05[0]"
@@ -380,7 +380,6 @@ pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
 
 ask full_name: text "Full name"
 fill "nmae" = full_name
-skip "agree" because "not filled yet"
 ```
 
 gives, from `stride check consent.stride`:
@@ -565,10 +564,9 @@ write the same boxes.
 ## 20. The PDF
 
 - `fill "box" = e` writes words into a text box or a list box; `tick "box" when c` ticks a check box; `pick
-  "group" "button" when c` chooses a radio button; `skip "box" because "why"` leaves one alone.
-- **No stricter than the form.** A box the PDF does not have is a mistake. A box the program never mentions, or
-  one it can write twice when some answers are given, is a warning (§10): the form lets a box stay empty, and
-  the later write stays.
+  "group" "button" when c` chooses a radio button.
+- **No stricter than the form.** A box written out that the PDF does not have is a mistake, as a misspelt name
+  is. A box the program never mentions stays empty, and a box written twice keeps the later write (§10).
 - **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
   on the page and on the form. Stride does not read them off the PDF: you do. When a header lists the words beside
   a box (its `"near"`: you may add them, or a tool that prepares forms may), a question whose answer goes into that
@@ -602,8 +600,6 @@ ask full_name: text "Full name"
 ask agrees: yes-no "I agree to the terms"
 if agrees {
   fill "name" = full_name
-} else {
-  skip "name" because "only with agreement"
 }
 tick "agree" when agrees
 ```

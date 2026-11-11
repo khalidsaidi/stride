@@ -11,6 +11,5 @@ export define pick_box() -> yes-no {
   return yes
 }
 export define skip_box() -> yes-no {
-  skip "Missing" because "test has no form"
   return yes
 }

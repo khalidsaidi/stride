@@ -269,8 +269,6 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         if (cond) writes.set(box, button);
         return;
       }
-      case "skip":
-        return;
       case "eval":
         expr(s.value, locals);
         return;

@@ -198,7 +198,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
 
   // ----- 2. effects
 
-  const EFFECTS = new Set(["ask", "fill", "tick", "pick", "skip", "collect"]);
+  const EFFECTS = new Set(["ask", "fill", "tick", "pick", "collect"]);
   const directEffects = (body) => [...statements(body)].some((s) => EFFECTS.has(s.kind));
   for (const f of functions) f.effects = directEffects(f.node.body);
   for (let changed = true; changed; ) {
@@ -267,9 +267,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
           break;
         case "fill":
         case "tick":
-        case "skip":
           need(s.box, "a box's name");
-          if (s.kind === "skip") need(s.reason, "the reason a box is skipped");
           break;
         case "pick":
           need(s.box, "a box's name");

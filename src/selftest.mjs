@@ -168,7 +168,6 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
   const first = compile(source, name, { dir: TESTS, header: { form: null, pdf: PDF, boxes: [], open: true }, ...options });
   if (!first.program) return { form: "test", pdf: PDF, boxes: [] };
   const found = new Map(); // full name (and a radio's button) -> a header's box
-  const skipped = []; // boxes only skipped: a text box each, unless something writes them
   const add = (field, kind, button) => {
     if (kind === "pick") found.set(`${field}\t${button}`, { field, kind: "radio", on: button, page: 1 });
     else if (!found.has(field)) found.set(field, kind === "tick" ? { field, kind: "check", on: "Yes", page: 1 } : { field, kind: "text", page: 1 });
@@ -176,9 +175,8 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
   for (const fn of first.program.functions) {
     for (const b of fn.blocks) {
       for (const s of b.stmts) {
-        if (!["fill", "tick", "pick", "skip"].includes(s.op) || !IR.isConst(s.box)) continue;
-        if (s.op === "skip") skipped.push(first.program.prefix + textOf(s.box.v));
-        else if (s.op !== "pick") add(first.program.prefix + textOf(s.box.v), s.op, null);
+        if (!["fill", "tick", "pick"].includes(s.op) || !IR.isConst(s.box)) continue;
+        if (s.op !== "pick") add(first.program.prefix + textOf(s.box.v), s.op, null);
         else if (IR.isConst(s.button)) add(first.program.prefix + textOf(s.box.v), "pick", textOf(s.button.v));
       }
     }
@@ -192,7 +190,6 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
       }
     }
   }
-  for (const field of skipped) if (![...found.values()].some((b) => b.field === field)) found.set(field, { field, kind: "text", page: 1 });
   return { form: first.program.form, pdf: first.program.pdf, boxes: [...found.values()] };
 }
 

@@ -16,8 +16,8 @@ const build = (body) => {
 export function test() {
   const problems = [];
   const cases = [
-    ["a fault's code", 'skip "A" because "x"\nprint(1 / 0)\n', 'skip "A" because "x"\nfail("stop")\n', { fault: "F001" }],
-    ["a print", 'skip "A" because "x"\nprint(1)\n', 'skip "A" because "x"\nprint(2)\n', { prints: ["1"] }],
+    ["a fault's code", 'print(1 / 0)\n', 'fail("stop")\n', { fault: "F001" }],
+    ["a print", 'print(1)\n', 'print(2)\n', { prints: ["1"] }],
     ["a question", 'ask name: text "Name"\nfill "A" = name\n', 'ask name: text "Name"\nask other: text "Name"\nfill "A" = either(name, other)\n', { answers: { name: "Ada" }, boxes: { A: "Ada" }, loose: true }],
     ["a box", 'ask name: text "Name"\nfill "A" = name\n', 'ask name: text "Name"\nfill "A" = upper(name)\n', { answers: { name: "Ada" }, boxes: { A: "Ada" } }],
   ];

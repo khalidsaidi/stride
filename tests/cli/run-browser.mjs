@@ -64,13 +64,13 @@ export function test() {
     mkdirSync(join(dir, "shared"));
     copyFileSync(join(dir, "consent.sbc"), join(dir, "shared", "consent.sbc"));
     copyFileSync(join(dir, "consent.pdf"), join(dir, "shared", "consent.pdf"));
-    writeFileSync(join(dir, "bad.stride"), source.replace('skip "agree"', 'fill "agree" = "x"'));
+    writeFileSync(join(dir, "bad.stride"), `${source}fill "agree" = "x"\n`);
     writeFileSync(join(dir, "bad.boxes.json"), readFileSync(join(dir, "consent.boxes.json")));
     writeFileSync(join(dir, "bad.pdf"), tinyPdf());
     const steps = [
       { name: "source", args: ["consent.stride", "--port", "0"], asks: [
         { ask: "/" }, { ask: "/app.js" }, { ask: "/app.css" }, { ask: "/form.pdf" }, { ask: "/workflow.sbc" }, { ask: "/pdf.worker.mjs" },
-        { ask: "/workflow.sbc", write: "consent.stride", text: source.replace('skip "agree"', 'fill "agree" = "x"') },
+        { ask: "/workflow.sbc", write: "consent.stride", text: `${source}fill "agree" = "x"\n` },
         { ask: "/workflow.sbc", write: "consent.stride", text: source },
         { ask: "/workflow.sbc", write: "consent.stride", text: source.replace(/^pdf \S+/m, "pdf {sha}") },
         { ask: "/workflow.sbc", write: "consent.stride", text: source },

@@ -232,9 +232,6 @@ export function check(resolved, diagnostics) {
         text(s.box, ctx, "a box's name");
         text(s.button, ctx, "a button's name");
         return condition(s.condition, ctx, "pick … when");
-      case "skip":
-        text(s.box, ctx, "a box's name");
-        return text(s.reason, ctx, "the reason");
       case "if":
         condition(s.condition, ctx, "if");
         block(s.then, ctx);

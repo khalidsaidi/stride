@@ -150,9 +150,6 @@ export function lower(resolved, diagnostics, options = {}) {
       case "pick":
         emit(ctx, { op: "pick", box: expr(s.box, ctx), button: expr(s.button, ctx), cond: expr(s.condition, ctx), node: s });
         return;
-      case "skip":
-        emit(ctx, { op: "skip", box: expr(s.box, ctx), node: s });
-        return;
       case "if":
         return lowerIf(s, ctx);
       case "match":

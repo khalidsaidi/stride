@@ -6,16 +6,15 @@
 // F016, §11.2). Stride is no stricter than the form.
 //
 //   S501, S502   the header is for another PDF, or another form
-//   S503, S508   a box written out that the form does not have (with the nearest)
+//   S508         a box written out that the form does not have (with the nearest)
 //   S509         a box written by the statement of another kind
 //   S511         a button a radio group does not have
 //   S514         a list box given words, written out, that are not one of its entries
-//   W009, W010   boxes the program names nowhere (said only when every name it writes is written out)
 //
 // Gives the machine what it needs of the form: every box (its kind, and a check box's export value), every
 // question the program asks, and, for the page, which boxes a question's answer goes into, where the program
 // says so plainly (`fill "box" = answer`, `tick "box" when … answer …`).
-import { KIND, didYouMean, plural } from "./source.mjs";
+import { KIND, didYouMean } from "./source.mjs";
 import { textOf } from "../runtime/natives.mjs";
 import * as V from "../runtime/values.mjs";
 
@@ -60,13 +59,10 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
   const byField = new Map();
   for (const b of header.boxes) byField.set(b.field, [...(byField.get(b.field) ?? []), b]);
   const shortNames = [...byField.keys()].map((f) => (f.startsWith(prefix) ? f.slice(prefix.length) : f));
-  const keyOf = (b) => (b.kind === "radio" ? `${b.field}\t${b.on}` : b.field);
 
   const boxes = new Map(); // full name -> { kind: the statement that writes it, on: a check box's export value }
   for (const b of header.boxes) if (!boxes.has(b.field)) boxes.set(b.field, { kind: b.kind === "check" ? "tick" : b.kind === "radio" ? "pick" : "fill", on: b.kind === "check" ? b.on ?? "Yes" : null });
-  const named = new Set(); // the boxes (a radio group's buttons each) the program names, written out
   const writtenOut = new Set(); // the boxes it writes, written out
-  let workedOut = false; // some name is worked out as the program runs
   const questions = new Set();
   const keys = new Map(); // a question's key, written out -> { q, printed, node }
   const links = new Map(); // key \t box -> { key, box, direct }
@@ -96,25 +92,17 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
         if (key !== undefined && !keys.has(key)) keys.set(key, { q: s.q, printed: wordsOf(s.printed) ?? "", node: s.node });
         continue;
       }
-      if (!["fill", "tick", "pick", "skip"].includes(s.op)) continue;
+      if (!["fill", "tick", "pick"].includes(s.op)) continue;
       const short = wordsOf(s.box);
-      if (short === undefined) {
-        workedOut = true;
-        continue;
-      }
+      if (short === undefined) continue; // worked out as the program runs: the run looks it up
       const full = prefix + short;
       if (open) {
         // Taken as one of the form's, of this statement's kind.
-        if (s.op !== "skip" && !boxes.has(full)) boxes.set(full, { kind: s.op, on: s.op === "tick" ? "Yes" : null });
+        if (!boxes.has(full)) boxes.set(full, { kind: s.op, on: s.op === "tick" ? "Yes" : null });
       }
       const found = byField.get(full);
       if (!found && !open) {
-        if (s.op === "skip") errOnce("S503", `skip\t${full}`, s.node?.box ?? s.node, `skips "${short}", which the PDF does not have${didYouMean(short, shortNames)}`);
-        else errOnce("S508", `nobox\t${full}\t${s.node?.span?.start}`, s.node?.box ?? s.node, program.script ? `a script has no form, so it has no box "${short}" to write; start the file with form and pdf lines to fill a form (§4.6)` : `the PDF has no box "${short}"${didYouMean(short, shortNames)}`);
-        continue;
-      }
-      if (s.op === "skip") {
-        for (const b of found ?? []) named.add(keyOf(b));
+        errOnce("S508", `nobox\t${full}\t${s.node?.span?.start}`, s.node?.box ?? s.node, program.script ? `a script has no form, so it has no box "${short}" to write; start the file with form and pdf lines to fill a form (§4.6)` : `the PDF has no box "${short}"${didYouMean(short, shortNames)}`);
         continue;
       }
       writtenOut.add(full);
@@ -124,20 +112,14 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
         if (!kinds[s.op].includes(first.kind)) {
           const how = { text: "fill", choice: "fill", check: "tick", radio: "pick" }[first.kind];
           errOnce("S509", `kind\t${full}\t${s.node?.span?.start}`, s.node, `"${short}" is a ${first.kind === "check" ? "check box" : first.kind === "radio" ? "radio group" : `${first.kind} box`}; ${s.op} cannot write it (${how} does)`);
-          for (const b of found) named.add(keyOf(b));
           continue;
         }
         if (s.op === "pick") {
           const button = wordsOf(s.button);
-          if (button === undefined) {
-            for (const b of found) named.add(keyOf(b));
-          } else {
-            const box = found.find((b) => b.on === button);
-            if (!box) errOnce("S511", `button\t${full}\t${button}`, s.node?.button ?? s.node, `the radio group "${short}" has no button "${button}"; it has ${found.map((b) => `"${b.on}"`).join(", ")}`);
-            // A group is one box for the form: a button of it picked covers it.
-            for (const b of found) named.add(keyOf(b));
+          if (button !== undefined && !found.some((b) => b.on === button)) {
+            errOnce("S511", `button\t${full}\t${button}`, s.node?.button ?? s.node, `the radio group "${short}" has no button "${button}"; it has ${found.map((b) => `"${b.on}"`).join(", ")}`);
           }
-        } else for (const b of found) named.add(keyOf(b));
+        }
         if (s.op === "fill" && first.kind === "choice" && first.options) {
           const w = wordsOf(s.value);
           if (w !== undefined && w !== "" && !first.options.includes(w)) errOnce("S514", `choice\t${full}\t${w}`, s.node?.value ?? s.node, `the list box "${short}" has no entry "${w}"`);
@@ -157,13 +139,6 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
         if (direct && max) maxOf.set(key, Math.min(maxOf.get(key) ?? Infinity, max));
       }
     }
-  }
-
-  // The boxes the program names nowhere: said when every name it writes is written out, so the list is whole.
-  if (!open && !workedOut && !program.script && !program.test) {
-    const missing = header.boxes.filter((b) => !named.has(keyOf(b)));
-    for (const b of missing.slice(0, 40)) err("W009", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}) is neither written nor skipped`);
-    if (missing.length > 40) err("W010", program.formNode ?? null, `and ${plural(missing.length - 40, "more box", "more boxes")} neither written nor skipped`);
   }
 
   return { boxes, written: writtenOut, questions: [...questions], links: [...links.values()], maxOf, keys };

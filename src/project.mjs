@@ -4,7 +4,7 @@
 // PDF says of it: its kind, export value, longest length and its maker's description (src/pdf-boxes.mjs). Which
 // printed words stand beside a box is not in a PDF; whoever writes the program may add them to the header as each
 // box's "near" (§10.6). A new program is the shortest one that compiles against its form: one question filling the
-// first text box, and a skip of every other box, each to be replaced with what fills it; with a test of it. Without
+// first text box, and every other box listed in a comment with the statement that writes it; with a test of it. Without
 // a PDF it is a script (§4.6).
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -91,9 +91,14 @@ function starter(name, header, withQuestion = true) {
   const question = first ? nameOf(says) : null;
   const lines = [`form ${name}`, `pdf ${header.pdf}`];
   if (prefix) lines.push(`fields ${quote(prefix)}`);
-  lines.push("", "# Every box of the form is listed here. Replace each skip with the question and the write that fill its", "# box; stride check warns of any box the program no longer mentions (stride explain W009).", "# A question's words are the form's own: write them as the form prints them.", "");
+  lines.push("", "# The form's other boxes are listed below, each with the statement that writes it. A question's words are", "# the form's own: write them as the form prints them. stride run shows each box's name on the form.", "");
   if (first) lines.push(`ask ${question}: text ${quote(says)}`, `fill ${quote(short(first.field))} = ${question}`, "");
-  for (const f of fields) if (!first || f !== first.field) lines.push(`skip ${quote(short(f))} because "not filled yet"`);
+  const how = { text: (f) => `fill ${quote(short(f))} = …`, choice: (f, b) => `fill ${quote(short(f))} = …   one of: ${(b.options ?? []).slice(0, 8).join(", ")}${(b.options ?? []).length > 8 ? ", …" : ""}`, check: (f) => `tick ${quote(short(f))} when …`, radio: (f, b, all) => `pick ${quote(short(f))} "…" when …   buttons: ${all.map((x) => x.on).join(", ")}` };
+  for (const f of fields) {
+    if (first && f === first.field) continue;
+    const all = header.boxes.filter((b) => b.field === f);
+    lines.push(`# ${how[all[0].kind](f, all[0], all)}`);
+  }
   const test = first ? { answers: { [question]: "Ada Lovelace" }, boxes: { [short(first.field)]: "Ada Lovelace" } } : { answers: {}, boxes: {} };
   return { source: `${lines.join("\n")}\n`, test };
 }
@@ -123,7 +128,7 @@ export async function newProgram(path, pdfPath = null) {
     const header = await headerOf(bytes, name);
     if (header.error) return { error: `${pdfPath}: ${header.error}` };
     // What it writes compiles: a starter that does not (words the compiler reads otherwise) gives way to one that
-    // only skips; one that still does not is said, and nothing is written.
+    // asks nothing; one that still does not is said, and nothing is written.
     const compiles = ({ source }) => !compile(source, `${name}.stride`, { dir, header }).diagnostics.sorted().some((d) => d.severity === "error");
     let start = starter(name, header);
     if (!compiles(start)) start = starter(name, header, false);

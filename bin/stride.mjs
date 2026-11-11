@@ -64,7 +64,7 @@ const COMMANDS = {
   new: ["stride new <name> [--pdf <file.pdf>]", "A new program to start from: <name>.stride, a test in <name>.tests/, and, with --pdf, the form's header <name>.boxes.json read from the PDF.", { "--pdf": ["the form's PDF, whose boxes the program fills", "file.pdf"] }, "stride new w9 --pdf fw9.pdf"],
   init: ["stride init [folder]", "Makes a folder a project: stride.json, saying the Stride it needs, and lib/ for the libraries its programs share.", {}, "stride init"],
   header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256 and each box as the PDF gives it: its kind, export value, longest length and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
-  map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, and those only skipped.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
+  map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, and those not written.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
   asm: ["stride asm <file.stride|file.sbc>", "The instructions, with their source lines.", { "--ir": ["the intermediate form instead", null] }, "stride asm w9.stride"],
   fmt: ["stride fmt <path …>", "Puts the files in Stride's one layout, comments kept; a folder, every .stride file in it.", { "--check": ["only says which files are not in it", null] }, "stride fmt ."],
   lsp: ["stride lsp", "The language server, for editors: mistakes as you type, completion, signatures, going to a definition, references, renaming, what a name is.", {}, "stride lsp"],
@@ -483,12 +483,12 @@ async function main(argv) {
     }
     case "map": {
       // The program against its form, as the PDF check reads it (§10.6): each question and the boxes its answer
-      // goes into, the boxes written from no answer, the boxes only skipped. It reads the source.
+      // goes into, the boxes written from no answer, the boxes not written. It reads the source.
       if (args[0].endsWith(".sbc")) return usage("map", `${args[0]} is compiled: map reads the program's .stride source`);
       const warnings = json ? [] : null;
       const r = program(args[0], { warnings });
       if (r.error) return fileError(r);
-      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], onlySkipped: [] })), 1) : (report(r.mistakes), 1);
+      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], notWritten: [] })), 1) : (report(r.mistakes), 1);
       if (r.out.program?.script) return fail(`${args[0]} is a script: it writes no boxes (§4.6)`);
       const short = (b) => b.slice(r.p.prefix.length);
       const byKey = new Map();
@@ -497,7 +497,7 @@ async function main(argv) {
       const written = [...r.out.written].filter((b) => !linked.has(b));
       const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b));
       if (json) {
-        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })) })), writtenFromNoAnswer: written.map(short), onlySkipped: skipped.map(short) }));
+        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })) })), writtenFromNoAnswer: written.map(short), notWritten: skipped.map(short) }));
         return 0;
       }
       out(bold("question → the boxes its answer goes into (= as given)"));
@@ -506,7 +506,7 @@ async function main(argv) {
         out(`  ${key.padEnd(36)} ${into.length ? into.map((l) => `${l.direct ? "= " : ""}${short(l.box)}`).join(", ") : "(no box: it decides what is asked)"}${printed ? `   "${printed.slice(0, 50)}"` : ""}`);
       }
       if (written.length) out(`${bold("\nwritten from no answer")}\n  ${written.map(short).join("\n  ")}`);
-      if (skipped.length) out(`${bold("\nonly skipped")}\n  ${skipped.map(short).join("\n  ")}`);
+      if (skipped.length) out(`${bold("\nnot written")}\n  ${skipped.map(short).join("\n  ")}`);
       return 0;
     }
     case "doc": {

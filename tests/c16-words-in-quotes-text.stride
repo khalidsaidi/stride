@@ -4,7 +4,6 @@ ask n: number "N"
 for i in 1..1 {
   fill "Row{i}x" = "{n}"
 }
-skip "Other" because "{1 + 1} reasons"
 # rule 6.10
 # box Row1x text near N
 # box Other text near N

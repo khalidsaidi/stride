@@ -277,7 +277,7 @@ export function generate(seed) {
     if (top) kinds.push("ask", "ask", "let", "let", "var", "for", "each", "collect", "match", "record", "call");
     if (all(sc).some((n) => n.kind === "var")) kinds.push("assign", "assign");
     if (ctx.inLoop) kinds.push("loopfill", "loopfill", "leave");
-    if (top && !ctx.inFunction) kinds.push("skip", "rows", "grow");
+    if (top && !ctx.inFunction) kinds.push("rows", "grow");
     const kind = r.pick(kinds);
     switch (kind) {
       case "print":
@@ -297,8 +297,6 @@ export function generate(seed) {
         // break or continue under a condition: the loop's turns are what the run decides (§7.13).
         // On the counter, so it is not known before the form opens: a known one leaves what follows unreachable (S406).
         return [`${i}if (${ctx.inLoop.counter} == ${r.int(1, 3)}) and ${bool(sc, d)} {`, `${i}  ${r.pick(["break", "continue"])}`, `${i}}`];
-      case "skip":
-        return [`${i}skip "${box("K")}" because "${r.pick(["not used", "the office fills it"])}"`];
       case "rows": {
         // A collect of records: each item's fields asked, then the list read field by field.
         const name = fresh("rows");

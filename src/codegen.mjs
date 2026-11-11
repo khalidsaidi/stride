@@ -358,8 +358,6 @@ export function generate(program, pdf) {
           expr(s.button);
           expr(s.cond);
           return emit(OP.PICK_AT);
-        case "skip":
-          return;
         case "eval":
           expr(s.value);
           return emit(OP.POP);

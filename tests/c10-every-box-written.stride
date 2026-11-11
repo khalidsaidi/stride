@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask a: text "Name"
-fill "Name" = a
-# rule 10.5 W009
-# box Name text near Name
-# box Other text near Other
-# warning 1 W009 Other

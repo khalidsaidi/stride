@@ -2,7 +2,7 @@
 // `stride new` without a PDF makes a script and a test of it that pass; with a PDF it makes the form's header, a
 // program that compiles against it and a test that passes; nothing is written over. `stride header` reads a PDF's
 // boxes and the words beside them; a file that is not a PDF is said so. `stride map` says which box each question's
-// answer goes into and which boxes are only skipped.
+// answer goes into and which boxes are not written.
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,7 +31,7 @@ export function test() {
     expect(["check", "consent.stride"], 0, "no mistakes (1 question, 2 boxes)");
     expect(["test", "consent.stride"], 0, "1 test passed");
     expect(["map", "consent.stride"], 0, "name                                 = name");
-    expect(["map", "consent.stride"], 0, "only skipped\n  agree");
+    expect(["map", "consent.stride"], 0, "not written\n  agree");
     expect(["map", "hello.stride"], 1, "is a script");
     const header = JSON.parse(readFileSync(join(dir, "consent.boxes.json"), "utf8"));
     const name = header.boxes.find((b) => b.field === "name"), agree = header.boxes.find((b) => b.field === "agree");

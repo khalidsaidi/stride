@@ -37,9 +37,9 @@ without a `use`. Declarations may be used before the line they stand on (§5.7).
 Whitespace and line breaks are free between tokens, except that a line break before `[` or `(` ends the
 expression before it, and a `return`'s value is on its line (§1.4); `#` starts a comment to the end of the line.
 Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`)
-(§2.1). Keywords cannot be names (§2.3): `and as ask because break check collect const continue default define
+(§2.1). Keywords cannot be names (§2.3): `and as ask break check collect const continue default define
 each else empty export expect fields fill for form if in is let list match most native new no not of options or
-pdf pick record return set skip then tick use var when yes`. `option`, `any`, `another` and `faults` are keywords
+pdf pick record return set then tick use var when yes`. `option`, `any`, `another` and `faults` are keywords
 only where the grammar uses them (§2.3.1).
 
 ## Types
@@ -132,8 +132,7 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is yes |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
-| `skip "box" because "reason"` | a box the workflow leaves alone, and why |
-| `const b = "box"`, then `fill b = e` | a box named once: where words in quotes must be known (a box's name, a question's words, a reason), a constant that holds them goes too (§7.9.1) |
+| `const b = "box"`, then `fill b = e` | a box named once: where words in quotes must be known (a box's name, a question's words, a reason), a constant that holds them goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value (or words) |
 | `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |

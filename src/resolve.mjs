@@ -473,9 +473,6 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(s.box, scope, unit);
         resolveExpr(s.button, scope, unit);
         return resolveExpr(s.condition, scope, unit);
-      case "skip":
-        resolveExpr(s.box, scope, unit);
-        return resolveExpr(s.reason, scope, unit);
       case "if":
         resolveExpr(s.condition, scope, unit);
         inBranch(s, 0, () => s.then.forEach((t) => resolveStatement(t, scope, unit)));

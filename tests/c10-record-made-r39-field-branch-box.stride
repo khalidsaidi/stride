@@ -6,7 +6,7 @@ ask p.age: number "Age"
 if p.age > 5 {
   fill "B" = "old"
 }
-# rule 10.5
+# rule 10.3
 # box B text near Age
 # answers {"p.age": 7}
 # boxes {"B": "old"}

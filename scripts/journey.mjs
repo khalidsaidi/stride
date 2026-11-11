@@ -89,7 +89,7 @@ try {
   writeFileSync(join(work, "consent-form.pdf"), tinyPdf());
   expect("stride new from a PDF", stride(["new", "forms/consent", "--pdf", "consent-form.pdf"]), (x) => x.status === 0 && x.stderr.includes("stride run forms/consent.stride") && !x.stderr.includes("preview"));
   expect("its test", stride(["test", "forms/consent.stride"]), (x) => x.status === 0);
-  expect("its map", stride(["map", "forms/consent.stride"]), (x) => x.stdout.includes("= name") && x.stdout.includes("only skipped"));
+  expect("its map", stride(["map", "forms/consent.stride"]), (x) => x.stdout.includes("= name") && x.stdout.includes("not written"));
   const pdfjs = await import(join(repo, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"));
   // `stride run <file>` in the browser, the browser left closed; a headless browser answers the question in the
   // page and downloads the filled PDF; gives what its box "name" holds and the page's errors.

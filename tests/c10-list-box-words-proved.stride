@@ -8,18 +8,12 @@ ask b: yes-no "B"
 ask o: one-of st "Pick"
 if t == "CA" {
   fill "L" = t
-} else {
-  skip "L" because "not a state"
 }
 if u == "CA" or u == "NY" {
   fill "M" = u
-} else {
-  skip "M" because "not a state"
 }
 if v == "CA" or b {
   fill "N" = v
-} else {
-  skip "N" because "not a state"
 }
 fill "P" = upper(o)
 fill "Q" = t

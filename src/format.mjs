@@ -216,9 +216,6 @@ export function format(text, name = "program.stride") {
       case "pick":
         put(s, indent, `pick ${expr(s.box)} ${expr(s.button)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
-      case "skip":
-        put(s, indent, `skip ${expr(s.box)} because ${str(s.reason)}`);
-        return trailing(s.span.endLine);
       case "if":
         return ifChain(s, indent, "if");
       case "match":

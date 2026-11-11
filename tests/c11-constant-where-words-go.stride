@@ -1,17 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 const Q = "Full name"
-const WHY = "only with a long name"
 const MSG = "too short"
 
 ask name: text Q
   check length(name) > 1 MSG
 if length(name) > 1 {
   fill "A" = name
-} else {
-  skip "A" because WHY
 }
-# rule 11.2 7.9.1
+# rule 11.2 7.9
 # box A text
 # run long
 # answers {"name": "Ada"}

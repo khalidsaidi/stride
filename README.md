@@ -15,8 +15,6 @@ ask full_name: text "Full name"
 ask agrees: yes-no "I agree to the terms"
 if agrees {
   fill "name" = full_name
-} else {
-  skip "name" because "only with agreement"
 }
 tick "agree" when agrees
 ```

@@ -99,12 +99,12 @@ export function test() {
       return sha;
     };
     program("constant", 'fill "name" = "Ada"\ntick "agree" when yes\nprint("ready")\n');
-    program("faulty", 'ask n: number "Full name" default 0\ndefine tenth(d: number) -> number {\n  return 10 / d\n}\nfill "name" = tenth(n)\nskip "agree" because "unused"\n');
-    program("prints", 'ask who: text "Full name"\nfill "name" = who\nprint("seen: {who}")\nskip "agree" because "unused"\n');
-    program("moving", 'ask who: text "Full name"\nfill "name" = who\nskip "agree" because "unused"\n');
-    program("checked", 'ask n: number "Full name" check n >= 18 "Must be at least 18"\nfill "name" = n\nskip "agree" because "unused"\n');
-    program("swapped", 'ask who: text "Full name"\nfill "name" = who\nskip "agree" because "unused"\n');
-    program("stable", 'ask n: number "Full name"\nprint("same")\nif n == 0 {\n  fail("zero")\n}\nfill "name" = n\nskip "agree" because "unused"\n');
+    program("faulty", 'ask n: number "Full name" default 0\ndefine tenth(d: number) -> number {\n  return 10 / d\n}\nfill "name" = tenth(n)\n');
+    program("prints", 'ask who: text "Full name"\nfill "name" = who\nprint("seen: {who}")\n');
+    program("moving", 'ask who: text "Full name"\nfill "name" = who\n');
+    program("checked", 'ask n: number "Full name" check n >= 18 "Must be at least 18"\nfill "name" = n\n');
+    program("swapped", 'ask who: text "Full name"\nfill "name" = who\n');
+    program("stable", 'ask n: number "Full name"\nprint("same")\nif n == 0 {\n  fail("zero")\n}\nfill "name" = n\n');
     for (const n of ["constant", "faulty"]) execFileSync("node", [cli, "compile", `${n}.stride`, "-q"], { cwd: dir });
     // The compiled ones alone with their PDFs.
     mkdirSync(join(dir, "shared"));

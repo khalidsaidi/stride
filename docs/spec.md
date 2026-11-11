@@ -483,9 +483,7 @@ unticked.
 
 7.8. **pick** `pick "group" "button" when c`: picks that button when c is yes.
 
-7.9. **skip** `skip "box" because "reason"`: a box the workflow leaves alone.
-
-7.9.1. **Words, or an expression that gives them.** Where a statement takes words that must be known before the
+7.9. **Words, or an expression that gives them.** Where a statement takes words that must be known before the
 form opens (§11.2) — a box's name and a button's, a question's printed words, a check's message, a skip's reason,
 a collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
 a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box; with
@@ -775,7 +773,7 @@ value, a list box's entries. The header is input: the compiler takes what it say
 form. The header's PDF and form must be the program's (S501, S502).
 
 10.3. **What the compiler looks up.** A box's name written out in the program is looked up in the header, as a
-name is looked up among the declarations: it is one of the form's boxes (S508; S503 for a `skip`; with the nearest
+name is looked up among the declarations: it is one of the form's boxes (S508, with the nearest
 name), and it is written by the statement of its kind: `fill` a text or list box, `tick` a check box, `pick` a
 radio group (S509); a button written out is one the group has (S511); words written out for a list box are one of
 its entries (S514). That is all: the compiler follows no path and proves nothing about what a program does with
@@ -785,10 +783,6 @@ its boxes.
 program may write a box more than once: the later write is the one that stays. A name, a button or words worked
 out as the program runs are not looked up beforehand (§11.2): a box the form does not have stops the run with
 F016, and anything else goes in as it is.
-
-10.5. A box of the PDF that the program names nowhere is a warning (W009, W010), said when every name the program
-writes is written out: the form lets it stay empty, and the warning says which boxes the program has not got to.
-`skip "box" because "reason"` names a box left empty on purpose.
 
 ## 11. Known before the form opens
 
@@ -803,7 +797,7 @@ call of a pure Stride function (§9.9) on known values is known too, so a functi
 a list of known values (§8.6.3 encodes each).
 
 11.2. **Worked out as the program runs.** A box's name and a button's, a question's printed words, a check's
-message, a skip's reason, a collect's questions and a loop's bounds are ordinary expressions: they may be made of
+message, a collect's questions and a loop's bounds are ordinary expressions: they may be made of
 answers, vars and calls, and are worked out when the statement runs (`fill "Row{n}" = v`, with n an answer). A
 box's name written out that the form does not have is mistake S508; one worked out as the program runs that the
 form does not have stops the run with F016. The compiler itself works out only a constant's value (S304), a
@@ -1120,7 +1114,7 @@ column, endLine, endColumn, message}]}`. The documents, every field always prese
 - `test`: `{ok, files: [{file, ok, error, diagnostics, tests: [{name, ok, problems}]}]}`.
 - `eval`: `{ok, value, diagnostics, fault}`: `value` the words `stride eval` prints, or null.
 - `map`: `{ok, diagnostics, questions: [{key, printed, boxes: [{box, direct}]}], writtenFromNoAnswer,
-  onlySkipped}`.
+  notWritten}`.
 
 Values: a number as its words (§3.3.5), a JSON string, so no digit is lost (`"1.5"`); words and a date
 (`"2024-01-02"`) as JSON strings; yes and no as `true` and `false`; an option as its value; an any-of answer as
@@ -1129,7 +1123,7 @@ in a major one (§21.1).
 
 With compilation mistakes, `compile` still includes every result field: `output` is null and `bytes`,
 `questions` and `boxes` are 0. With mistakes, `map` includes empty `questions`, `writtenFromNoAnswer` and
-`onlySkipped` arrays.
+`notWritten` arrays.
 
 Lines and columns count from 1
 (§1.3); an end is exclusive: endLine and endColumn are the position just after the last character, so `r.nmae` at
@@ -1331,7 +1325,6 @@ its call: the function's name in the call.
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
-| S503 | a skip of a box the PDF lacks | The message gives the nearest. |
 | S508 | a box the PDF lacks | The message gives the nearest. |
 | S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group. |
 | S511 | a radio button the group lacks | The message lists its buttons. |
@@ -1345,8 +1338,6 @@ its call: the function's name in the call.
 | W005 | a field asked and never read | Warning: Use it, or do not ask it. |
 | W006 | a collected item asked and never read | Warning: The same. |
 | W007 | a let or var never used | Warning: Remove it. |
-| W009 | a box neither written nor skipped | Warning: Write it, or `skip "box" because "…"`. |
-| W010 | more such boxes | Warning: Counted after the first 40. |
 | F001–F020 | §13.4 | |
 
 ## 17. The command line
@@ -1367,7 +1358,7 @@ its call: the function's name in the call.
 | `stride new <name> [--pdf <file.pdf>]` | §17.6 |
 | `stride init [folder]` | §4.7 |
 | `stride header <file.pdf> [-o file.boxes.json]` | §17.6 |
-| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given (§10.6); the boxes written from no answer; the boxes only skipped |
+| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given (§10.6); the boxes written from no answer; the boxes not written |
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
 | `stride vscode [-o file.vsix]` | §17.16 |

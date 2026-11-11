@@ -6,7 +6,7 @@ for i in 1..2 {
   ask ok: yes-no QUESTIONS[i]
   tick BOXES[i] when ok
 }
-# rule 11.1 7.9.1
+# rule 11.1 7.9
 # box A check
 # box B check
 # run second

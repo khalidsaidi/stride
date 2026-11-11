@@ -187,8 +187,6 @@ export function expressionsOf(s) {
       return [s.box, s.cond];
     case "pick":
       return [s.box, s.button, s.cond];
-    case "skip":
-      return [s.box];
     case "branch":
       return [s.cond];
     case "return":
@@ -257,8 +255,6 @@ export function showStatement(s) {
       return `tick ${showExpr(s.box)} when ${showExpr(s.cond)}`;
     case "pick":
       return `pick ${showExpr(s.box)} ${showExpr(s.button)} when ${showExpr(s.cond)}`;
-    case "skip":
-      return `skip ${showExpr(s.box)}`;
     case "eval":
       return showExpr(s.value);
     case "jump":
