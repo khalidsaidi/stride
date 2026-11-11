@@ -340,7 +340,7 @@ x is within s. With `s` a map: yes when x is one of its keys.
   `r.f` of an empty record (an absent list item) is empty.
 - 6.9.2. `l[i]`: i a number (S358), l a list, or words (their i-th character; S359 otherwise). i not whole, or below 1, is F004 (S360 when i is
   written out). i above the number of items is empty (a form's empty row).
-- 6.9.3. `l[a..b]`: the items a to b (of words: the characters a to b), a list of l's element type and most. a, b whole (F004); a < 1 counts from 1;
+- 6.9.3. `l[a..b]`: the items a to b (of words: the characters a to b; `l[a..]` to the last, `l[..b]` from the first), a list of l's element type and most. a, b whole (F004); a < 1 counts from 1;
   b beyond the items stops at the last; a > b gives an empty list.
 - 6.9.4. `f(args)`: a call (§9).
 
@@ -712,7 +712,7 @@ Calling through a name that holds no function when the program runs stops the ru
 
 9.11. **A function written in place.** `function(n: number) -> number { return n * 2 }` is a function with no name,
 written where a value goes; its result's type may be left out, as a named function's (§9.6), and its parameters
-have no defaults. It reads and changes the program's top-level names as any function does (§9.1). A `var` of the
+have no defaults. One put straight into a `let` or `var` may call itself by that name. It reads and changes the program's top-level names as any function does (§9.1). A `var` of the
 function or loop around it is shared: the function and the code around it read and change the one var, which
 lives as long as either uses it; each run of the var's declaration makes a new one. Another name around it (a
 let, a parameter, a loop's counter or item) does not change, and the function has its value. One put straight
@@ -872,8 +872,8 @@ words given to `print`, and a fault or none.
 | `lower(t: text) -> text` | t in small letters |
 | `title(t: text) -> text` | each word's first letter a capital, the rest small; words are split on spaces, `-` and `'` |
 | `capitalize(t: text) -> text` | the first character a capital, the rest as written |
-| `trim(t: text) -> text` | spaces and tabs off both ends, inner runs of them made one space |
-| `trim_start(t: text) -> text`, `trim_end(t: text) -> text` | spaces and tabs off the start, off the end |
+| `trim(t: text) -> text` | white space off both ends |
+| `trim_start(t: text) -> text`, `trim_end(t: text) -> text` | white space off the start, off the end |
 | `remove_prefix(t: text, prefix: text) -> text` | t without prefix at its start, when it starts so (case as written); else t |
 | `remove_suffix(t: text, suffix: text) -> text` | the same at the end |
 | `length(t: text) -> number` | how many characters; empty: 0 |
@@ -936,7 +936,7 @@ entry says "or a set" (its items are then options).
 | Signature | Gives |
 |---|---|
 | `count(l: list of T or set) -> number` | how many items, or options chosen |
-| `join(l: list of T or set, separator: text = ", ") -> text` | T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words, empty items left out, joined |
+| `join(l: list of T or set, separator: text = ", ") -> text` | T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out) |
 | `first(l: list of T or set) -> T`, `last(l: list of T or set) -> T` | the first, the last item; empty when there is none |
 | `filled(l: list of T) -> list of T most same` | the items that are not empty, in order |
 | `index_of(l: list of T, x: T) -> number` | the position of the first item equal to x (§6.6); 0 when none |

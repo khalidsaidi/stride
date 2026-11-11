@@ -1087,11 +1087,13 @@ class Parser {
         e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span };
       } else if (this.sym("[") && !t.broken) {
         const open = this.take();
-        const index = this.expr();
+        // l[..b] starts at the first item, l[a..] goes to the last (§6.9.3).
+        const first = { kind: "number", value: D.fromInt(1), raw: "1", span: open.span };
+        const index = this.sym("..") ? { ...first, open: true } : this.expr();
         if (this.sym("..")) {
           // l[a..b] (§6.9.3)
           this.take();
-          const to = this.expr();
+          const to = this.sym("]") ? { kind: "number", value: D.fromInt(2147483647), raw: "2147483647", span: this.token.span, open: true } : this.expr();
           const end = this.expect("punct", "]");
           e = { kind: "slice", from: index, to, target: e, opSpan: open.span, span: join(e.span, end.span) };
           continue;

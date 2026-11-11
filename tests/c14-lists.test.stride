@@ -8,7 +8,7 @@ let y: set of letters = ["c", "a"]
 expect count([1, 2]) == 2
 expect count(no_items) == 0
 expect count(x) == 2
-expect join([1, empty, 2]) == "1, 2"
+expect join([1, empty, 2]) == "1, , 2"
 expect join(["a", "b"], "-") == "a-b"
 expect join(x) == "b, a"
 expect first([3, 4]) == 3

@@ -33,7 +33,7 @@ export native define lower(t: text) -> text
 export native define title(t: text) -> text
 # example: capitalize("hello world") gives Hello world
 export native define capitalize(t: text) -> text
-# example: "[{trim("  a   b  ")}]" gives [a b]
+# example: "[{trim("  a   b  ")}]" gives [a   b]
 export native define trim(t: text) -> text
 # example: "[{trim_start("  a  ")}]" gives [a  ]
 export native define trim_start(t: text) -> text
@@ -161,7 +161,8 @@ export native define has<k, v>(m: map of k to v, key: k) -> yes-no
 # The map without a key; the map given is not changed.
 # example: remove({"a": 1, "b": 2}, "a") gives {b: 2}
 export native define remove<k, v>(m: map of k to v, key: k) -> map of k to v
-# example: join(["a", "b", ""], "; ") gives a; b
+# example: join(["a", "", "b"], "; ") gives a; ; b
+# example: join(filled(["a", "", "b"]), "; ") gives a; b
 # example: join(warm) gives red, green
 export native define join(l: any, separator: text = ", ") -> text
 # example: first([4, 5]) gives 4

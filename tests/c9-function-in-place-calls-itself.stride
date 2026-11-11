@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define outer(base: number) -> number {
+  let fib = function(n: number) -> number {
+    if n < 2 {
+      return n + base
+    }
+    return fib(n - 1) + fib(n - 2)
+  }
+  return fib(10)
+}
+print(outer(0))
+let fact = function(n: number) -> number {
+  if n <= 1 {
+    return 1
+  }
+  return n * fact(n - 1)
+}
+print(fact(5))
+let xs = [1, 2, 3, 4, 5]
+print(xs[2..])
+print(xs[..2])
+print("hello"[3..])
+# rule 9.11 6.9.3
+# prints ["55", "120", "[2, 3, 4, 5]", "[1, 2]", "llo"]

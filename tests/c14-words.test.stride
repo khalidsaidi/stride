@@ -4,7 +4,7 @@ expect upper(empty) is empty
 expect title("ada o'neil-smith") == "Ada O'Neil-Smith"
 expect title("ADA LOVELACE") == "Ada Lovelace"
 expect capitalize("ada LOVE") == "Ada LOVE"
-expect trim("  a \t  b  ") == "a b"
+expect trim("  a \t  b \n ") == "a \t  b"
 expect trim_start("  a  ") == "a  "
 expect trim_end("  a  ") == "  a"
 expect remove_prefix("Mr Smith", "Mr ") == "Smith"

@@ -403,7 +403,7 @@ export function format(text, name = "program.stride") {
       case "index":
         return `${expr(e.target, 8)}[${expr(e.index)}]`;
       case "slice":
-        return `${expr(e.target, 8)}[${expr(e.from)}..${expr(e.to)}]`;
+        return `${expr(e.target, 8)}[${e.from.open ? "" : expr(e.from)}..${e.to.open ? "" : expr(e.to)}]`;
       case "call":
         return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}(${e.args.map((a) => expr(a)).join(", ")})`;
       case "named-arg":

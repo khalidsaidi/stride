@@ -683,11 +683,13 @@ export function lower(resolved, diagnostics, options = {}) {
           return withAt(ordered(IR.native(sym.name, args)), at);
         }
         const fn = functionOf(sym);
-        if (!sym.effects) return withAt(ordered(IR.call(fn, args)), at);
+        // A function written in place calling itself: what it keeps goes along.
+        const kept = (sym.keeps ?? []).map((k) => (k.shared ? IR.cellref(ctx.locals.get(k)) : IR.local(ctx.locals.get(k))));
+        if (!sym.effects) return withAt(ordered(IR.call(fn, [...kept, ...args]), kept.length), at);
         // §8.6.2: a call that can reach questions adds its segment: the function's name, then the turns of the loops
         // around it; a second call of it there in the same run is name#2, a third name#3.
         const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(keyName(sym)), suffix(ctx))]), IR.constant("."));
-        return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...args]), 2), at);
+        return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...kept, ...args]), 2 + kept.length), at);
       }
       case "map":
         return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));

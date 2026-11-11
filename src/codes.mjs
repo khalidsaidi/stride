@@ -836,7 +836,7 @@ export const LIBRARY = [
     "names": [
       "trim"
     ],
-    "gives": "spaces and tabs off both ends, inner runs of them made one space"
+    "gives": "white space off both ends"
   },
   {
     "section": "14.1 Words",
@@ -848,7 +848,7 @@ export const LIBRARY = [
       "trim_start",
       "trim_end"
     ],
-    "gives": "spaces and tabs off the start, off the end"
+    "gives": "white space off the start, off the end"
   },
   {
     "section": "14.1 Words",
@@ -1306,7 +1306,7 @@ export const LIBRARY = [
     "names": [
       "join"
     ],
-    "gives": "T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words, empty items left out, joined"
+    "gives": "T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out)"
   },
   {
     "section": "14.4 Lists and sets",

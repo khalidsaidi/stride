@@ -742,6 +742,8 @@ export function resolve(loaded, diagnostics) {
         sym.scope = fnScope;
         sym.params = [];
         sym.typeParams = [];
+        // One put into a let or var may call itself by that name.
+        if (e.called) fnScope.names.set(e.called, sym);
         for (const p of e.params) {
           const param = new Sym("param", p.name, p, unit);
           param.type = resolveType(p.type, scope, unit, false, true);

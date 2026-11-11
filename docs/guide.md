@@ -477,7 +477,7 @@ still running
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
 | an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |
 
-There is no try and catch. A program guards against faults before they happen (`if n != 0`, `either`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
+A program can also guard against faults before they happen (`if n != 0`, `either`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
 faults`, below).
 
 ## 13. Tests
@@ -705,7 +705,7 @@ Linux. Other platforms are outside this release's scope.
 |---|---|
 | loops | `for`, `for each`, `while`, `collect` |
 | recursion | a function may call itself; calls deeper than 10,000 stop the run (F015) |
-| function values | none (§9.10, section 8 above) |
+| functions | are values: passed, kept, returned, written in place (§9.10, §9.11) |
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |
 | the PDF | never changed; only its boxes are filled |
 | a run | calls at most 10,000 deep (F015); no limit of instructions unless the host sets one (F014) |
