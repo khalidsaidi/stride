@@ -238,8 +238,8 @@ export const CODES = {
     "explanation": "A loop's names are known only inside it; collect into a var declared before."
   },
   "S204": {
-    "when": "a program's name used in a function",
-    "explanation": "A function sees only its parameters and its file's declarations; pass the value."
+    "when": "a program's name a function cannot use",
+    "explanation": "A function reads the program's top-level names and does not change them: return the new value. A parameter's default is worked out by the compiler, so it reads none."
   },
   "S205": {
     "when": "a name defined twice",

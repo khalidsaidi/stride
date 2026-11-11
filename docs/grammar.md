@@ -104,8 +104,8 @@ A function may be generic: `define first_of<t>(l: list of t) -> t` takes a list 
 its items; each call works out what `t` is from its arguments (§9.5). A function that returns a value and does not write its result's
 type has the join of its returns' types (§3.9, §9.6).
 
-A function sees its parameters, its own names, and its file's declarations; it does not see the program's
-answers: what it needs is passed. A function may call itself. A function is a value too: its name can be passed,
+A function sees its parameters, its own names, its file's declarations, and the program's top-level names (an
+answer, a let, a var), which it reads and does not change. A function may call itself. A function is a value too: its name can be passed,
 kept and called through (§9.10).
 
 `r.label()` calls `label(r)`: any function can be called on its first argument. A library kept under a name

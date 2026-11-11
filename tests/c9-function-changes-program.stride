@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var total = 10
+define bump() -> number {
+  total = total + 1
+  return total
+}
+print(bump())
+# rule 9.1 S204
+# mistake 5:3 S204

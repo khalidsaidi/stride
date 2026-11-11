@@ -49,12 +49,14 @@ export function generate(program, pdf, debug = null) {
   const code = new Writer();
   const places = [];
   const functions = [];
+  let mainSlots = null; // the program's own locals (the first function), for the functions that read them
 
   for (const fn of program.functions) {
     // Locals numbered parameters first, in the order they are passed.
     const slot = new Map();
     for (const p of fn.params) slot.set(p, slot.size);
     for (const l of fn.locals) if (!slot.has(l)) slot.set(l, slot.size);
+    mainSlots ??= slot;
     const local = (l) => {
       if (!slot.has(l)) slot.set(l, slot.size);
       return slot.get(l);
@@ -136,6 +138,12 @@ export function generate(program, pdf, debug = null) {
           args(x);
           atExpr(x);
           return emit(OP.CALL, fnIndex.get(x.fn), x.args.length);
+        case "outer": {
+          // The program's local of that name, in the program's own frame; a name it never gave a value is empty.
+          const l = program.outer?.get(x.sym);
+          const k = l ? mainSlots.get(l) : undefined;
+          return k === undefined ? emit(OP.EMPTY) : emit(OP.LOAD_MAIN, k);
+        }
         case "fnref":
           return emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
         case "callv":

@@ -121,8 +121,9 @@ export function check(resolved, diagnostics) {
   // ----- bodies
 
   for (const r of resolved.units) {
-    for (const sym of r.functions) checkFunction(sym, r.unit);
+    // The program first: a function it calls is checked at the call, and may read the names defined before it.
     if (!r.unit.library) block(r.main, { fn: null, unit: r.unit, main: true });
+    for (const sym of r.functions) checkFunction(sym, r.unit);
   }
 
   // A type no value tells: the bare empty, or a list of such at any depth (§6.11, S328, S344).
@@ -455,6 +456,12 @@ export function check(resolved, diagnostics) {
     const valueType = s.op ? binary({ kind: "binary", op: s.op, a: s.target, b: s.value, span: s.span, opSpan: s.opSpan, compound: true, file: s.file }, ctx) : expr(s.value, ctx, { allowNone: true });
     const target = s.target;
     let wanted = T.ERROR;
+    // A function reads the program's names, and does not change them (§9.1).
+    if (ctx.fn && rootOf(target)?.symbol?.program) {
+      const name = rootOf(target).symbol.name;
+      err("S204", target, `${name} is the program's: a function reads it, and does not change it; give the new value back with return`);
+      return;
+    }
     if (target.kind === "name") {
       const sym = target.symbol;
       if (!sym) return;
@@ -606,6 +613,11 @@ export function check(resolved, diagnostics) {
           }
           e.functionValue = sym;
           return T.fn(sym.params.map((p) => p.type), sym.result);
+        }
+        // The program's own name, read in a function called before the line that defines it.
+        if (ctx.fn && sym.program && !sym.type) {
+          err("S202", e, `${sym.name} is read in ${ctx.fn.name}, which is called before the program defines ${sym.name}, on line ${sym.line ?? sym.node?.span?.line}`);
+          return T.ERROR;
         }
         return sym.type ?? T.ERROR;
       }

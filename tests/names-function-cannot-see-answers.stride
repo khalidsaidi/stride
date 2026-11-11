@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-ask taxpayer: text "T"
-define f() -> text {
-# mistake 6 S204 pass taxpayer to f
-  return taxpayer
-}
-fill "A" = f() + taxpayer
-# rule 9.1 S204

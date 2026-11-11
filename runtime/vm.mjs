@@ -414,6 +414,9 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           entered(frames.at(-1), args);
           break;
         }
+        case OP.LOAD_MAIN:
+          stack.push(frames[0].locals[ins.a] ?? null);
+          break;
         case OP.FN:
           stack.push(new StrideFunction(p.texts[ins.b], ins.a));
           break;

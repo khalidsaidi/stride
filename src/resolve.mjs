@@ -215,7 +215,7 @@ export function resolve(loaded, diagnostics) {
         param.type = resolveType(p.type, fnScope, unit, sym.kind === "native", true);
         // A default is worked out by the compiler: made of words, numbers and the file's constants (§9.2).
         if (p.default) {
-          // Seen from the function (a program's name is S204 here, as in its body), with no parameter in sight.
+          // Seen from the function (a program's name is S204 here: a default is worked out by the compiler), with no parameter in sight.
           resolveExpr(p.default, new Scope(scope, "function", sym), unit);
           param.hasDefault = true;
         }
@@ -244,8 +244,7 @@ export function resolve(loaded, diagnostics) {
     }
     checkRecordCycles(result.records, unit);
 
-    // Bodies: each function's, then the program's own statements in order.
-    for (const sym of result.functions) resolveBlock(sym.node.body, sym.scope, unit);
+    // Bodies: the program's own statements in order, then each function's (which may read the program's names).
     const statements = unit.tree.items.filter((i) => !DECLARATION_KINDS.has(i.kind) && i.kind !== "use");
     if (unit.library) {
       // An expect is a test file's (§7.17): S236 wherever else it stands.
@@ -261,6 +260,7 @@ export function resolve(loaded, diagnostics) {
       result.main = statements;
       resolveBlock(statements, main, unit);
     }
+    for (const sym of result.functions) resolveBlock(sym.node.body, sym.scope, unit);
   }
 
   // ----- types
@@ -648,7 +648,12 @@ export function resolve(loaded, diagnostics) {
     const fn = scope.function;
     if (later) err("S202", unit.file, node.span, `${name} is used before it is defined, on line ${later.span.line}`, [{ file: unit.file, span: later.span, message: `${name} is defined here` }]);
     else if (inner) err("S203", unit.file, node.span, `${name} is defined inside the ${inner.kind === "collect" ? "collect" : "loop"} on line ${inner.span.line}, and is known only there`);
-    else if (fn && mainNames(unit).has(name)) err("S204", unit.file, node.span, `${name} is the program's, and a function sees only its parameters and its file's declarations; pass ${name} to ${fn.name}`);
+    // A function reads the program's own names (§9.1): an answer, a let, a var of its top level.
+    else if (fn && ["let", "var", "answer"].includes(results.get(unit)?.mainScope?.own(name)?.kind)) {
+      const outer = results.get(unit).mainScope.own(name);
+      outer.program = true;
+      return outer;
+    } else if (fn && mainNames(unit).has(name)) err("S204", unit.file, node.span, `${name} is not seen in ${fn.name}: a parameter's default is worked out by the compiler, and ${name} is the program's; pass ${name} to ${fn.name}`);
     else err("S201", unit.file, node.span, `nothing called ${name} is defined here${didYouMean(name, scope.visible())}`);
     return null;
   }

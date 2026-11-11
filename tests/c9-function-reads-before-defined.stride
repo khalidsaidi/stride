@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define early() -> number {
+  return later
+}
+print(early())
+let later = 4
+# rule 9.1 S202
+# mistake 4:10 S202

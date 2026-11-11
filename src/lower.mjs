@@ -45,7 +45,7 @@ export function lower(resolved, diagnostics, options = {}) {
   // Where lowering stands: the function being built and its current block; what each name is (a local); the key prefix of the questions asked here (an expression), the turns of
   // the loops around them (expressions, outermost first), and the items of lists being asked about.
   const context = (fn, extra = {}) => ({ fn, block: fn.entry, locals: new Map(), prefix: IR.constant(""), suffixes: [], items: new Map(), ...extra });
-  const child = (ctx, extra = {}) => ({ ...ctx, locals: new Map(ctx.locals), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
+  const child = (ctx, extra = {}) => ({ ...ctx, locals: new ctx.locals.constructor(ctx.locals), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
 
   function emit(ctx, stmt) {
     if (ctx.block.term) ctx.block = ctx.fn.block(); // after a return: a block nothing reaches, which is not generated
@@ -82,7 +82,15 @@ export function lower(resolved, diagnostics, options = {}) {
   main.entry = main.block();
   program.main = main;
   program.functions.push(main);
-  const mainCtx = context(main);
+  // Each name of the program's top level and the local that holds it, for the functions that read it (§9.1).
+  program.outer = new Map();
+  class Recording extends Map {
+    set(sym, l) {
+      program.outer.set(sym, l);
+      return super.set(sym, l);
+    }
+  }
+  const mainCtx = context(main, { locals: new Recording() });
   lowerBlock(mainResult.main, mainCtx);
   if (!mainCtx.block.term) mainCtx.block.term = { op: "halt" };
 
@@ -535,6 +543,8 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.functionValue) return IR.fnref(e.functionValue.kind === "native" ? nativeOf(e.functionValue) : functionOf(e.functionValue));
         const sym = e.symbol;
         if (sym.kind === "const") return IR.constant(sym.value ?? null);
+        // The program's own name, read in a function: where the program holds it (§9.1).
+        if (ctx.fnSym && sym.program && !ctx.locals.has(sym)) return IR.outer(sym);
         const l = ctx.locals.get(sym);
         if (!l) {
           // A question asked in a branch that is not this one, or not asked yet on this path: it is empty here.

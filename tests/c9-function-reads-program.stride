@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask a: text "A"
+let rate = 3
+var total = 10
+define taxed(n: number) -> number {
+  return n * rate + total
+}
+define greet() -> text {
+  return "hi " + a
+}
+total = total + 1
+print(taxed(2))
+print(greet())
+# rule 9.1
+# answers {"a": "Ann"}
+# prints ["17", "hi Ann"]

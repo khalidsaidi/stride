@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define f() -> number {
+  return inner
+}
+if 1 == 1 {
+  let inner = 1
+  print(f() + inner)
+}
+# rule 9.1
+# prints ["2"]
