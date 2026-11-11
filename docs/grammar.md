@@ -142,7 +142,9 @@ string`. A native's parameter may be `any`; its result may be `any` (the type of
 | `for i in a..b { }`, `for i in a..<b { }` | its block for each whole number from a to b, or with `..<` to before b; a and b worked out once (§7.11) |
 | `for x in list { }`, `for n, x in list { }` | its block for each item of a list or option of a set, n counting from 0 |
 | `while c { }` | its block as long as the condition is true (§7.11.1) |
-| `try { } catch problem { }` | a fault in the try runs the catch, its message in `problem` (§7.18) |
+| `try { } catch problem { }` | a fault in the try runs the catch, the error in `problem`: `problem.code`, `problem.message` (§7.18) |
+| `try { } catch problem { } finally { }`, `try { } finally { }` | the finally block runs after the try and its catch, however they end (§7.18.2) |
+| `throw "why"`, `throw error("why", code: "CODE")`, `throw problem` | raises an error; a caught one again, unchanged (§7.19) |
 | `break`, `continue` | end the innermost `for` or `while`, or go to its next turn; not in a collect (§7.12) |
 | `collect x in list "Add another…?" { }`, `collect n, x in list any "Any…?" another "Another…?" { }` | asks for the items of a list one at a time (below) |
 | `return`, `return e` | ends a function (with its value), or the program |
@@ -237,7 +239,7 @@ rest_lines word word_count pad_left string_of number_of`. Numbers: `round ceil f
 fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days add_months`.
 Lists and sets: `count join first last filled index_of append insert remove_at clear copy without reversed sorted sum
 smallest largest any all union intersection difference`; `append`, `insert`, `remove_at` and `clear` change the list
-they are given, the others give a new one. Null, faults and output: `either fail print`.
+they are given, the others give a new one. Null, faults and output: `either fail error print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
 one-character boxes. Their positions count from 0, as a list's do, and `find` and `index_of` give -1 for none. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).

@@ -254,6 +254,11 @@ export native function difference(a: any, b: any) -> any
 export native function either(a: any, b: any) -> any
 # example: fail("stop") faults F013
 export native function fail(message: string)
+
+# An error value with a message and a code, for throw; without a code it is F013.
+# example: error("no file", code: "NOFILE").code == "NOFILE" gives true
+# example: error("no file").message == "no file" gives true
+export native function error(message: string, code: string = "F013") -> error
 # example: print(people[0]) prints person { name: Bo, age: 40 }
 # example: print(1, "a", [2, 3]) prints 1 a [2, 3]
 export native function print(v: any)

@@ -143,6 +143,22 @@ export class StrideRecord {
   }
 }
 
+// An error value (§3.11): a code and a message, which never change. `origin` is the fault it was caught as, with
+// its place and the calls that led there, so that the error thrown again is the same fault; null for one a
+// program made.
+export class StrideError extends StrideRecord {
+  constructor(code, message, origin = null) {
+    super("error", [code, message], ["code", "message"]);
+    this.origin = origin;
+  }
+  get code() {
+    return this.fields[0];
+  }
+  get message() {
+    return this.fields[1];
+  }
+}
+
 // A record made where a place on the way to a field holds null (§7.5.1), as `new R { }` makes it (§6.14): every
 // field null, but a list field a list with no items and a map field a map with no keys. `starts` tells, for each
 // field, which: "list", "map" or null.
@@ -218,7 +234,7 @@ export class StrideFunction {
 // that holds itself is copied as one that holds itself. `whole`: what a function value keeps and the vars it shares
 // are copied too, for an expectation's sub-run (§7.17.1).
 export function copy(v, made = new Map(), whole = false) {
-  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || (whole && (v instanceof StrideFunction || v instanceof Cell)))) return v;
+  if (isSet(v) || v instanceof StrideError || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || (whole && (v instanceof StrideFunction || v instanceof Cell)))) return v;
   if (made.has(v)) return made.get(v);
   if (v instanceof Cell) {
     const out = new Cell(null);
@@ -252,7 +268,7 @@ export function copy(v, made = new Map(), whole = false) {
 
 // Whether a value holds itself (§3.4.6): a tool that shows values says so, and does not follow it.
 export function holdsItself(v, path = new Set()) {
-  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap)) return false;
+  if (isSet(v) || v instanceof StrideError || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap)) return false;
   if (path.has(v)) return true;
   path.add(v);
   const found = (Array.isArray(v) ? v : v instanceof StrideRecord ? v.fields : v.pairs.map(([, x]) => x)).some((x) => holdsItself(x, path));
@@ -282,6 +298,7 @@ export function words(v) {
   if (isDate(v)) return v.iso;
   if (typeof v === "boolean") return v ? "true" : "false";
   if (Array.isArray(v)) return v.map(words).join(", ");
+  if (v instanceof StrideError) return v.message;
   if (v instanceof StrideRecord) return inside(v, () => v.fields.map(words).filter(Boolean).join(", "));
   if (v instanceof StrideFunction) return `function ${v.name}`;
   if (v instanceof StrideRange) return v.words;
@@ -291,7 +308,7 @@ export function words(v) {
 
 // What print gives the host (§14.5): lists as [a, b], records as R { field: v, … } (field names from `names`).
 export function printed(v, recordNames = () => null) {
-  if (isSet(v)) return words(v);
+  if (isSet(v) || v instanceof StrideError) return words(v);
   if (Array.isArray(v)) return `[${v.map((x) => printed(x, recordNames)).join(", ")}]`;
   if (v instanceof StrideRecord) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);
@@ -374,7 +391,8 @@ export function expectation(faults, value, message, fault) {
     return truthy(value) ? { result: "pass" } : { result: "fail", why: words(message) || "it is not true" };
   }
   if (!fault) return { result: "fail", why: `no fault; expected ${faults}` };
-  const matches = /^F\d{3}$/.test(faults) ? fault.code === faults : fault.message.includes(faults);
+  // A program's own code (§7.19) is matched whole, as a fault's is.
+  const matches = /^F\d{3}$/.test(faults) ? fault.code === faults : fault.code === faults || fault.message.includes(faults);
   return matches ? { result: "pass" } : { result: "fail", why: `the fault was ${fault.code} ${fault.message}; expected ${faults}` };
 }
 

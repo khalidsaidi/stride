@@ -449,7 +449,7 @@ export function generate(program, pdf, debug = null) {
       }
       const t = b.term;
       // An if's, a match's and a return's line are statements of the program too (§17.7, §17.15).
-      if (t?.node && ["if", "match", "return"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
+      if (t?.node && ["if", "match", "return", "throw"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
       at(t?.node);
       switch (t?.op) {
         case "try":
@@ -482,6 +482,11 @@ export function generate(program, pdf, debug = null) {
           break;
         case "halt":
           emit(OP.HALT);
+          break;
+        case "throw":
+          expr(t.value);
+          at(t.node);
+          emit(OP.THROW);
           break;
         default:
           throw new Error(`block b${b.id} of ${fn.name} has no end`);

@@ -1,0 +1,19 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function f(n: number) -> number {
+  if n > 0 {
+    return n
+  }
+  throw error("not positive", code: "NEG")
+}
+print(f(1))
+var x: number
+try {
+  x = f(0)
+} catch e {
+  throw "gave up: {e.code}"
+}
+print(x)
+# rule 12.1.2 7.19
+# prints ["1"]
+# fault F013 at 14:3 gave up: NEG

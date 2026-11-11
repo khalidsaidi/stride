@@ -1,0 +1,30 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function describe(e: error) -> string {
+  return "{e.code}: {e.message}"
+}
+function caught() -> error {
+  try {
+    print(1 / 0)
+  } catch e {
+    return e
+  }
+  return error("nothing")
+}
+let made = error("no such file", code: "NOFILE")
+print(made.code)
+print(made.message)
+print(made)
+print("{made}!")
+print(string_of(made))
+print(describe(made))
+print(describe(caught()))
+print(error("plain").code)
+print(error(null, code: "").code + "/" + error(null).message + "/")
+print(made == error("no such file", code: "NOFILE"))
+print(made == error("no such file"))
+let all: list<error> = [made, caught()]
+print([e.code for e in all])
+print(count(all))
+# rule 3.11 14.5
+# prints ["NOFILE", "no such file", "no such file", "no such file!", "no such file", "NOFILE: no such file", "F001: division by zero", "F013", "F013//", "true", "false", "[NOFILE, F001]", "2"]

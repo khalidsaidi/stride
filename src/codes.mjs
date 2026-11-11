@@ -46,7 +46,7 @@ export const CODES = {
     "explanation": ""
   },
   "F013": {
-    "when": "`fail(message)`: the program's own fault",
+    "when": "the program's own fault: `throw` of words or of an error made without a code, and `fail(message)`",
     "explanation": ""
   },
   "F014": {
@@ -752,6 +752,18 @@ export const CODES = {
   "S700": {
     "when": "a range's bound that is not a number",
     "explanation": "`a..b` and `a..<b` are ranges of whole numbers (§6.17)."
+  },
+  "S720": {
+    "when": "throw of a value that is not an error and not words",
+    "explanation": "`throw \"message\"`, or `throw error(\"message\", code: \"CODE\")` (§7.19)."
+  },
+  "S721": {
+    "when": "a return in a finally block, or a break or continue there of a loop around the try",
+    "explanation": "The finally block runs to its end, and what the try was doing goes on after it; return, break or continue after the try statement, or in the try or the catch (§7.18.2)."
+  },
+  "S722": {
+    "when": "an error's code or message given a value",
+    "explanation": "An error does not change; `error(message, code: \"…\")` makes another (§3.11)."
   },
   "W001": {
     "when": "a match on an option missing options, without else",
@@ -1586,7 +1598,17 @@ export const LIBRARY = [
     "names": [
       "fail"
     ],
-    "gives": "no value: fault F013 with the message"
+    "gives": "no value: fault F013 with the message, as `throw message` (§7.19)"
+  },
+  {
+    "section": "14.5 Null, faults and output",
+    "signatures": [
+      "error(message: string, code: string = \"F013\") -> error"
+    ],
+    "names": [
+      "error"
+    ],
+    "gives": "an error (§3.11) with that message and code, for `throw`; a null message is no words, a null or empty code F013"
   },
   {
     "section": "14.5 Null, faults and output",

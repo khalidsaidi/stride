@@ -224,7 +224,14 @@ export function check(resolved, diagnostics) {
         return match(s, ctx);
       case "try":
         block(s.then, ctx);
-        return block(s.otherwise, ctx);
+        block(s.otherwise, ctx);
+        return block(s.final ?? [], ctx);
+      case "throw": {
+        // What is thrown is an error, or the words of one (§7.19).
+        const t = expr(s.value, ctx);
+        if (!T.isStringLike(t) && !["caught", "option", "null", "error"].includes(t.t)) err("S720", s.value, `throw raises an error or the words of one, and this is ${T.describe(t)}; error(message, code: "…") makes an error`);
+        return;
+      }
       case "while":
         condition(s.condition, ctx, "while");
         return block(s.body, ctx);
@@ -482,6 +489,7 @@ export function check(resolved, diagnostics) {
       const sym = root?.symbol;
       // A field or an item is changed through any name that holds the record, list or map (§7.5); a constant's
       // items never change, and an answer stays as the person gave it.
+      if (target.kind === "field" && target.target.type?.t === "caught") err("S722", target, `an error's ${target.name} does not change; error(message, code: "…") makes another`);
       if (sym && collectedItem(sym)) err("S346", target, `${sym.name} is a collected item; its fields are answers`);
       else if (sym && !["var", "let", "param", "item"].includes(sym.kind)) err("S347", target, sym.kind === "const" ? `${sym.name} is a constant, and its items do not change; copy(${sym.name}) gives a list that can` : `${sym.name} is ${what(sym)}, which holds nothing that can be given a value`);
       if (target.kind === "index" && T.isStringLike(target.target.type ?? T.ERROR)) err("S349", target, `${describeExpr(target.target)} is words, whose characters cannot be given a value; a list's item or a map's key can`);
@@ -658,6 +666,15 @@ export function check(resolved, diagnostics) {
       case "field": {
         const t = expr(e.target, ctx);
         if (T.isError(t)) return T.ERROR;
+        // An error's two fields (§3.11).
+        if (t.t === "caught") {
+          e.fieldIndex = T.CAUGHT_FIELDS.indexOf(e.name);
+          if (e.fieldIndex < 0) {
+            err("S318", e, `an error has a code and a message, and no field ${e.name}${didYouMean(e.name, T.CAUGHT_FIELDS)}`).label = `no field ${e.name}`;
+            return T.ERROR;
+          }
+          return T.STRING;
+        }
         if (t.t !== "record") {
           err("S357", e, `${describeExpr(e.target)} is ${T.describe(t)}, which has no fields${t.t === "list" ? "; count(…) is how many items, [n] the n-th" : ""}`);
           return T.ERROR;
@@ -969,7 +986,7 @@ export function check(resolved, diagnostics) {
     const l = bound[0]?.type;
     if (!l || T.isError(l)) return;
     const element = l.t === "list" ? l.element : l.t === "options" ? T.option(l.set) : null;
-    const hasWords = (t) => T.isStringLike(t) || ["number", "date", "bool", "option", "null", "error"].includes(t.t);
+    const hasWords = (t) => T.isStringLike(t) || ["number", "date", "bool", "option", "null", "error", "caught"].includes(t.t);
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];

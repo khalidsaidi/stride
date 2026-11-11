@@ -199,6 +199,8 @@ export function expressionsOf(s) {
       return [s.cond];
     case "return":
       return s.value ? [s.value] : [];
+    case "throw":
+      return [s.value];
     default:
       return [];
   }
@@ -281,6 +283,8 @@ export function showStatement(s) {
       return s.value ? `return ${showExpr(s.value)}` : "return";
     case "halt":
       return "halt";
+    case "throw":
+      return `throw ${showExpr(s.value)}`;
     default:
       return `?${s.op}`;
   }

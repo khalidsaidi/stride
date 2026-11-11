@@ -29,7 +29,8 @@
 //   match       = "match" expr "{" (plain ("," plain)* "=>" block | "else" "=>" block)* "}"
 //   for         = "for" name "in" expr (".." | "..<") expr block
 //   while       = "while" expr block
-//   try         = "try" block "catch" [name] block
+//   try         = "try" block ("catch" [name] block ["finally" block] | "finally" block)
+//   throw       = "throw" expr
 //   foreach     = "for" [name ","] name "in" expr block               (what follows "in" has no ".." after its sum)
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = cond | coalesce;  coalesce = or ("??" or)*;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
@@ -749,19 +750,34 @@ class Parser {
 
   statement() {
     const t = this.token;
-    // try { … } catch problem { … }: what a fault inside stops is the try, not the run (§7.18).
+    // try { … } catch problem { … } finally { … }: what a fault inside stops is the try, not the run (§7.18).
     if (this.is("name", "try") && this.peek().type === "punct" && this.peek().value === "{") {
       const start = this.take();
       const then = this.block();
       const catchLine = this.token.span.line;
-      if (!this.is("name", "catch")) this.expect("keyword", "catch", '"catch"');
-      else this.take();
-      let caught = null;
-      if (this.token.type === "name") {
-        const n = this.token;
-        caught = this.node("caught", n, { name: this.name("the name the fault's words go by") });
+      const hasCatch = this.is("name", "catch");
+      if (!hasCatch && !this.is("name", "finally")) throw this.mistake(['"catch"', '"finally"']);
+      let caught = null, otherwise = [];
+      if (hasCatch) {
+        this.take();
+        if (this.token.type === "name") {
+          const n = this.token;
+          caught = this.node("caught", n, { name: this.name("the name the error goes by") });
+        }
+        otherwise = this.block();
       }
-      return this.node("try", start, { then, caught, catchLine, otherwise: this.block() });
+      // finally { … }: what runs after the try and its catch, however they end (§7.18.2).
+      let final = null, finallyLine = null;
+      if (this.is("name", "finally") && (!hasCatch || (this.peek().type === "punct" && this.peek().value === "{"))) {
+        finallyLine = this.take().span.line;
+        final = this.block();
+      }
+      return this.node("try", start, { then, caught, hasCatch, catchLine, otherwise, final, finallyLine });
+    }
+    // throw e: an error raised (§7.19). `throw` is a word of the statement only before a value on its line.
+    if (this.is("name", "throw") && !this.peek().broken && (["name", "string", "number"].includes(this.peek().type) || (this.peek().type === "keyword" && ["new", "null", "true", "false", "not"].includes(this.peek().value)) || (this.peek().type === "punct" && this.peek().value === "["))) {
+      const start = this.take();
+      return this.node("throw", start, { value: this.expr() });
     }
     if (t.type === "keyword") {
       switch (t.value) {
@@ -807,7 +823,7 @@ class Parser {
     const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["true", "false", "null", "not", "new"].includes(t.value));
     const prevTok = this.tokens[this.at - 1];
     if (value && (t.broken || !prevTok || (prevTok.type === "punct" && prevTok.value === "{"))) return this.node("call-statement", t, { call: this.expr() });
-    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, try, collect, return, break, continue)", "a call"]);
+    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, try, throw, collect, return, break, continue)", "a call"]);
   }
 
   // A declaration started with a word Stride does not have: what it writes for it.

@@ -47,6 +47,9 @@ export function lower(resolved, diagnostics, options = {}) {
   const context = (fn, extra = {}) => ({ fn, block: fn.entry, locals: new Map(), prefix: IR.constant(""), suffixes: [], items: new Map(), ...extra });
   const child = (ctx, extra = {}) => ({ ...ctx, locals: new ctx.locals.constructor(ctx.locals), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
 
+  // The ways into a finally block that go on elsewhere after it (lowerTry), each with the number its state holds.
+  const LEAVES = { rethrow: 1, return: 2, break: 3, continue: 4 };
+
   function emit(ctx, stmt) {
     if (ctx.block.term) ctx.block = ctx.fn.block(); // after a return: a block nothing reaches, which is not generated
     ctx.block.stmts.push(stmt);
@@ -177,20 +180,25 @@ export function lower(resolved, diagnostics, options = {}) {
       case "collect":
         return lowerCollect(s, ctx);
       case "return":
-        if (!ctx.fnSym) terminate(ctx, { op: "halt", node: s });
+        if ((ctx.tries ?? []).some((t) => t.final)) {
+          // Out of a try with a finally block (§7.18.2): the value is worked out here, then the block runs.
+          if (ctx.fnSym && s.value) {
+            ctx.fn.returned ??= ctx.fn.local("return", ctx.fnSym.result);
+            emit(ctx, { op: "set", dst: ctx.fn.returned, value: placeAs(expr(s.value, ctx), ctx.fnSym.result, s.value.type), node: s });
+          }
+          leaveTries(s, ctx, 0, "return");
+        } else if (!ctx.fnSym) terminate(ctx, { op: "halt", node: s });
         else terminate(ctx, { op: "return", value: s.value ? placeAs(expr(s.value, ctx), ctx.fnSym.result, s.value.type) : null, node: s });
+        return;
+      case "throw":
+        terminate(ctx, { op: "throw", value: expr(s.value, ctx), node: s });
         return;
       case "call-statement":
         if (s.call.kind === "call") emit(ctx, { op: "eval", value: expr(s.call, ctx), node: s });
         return;
       case "break":
-        leaveTries(s, ctx);
-        terminate(ctx, { op: "jump", to: ctx.loop.exit, node: s });
-        return;
       case "continue":
-        leaveTries(s, ctx);
-        terminate(ctx, { op: "jump", to: ctx.loop.next, node: s });
-        return;
+        return finishLeave(s, ctx, s.kind);
       case "expect":
         return lowerExpect(s, ctx);
       default:
@@ -327,28 +335,91 @@ export function lower(resolved, diagnostics, options = {}) {
   }
 
 
-  // A break or continue out of the tries the loop holds: each is over.
-  function leaveTries(s, ctx) {
-    for (let i = ctx.loop.tries ?? 0; i < (ctx.tries ?? 0); i++) emit(ctx, { op: "endtry", node: s });
+  // `ctx.tries` holds the tries around what is being lowered, innermost last: each { final }, null or what its
+  // finally block is reached by. A return, break or continue (`kind`) leaves the tries from the innermost down to
+  // `depth`: each is over. At one with a finally block the way goes into that block (§7.18.2), which goes on with
+  // the leaving when it ends; false then.
+  function leaveTries(s, ctx, depth, kind) {
+    const tries = ctx.tries ?? [];
+    for (let i = tries.length - 1; i >= depth; i--) {
+      emit(ctx, { op: "endtry", node: s });
+      const f = tries[i].final;
+      if (!f) continue;
+      if (!f.leaves.has(kind)) f.leaves.set(kind, s);
+      emit(ctx, { op: "set", dst: f.state, value: IR.constant(V.num(LEAVES[kind])), node: null });
+      terminate(ctx, { op: "jump", to: f.block, node: s });
+      return false;
+    }
+    return true;
+  }
+
+  // What a return, break or continue does once the tries it leaves are over.
+  function finishLeave(s, ctx, kind) {
+    if (kind === "return") {
+      if (!leaveTries(s, ctx, 0, kind)) return;
+      terminate(ctx, ctx.fnSym ? { op: "return", value: ctx.fn.returned ? IR.local(ctx.fn.returned) : null, node: null } : { op: "halt", node: null });
+    } else if (leaveTries(s, ctx, ctx.loop.tries ?? 0, kind)) terminate(ctx, { op: "jump", to: kind === "break" ? ctx.loop.exit : ctx.loop.next, node: s });
   }
 
   // try { … } catch name { … } (§7.18): a fault in the try, or in what it calls, goes on at the catch, the
-  // fault's words in the name.
+  // error in the name.
+  //
+  // With finally { … } (§7.18.2) the try and its catch stand in a try of their own, whose catch is the finally
+  // block. The block is lowered once. Every way into it sets `state` first: 0 from the end of the try or the
+  // catch, 1 from a fault (the error kept in `pending`), and one number for each of return, break and continue
+  // that leaves through it. After the block's statements the state chooses what goes on: the statement after,
+  // the error raised again, or the rest of the leaving.
   function lowerTry(s, ctx) {
-    const body = ctx.fn.block();
-    const handler = ctx.fn.block();
+    const outer = ctx.tries ?? [];
     const join = ctx.fn.block();
-    const caught = ctx.fn.local(s.caught?.name ?? "fault", { t: "string" });
-    if (s.caught?.symbol) ctx.locals.set(s.caught.symbol, caught);
-    terminate(ctx, { op: "try", body, handler, dst: caught, node: s });
-    ctx.block = body;
-    ctx.tries = (ctx.tries ?? 0) + 1;
-    lowerBlock(s.then, ctx);
-    ctx.tries -= 1;
-    if (!ctx.block.term) emit(ctx, { op: "endtry", node: s });
-    jumpTo(ctx, join, s);
-    ctx.block = handler;
-    lowerBlock(s.otherwise, ctx);
+    let final = null;
+    if (s.final) {
+      final = { state: ctx.fn.local("finally", { t: "number" }), pending: ctx.fn.local("finally.error", { t: "caught" }), block: ctx.fn.block(), leaves: new Map() };
+      const body = ctx.fn.block();
+      const handler = ctx.fn.block();
+      terminate(ctx, { op: "try", body, handler, dst: final.pending, node: s });
+      ctx.block = handler;
+      emit(ctx, { op: "set", dst: final.state, value: IR.constant(V.num(LEAVES.rethrow)), node: null });
+      jumpTo(ctx, final.block, s);
+      ctx.block = body;
+      ctx.tries = [...outer, { final }];
+    }
+    if (s.hasCatch !== false) {
+      const within = ctx.tries ?? [];
+      const body = ctx.fn.block();
+      const handler = ctx.fn.block();
+      const after = final ? ctx.fn.block() : join;
+      const caught = ctx.fn.local(s.caught?.name ?? "error", { t: "caught" });
+      if (s.caught?.symbol) ctx.locals.set(s.caught.symbol, caught);
+      terminate(ctx, { op: "try", body, handler, dst: caught, node: s });
+      ctx.block = body;
+      ctx.tries = [...within, { final: null }];
+      lowerBlock(s.then, ctx);
+      ctx.tries = within;
+      if (!ctx.block.term) emit(ctx, { op: "endtry", node: s });
+      jumpTo(ctx, after, s);
+      ctx.block = handler;
+      lowerBlock(s.otherwise, ctx);
+      jumpTo(ctx, after, s);
+    } else lowerBlock(s.then, ctx);
+    if (!final) return;
+    ctx.tries = outer;
+    if (!ctx.block.term) {
+      emit(ctx, { op: "endtry", node: s });
+      emit(ctx, { op: "set", dst: final.state, value: IR.constant(V.num(0)), node: null });
+    }
+    jumpTo(ctx, final.block, s);
+    lowerBlock(s.final, ctx);
+    for (const [kind, node] of [["rethrow", s], ...final.leaves]) {
+      if (ctx.block.term) break; // the finally block itself always throws: nothing goes on after it
+      const yes = ctx.fn.block();
+      const no = ctx.fn.block();
+      terminate(ctx, { op: "branch", cond: IR.binary("==", IR.local(final.state), IR.constant(V.num(LEAVES[kind]))), yes, no, node: s });
+      ctx.block = yes;
+      if (kind === "rethrow") terminate(ctx, { op: "throw", value: IR.local(final.pending), node: null });
+      else finishLeave(node, ctx, kind);
+      ctx.block = no;
+    }
     jumpTo(ctx, join, s);
   }
 
@@ -402,7 +473,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const at = child(ctx, { block: head });
     const cond = expr(s.condition, at);
     at.block.term = { op: "branch", cond, yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: (ctx.tries ?? []).length } });
     if (turn) inner.suffixes.push(join(IR.constant("["), IR.local(turn), IR.constant("]")));
     lowerBlock(s.body, inner);
     jumpTo(inner, step, s);
@@ -424,7 +495,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
     head.term = { op: "branch", cond: IR.binary(s.exclusive ? "<" : "<=", IR.local(counter), IR.local(last)), yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: (ctx.tries ?? []).length } });
     inner.locals.set(s.symbol, counter);
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(counter), IR.constant("]")));
     lowerBlock(s.body, inner);
@@ -458,7 +529,7 @@ export function lower(resolved, diagnostics, options = {}) {
     const exit = ctx.fn.block();
     jumpTo(ctx, head, s);
     head.term = { op: "branch", cond: IR.binary("<", IR.local(k), IR.native("count", [IR.local(listLocal)])), yes: body, no: exit, node: s };
-    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
+    const inner = child(ctx, { block: body, loop: { exit, next: step, tries: (ctx.tries ?? []).length } });
     const itemLocal = ctx.fn.local(s.item, s.itemSymbol.type);
     if (overMap && s.indexSymbol) {
       const keyLocal = ctx.fn.local(s.index, s.indexSymbol.type);

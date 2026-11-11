@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isNull, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideError, StrideFunction, StrideMap, Cell, isNull, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -254,7 +254,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
       const f = frames[frames.length - 1];
       const ins = f.code[f.ip++];
       current = ins.at;
-      if (++count > limit) fault("F014", `the workflow ran more than ${limit} instructions`);
+      if (++count > limit) throw Object.assign(new StrideFault("F014", `the workflow ran more than ${limit} instructions`), { limit: true });
       const op = ins.op;
       if (trace) trace({ fn: f.fn, at: ins.at, op, stack, locals: f.locals });
       if (watch) for (const m of debug.marks.get(ins.at) ?? []) watch({ ...m, fn: debug.fns[f.index], locals: view(f) });
@@ -543,6 +543,13 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.TRY_DONE:
           subruns.pop();
           break;
+        case OP.THROW: {
+          // An error is raised as the fault it holds: one that was caught, with the place it was caught from.
+          const v = pop();
+          if (v instanceof StrideError) throw Object.assign(new StrideFault(v.code, v.message), { origin: v.origin });
+          fault("F013", words(v));
+          break;
+        }
         case OP.EXPECT: {
           // The sub-run works on its own copy of everything the file's names hold (§7.17.1): what it changes in a
           // list, a record or a map is dropped with it.
@@ -607,10 +614,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
       }
     }
   } catch (e) {
-    const f = e instanceof StrideFault ? faultOf(e.code, e.message, current) : faultOf("F019", `the machine stopped: ${e.message}`, current);
+    const f = e instanceof StrideFault ? e.origin ?? faultOf(e.code, e.message, current) : faultOf("F019", `the machine stopped: ${e.message}`, current);
     // A fault in an expectation stops only it (§7.17.1): undone, judged, and the file goes on after it.
     // A fault in a try goes on at its catch (§7.18); running too long is not one a program catches.
-    if (e instanceof StrideFault && e.code === "F014") while (subruns.at(-1)?.catch !== undefined) subruns.pop();
+    if (e instanceof StrideFault && e.limit) while (subruns.at(-1)?.catch !== undefined) subruns.pop();
     if (subruns.length && e instanceof StrideFault && subruns.at(-1).catch !== undefined) {
       const h = subruns.pop();
       while (frames.length > h.frames) {
@@ -618,7 +625,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         if (watch) watch({ kind: "return", fn: debug.fns[gone.index], value: null, locals: view(gone) });
       }
       stack.length = h.stack;
-      frames[frames.length - 1].locals[h.into] = e.message;
+      frames[frames.length - 1].locals[h.into] = new StrideError(e.code, e.message, f);
       frames[frames.length - 1].ip = h.catch;
       continue;
     }

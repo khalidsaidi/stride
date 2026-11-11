@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function half(n: number) -> number {
+  return 10 / n
+}
+function careful(n: number) -> number {
+  try {
+    return half(n)
+  } catch e {
+    print("seen {e.code}")
+    throw e
+  } finally {
+    print("left")
+  }
+}
+print(careful(0))
+# rule 7.19 7.18.2 16.3
+# prints ["seen F001", "left"]
+# fault F001 at 4:13 division by zero
+# stack ["half c7-throw-again-keeps-place.stride:4:13", "careful c7-throw-again-keeps-place.stride:8:12", "main c7-throw-again-keeps-place.stride:16:7"]

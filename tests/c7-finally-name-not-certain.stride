@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var x: number
+var y: number
+var z: number
+try {
+  x = 1
+  let inside = 2
+  print(inside)
+} catch {
+  y = 2
+} finally {
+  print(x)
+  z = 3
+}
+print(z)
+print(y)
+# rule 12.1.2 7.18.2 S407
+# mistake 13:9 S407
+# mistake 17:7 S407

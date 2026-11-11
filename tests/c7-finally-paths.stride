@@ -1,0 +1,91 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function risky(n: number) -> number {
+  return 10 / n
+}
+function by_return(n: number) -> number {
+  try {
+    return risky(n)
+  } catch e {
+    print("caught {e.code}")
+    return 0 - 1
+  } finally {
+    print("finally {n}")
+  }
+}
+function value_first() -> number {
+  var n = 1
+  try {
+    return n
+  } finally {
+    n = 2
+    print("n is {n}")
+  }
+}
+function no_value(n: number) {
+  try {
+    if n == 0 {
+      return
+    }
+    print("went on")
+  } finally {
+    print("done {n}")
+  }
+}
+try {
+  print("try")
+} catch {
+  print("no")
+} finally {
+  print("after try")
+}
+try {
+  print(risky(0))
+} catch e {
+  print("catch")
+} finally {
+  print("after catch")
+}
+try {
+  print("no catch")
+} finally {
+  print("after no catch")
+}
+print(by_return(5))
+print(by_return(0))
+print(value_first())
+no_value(0)
+no_value(1)
+for i in 0..4 {
+  try {
+    if i == 1 {
+      continue
+    }
+    if i == 3 {
+      break
+    }
+    print("turn {i}")
+  } finally {
+    print("end of {i}")
+  }
+}
+var k = 0
+while k < 3 {
+  try {
+    print(risky(k))
+  } catch e {
+    k = k + 2
+    continue
+  } finally {
+    k = k + 1
+    print("k {k}")
+  }
+}
+try {
+  fill "A" = "kept"
+} finally {
+  fill "B" = "too"
+}
+# rule 7.18.2
+# prints ["try", "after try", "catch", "after catch", "no catch", "after no catch", "finally 5", "2", "caught F001", "finally 0", "-1", "n is 2", "1", "done 0", "went on", "done 1", "turn 0", "end of 0", "end of 1", "turn 2", "end of 2", "end of 3", "k 3"]
+# boxes {"A": "kept", "B": "too"}

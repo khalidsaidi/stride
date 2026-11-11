@@ -206,6 +206,13 @@ a bool or an option (another type of key is S209). It holds any number of keys, 
 given. A map is shared, as a list is (§3.4); `==` compares keys and values, and one with no keys
 is a map, not null (§3.2). A `var` of a map type declared without a value starts with no keys.
 
+3.11. **Errors.** An error is a value of the type `error`: what a `catch` holds (§7.18.1), what `error(message,
+code: …)` makes (§14.5) and what `throw` raises (§7.19). It has two fields, both strings: `e.code`, a fault's code
+(`"F001"`, §13.4) or the code a program gave, and `e.message`. An error's words are its message: `"{e}"`,
+`print(e)` and `string_of(e)` give it. Its fields are read and never set (S722); another field is S318. Two errors
+are equal when their codes and their messages are. `error` is a type's name where a type is written
+(`function report(e: error)`), and a record or an enum declared with that name is that type instead.
+
 ## 4. Files
 
 4.1. **A program**: `program = "form" id "pdf" sha ["fields" plain] item*;` One per form,
@@ -586,8 +593,8 @@ is the loop of §7.11: it counts, and makes no range.
 a collect, they are S233, S234.
 
 7.13. **return** `return [e]`: ends the function (with e) or the program (no value: S338). e is on the return's
-line. Statements after a `return`, `break` or `continue` in the same block never run: warning W008. They are
-checked like any others, and the program compiles and runs.
+line. Statements after a `return`, `break`, `continue` or `throw` (§7.19) in the same block never run: warning W008.
+They are checked like any others, and the program compiles and runs.
 
 7.14. **call** `f(args)` on its own: a call for what the function does.
 
@@ -616,10 +623,42 @@ faults fails, and the file goes on. A fault outside any `expect` (in a `let`) st
 after it are reported as not run. Every expectation's result is reported, in order.
 
 7.18. **try.** `try { … } catch name { … }`: the try's statements run; a fault in them, or in a function they
-call, ends the try there and runs the catch, with the fault's message in `name`, a string (the name may be left
+call, ends the try there and runs the catch, with the fault in `name`, an error (§7.18.1; the name may be left
 out). With no fault the catch does not run. What the try did before the fault stays done: a box written, a
 question asked, a var changed. A name the try gives a value has one after it only when the catch gives it one
 too (§12.1.1). Running too long (F014) is not caught.
+
+7.18.1. **The error a catch holds** is an error value (§3.11): `name.code` is the fault's code, `name.message` its
+message, and the name's words are the message, so `print(name)` and `"{name}"` give it. The name is a `let` of
+the catch. A fault in the catch itself is not caught by this try: a `try` around it catches it, and without one it
+stops the run.
+
+7.18.2. **finally.** `try { … } catch name { … } finally { … }` and `try { … } finally { … }`. The finally block
+runs once, after the try and its catch, however they end:
+- the try ends without a fault, or the catch does: the block runs, and the statement after goes on;
+- the try or the catch leaves by `return`, `break` or `continue`: a return's value is worked out first, the block
+  runs, then the function returns that value, or the loop ends or takes its next turn;
+- a fault with no catch, or a fault or a `throw` in the catch: the block runs, then the same error goes on, with
+  the place it first had: to the catch of a `try` around, or it stops the
+  run.
+
+A fault in the finally block takes the place of an error that was on its way. A `return` in a finally block, and a
+`break` or `continue` there of a loop around the try, is S721; a loop inside the block has its own. When several
+tries with finally blocks are left at once, their blocks run innermost first. Running too long (F014) runs no
+finally block. With no catch, a name the try gives a value has one after the statement; inside a finally block a
+name has a value only when it had one before the try, or the block gives it one (§12.1.2). `try` with neither
+`catch` nor `finally` is S010.
+
+7.19. **throw.** `throw e` raises an error: the statements after it do not run (one written after it in its block
+is S406), and the error goes to the catch of the nearest `try` around it, in this function or in one that called
+it, or stops the run as any fault does (§13.4). `e` is an error (§3.11) or words (anything else is S720):
+`throw "message"` raises an error with the code F013 and that message, as `fail("message")` does;
+`throw error("message", code: "NOFILE")` one with the program's own code; `throw name` with a caught error raises
+it again unchanged, with its code, its message and the place it first had. Thrown words that are null are no
+words. The place of a fault raised by `throw` is the word `throw`. `throw` is a statement only when a value
+follows it on its line; it stays a name elsewhere, as `try`, `catch` and `finally` do. In `expect e faults "…"`
+(§7.17) a selector that is exactly the code a program gave its error matches that error:
+`expect open("") faults "NONAME"`.
 
 ## 8. Questions
 
@@ -894,6 +933,13 @@ print(y)            # S407: when c is false, y is never declared
 
 A branch whose condition is written out (`if true`) is taken as written (§11.3.3); a loop may run no turns.
 
+12.1.2. **Through a try.** A try and its catch are two paths, as an if's branches are: after the statement a name
+has a value when both gave it one. With no catch the try is the only path: what it gives a value has one after
+the statement. A finally block may run after any part of the try and of the catch, so a name read in it is S407
+unless it had a value before the try or the block gave it one; what the block gives a value has one after the
+statement. A path that ends in `throw` is one that does not reach the statement after, as one that ends in
+`return` is: a function whose other paths return a value gives one on every path (S405).
+
 12.2. A name is known from the statement that defines it on (S202 says where it is). A name defined inside a loop
 is known only there (S203).
 
@@ -918,7 +964,9 @@ words given to `print`, and a fault or none.
 
 13.3. `today()` is the device's date, or the date the host fixes for a run.
 
-13.4. **Faults.** A fault outside a `try` (§7.18) stops the run; nothing it wrote counts. A fault has a code, a message, and the place
+13.4. **Faults.** A fault outside a `try` (§7.18) stops the run; nothing it wrote counts. An error a program
+throws (§7.19) is a fault with the code the program gave it, any words that are not empty, F013 when it gave
+none. A fault has a code, a message, and the place
 (file, line, column) and function of the faulting operation and of every call that led there (§16.3).
 
 | Code | Fault |
@@ -934,7 +982,7 @@ words given to `print`, and a fault or none.
 | F009 | `pad_left`, `pad_right` or `repeat` given a width or times that is not a whole number of 0 or more, or padding that is not one character |
 | F010 | a date pattern with none of YYYY YY MM DD M D |
 | F011 | a date outside 0001-01-01 to 9999-12-31 |
-| F013 | `fail(message)`: the program's own fault |
+| F013 | the program's own fault: `throw` of words or of an error made without a code, and `fail(message)` |
 | F014 | more instructions in one run than the host allows (it allows any number unless it sets a limit) |
 | F015 | calls deeper than 10,000 |
 | F016 | a box name, worked out as the program runs, that the program does not know (a compiler fault) |
@@ -1091,7 +1139,8 @@ entry says "or a set" (its items are then options).
 | Signature | Gives |
 |---|---|
 | `either(a: T, b: T) -> T` | a when it is not null, else b (`a ?? b`, §6.16, with both worked out) |
-| `fail(message: string)` | no value: fault F013 with the message |
+| `fail(message: string)` | no value: fault F013 with the message, as `throw message` (§7.19) |
+| `error(message: string, code: string = "F013") -> error` | an error (§3.11) with that message and code, for `throw`; a null message is no words, a null or empty code F013 |
 | `print(v: any, …)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only. It takes any number of values, given in order without names: `print(a, b, c)` gives one line, each value as `print` shows it alone, one space between them; `print()` gives a line of no characters |
 
 ## 15. Limits
@@ -1372,6 +1421,9 @@ its call: the function's name in the call.
 | S514 | a list box entry it lacks | The list box's entries. |
 | S601 | more than 255 arguments or parameters | Use a record. |
 | S700 | a range's bound that is not a number | `a..b` and `a..<b` are ranges of whole numbers (§6.17). |
+| S720 | throw of a value that is not an error and not words | `throw "message"`, or `throw error("message", code: "CODE")` (§7.19). |
+| S721 | a return in a finally block, or a break or continue there of a loop around the try | The finally block runs to its end, and what the try was doing goes on after it; return, break or continue after the try statement, or in the try or the catch (§7.18.2). |
+| S722 | an error's code or message given a value | An error does not change; `error(message, code: "…")` makes another (§3.11). |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |

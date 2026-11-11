@@ -30,7 +30,9 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `class`, `struct` | `record person { name: string }`; `new person { name: "Ada" }`; `p.f(x)` calls `f(p, x)` |
 | `enum` | `enum colour { "red" "Red" … }`: each option its value and the words a person reads |
 | `import x`, `require` | `import "x"`, `import "x" as m` (a file in `lib/`); `export function …` |
-| `try`/`catch`, exceptions | `try { } catch problem { }`; `fail("why")` raises a fault; one not caught stops the run |
+| `try`/`catch`/`finally`, exceptions | `try { } catch problem { } finally { }`; `problem.code`, `problem.message`; one not caught stops the run |
+| `throw`, `raise`, `throw new Error("why")` | `throw "why"`; `throw error("why", code: "CODE")`; `throw problem` raises a caught error again; `fail("why")` is `throw "why"` |
+| `finally`, `defer`, `using`, `with` | `try { } finally { }`: the block runs however the try ends |
 | `print`, `console.log`, `fmt.Println` | `print(x)`; `print(a, b, c)` gives one line, a space between the values |
 | `1e5`, `0xFF`, `0b1010`, `1_000_000`, `.5` | the same; every number is an exact decimal |
 | `"\r"`, `"\0"`, `"\x41"` | the same, beside `\n`, `\t` and `\u{41}` |
@@ -199,8 +201,9 @@ print(sorted([3, 1, 2], descending: true))
 
 Mistakes the compiler can see (a misspelt name, a wrong type, a box the form
 does not have) are found before anything runs. At run time a fault stops the run and says where, unless
-a `try { … } catch problem { … }` around it catches it (§7.18); a program avoids faults by checking first, and
-stops itself with `fail` when it must:
+a `try { … } catch problem { … }` around it catches it (§7.18), with the error's `code` and `message` in
+`problem`, and a `finally { … }` block after it runs either way; a program avoids faults by checking first, and
+stops itself with `throw` when it must (§7.19):
 
 ```stride answers={"n":"0"}
 ask n: number "How many people"
@@ -217,7 +220,7 @@ nobody to share with
 ```stride answers={"born":"2030-01-01"}
 function age_on(born: date, day: date) -> number {
   if born > day {
-    fail("born after the day")
+    throw "born after the day"
   }
   return years_between(born, day)
 }

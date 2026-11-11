@@ -234,12 +234,24 @@ export function format(text, name = "program.stride") {
         put(s, indent, "try {");
         opening(s);
         block(s.then, `${indent}  `);
-        leading(s.catchLine, `${indent}  `);
-        lines.push(`${indent}} catch ${s.caught ? `${s.caught.name} ` : ""}{`);
-        lastLine = s.catchLine;
-        trailing(s.catchLine);
-        block(s.otherwise, `${indent}  `);
+        if (s.hasCatch !== false) {
+          leading(s.catchLine, `${indent}  `);
+          lines.push(`${indent}} catch ${s.caught ? `${s.caught.name} ` : ""}{`);
+          lastLine = s.catchLine;
+          trailing(s.catchLine);
+          block(s.otherwise, `${indent}  `);
+        }
+        if (s.final) {
+          leading(s.finallyLine, `${indent}  `);
+          lines.push(`${indent}} finally {`);
+          lastLine = s.finallyLine;
+          trailing(s.finallyLine);
+          block(s.final, `${indent}  `);
+        }
         return close(s, indent);
+      case "throw":
+        put(s, indent, `throw ${expr(s.value)}`);
+        return trailing(s.span.endLine);
       case "while":
         put(s, indent, `while ${expr(s.condition)} {`);
         opening(s);
