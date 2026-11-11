@@ -330,6 +330,8 @@ export function format(text, name = "program.stride") {
         return `set of ${t.name}`;
       case "type-any":
         return "any";
+      case "type-function":
+        return `function(${t.params.map(type).join(", ")})${t.result ? ` -> ${type(t.result)}` : ""}`;
       case "type-name":
       case "type-param":
         return t.name;

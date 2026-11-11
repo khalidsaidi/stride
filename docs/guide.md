@@ -320,25 +320,29 @@ yes
 [ADA, CY]
 ```
 
-## 8. Functions are not values
+## 8. Functions as values
 
-A function is called, never passed, kept or returned (§9.10); `let f = double` is a mistake (S353). So every call
-a program can make is written in it, and the compiler can follow each one when it checks the form. What other
-languages do with a function argument is written directly:
+A function's name, where a value goes, is the function itself (§9.10): it can be given to another function, kept
+in a `let`, and called through that name. Its type is written `function(number) -> number`.
 
-| Instead of | Write |
-|---|---|
-| `filter(l, f)` | `[x for each x in l if condition]` |
-| `map(l, f)` | `[f(x) for each x in l]` |
-| `sort(l, key=f)` | `sorted(l, by: "field")` for records, `sorted(l)` for numbers, dates and words |
-| a callback | a function taking the list, with its own loop |
-
-```stride mistake=S353
+```stride
 define double(n: number) -> number {
   return n * 2
 }
+define apply(f: function(number) -> number, n: number) -> number {
+  return f(n)
+}
+print(apply(double, 21))
 let f = double
+print(f(4))
 ```
+```output
+42
+8
+```
+
+For the common cases there are shorter ways: keeping some items or changing each is a comprehension
+(`[upper(x) for each x in names if x is not empty]`), and ordering records is `sorted(l, by: "field")`.
 
 ## 9. Files and libraries
 

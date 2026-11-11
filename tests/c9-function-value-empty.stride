@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record op {
+  f: function(number) -> number
+}
+var o: op
+let h = o.f
+print(h(1))
+# rule 9.10 F022
+# fault F022

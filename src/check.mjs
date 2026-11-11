@@ -575,9 +575,23 @@ export function check(resolved, diagnostics) {
         const sym = e.symbol;
         if (!sym) return T.ERROR;
         if (sym.kind === "const") return constType(sym);
-        if (sym.kind === "function" || sym.kind === "native") {
-          err("S353", e, `${sym.name} is a function; call it: ${sym.name}(…)`);
+        if (sym.kind === "native") {
+          err("S353", e, `${sym.name} is the standard library's; to pass it, wrap it in a function of your own`);
           return T.ERROR;
+        }
+        // A function's name where a value goes is the function itself (§9.10).
+        if (sym.kind === "function") {
+          if (sym.typeParams?.length) {
+            err("S353", e, `${sym.name} has a type parameter, so it is called, not passed`);
+            return T.ERROR;
+          }
+          if (!sym.checked && !sym.checking) checkFunction(sym);
+          if (!sym.result) {
+            err("S353", e, `${sym.name} is used as a value inside itself; write its result: -> type`);
+            return T.ERROR;
+          }
+          e.functionValue = sym;
+          return T.fn(sym.params.map((p) => p.type), sym.result);
         }
         return sym.type ?? T.ERROR;
       }
@@ -721,6 +735,19 @@ export function check(resolved, diagnostics) {
     for (const a of e.args) if (a.kind === "named-arg") a.type = a.value.type;
     const sym = e.target.symbol;
     if (!sym) return T.ERROR;
+    // A call of a function a name holds (§9.10): its values in order, each of its parameter's type.
+    if (e.valueCall) {
+      const t = expr(e.target, ctx);
+      if (T.isError(t)) return T.ERROR;
+      if (t.t !== "function") return (err("S228", e.target, `${e.target.name} is ${T.describe(t)}, not a function`), T.ERROR);
+      if (e.args.some((a) => a.kind === "named-arg")) return (err("S388", e, `a function held in a name takes its values in order, without names`), T.ERROR);
+      if (e.args.length !== t.params.length) return (err("S365", e, `${e.target.name} takes ${t.params.length} ${t.params.length === 1 ? "value" : "values"}, and is given ${e.args.length}`), T.ERROR);
+      e.args.forEach((a, i) => {
+        if (a.type && !T.isError(a.type) && !fitsAt(a, a.type, t.params[i])) err("S367", a, `${e.target.name}'s value ${i + 1} is ${T.describe(t.params[i])}, and this is ${T.describe(a.type)}`);
+      });
+      e.valueType = t;
+      return t.result;
+    }
     e.callee = sym;
     if (sym.kind === "function" && !sym.checked) {
       if (sym.checking) {

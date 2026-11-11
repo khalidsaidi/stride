@@ -86,6 +86,17 @@ export const mostOf = (l) => (Array.isArray(l) ? l.most ?? l.length : 0);
 export const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
 export const isNumber = (v) => v instanceof D.Decimal;
 
+// A function as a value (§9.10): its name, and what an engine calls it by.
+export class StrideFunction {
+  constructor(name, target) {
+    this.name = name;
+    this.target = target;
+  }
+  toJSON() {
+    return `function ${this.name}`;
+  }
+}
+
 // A deep copy: what a place receives (§3.4). Scalars are immutable and shared.
 export function copy(v) {
   if (isSet(v)) return set([...v], v.order);
@@ -104,6 +115,7 @@ export function words(v) {
   if (typeof v === "boolean") return v ? "yes" : "no";
   if (Array.isArray(v)) return v.map(words).join(", ");
   if (v instanceof StrideRecord) return v.fields.map(words).filter(Boolean).join(", ");
+  if (v instanceof StrideFunction) return `function ${v.name}`;
   return String(v);
 }
 
@@ -126,6 +138,7 @@ export function equal(a, b) {
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
   if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && a.fields.every((x, i) => equal(x, b.fields[i]));
+  if (a instanceof StrideFunction && b instanceof StrideFunction) return a.name === b.name;
   return a === b;
 }
 

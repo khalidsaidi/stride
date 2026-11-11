@@ -107,7 +107,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       case "index":
         return [e.target, e.index];
       case "call":
-        return e.args;
+        return e.valueCall ? [e.target, ...e.args] : e.args;
       case "list":
         return e.items;
       case "new":
@@ -139,7 +139,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // ----- 2. effects
 
   const EFFECTS = new Set(["ask", "fill", "tick", "pick", "collect"]);
-  const directEffects = (body) => [...statements(body)].some((s) => EFFECTS.has(s.kind));
+  // A call of a function a name holds may ask or write (§9.10): which function it is, the run says.
+  const directEffects = (body) => [...statements(body)].some((s) => EFFECTS.has(s.kind) || [...expressionsOf(s)].some((e) => e.kind === "call" && e.valueCall));
   for (const f of functions) f.effects = directEffects(f.node.body);
   for (let changed = true; changed; ) {
     changed = false;
@@ -449,6 +450,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const usedConsts = new Set();
   for (const { body } of bodies) {
     for (const c of callsIn(body)) called.add(c.callee);
+    // A function used as a value is used (§9.10).
+    for (const st of statements(body)) for (const e of expressionsOf(st)) if (e.functionValue) called.add(e.functionValue);
     for (const s of statements(body)) for (const e of expressionsOf(s)) if (e.kind === "name" && e.symbol?.kind === "const") usedConsts.add(e.symbol);
   }
   for (const r of resolved.units) {

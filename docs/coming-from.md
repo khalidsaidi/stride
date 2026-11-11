@@ -121,9 +121,10 @@ yes
 1
 ```
 
-## No function values: comprehensions and sorting by a field
+## Functions as values, comprehensions and sorting by a field
 
-A function cannot be passed, kept or returned (§9.10). What you would do with a callback:
+A function can be passed, kept and returned (§9.10): `define apply(f: function(number) -> number, n: number)`.
+For the common cases a comprehension or `sorted` is shorter:
 
 ```stride
 record person {
@@ -143,8 +144,6 @@ print(sorted([3, 1, 2], descending: yes))
 [Cy, Al, Bo]
 [3, 2, 1]
 ```
-
-Anything else a callback would do is a function that takes the list and has its own loop.
 
 ## Errors: guard, or stop
 

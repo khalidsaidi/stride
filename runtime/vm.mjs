@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, encode, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, encode, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -384,6 +384,19 @@ function execute(p, answers, limit, depth, trace, prints) {
           const args = stack.splice(stack.length - ins.b, ins.b).map(copy);
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(ins.a, args));
+          break;
+        }
+        case OP.FN:
+          stack.push(new StrideFunction(p.texts[ins.b], ins.a));
+          break;
+        case OP.CALL_VALUE: {
+          // A call of a function a value holds (§9.10): one that asks is given the key of this call (§8.6.2).
+          const given = stack.splice(stack.length - ins.a, ins.a).map(copy);
+          const turns = words(pop()), before = words(pop()), f = pop();
+          if (!(f instanceof StrideFunction)) fault("F022", "a function was called through a name that holds none");
+          const args = p.functions[f.target].keyed ? [`${NATIVES.call_key.fn(before + f.name + turns)}.`, "", ...given] : given;
+          if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
+          frames.push(frame(f.target, args));
           break;
         }
         case OP.RETURN:

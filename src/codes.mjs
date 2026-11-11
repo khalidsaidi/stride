@@ -77,6 +77,10 @@ export const CODES = {
     "when": "the machine stopped on something else (a machine fault)",
     "explanation": ""
   },
+  "F022": {
+    "when": "a function called through a name that holds none",
+    "explanation": ""
+  },
   "F020": {
     "when": "an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[3].name = v` when xs holds 2): a program fault",
     "explanation": ""
@@ -558,8 +562,8 @@ export const CODES = {
     "explanation": "Put in words, a number, a date or an option."
   },
   "S353": {
-    "when": "a function used as a value",
-    "explanation": "Call it: `f(…)`."
+    "when": "a function that cannot be passed, used as a value",
+    "explanation": "One with a type parameter, or the standard library's: call it, or wrap it in a function of your own."
   },
   "S354": {
     "when": "`-` before something not a number",

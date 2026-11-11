@@ -123,6 +123,10 @@ export const binary = (op, a, b) => ({ e: "binary", op, a, b });
 export const concat = (parts) => ({ e: "concat", parts });
 export const call = (fn, args) => ({ e: "call", fn, args });
 export const native = (name, args) => ({ e: "native", name, args });
+// A function as a value, and a call of one a value holds: its args are the value, the key before the call and the
+// turns around it (for a function that asks, §8.6.2), then what it is given.
+export const fnref = (fn) => ({ e: "fnref", fn });
+export const callv = (args) => ({ e: "callv", args });
 export const field = (a, i, name) => ({ e: "field", a, i, name });
 export const item = (a, i) => ({ e: "item", a, i });
 export const record = (decl, fields) => ({ e: "record", decl, fields });
@@ -144,6 +148,7 @@ export function children(x) {
       return x.parts;
     case "call":
     case "native":
+    case "callv":
       return x.args;
     case "field":
       return [x.a];
@@ -212,6 +217,10 @@ export function showExpr(x) {
       return `concat(${x.parts.map(showExpr).join(", ")})`;
     case "call":
       return `${x.fn.name}(${x.args.map(showExpr).join(", ")})`;
+    case "fnref":
+      return `function ${x.fn.name}`;
+    case "callv":
+      return `call ${showExpr(x.args[0])}(${x.args.slice(3).map(showExpr).join(", ")})`;
     case "native":
       return `native ${x.name}(${x.args.map(showExpr).join(", ")})`;
     case "field":

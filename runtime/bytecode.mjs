@@ -90,6 +90,8 @@ export const OP = {
   EXPECT: 61, // a after, v faults: a test file's expectation starts, its own sub-run (§7.17.1); a fault in it
   //            undoes the sub-run, is judged, and the run goes on at `after`. `faults` is 0 for a plain expect,
   //            else the index of the fault's code or words plus one
+  FN: 64, // v function, v text: push the function as a value, by the name its questions' keys use
+  CALL_VALUE: 65, // v count: pop that many values, the turns, the key and a function value; call it (§9.10)
   FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
   EXPECT_DONE: 62, // v faults: pop the words (plain only) and the value, undo the sub-run, judge it
 };
@@ -100,7 +102,7 @@ export const OPERANDS = {
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
-  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv",
+  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.CALL_VALUE]: "v",
 };
 
 export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
@@ -300,7 +302,7 @@ export function load(input) {
         p.natives = list(() => ({ name: t(s), params: s.varint() }));
         break;
       case SECTION.FUNCTIONS:
-        p.functions = list(() => ({ name: t(s), file: t(s), params: s.varint(), localNames: list(() => t(s)), start: s.varint(), end: s.varint(), pure: !!s.u8() }));
+        p.functions = list(() => ({ name: t(s), file: t(s), params: s.varint(), localNames: list(() => t(s)), start: s.varint(), end: s.varint(), flags: s.u8() })).map((f) => ({ ...f, pure: !!(f.flags & 1), keyed: !!(f.flags & 2) }));
         for (const f of p.functions) f.locals = f.localNames.length;
         break;
       case SECTION.CODE:
@@ -379,6 +381,9 @@ export function verify(p) {
           break;
         case OP.NEW_LIST:
           check(args[1] <= 1000 && args[0] <= Math.max(args[1], 1), "list most");
+          break;
+        case OP.FN:
+          check(args[0] < p.functions.length, "function");
           break;
         case OP.CALL:
           check(args[0] < p.functions.length, "function");
@@ -466,6 +471,10 @@ function stackEffect(op, args) {
       return [args[0], 1];
     case OP.CALL: case OP.NATIVE:
       return [args[1], 1];
+    case OP.FN:
+      return [0, 1];
+    case OP.CALL_VALUE:
+      return [args[0] + 3, 1];
     case OP.HALT: case OP.RETURN_NONE: case OP.JUMP: case OP.LOOP:
       return [0, 0];
     default:

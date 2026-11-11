@@ -34,6 +34,8 @@ export const option = (set) => ({ t: "option", set });
 export const options = (set) => ({ t: "options", set });
 export const record = (decl) => ({ t: "record", decl });
 export const list = (element, most) => ({ t: "list", element, most });
+// A function as a value (§9.10): what it takes and what it gives.
+export const fn = (params, result) => ({ t: "function", params, result });
 // A type parameter of a generic function: whatever type each call gives it.
 export const typevar = (sym) => ({ t: "typevar", sym });
 
@@ -55,6 +57,8 @@ export function same(a, b) {
       return a.decl === b.decl;
     case "list":
       return same(a.element, b.element);
+    case "function":
+      return a.params.length === b.params.length && a.params.every((p, i) => same(p, b.params[i])) && same(a.result, b.result);
     case "typevar":
       return a.sym === b.sym;
     default:
@@ -146,7 +150,9 @@ export function describe(type) {
     case "record":
       return type.decl.name;
     case "list":
-      return type.most === Infinity ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
+      return type.most >= 1000 ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
+    case "function":
+      return `a function (${type.params.map(describe).join(", ")})${type.result.t === "none" ? "" : ` -> ${describe(type.result)}`}`;
     case "typevar":
       return type.sym.name;
     case "empty":

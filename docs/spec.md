@@ -240,7 +240,7 @@ text)`, `native define print(v: any)`. A native's parameters may have defaults (
 native with as many parameters (S301, S302).
 
 5.6. **Types written**: `text long-text phone email number date yes-no`, an option set's name, `set of` an option
-set's name, a record's name, `list of T`, `list of T most N` (N a whole number 1–1000 the compiler works out: S212, S213), a type parameter's name inside its function, and the native-only
+set's name, a record's name, `list of T`, `list of T most N` (N a whole number 1–1000 the compiler works out: S212, S213), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
 markers `any` and `element` (S214 elsewhere). A name that is not a type is S209. Unless §14 specifies otherwise,
 an `any` result has the first argument's type after binding and conversion; an `element` result has its list-item
 type, or its option type for a set. `either` returns the join of both argument types (§3.9, §14.5).
@@ -679,11 +679,14 @@ libraries with the same function is S113.
 function that does, has effects; else it is pure. A call runs exactly as often as the program says: a
 function wrapping `today()` gives the run's date at each run, not the date it was compiled.
 
-9.10. **Functions are not values.** A function is called, never passed, kept or returned: its name anywhere but
-before `(` is S353. What other languages do by passing a function is written in Stride without one: keeping some
-items, or changing each, is a comprehension (`[upper(x) for each x in names if x is not empty]`, §6.12); ordering
-records is `sorted(l, by: "field")` (§14.4); anything else is a function that takes the list and loops over it.
-So every call the program can make is written in it, and the compiler follows each one (§10, §11).
+9.10. **Functions as values.** A function's name where a value goes is the function itself: it may be given to a
+parameter, kept in a `let` or a `var`, held in a record's field or a list, and returned. Its type is written
+`function(T, …) -> R`, or `function(T, …)` for one that gives no value; two function types are the same when
+their parameters' types and their results are. A name that holds a function is called as a function is, its
+values given in order: `f(x)` (the wrong number of values is S365, a value of another type S367, a name that
+holds no function S228). A function that asks questions may be passed like any other; its questions are named
+by it (§8.6.2). A function with a type parameter, and one of the standard library's, is called, not passed (S353).
+Calling through a name that holds no function when the program runs stops the run with F022.
 
 ## 10. Boxes
 
@@ -801,6 +804,7 @@ words given to `print`, and a fault or none.
 | F017 | a list given more than its most items; `split` giving more than 1000; mosts known only at run time adding to more than 1000, or placed where a smaller most is expected (§3.7.7) |
 | F018 | an operator given values it does not take (a compiler fault) |
 | F019 | the machine stopped on something else (a machine fault) |
+| F022 | a function called through a name that holds none |
 | F020 | an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[3].name = v` when xs holds 2): a program fault |
 
 ## 14. The standard library
@@ -1160,7 +1164,7 @@ its call: the function's name in the call.
 | S350 | a value given from a call with no result | The function gives nothing. |
 | S351 | a value of another type given | The place's type. |
 | S352 | `{…}` of a list, record or no value | Put in words, a number, a date or an option. |
-| S353 | a function used as a value | Call it: `f(…)`. |
+| S353 | a function that cannot be passed, used as a value | One with a type parameter, or the standard library's: call it, or wrap it in a function of your own. |
 | S354 | `-` before something not a number | Only numbers are negated. |
 | S355 | `not` of something not yes-no | `not` is for conditions. |
 | S356 | `is empty` of a call with no result | It gives no value to test. |

@@ -93,6 +93,8 @@ export function lower(resolved, diagnostics, options = {}) {
   function functionOf(sym) {
     if (functions.has(sym)) return functions.get(sym);
     const fn = new IR.Fn(sym.name, { source: sym, result: sym.result, pure: !sym.impure });
+    fn.keyed = !!sym.effects; // it takes the key of its call and the turns around it (§8.6.2)
+    fn.keyName = keyName(sym);
     functions.set(sym, fn);
     program.functions.push(fn);
     fn.entry = fn.block();
@@ -516,6 +518,7 @@ export function lower(resolved, diagnostics, options = {}) {
         return withAt(IR.concat(parts), placeOf(e, e.span));
       }
       case "name": {
+        if (e.functionValue) return IR.fnref(functionOf(e.functionValue));
         const sym = e.symbol;
         if (sym.kind === "const") return IR.constant(sym.value ?? null);
         const l = ctx.locals.get(sym);
@@ -575,6 +578,11 @@ export function lower(resolved, diagnostics, options = {}) {
         };
       }
       case "call": {
+        // A call of a function a name holds (§9.10).
+        if (e.valueCall) {
+          const given = e.args.map((a, i) => placeAs(expr(a, ctx), e.valueType.params[i], a.type, a));
+          return withAt(IR.callv([expr(e.target, ctx), join(ctx.prefix), join(suffix(ctx)), ...given]), placeOf(e, e.target.span));
+        }
         const sym = e.callee;
         const params = sym.params ?? [];
         const bound = e.bound ?? e.args;

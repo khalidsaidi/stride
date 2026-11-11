@@ -580,6 +580,23 @@ class Parser {
       this.take();
       return this.node("type-any", start, {});
     }
+    // function(number, text) -> yes-no: a function as a value (§9.10).
+    if (this.is("name", "function") && this.peek().type === "punct" && this.peek().value === "(") {
+      this.take();
+      this.take();
+      const params = [];
+      while (!this.sym(")")) {
+        params.push(this.type());
+        if (!this.sym(")")) this.expect("punct", ",", '"," or ")"');
+      }
+      this.take();
+      let result = null;
+      if (this.sym("->")) {
+        this.take();
+        result = this.type();
+      }
+      return this.node("type-function", start, { params, result });
+    }
     if (!this.is("name")) throw this.mistake("a type");
     return this.node("type-name", start, { name: this.qname() });
   }

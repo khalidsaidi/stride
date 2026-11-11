@@ -125,6 +125,12 @@ export function generate(program, pdf) {
           args(x);
           atExpr(x);
           return emit(OP.CALL, fnIndex.get(x.fn), x.args.length);
+        case "fnref":
+          return emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
+        case "callv":
+          args(x);
+          atExpr(x);
+          return emit(OP.CALL_VALUE, x.args.length - 3);
         case "native":
           args(x);
           atExpr(x);
@@ -442,7 +448,7 @@ export function generate(program, pdf) {
     }
     const names = [];
     for (const [l, k] of slot) names[k] = l.name ?? `t${k}`;
-    functions.push({ name: fn.name, file: fn.file ?? program.file ?? "", params: fn.params.length, localNames: names.map((n) => n ?? ""), start, end: code.length, pure: fn.pure });
+    functions.push({ name: fn.name, file: fn.file ?? program.file ?? "", params: fn.params.length, localNames: names.map((n) => n ?? ""), start, end: code.length, pure: fn.pure, keyed: !!fn.keyed });
   }
 
   // ----- the file
@@ -526,7 +532,7 @@ export function generate(program, pdf) {
       f.localNames.forEach((n) => s.varint(T(n)));
       s.varint(f.start);
       s.varint(f.end);
-      s.u8(f.pure ? 1 : 0);
+      s.u8((f.pure ? 1 : 0) | (f.keyed ? 2 : 0));
     }
   });
   section(SECTION.CODE, (s) => (s.varint(code.length), s.raw(code.bytes)));

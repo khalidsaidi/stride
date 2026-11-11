@@ -54,6 +54,7 @@ only where the grammar uses them (§2.3.1).
 | `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
 | `list of T`, `list of T most N` | values of type T, up to 1000, or up to N when a most is stated |
+| `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
 
 Numbers are exact: `0.1 + 0.2 == 0.3` is yes; `+ - *` round to 34 digits only past them, and `/` rounds its
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;

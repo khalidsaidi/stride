@@ -280,6 +280,8 @@ export function resolve(loaded, diagnostics) {
       case "type-any":
         if (!native) err("S214", unit.file, node.span, "any is only for the natives of the standard library");
         return T.ANY;
+      case "type-function":
+        return T.fn(node.params.map((p) => resolveType(p, scope, unit, native, true)), node.result ? resolveType(node.result, scope, unit, native, false) : T.NONE);
       case "type-name": {
         if (T.SCALARS[node.name]) return T.SCALARS[node.name];
         if (node.name === "element" && native) return T.ELEMENT;
@@ -799,7 +801,11 @@ export function resolve(loaded, diagnostics) {
             const fns = scope.visible().filter((n) => ["function", "native"].includes(scope.lookup(n)?.kind));
             err("S227", unit.file, e.target.span, `there is no function called ${e.target.name}${didYouMean(e.target.name, fns)}`);
           } else if (sym.kind !== "function" && sym.kind !== "native") {
-            err("S228", unit.file, e.target.span, `${e.target.name} is ${what(sym)}, not a function`);
+            // A name that holds a function (§9.10): the type phase says whether it does.
+            if (["param", "let", "var", "const", "item", "answer", "counter", "index"].includes(sym.kind)) {
+              e.valueCall = true;
+              resolveExpr(e.target, scope, unit);
+            } else err("S228", unit.file, e.target.span, `${e.target.name} is ${what(sym)}, not a function`);
           } else e.target.symbol = sym;
         }
         for (const a of e.args) resolveExpr(a, scope, unit);

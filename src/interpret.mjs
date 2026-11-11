@@ -10,7 +10,7 @@
 import { NATIVES, setToday, setPrinter, resetCalls } from "../runtime/natives.mjs";
 import { binary, unary, truthy } from "../runtime/ops.mjs";
 import { convert } from "../runtime/vm.mjs";
-import { StrideFault, StrideRecord, isEmpty, words, printed, copy, list, mostOf, set, whole, encode, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
+import { StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, whole, encode, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
 
 const DEPTH = 200;
 
@@ -319,6 +319,16 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         const values = inOrder(x, x.args, locals).map(copy);
         const at = exprPlace(x);
         return call(x.fn, values, at);
+      }
+      case "fnref":
+        return new StrideFunction(x.fn.keyName ?? x.fn.name, x.fn);
+      case "callv": {
+        // A call of a function a value holds (§9.10), as the machine makes it.
+        const [f, before, turns, ...given] = x.args.map((a) => expr(a, locals));
+        const at = exprPlace(x);
+        if (!(f instanceof StrideFunction)) fault("F022", "a function was called through a name that holds none", at);
+        const args = f.target.keyed ? [`${NATIVES.call_key.fn(words(before) + f.name + words(turns))}.`, "", ...given.map(copy)] : given.map(copy);
+        return call(f.target, args, at);
       }
       case "native": {
         const values = inOrder(x, x.args, locals);
