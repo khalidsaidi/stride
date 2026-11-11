@@ -50,11 +50,11 @@ export const CODES = {
     "explanation": ""
   },
   "F014": {
-    "when": "more than 2,000,000 instructions in one run",
+    "when": "more instructions in one run than the host allows (it allows any number unless it sets a limit)",
     "explanation": ""
   },
   "F015": {
-    "when": "calls deeper than 200",
+    "when": "calls deeper than 10,000",
     "explanation": ""
   },
   "F016": {

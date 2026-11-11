@@ -7,6 +7,8 @@
 // The language says what is asked and what goes where; how it is shown and how a person moves through it are the
 // runner's. The page that hosts it gives the boxes (box, read, show).
 import { boxValues, faultWords, load, run, textOf } from "./vm.mjs";
+// The page is the host here: it stops a run that goes on too long, so a program that never ends does not freeze it.
+const PAGE_LIMIT = 100_000_000;
 
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length);
 // An answer as the page keeps it: a number or a date as its words, the way a person would type it.
@@ -31,7 +33,7 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
 
   // Every box the program can write, written from one run: what this run does not write is emptied.
   function write() {
-    const result = run(p, answers, { today });
+    const result = run(p, answers, { today, limit: PAGE_LIMIT });
     // A run that stopped part-way would empty every box after the place it stopped: the boxes are left as they
     // were, and the panel says so (render).
     if (!result.fault) for (const [field, value] of Object.entries(boxValues(p, result.writes))) box(field, value);
@@ -52,7 +54,7 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
   const noted = (s) => notesOf(s).map((m) => el("p", { className: "check", role: "alert", textContent: m }));
 
   function render() {
-    const { steps, fault, links } = run(p, answers, { today });
+    const { steps, fault, links } = run(p, answers, { today, limit: PAGE_LIMIT });
     at = Math.max(0, Math.min(at, steps.length));
     panel.replaceChildren();
     const close = el("button", { type: "button", className: "close", textContent: "×" });

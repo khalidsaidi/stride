@@ -474,7 +474,7 @@ are numbers (S313); an empty or non-whole bound is F004: empty is never taken as
 
 7.11.1. **while** `while c { }`: c, a yes-no (S311), is worked out before each turn; the body runs as long as it
 is yes. A question asked in the body has its own key in each turn (`name[1]`, `name[2]`, …, §8.6). A loop that
-never ends is stopped by the run's limit of instructions (F014).
+never ends runs until its host stops it (F014, §15).
 
 7.12. **break** ends the innermost `for`, `for each` or `while`; **continue** goes to its next turn. Outside one, or inside
 a collect, they are S233, S234.
@@ -690,7 +690,7 @@ returned is never a mistake, and its call is a value like any other: with `defin
 is worked out) gives no value: its call is a statement, and used as a value it is a mistake: S324 when a `let` or
 `var` keeps it, S370 anywhere the table of §16.4 names no more particular code.
 
-9.7. A function may call itself, directly or through others. Calls deeper than 200 stop the run (F015).
+9.7. A function may call itself, directly or through others. Calls deeper than 10,000 stop the run (F015).
 
 9.8. `r.f(args)` is `f(r, args)`. A library kept under a name lends its functions to such calls; two such
 libraries with the same function is S113.
@@ -826,8 +826,8 @@ words given to `print`, and a fault or none.
 | F010 | a date pattern with none of YYYY YY MM DD M D |
 | F011 | a date outside 0001-01-01 to 9999-12-31 |
 | F013 | `fail(message)`: the program's own fault |
-| F014 | more than 2,000,000 instructions in one run |
-| F015 | calls deeper than 200 |
+| F014 | more instructions in one run than the host allows (it allows any number unless it sets a limit) |
+| F015 | calls deeper than 10,000 |
 | F016 | a box name, worked out as the program runs, that the program does not know (a compiler fault) |
 | F017 | a list given more than its most items; or placed where a smaller most is expected (§3.7.7) |
 | F018 | an operator given values it does not take (a compiler fault) |
@@ -976,8 +976,8 @@ entry says "or a set" (its items are then options).
 | nesting of blocks, brackets and expressions | 200 (S019) |
 | arguments of a call, parameters of a function | 255 (S601) |
 | significant digits of a number | 34 (S009; §3.3) |
-| instructions in one run | 2,000,000 (F014) |
-| depth of calls | 200 (F015) |
+| instructions in one run | no limit, unless the host sets one: `STRIDE_LIMIT` in the environment (F014) |
+| depth of calls | 10,000 (F015) |
 | mistakes reported | 20; the rest are counted |
 
 ## 16. Mistakes, warnings and how they are shown
@@ -1073,8 +1073,8 @@ fault F001: division by zero
 16.3.1. **The place of a fault** is the first character of the operation that faults: a binary operator's sign
 (`/` for F001), the `[` of a position (F004, F005, F020), the field's `.` (F006), the function's name for a call
 of a native or of `fail` (F007–F013, F017 for `split`), the expression placed for F017 at a place (§3.7.7), and
-the call's name for F015 (the program's own body is the first of the 200 frames; the call that would make the
-201st faults); a loop bound that is not whole faults at the bound's first character (F004); F014 at the
+the call's name for F015 (the program's own body is the first of the 10,000 frames; the call that would make one
+more faults); a loop bound that is not whole faults at the bound's first character (F004); F014 at the
 instruction where the count is passed. Each frame of the stack is the place of
 its call: the function's name in the call.
 
@@ -1575,7 +1575,7 @@ order, and unreadable answer with its reason; every box written and its value; e
 every fault: its code, its message, and its whole stack — the function and place of the faulting operation and of
 every call that led there, innermost first (§13.4).
 
-19.1.2. **A run's limits.** The machine stops a run with F014 at 2,000,000 instructions and with F015 past 200
+19.1.2. **A run's limits.** The machine stops a run with F014 at the host's limit of instructions, when it sets one, and with F015 past 10,000
 calls, counted as it runs the program it was given.
 
 19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs

@@ -257,8 +257,8 @@ small
 large
 ```
 
-`while c { … }` runs its body as long as c is yes. A run that never ends is stopped: after 2,000,000
-instructions (F014), or calls 200 deep (F015).
+`while c { … }` runs its body as long as c is yes. A program that never ends runs until its host stops it;
+calls deeper than 10,000 stop the run (F015).
 
 ## 6. Functions
 
@@ -703,11 +703,11 @@ Linux. Other platforms are outside this release's scope.
 
 | | |
 |---|---|
-| loops | `for`, `for each`, `while`, `collect`; a run is stopped after 2,000,000 instructions (F014) |
-| recursion | a function may call itself; calls deeper than 200 stop the run (F015) |
+| loops | `for`, `for each`, `while`, `collect` |
+| recursion | a function may call itself; calls deeper than 10,000 stop the run (F015) |
 | function values | none (§9.10, section 8 above) |
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |
 | the PDF | never changed; only its boxes are filled |
-| a run | at most 2,000,000 instructions (F014) and calls 200 deep (F015) |
+| a run | calls at most 10,000 deep (F015); no limit of instructions unless the host sets one (F014) |
 | values | numbers below 10^34 with 34 digits |
 | errors | at most 20 mistakes shown; the rest are counted |

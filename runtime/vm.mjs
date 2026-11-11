@@ -17,8 +17,10 @@ import { binary, unary, truthy } from "./ops.mjs";
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
 export const textOf = words;
 
-const LIMIT = 2_000_000; // instructions in one run (§15)
-const DEPTH = 200; // frames, the program's own body the first (§15, §16.3.1)
+// Instructions in one run: no limit, unless the host that runs the program sets one (the limit option, or
+// STRIDE_LIMIT in the environment), as a host stops a script that runs too long (§15).
+const hostLimit = () => Number(globalThis.process?.env?.STRIDE_LIMIT) || Infinity;
+const DEPTH = 10_000; // frames, the program's own body the first (§15, §16.3.1)
 
 // A compiled program from its bytes, with its natives found; every run uses it as it is.
 export function load(bytes) {
@@ -121,7 +123,7 @@ export function convert(question, raw) {
 // ({ kind: "line", fn, node, op, dst, locals }), each turn of a loop, each call of the library, each return and
 // each print. `open`: a box the program names that the form does not list is taken as one of the form's
 // (`onWrite` is told of each), for a program checked without its form.
-export function run(p, answers = {}, { limit = LIMIT, depth = DEPTH, trace, today = null, watch = null, debug = null, open = false, onWrite = null } = {}) {
+export function run(p, answers = {}, { limit = hostLimit(), depth = DEPTH, trace, today = null, watch = null, debug = null, open = false, onWrite = null } = {}) {
   setToday(today);
   resetCalls();
   const prints = [];

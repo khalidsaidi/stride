@@ -292,7 +292,7 @@ run reaches, in order (each with its key, printed words, value, default, failed 
 given was unreadable and why), what goes into each box, the words given to `print`, and a fault or none (§13.1).
 It reaches nothing outside: no network, no storage, no page. A fault stops the run, nothing it wrote counts, and
 it is shown with its code, message and place and the calls that led there (§13.4, §16.3); a run stops at
-2,000,000 instructions (F014) or calls 200 deep (F015). The page runs the program again after every answer; a
+calls 10,000 deep (F015), and at the host's limit of instructions when it sets one (F014). The page runs the program again after every answer; a
 box the run does not write is emptied.
 
 | Instructions | Do |

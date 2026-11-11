@@ -194,7 +194,7 @@ A test can say a fault is what it expects: `expect age_on(...) faults "F013"` (`
 
 `for i in a..b`, `for each x in list`, `while c`, and functions that call themselves, as you know them. A `for`
 loop's bounds are worked out once, when it starts; `for each` goes through the items the list held then. A run
-that never ends is stopped: after 2,000,000 instructions (F014), or calls 200 deep (F015).
+that never ends runs until its host stops it; calls deeper than 10,000 stop the run (F015).
 
 ```stride
 define digits_of(n: number) -> number {

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+process.env.STRIDE_LIMIT ??= "2000000"; // the tests' own stop on a run that goes on too long
 // Stride's own tests (docs/spec.md §19): node scripts/selftest.mjs [name …]. Every program in tests/ gives the
 // mistakes it states or fills the boxes it states, in both engines; with no name, every rule of the specification
 // must have a test that passes, and `stride explain`'s words must be the specification's.

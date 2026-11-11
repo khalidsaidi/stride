@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+process.env.STRIDE_LIMIT ??= "2000000"; // the tests' own stop on a run that goes on too long
 // Programs made at random, run in both engines (docs/spec.md §19.2):
 // node scripts/fuzz.mjs [runs] [seed] [--show]. A disagreement, a crash, or a mistake on a valid program is a bug.
 import { fuzz } from "../tests/support/fuzz.mjs";
