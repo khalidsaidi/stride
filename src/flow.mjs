@@ -359,7 +359,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       for (const e of expressionsOf(s)) {
-        if (s.kind === "assign" && e === s.target) continue;
+        // A name given a value is not read by that; a list added to in place (§6.5.1) is.
+        if (s.kind === "assign" && e === s.target && !s.inPlace) continue;
         if (e.kind === "name" && e.symbol) reads.add(e.symbol);
         if (e.kind === "field" && e.target.type?.t === "record") fieldReads.add(`${e.target.type.decl.name}.${e.name}`);
         // sorted(l, by: "field") reads that field of every item (§14.4).

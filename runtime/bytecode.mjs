@@ -1,4 +1,4 @@
-// Stride's bytecode, version 7 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 8 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 7;
+export const VERSION = 8;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];
@@ -37,12 +37,12 @@ export const OP = {
   FALSE: 4,
   EMPTY: 5,
   LOAD: 6, // v local: push its value
-  STORE: 7, // v local: pop a value, copy it into the local (§3.4)
+  STORE: 7, // v local: pop a value into the local
   POP: 8,
   DUP: 9,
   NEW_RECORD: 10, // v record type: push a record with every field empty
   GET_FIELD: 11, // v field: pop a record, push its field (F023 of empty; F006 of anything else that is no record)
-  SET_FIELD: 12, // v field: pop a value, pop a record, set the field to a copy of the value
+  SET_FIELD: 12, // v field: pop a value, pop a record, set the field to the value
   NEW_LIST: 13, // v count: pop that many values, push a list of them
   GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004)
   SET_ITEM: 15, // pop a value, pop a position, pop a list, set the item (§7.5.1: F005)

@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { n: number, tags: list of text }
+var a: list of number = [1, 2]
+var b = a
+b[0] = 9
+append(b, 3)
+print(a)
+print(a == b)
+let r = new p { n: 1 }
+var s = r
+s.n = 2
+s.tags += ["t"]
+print(r)
+var m = {"k": 1}
+let n = m
+n["j"] = 2
+print(m)
+b = [0]
+print(a)
+print(b)
+# rule 3.4 3.4.4
+# prints ["[9, 2, 3]", "yes", "p { n: 2, tags: [t] }", "{k: 1, j: 2}", "[9, 2, 3]", "[0]"]

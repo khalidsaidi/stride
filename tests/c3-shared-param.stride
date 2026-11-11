@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { n: number }
+define bump(r: p) -> p {
+  r.n += 1
+  return r
+}
+define push(l: list of number, x: number) {
+  append(l, x)
+}
+let r = new p { n: 1 }
+let back = bump(r)
+back.n += 1
+print(r.n)
+let l = [1]
+push(l, 2)
+push(l, 3)
+print(l)
+# rule 3.4 3.4.3 9.4.1
+# prints ["3", "[1, 2, 3]"]

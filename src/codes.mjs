@@ -78,7 +78,11 @@ export const CODES = {
     "explanation": ""
   },
   "F023": {
-    "when": "empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value",
+    "when": "empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value",
+    "explanation": ""
+  },
+  "F024": {
+    "when": "a record that holds itself (§3.4.6) printed, put into words, or compared with another all the way round",
     "explanation": ""
   },
   "S001": {
@@ -507,15 +511,15 @@ export const CODES = {
   },
   "S345": {
     "when": "a value given to an answer, let, constant, parameter, counter or item",
-    "explanation": "The message says what it is and what to do."
+    "explanation": "Only a var is given another value; the message says what the name is and what to do."
   },
   "S346": {
     "when": "a collected list changed",
     "explanation": "Its items are answers."
   },
   "S347": {
-    "when": "a field or item of a non-var changed",
-    "explanation": "Only a var's fields and items change."
+    "when": "an item of a constant changed",
+    "explanation": "A constant's items do not change; `copy(c)` gives a list that can."
   },
   "S348": {
     "when": "an asked field given a value",
@@ -523,7 +527,7 @@ export const CODES = {
   },
   "S349": {
     "when": "a value given to something that is not a place",
-    "explanation": "Only a var, its field or its item."
+    "explanation": "Only a var, a field or an item of a list or map."
   },
   "S350": {
     "when": "a value given from a call with no result",
@@ -1320,7 +1324,7 @@ export const LIBRARY = [
     "names": [
       "filled"
     ],
-    "gives": "the items that are not empty, in order; `\"\"` and `[]` are not empty and stay; l empty: a list with no items"
+    "gives": "a new list of the items that are not empty, in order; `\"\"` and `[]` are not empty and stay; l empty: a list with no items"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1340,7 +1344,49 @@ export const LIBRARY = [
     "names": [
       "append"
     ],
-    "gives": "the list with x after its last item"
+    "gives": "puts x after the last item of l itself, and gives l"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "insert(l: list of T, position: number, x: T) -> list of T"
+    ],
+    "names": [
+      "insert"
+    ],
+    "gives": "puts x before the item at the position in l itself (at `count(l)`: after the last), and gives l; a position not whole or outside 0 to `count(l)` is F005"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "remove_at(l: list of T, position: number) -> T"
+    ],
+    "names": [
+      "remove_at"
+    ],
+    "gives": "takes the item at the position out of l itself, and gives the item; a position not whole or outside 0 to `count(l) - 1` is F004"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "clear(l: list of T) -> list of T",
+      "clear(m: map of K to V) -> map of K to V"
+    ],
+    "names": [
+      "clear",
+      "clear"
+    ],
+    "gives": "takes every item out of l itself, or every key out of m itself, and gives it"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "copy(x: T) -> T"
+    ],
+    "names": [
+      "copy"
+    ],
+    "gives": "a list, a record or a map made anew, with everything inside it copied too (§3.4.2); any other value, x itself"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1350,7 +1396,7 @@ export const LIBRARY = [
     "names": [
       "without"
     ],
-    "gives": "the list without the items equal to x"
+    "gives": "a new list of the items not equal to x; l is not changed"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1360,7 +1406,7 @@ export const LIBRARY = [
     "names": [
       "reversed"
     ],
-    "gives": "the items in the other order"
+    "gives": "a new list of the items in the other order; l is not changed"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1370,7 +1416,7 @@ export const LIBRARY = [
     "names": [
       "sorted"
     ],
-    "gives": "T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`)"
+    "gives": "T a number, a date or words (else S367): a new list of the items in order (§6.7); l is not changed; equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`)"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1476,7 +1522,7 @@ export const LIBRARY = [
     "names": [
       "remove"
     ],
-    "gives": "m without the key; m itself is not changed"
+    "gives": "takes the key out of m itself, and gives m"
   },
   {
     "section": "14.4 Lists and sets",

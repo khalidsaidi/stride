@@ -9,7 +9,9 @@ idioms, the differences, and what to write instead. Every example here is run by
 
 | You know | In Stride |
 |---|---|
-| `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is worked out by the compiler |
+| `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` is given other values; `let x = 1` keeps its value (a list's items may still change); `const X = 1` is worked out by the compiler |
+| `xs.append(x)`, `xs.push(x)`, `xs.insert(i, x)`, `xs.pop(i)`, `xs.clear()` | `append(xs, x)`, `insert(xs, i, x)`, `remove_at(xs, i)`, `clear(xs)`: each changes xs itself |
+| `copy.deepcopy(xs)`, `structuredClone(xs)` | `copy(xs)` |
 | `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
 | `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is empty; `""`, `0` and `[]` are not empty |
 | `if x:`, `if (x)` on a value that may be null | `if x { }` for a yes-no: empty counts as no; `if x is not empty { }` for anything else |
@@ -34,30 +36,33 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `input()`, `args`, `stdin` | `ask name: text "Your name"`; answered at the terminal, as `name=Ada`, or from JSON |
 | `# comment`, `// comment` | `# comment` |
 
-## Values are copied, never shared
+## Lists, records and maps are shared
 
-In Python, Java and JavaScript a list or an object is a reference: two names can change one value. In Stride a list
-and a record are values, like numbers: `var b = a` copies, and a function changes only its own copy (§3.4).
+As in Python, Java and JavaScript, a list, a record or a map is one object that several names may hold: `var b = a`
+makes `b` the same list as `a`, and a function changes the list it is given. `copy(a)` makes another list with the
+same items, copied all the way down. A `let`, like JavaScript's `const` and Kotlin's `val`, keeps its list, whose
+items may still change (§3.4).
 
 ```stride
 var a: list of number = [1, 2]
-var b = a
+let b = a
 b[2] = 3
 print(a)
-print(b)
-define add_one(xs: list of number) -> list of number {
-  var out = xs
-  out[0] = out[0] + 1
-  return out
+let c = copy(a)
+define add_one(xs: list of number) {
+  xs[0] = xs[0] + 1
+  append(xs, 0)
 }
-print(add_one(a))
+add_one(a)
 print(a)
+print(b)
+print(c)
 ```
 ```output
-[1, 2]
 [1, 2, 3]
-[2, 2]
-[1, 2]
+[2, 2, 3, 0]
+[2, 2, 3, 0]
+[1, 2, 3]
 ```
 
 `==` compares values, items and fields included, the way Python's `==` does on lists: `[1, 2] == [1, 2]` is `yes`.

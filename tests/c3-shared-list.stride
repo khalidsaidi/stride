@@ -5,5 +5,8 @@ var b = a
 b[0] = 9
 print(a[0])
 print(b[0])
-# rule 3.4
-# prints ["1", "9"]
+var c = copy(a)
+c[0] = 1
+print(a[0])
+# rule 3.4 3.4.2
+# prints ["9", "9", "9"]

@@ -1,0 +1,24 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s { "b" "B" "a" "A" }
+ask st: any-of s "S"
+append(st, "a")
+insert(st, 0, "a")
+print(remove_at(st, 0))
+clear(st)
+clear(5)
+let l = [1]
+insert(l, 0, "x")
+append(l, "x")
+insert(l, "0", 2)
+print(copy(st) == st)
+print(l)
+# rule 14.4 S369 S367
+# mistake 5:8 S369
+# mistake 6:8 S369
+# mistake 7:17 S369
+# mistake 8:7 S369
+# mistake 9:7 S369
+# mistake 11:14 S367
+# mistake 12:11 S367
+# mistake 13:11 S367

@@ -6,7 +6,7 @@
 // A native given empty where it needs a value faults (F023, §14.0.3) before anything else: `takes` names each
 // parameter and the kind of value it needs. Then it checks its control arguments — positions, places, widths,
 // paddings, patterns — and faults when one is wrong (§14.0.3.1).
-import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isEmpty };
 export const textOf = words;
@@ -108,10 +108,11 @@ function sortItems(l, key, descending) {
   return items.map((x) => x.v);
 }
 
-// Each native: its function, whether it is pure (only a pure native is worked out by the compiler, in a constant), and
-// whether its call is a statement (no result). `takes`: its parameters, each `name:kind`, the kind of value it
-// needs — t words, n a number, d a date, l a list, m a map, s a set, v any value — in a capital when it takes empty
-// too; given empty where it needs a value, the call is F023 (§14.0.3). `as`: the name its faults give it.
+// Each native: its function, whether it is pure (only a pure native is worked out by the compiler, in a constant),
+// whether it changes the list or map it is given (§3.4), and whether its call is a statement (no result). `takes`:
+// its parameters, each `name:kind`, the kind of value it needs — t words, n a number, d a date, l a list, m a map,
+// s a set, v any value — in a capital when it takes empty too; given empty where it needs a value, the call is F023
+// (§14.0.3). `as`: the name its faults give it.
 export const NATIVES = {
   // ----- words (§14.1)
   upper: { pure: true, takes: "t:t", fn: (t) => text(t).toUpperCase() },
@@ -284,19 +285,46 @@ export const NATIVES = {
 
   // ----- lists and sets (§14.4)
   count: { pure: true, takes: "l:l", fn: (l) => num(l instanceof StrideMap ? l.entries.size : typeof l === "string" ? chars(l).length : l.length) },
-  // Maps (§14.4.1). A map given is not changed: remove gives a new one.
+  // Maps (§14.4.1).
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
-  map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, copy(v)), m) }, // a map being written out: its next key
+  map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, v), m) }, // a map being written out: its next key
   keys: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([key]) => key) },
-  values: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([, x]) => copy(x)) },
+  values: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([, x]) => x) },
   has: { pure: true, takes: "m:m key:V", fn: (m, k) => m.has(k) },
-  remove: { pure: true, takes: "m:m key:V", fn: (m, k) => { const out = copy(m); out.remove(k); return out; } },
+  remove: { pure: true, changes: true, takes: "m:m key:V", fn: (m, k) => (m.remove(k), m) },
   join: { pure: true, takes: "l:l separator:t", fn: (l, sep) => l.map(words).join(sep === undefined ? ", " : text(sep)) },
   first: { pure: true, takes: "l:l", fn: (l) => l[0] ?? null },
   last: { pure: true, takes: "l:l", fn: (l) => (l.length ? l[l.length - 1] : null) },
   filled: { pure: true, takes: "l:L", fn: (l) => listLike((l ?? []).filter((x) => !isEmpty(x)), l) },
   index_of: { pure: true, takes: "l:l x:V", fn: (l, x) => num(l.findIndex((y) => equal(y, x))) },
-  append: { pure: true, takes: "l:l x:V", fn: (l, x) => [...l, x] },
+  // These change the list or map they are given (§3.4), and give it back.
+  append: { pure: true, changes: true, takes: "l:l x:V", fn: (l, x) => (l.push(x), l) },
+  insert: {
+    pure: true,
+    changes: true,
+    takes: "l:l position:n x:V",
+    fn: (l, position, x) => {
+      const n = whole(position);
+      if (n === null || n < 0 || n > l.length) throw new StrideFault("F005", `insert: position ${words(position)} is outside 0 to the number of items: the list holds ${l.length}`);
+      l.splice(n, 0, x);
+      return l;
+    },
+  },
+  remove_at: {
+    pure: true,
+    changes: true,
+    takes: "l:l position:n",
+    fn: (l, position) => {
+      const n = whole(position);
+      if (n === null || n < 0) throw new StrideFault("F004", `remove_at: position ${words(position)} is not a whole number of 0 or more`);
+      if (n >= l.length) throw new StrideFault("F004", `remove_at: ${outside(position, l.length)}`);
+      return l.splice(n, 1)[0];
+    },
+  },
+  clear: { pure: true, changes: true, takes: "l:l", fn: (l) => { if (l instanceof StrideMap) l.entries.clear(); else l.length = 0; return l; } },
+  // l += m (§6.5.1): m's items added to l itself.
+  extend: { pure: true, internal: true, fn: (l, m) => { if (isEmpty(l)) needed("a list is", "the left side of +="); if (isEmpty(m)) needed("a list is", "the right side of +="); l.push(...m); return l; } },
+  copy: { pure: true, takes: "x:V", fn: (x) => copy(x) },
   without: { pure: true, takes: "l:l x:V", fn: (l, x) => listLike(l.filter((y) => !equal(y, x)), l) },
   reversed: { pure: true, takes: "l:l", fn: (l) => [...l].reverse() },
   sorted: { pure: true, takes: "l:l descending:V", fn: (l, descending) => sortItems(valued(l, "an item sorted puts in order"), (v) => v, descending === true) },
@@ -336,7 +364,8 @@ export const NATIVES = {
   // A for loop's bound (§7.11): a number (F023), and a whole one (F004).
   loop_bound: { pure: true, internal: true, fn: (v) => { if (isEmpty(v)) needed("a number is", "a loop's bound"); if (whole(v) === null) throw new StrideFault("F004", `a loop's bound is a whole number, and this is ${words(v)}`); return v; } },
   // What a for each or a comprehension goes through (§7.11, §6.12): there (F023).
-  each_of: { pure: true, internal: true, fn: (v) => v ?? needed("a list is", "what for each goes through") },
+  // The items a list holds when the loop starts are the ones it goes through (§3.4.5).
+  each_of: { pure: true, internal: true, fn: (v) => (isEmpty(v) ? needed("a list is", "what for each goes through") : Array.isArray(v) && !isSet(v) ? [...v] : v) },
   // The last position of l[a..<b] (§6.9.3): b - 1, b a number (F023).
   slice_end: { pure: true, internal: true, fn: (v) => D.sub(v ?? needed("a number is", "a bound of [ .. ]"), num(1)) },
   // A date constant, from its words: the compiler's.

@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 7) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 8) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -231,9 +231,11 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
     return r;
   };
 
-  // A sub-run undone: the frames, stack, words printed, questions reached and boxes written as they were.
+  // A sub-run undone: the frames, stack, words printed, questions reached and boxes written as they were, and the
+  // file's names holding what they held.
   const undo = (h) => {
     frames.length = h.frames;
+    frames[0].locals = h.locals;
     stack.length = h.stack;
     prints.length = h.prints;
     steps.length = h.steps;
@@ -277,7 +279,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           stack.push(f.locals[ins.a] instanceof Cell ? f.locals[ins.a].v : f.locals[ins.a]);
           break;
         case OP.CELL:
-          f.locals[ins.a] = new Cell(copy(pop()));
+          f.locals[ins.a] = new Cell(pop());
           f.given?.add(ins.a);
           break;
         case OP.LOAD_CELL:
@@ -285,10 +287,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           break;
         case OP.STORE:
           if (f.locals[ins.a] instanceof Cell) {
-            f.locals[ins.a].v = copy(pop());
+            f.locals[ins.a].v = pop();
             break;
           }
-          f.locals[ins.a] = copy(pop());
+          f.locals[ins.a] = pop();
           f.given?.add(ins.a);
           break;
         case OP.POP:
@@ -312,13 +314,13 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.SET_FIELD: {
           const v = pop();
           const r = record(pop());
-          if (!r) fault("F006", "a field was set on an empty value");
+          if (!r) needed("a record is", "what a field is set in");
           if (ins.a >= r.fields.length) fault("F019", `field ${ins.a} of a record of ${r.fields.length} fields`);
-          r.fields[ins.a] = copy(v);
+          r.fields[ins.a] = v;
           break;
         }
         case OP.NEW_LIST:
-          stack.push(stack.splice(stack.length - ins.a, ins.a).map(copy));
+          stack.push(stack.splice(stack.length - ins.a, ins.a));
           break;
         case OP.GET_ITEM: {
           const i = pop();
@@ -351,10 +353,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const i = pop();
           const l = pop();
           if (l instanceof StrideMap) {
-            l.set(i, copy(v));
+            l.set(i, v);
             break;
           }
-          l[setPosition(l, i)] = copy(v);
+          l[setPosition(l, i)] = v;
           break;
         }
         case OP.CHECK_SLOT: {
@@ -405,10 +407,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.APPEND: {
           const v = pop();
-          const l = f.locals[ins.a];
+          const l = f.locals[ins.a] instanceof Cell ? f.locals[ins.a].v : f.locals[ins.a];
           if (isEmpty(l)) needed("a list is", "what an item is added to");
           if (!Array.isArray(l)) fault("F006", "an item was added to something that is not a list");
-          l.push(copy(v));
+          l.push(v);
           break;
         }
         case OP.SLICE: {
@@ -416,7 +418,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const a = pop();
           const l = pop();
           const [x, y] = sliceBounds(l, a, b);
-          stack.push(typeof l === "string" ? sliced([...l], x, y).join("") : sliced(l, x, y).map(copy));
+          stack.push(typeof l === "string" ? sliced([...l], x, y).join("") : sliced(l, x, y));
           break;
         }
         case OP.TO_BOOL:
@@ -442,14 +444,14 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           if (truthy(pop())) f.ip = ins.a;
           break;
         case OP.CALL: {
-          const args = stack.splice(stack.length - ins.b, ins.b).map(copy);
+          const args = stack.splice(stack.length - ins.b, ins.b);
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(ins.a, args));
           entered(frames.at(-1), args);
           break;
         }
         case OP.STORE_MAIN:
-          frames[0].locals[ins.a] = copy(pop());
+          frames[0].locals[ins.a] = pop();
           frames[0].given?.add(ins.a);
           break;
         case OP.ENSURE_MAIN: {
@@ -466,17 +468,17 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           stack.push(new StrideFunction(p.texts[ins.b], ins.a));
           break;
         case OP.KEEP: {
-          const kept = stack.splice(stack.length - ins.a, ins.a).map(copy);
+          const kept = stack.splice(stack.length - ins.a, ins.a);
           const made = pop();
           stack.push(new StrideFunction(made.name, made.target, kept));
           break;
         }
         case OP.CALL_VALUE: {
           // A call of a function a value holds (§9.10): one that asks is given the key of this call (§8.6.2).
-          let given = stack.splice(stack.length - ins.a, ins.a).map(copy);
+          let given = stack.splice(stack.length - ins.a, ins.a);
           const turns = words(pop()), before = words(pop()), f = pop();
           if (!(f instanceof StrideFunction)) fault("F022", "a function was called through a name that holds none");
-          if (f.kept.length) given = [...f.kept.map(copy), ...given];
+          if (f.kept.length) given = [...f.kept, ...given];
           const args = p.functions[f.target].keyed ? [`${NATIVES.call_key.fn(before + f.name + turns)}.`, "", ...given] : given;
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(f.target, args));
@@ -496,13 +498,14 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.NATIVE: {
           const args = stack.splice(stack.length - ins.b, ins.b);
+          // The library's functions the program calls, for the trace; not the machine's own (a loop's bounds…).
+          const name = watch && !debug.quiet.has(ins.at) ? p.natives[ins.a].name : null;
+          const told = name && (!NATIVES[name].internal || name === "sorted_by");
+          // What it was given, as it is before the call: the function may change a list or a map (§3.4).
+          const given = told ? args.map((x) => copy(x)) : null;
           const value = p.nativeFns[ins.a](...args) ?? null;
           stack.push(value);
-          // The library's functions the program calls, for the trace; not the machine's own (a loop's bounds…).
-          if (watch && !debug.quiet.has(ins.at)) {
-            const name = p.natives[ins.a].name;
-            if (!NATIVES[name].internal || name === "sorted_by") watch({ kind: "native", name: name === "sorted_by" ? "sorted" : name, args, value });
-          }
+          if (told) watch({ kind: "native", name: name === "sorted_by" ? "sorted" : name, args: given, value });
           break;
         }
         case OP.ASK:
@@ -538,9 +541,15 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.TRY_DONE:
           subruns.pop();
           break;
-        case OP.EXPECT:
-          subruns.push({ frames: frames.length, stack: stack.length, prints: prints.length, steps: steps.length, writes: new Map(writes), at: ins.at, after: ins.a, faults: ins.b ? p.texts[ins.b - 1] : null });
+        case OP.EXPECT: {
+          // The sub-run works on its own copy of everything the file's names hold (§7.17.1): what it changes in a
+          // list, a record or a map is dropped with it.
+          const held = frames[0].locals;
+          const made = new Map();
+          subruns.push({ frames: frames.length, stack: stack.length, prints: prints.length, steps: steps.length, writes: new Map(writes), locals: held, at: ins.at, after: ins.a, faults: ins.b ? p.texts[ins.b - 1] : null });
+          frames[0].locals = held.map((v) => copy(v, made, true));
           break;
+        }
         case OP.EXPECT_DONE: {
           const message = ins.a ? null : pop();
           const value = pop();

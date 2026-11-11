@@ -166,7 +166,7 @@ export native define values<k, v>(m: map of k to v) -> list of v
 # Whether a map has a key.
 # example: has({"a": 1}, "a") gives yes
 export native define has<k, v>(m: map of k to v, key: k) -> yes-no
-# The map without a key; the map given is not changed.
+# Takes a key out of the map itself, and gives the map.
 # example: remove({"a": 1, "b": 2}, "a") gives {b: 2}
 export native define remove<k, v>(m: map of k to v, key: k) -> map of k to v
 # example: join(["a", "", "b"], "; ") gives a; ; b
@@ -182,8 +182,30 @@ export native define filled(l: any) -> any
 # example: index_of([5, 6, 7], 6) gives 1
 # example: index_of([5, 6, 7], 8) gives -1
 export native define index_of(l: any, x: any) -> number
+# Adds x after the last item of the list itself, and gives the list.
 # example: append(filled(["a", empty, empty]), "b") gives [a, b]
+# example: count(append(people, people[0])) == count(people) gives yes
 export native define append(l: any, x: any) -> any
+# Puts x before the item at a position of the list itself, and gives the list.
+# example: insert([1, 3], 1, 2) gives [1, 2, 3]
+# example: insert([1, 2], 2, 3) gives [1, 2, 3]
+# example: insert([1, 2], 3, 4) faults F005
+export native define insert(l: any, position: number, x: any) -> any
+# Takes the item at a position out of the list itself, and gives the item.
+# example: remove_at([5, 6, 7], 1) gives 6
+# example: remove_at([5, 6, 7], 3) faults F004
+# example: remove_at(people, 0).name + first(people).name gives BoAl
+export native define remove_at(l: any, position: number) -> element
+# Takes every item out of the list itself, or every key out of the map itself, and gives it.
+# example: clear([1, 2]) gives []
+# example: count(clear(people)) + count(people) gives 0
+# example: clear({"a": 1}) gives {}
+export native define clear(l: any) -> any
+# A copy of a list, a record or a map, with everything inside it copied too; any other value itself.
+# example: copy([[1], [2, 3]]) gives [[1], [2, 3]]
+# example: copy(people) == people gives yes
+# example: count(append(copy(people), people[0])) - count(people) gives 1
+export native define copy(x: any) -> any
 # example: without([1, 2, 1], 1) gives [2]
 export native define without(l: any, x: any) -> any
 # example: reversed([1, 2, 3]) gives [3, 2, 1]

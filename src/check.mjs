@@ -236,8 +236,11 @@ export function check(resolved, diagnostics) {
       }
       case "for-each": {
         const type = expr(s.list, ctx);
-        if (type.t === "list") s.itemSymbol.type = type.element;
-        else if (T.isTextLike(type)) s.itemSymbol.type = T.TEXT; // each character
+        if (type.t === "list") {
+          s.itemSymbol.type = type.element;
+          // The items of a collected list are answers (§8.5), through a loop's name for them too.
+          if (s.list.kind === "name" && s.list.symbol?.collectedBy) s.itemSymbol.ofCollected = true;
+        } else if (T.isTextLike(type)) s.itemSymbol.type = T.TEXT; // each character
         else if (type.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it (§7.11).
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
@@ -450,30 +453,37 @@ export function check(resolved, diagnostics) {
     if (target.kind === "name") {
       const sym = target.symbol;
       if (!sym) return;
-      if (sym.kind !== "var") {
+      // `l += m` adds to the list the name holds (§6.5.1); the name keeps the list it has, so it need not be a var.
+      s.inPlace = s.op === "+" && valueType.t === "list" && sym.type?.t === "list";
+      if (sym.kind !== "var" && !(s.inPlace && ["let", "param", "item"].includes(sym.kind) && !collectedItem(sym))) {
         const why = {
           answer: `${sym.name} is the person's answer; a program cannot change it`,
-          let: `${sym.name} is a let, which keeps its first value; make it a var to change it`,
+          let: `${sym.name} is a let, which keeps its first value; make it a var to give it another`,
           const: `${sym.name} is a constant`,
-          param: `${sym.name} is a parameter; copy it into a var to change it`,
+          param: `${sym.name} is a parameter; put it into a var to give that another value`,
           counter: `${sym.name} is the loop's counter`,
-          item: `${sym.name} is an item of a list; change the list's var`,
+          item: `${sym.name} is an item of a list; give the list's item a value by its position`,
           index: `${sym.name} is an item's number`,
-        }[sym.kind] ?? `${sym.name} is ${what(sym)} and cannot be given a value`;
+        }[(sym.kept ?? sym).kind] ?? `${sym.name} is ${what(sym)} and cannot be given a value`;
         err("S345", target, why);
         return;
       }
       if (sym.collectedBy) err("S346", target, `${sym.name} is collected on line ${sym.collectedBy.span.line}; its items are answers, which a program cannot change`);
       // The whole var given a value would change an answer asked into one of its fields (§7.5).
-      const under = askedUnder(sym, "");
+      const under = s.inPlace ? null : askedUnder(sym, "");
       if (under) err("S348", target, `${sym.name}.${under.path} is asked on line ${under.ask.span.line}; giving ${sym.name} a value would change that answer`);
       wanted = sym.type ?? T.ERROR;
       expr(target, ctx);
     } else if (target.kind === "field" || target.kind === "index") {
       wanted = expr(target, ctx);
+      s.inPlace = s.op === "+" && valueType.t === "list" && wanted.t === "list";
       const root = rootOf(target);
       const sym = root?.symbol;
-      if (sym && sym.kind !== "var") err(sym.kind === "item" && sym.collected ? "S346" : "S347", target, sym.kind === "item" && sym.collected ? `${sym.name} is a collected item; its fields are answers` : `only a var's fields and items can be given a value; ${sym.name} is ${what(sym)}`);
+      // A field or an item is changed through any name that holds the record, list or map (§7.5); a constant's
+      // items never change, and an answer stays as the person gave it.
+      if (sym && collectedItem(sym)) err("S346", target, `${sym.name} is a collected item; its fields are answers`);
+      else if (sym && !["var", "let", "param", "item"].includes(sym.kind)) err("S347", target, sym.kind === "const" ? `${sym.name} is a constant, and its items do not change; copy(${sym.name}) gives a list that can` : `${sym.name} is ${what(sym)}, which holds nothing that can be given a value`);
+      if (target.kind === "index" && T.isTextLike(target.target.type ?? T.ERROR)) err("S349", target, `${describeExpr(target.target)} is words, whose characters cannot be given a value; a list's item or a map's key can`);
       if (sym && target.kind === "field") {
         const path = fieldPath(target);
         // The field itself asked, or a field inside it (§7.5): either answer would change.
@@ -482,12 +492,18 @@ export function check(resolved, diagnostics) {
       }
       if (sym?.collectedBy) err("S346", target, `${sym.name} is collected; its items are answers`);
     } else {
-      err("S349", target, "only a var, a var's field or a var's item can be given a value");
+      err("S349", target, "only a var, a field or an item can be given a value");
       return;
     }
     if (valueType.t === "none") err("S350", s.value, `${describeExpr(s.value)} gives no value`);
     else if (!fitsAt(s.value, valueType, wanted)) err("S351", s.value, `${describeExpr(target)} is ${T.describe(wanted)}, and this is ${T.describe(valueType)}`);
     else optionLiteral(s.value, wanted);
+  }
+
+  // The item of a collect, or of a for each over a collected list: an answer (§8.5).
+  function collectedItem(sym) {
+    const item = sym.kept ?? sym;
+    return item.kind === "item" && !!(item.collected || item.ofCollected);
   }
 
   function rootOf(e) {
@@ -951,9 +967,13 @@ export function check(resolved, diagnostics) {
     const element = l.t === "list" ? l.element : l.t === "options" ? T.option(l.set) : null;
     const hasWords = (t) => T.isTextLike(t) || ["number", "date", "yes-no", "option", "empty", "error"].includes(t.t);
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
-    const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "without", "reversed", "sorted", "sum", "smallest", "largest"];
+    const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
     if (sym.name === "count" && (l.t === "map" || T.isTextLike(l))) return;
+    if (sym.name === "clear") {
+      if (l.t !== "list" && l.t !== "map" && l.t !== "empty") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
+      return;
+    }
     if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "empty") {
       err("S369", bound[0], `${sym.name} takes a list${SET_FUNCTIONS.includes(sym.name) ? " or a set of options" : ""}, and this is ${T.describe(l)}`);
       return;
@@ -963,8 +983,10 @@ export function check(resolved, diagnostics) {
       err("S369", bound[0], `${sym.name} takes a list, and this is ${T.describe(l)}; count, join, first and last take a set`);
       return;
     }
-    if (["index_of", "append", "without"].includes(sym.name) && element?.t === "option" && bound[1]) optionLiteral(bound[1], element);
-    if (["index_of", "append", "without"].includes(sym.name) && element && bound[1]?.type && !T.isError(bound[1].type) && !T.join(element, bound[1].type)) err("S367", bound[1], `${sym.name} ${sym.name === "append" ? "adds" : "looks for"} one of the items, which are ${T.describe(element)}, and this is ${T.describe(bound[1].type)}`);
+    // The value to look for, or to put in: one of the items.
+    const x = ["index_of", "append", "without"].includes(sym.name) ? bound[1] : sym.name === "insert" ? bound[2] : null;
+    if (x && element?.t === "option") optionLiteral(x, element);
+    if (x && element && x.type && !T.isError(x.type) && (!T.join(element, x.type) || (["append", "insert"].includes(sym.name) && element.t !== "empty" && !fitsAt(x, x.type, element)))) err("S367", x, `${sym.name} ${["append", "insert"].includes(sym.name) ? "adds" : "looks for"} one of the items, which are ${T.describe(element)}, and this is ${T.describe(x.type)}`);
     if (sym.name === "sum" && element && !["number", "empty", "error"].includes(element.t)) err("S367", bound[0], `sum adds numbers up, and the items are ${T.describe(element)}`);
     if (sym.name === "join" && element && !hasWords(element)) err("S367", bound[0], `join puts items' words together, and the items are ${T.describe(element)}, which have no words`);
     // A set has words too: its options' values in declaration order (§3.5).

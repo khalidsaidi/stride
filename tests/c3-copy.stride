@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { n: number, tags: list of text }
+let a = [new p { n: 1, tags: ["x"] }]
+let b = copy(a)
+b[0].n = 2
+b[0].tags += ["y"]
+append(b, new p { n: 3 })
+print(a)
+print(b)
+print(copy(a) == a)
+let m = {"k": [1]}
+let n = copy(m)
+n["k"][0] = 2
+print(m)
+print(copy(5))
+print(copy("w") + "!")
+let nothing: list of number = empty
+print(copy(nothing) is empty)
+# rule 3.4.2 14.4
+# prints ["[p { n: 1, tags: [x] }]", "[p { n: 2, tags: [x, y] }, p { n: 3, tags: [] }]", "yes", "{k: [1]}", "5", "w!", "yes"]

@@ -11,7 +11,8 @@
 //   a list           an array of its items
 //   a record         a StrideRecord: its type's name and its fields in declaration order
 //
-// Lists and records are values (§3.4): every place takes a copy, never the same object.
+// A list, a record and a map are shared (§3.4): every name, field and item that holds one holds the same object.
+// The other values are never changed.
 import * as D from "./decimal.mjs";
 
 export { D };
@@ -142,13 +143,64 @@ export class StrideFunction {
   }
 }
 
-// A deep copy: what a place receives (§3.4). Scalars are immutable and shared.
-export function copy(v) {
-  if (isSet(v)) return set([...v], v.order);
-  if (Array.isArray(v)) return v.map(copy);
-  if (v instanceof StrideRecord) return new StrideRecord(v.type, v.fields.map(copy), v.names);
-  if (v instanceof StrideMap) return new StrideMap(v.pairs.map(([k, x]) => [k, copy(x)]));
-  return v;
+// What copy(x) gives (§3.4.2): a list, a record or a map made anew, with everything inside it copied too; any
+// other value itself. What is held twice inside x is one copy held twice (`made`: each object's copy), so a record
+// that holds itself is copied as one that holds itself. `whole`: what a function value keeps and the vars it shares
+// are copied too, for an expectation's sub-run (§7.17.1).
+export function copy(v, made = new Map(), whole = false) {
+  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || (whole && (v instanceof StrideFunction || v instanceof Cell)))) return v;
+  if (made.has(v)) return made.get(v);
+  if (v instanceof Cell) {
+    const out = new Cell(null);
+    made.set(v, out);
+    out.v = copy(v.v, made, whole);
+    return out;
+  }
+  if (v instanceof StrideFunction) {
+    const out = new StrideFunction(v.name, v.target, []);
+    made.set(v, out);
+    for (const x of v.kept) out.kept.push(copy(x, made, whole));
+    return out;
+  }
+  if (Array.isArray(v)) {
+    const out = [];
+    made.set(v, out);
+    for (const x of v) out.push(copy(x, made, whole));
+    return out;
+  }
+  if (v instanceof StrideRecord) {
+    const out = new StrideRecord(v.type, [], v.names);
+    made.set(v, out);
+    for (const x of v.fields) out.fields.push(copy(x, made, whole));
+    return out;
+  }
+  const out = new StrideMap();
+  made.set(v, out);
+  for (const [k, x] of v.pairs) out.set(k, copy(x, made, whole));
+  return out;
+}
+
+// Whether a value holds itself (§3.4.6): a tool that shows values says so, and does not follow it.
+export function holdsItself(v, path = new Set()) {
+  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap)) return false;
+  if (path.has(v)) return true;
+  path.add(v);
+  const found = (Array.isArray(v) ? v : v instanceof StrideRecord ? v.fields : v.pairs.map(([, x]) => x)).some((x) => holdsItself(x, path));
+  path.delete(v);
+  return found;
+}
+
+// The records being put into words, printed, compared or encoded now. One met inside itself (§3.4.6) is F024:
+// what holds itself has no words and no end to compare.
+const open = new Set();
+function inside(r, work) {
+  if (open.has(r)) throw new StrideFault("F024", `a ${r.type} holds itself, so it has no words and cannot be printed or compared`);
+  open.add(r);
+  try {
+    return work();
+  } finally {
+    open.delete(r);
+  }
 }
 
 // A value's words (§3.5): what fill writes and {…} puts in. Lists and records have none (the checker refuses
@@ -160,7 +212,7 @@ export function words(v) {
   if (isDate(v)) return v.iso;
   if (typeof v === "boolean") return v ? "yes" : "no";
   if (Array.isArray(v)) return v.map(words).join(", ");
-  if (v instanceof StrideRecord) return v.fields.map(words).filter(Boolean).join(", ");
+  if (v instanceof StrideRecord) return inside(v, () => v.fields.map(words).filter(Boolean).join(", "));
   if (v instanceof StrideFunction) return `function ${v.name}`;
   if (v instanceof StrideMap) return v.pairs.map(([k, x]) => `${words(k)}: ${words(x)}`).join(", ");
   return String(v);
@@ -172,7 +224,7 @@ export function printed(v, recordNames = () => null) {
   if (Array.isArray(v)) return `[${v.map((x) => printed(x, recordNames)).join(", ")}]`;
   if (v instanceof StrideRecord) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);
-    return `${v.type} { ${v.fields.map((f, i) => `${names[i]}: ${printed(f, recordNames)}`).join(", ")} }`;
+    return inside(v, () => `${v.type} { ${v.fields.map((f, i) => `${names[i]}: ${printed(f, recordNames)}`).join(", ")} }`);
   }
   if (v instanceof StrideMap) return `{${v.pairs.map(([k, x]) => `${words(k)}: ${printed(x, recordNames)}`).join(", ")}}`;
   return words(v);
@@ -182,10 +234,11 @@ export function printed(v, recordNames = () => null) {
 // the same options.
 export function equal(a, b) {
   if (isEmpty(a) || isEmpty(b)) return isEmpty(a) && isEmpty(b);
+  if (a === b) return true;
   if (isNumber(a) && isNumber(b)) return D.equal(a, b);
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
-  if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && a.fields.every((x, i) => equal(x, b.fields[i]));
+  if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && inside(a, () => a.fields.every((x, i) => equal(x, b.fields[i])));
   if (a instanceof StrideMap && b instanceof StrideMap) return a.entries.size === b.entries.size && a.pairs.every(([k, x]) => b.has(k) && equal(x, b.get(k)));
   if (a instanceof StrideFunction && b instanceof StrideFunction) return a.target === b.target && a.kept.length === b.kept.length && a.kept.every((k, i) => equal(k, b.kept[i]));
   return a === b;
@@ -262,7 +315,7 @@ export function encode(v, recordNames = () => null) {
   if (typeof v === "boolean") return v ? "yes" : "no";
   if (v instanceof StrideRecord) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);
-    return `${v.type}{${v.fields.map((f, i) => `${names[i]}=${encode(f, recordNames)}`).join(";")}}`;
+    return inside(v, () => `${v.type}{${v.fields.map((f, i) => `${names[i]}=${encode(f, recordNames)}`).join(";")}}`);
   }
   return JSON.stringify(v); // exactly the escaping §8.6.3 names
 }

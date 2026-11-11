@@ -1,8 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, age: number }
-let r = new person { name: "a" }
-r.name = "b"
-fill "A" = r.name
+const C = [1, 2]
+C[0] = 5
+fill "A" = "{C[0]}"
 # rule S347 16.4 7.5
-# mistake 5 S347
+# mistake 4:1 S347 C is a constant

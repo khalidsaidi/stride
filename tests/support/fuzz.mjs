@@ -290,7 +290,7 @@ export function generate(seed) {
     if (top) kinds.push("ask", "ask", "let", "let", "var", "for", "each", "collect", "match", "record", "call");
     if (all(sc).some((n) => n.kind === "var")) kinds.push("assign", "assign");
     if (ctx.inLoop) kinds.push("loopfill", "loopfill", "leave");
-    if (top && !ctx.inFunction) kinds.push("rows", "grow");
+    if (top && !ctx.inFunction) kinds.push("rows", "grow", "shared", "shared");
     const kind = r.pick(kinds);
     switch (kind) {
       case "print":
@@ -324,6 +324,31 @@ export function generate(seed) {
         const name = fresh("grow");
         const more = fresh("grow");
         return [`${i}var ${name}: list of number = [${num(sc, 1)}]`, `${i}${name}[1] = ${num(sc, 1)}`, `${i}let ${more}: list of number = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[${r.pick(["0..2", "0..<3", "1..", "..<2"])}])`, `${i}print(${name})`];
+      }
+      case "shared": {
+        // A list, a record and a map held by two names and given to a function that changes them (§3.4): changed
+        // in place by the library and through a let, a parameter and a loop's item, then read through each name.
+        const l = fresh("shared"), also = fresh("shared"), apart = fresh("shared"), rec = fresh("shared"), recs = fresh("shared"), m = fresh("shared");
+        const out = [`${i}${r.pick(["let", "var"])} ${l}: list of number = [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}let ${also} = ${l}`, `${i}let ${apart} = copy(${l})`];
+        out.push(`${i}let ${rec} = new item { label: ${text(sc, 1)}, amount: ${num(sc, 1)} }`, `${i}let ${recs} = [${rec}, new item { amount: ${num(sc, 1)} }]`, `${i}let ${m} = {"a": ${num(sc, 1)}}`);
+        for (let k = r.int(2, 6); k > 0; k--) {
+          out.push(i + r.pick([
+            () => `append(${r.pick([l, also, apart])}, ${num(sc, 1)})`,
+            () => `insert(${r.pick([l, also])}, ${r.int(0, 3)}, ${num(sc, 1)})`,
+            () => `print(remove_at(${r.pick([l, also])}, ${r.int(0, 2)}))`,
+            () => `${r.pick([l, also])} += [${num(sc, 1)}]`,
+            () => `${also}[${r.int(0, 2)}] = ${num(sc, 1)}`,
+            () => `change(${r.pick([l, also, apart])}, ${r.pick([rec, `${recs}[${r.int(0, 1)}]`])}, ${m})`,
+            () => `for each x in ${recs} { x.amount = ${num(sc, 1)} }`,
+            () => `${rec}.label = ${text(sc, 1)}`,
+            () => `${m}["${r.pick(["a", "b"])}"] = ${num(sc, 1)}`,
+            () => `remove(${m}, "${r.pick(["a", "b", "k"])}")`,
+            () => `clear(${r.pick([l, apart, m])})`,
+            () => `for each x in ${l} { append(${also}, x) }`,
+          ])());
+        }
+        out.push(`${i}print(${l} == ${also})`, `${i}print(${apart})`, `${i}print(${recs})`, `${i}print(${m})`);
+        return out;
       }
       case "loopfill":
         return [`${i}fill "${ctx.inLoop.box}_{${ctx.inLoop.counter}}_${++counter}" = ${expr(sc, r.pick([N, T]), d)}`];
@@ -497,6 +522,8 @@ export function generate(seed) {
     "}",
     "",
   );
+  // One that changes the list, the record and the map it is given (§3.4).
+  lines.push("define change(l: list of number, it: item, m: map of text to number) {", "  append(l, count(l))", "  l[0] = 0", "  it.amount = count(l)", "  it.done = yes", '  m["k"] = count(m)', "}", "");
   // Pure functions of numbers and words, and one that asks.
   for (let k = 0; k < r.int(1, 3); k++) {
     const name = fresh("f");

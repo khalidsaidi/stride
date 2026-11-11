@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define run() -> number {
+  var kids: list of text
+  let n = function() -> number { return count(kids) }
+  collect k in kids "Another?" {
+    ask k: text "Name"
+  }
+  return n()
+}
+fill "A" = "{run()}"
+# rule 9.11 8.5
+# answers {"run.kids[0].k": "a", "run.kids[0]#another": "no"}
+# boxes {"A": "1"}

@@ -69,8 +69,8 @@ values, not empty. In a condition empty counts as no; `"{x}"` and `fill` put in 
 compares it. Anything else that needs a value — arithmetic, `< <= > >=`, joining with `+`, a field, an item, a
 slice, `for each`, a library function — stops the run when it is given empty (fault F023, §6.3).
 
-A list or a record is a value, not a place: `var b = a` copies, and a function given a list changes only its
-copy (§3.4).
+A list, a record or a map is shared: `var b = a` makes `b` the same list as `a`, and a function given a list
+changes that list; `copy(a)` makes another (§3.4).
 
 ## Declarations
 
@@ -127,10 +127,10 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `ask r.field: type "…"` | the answer goes into a field of a var's record, or of a list's item |
 | `… default e` | the value the answer has until the person answers; once they answer, even with nothing, it does not come back (§8.4.1) |
 | `… check c "message"` | a condition the answer should meet; when it does not, the page shows the message (the answer stays); an empty answer is not checked |
-| `let name = e`, `let name: type = e` | a name for a value that does not change |
+| `let name = e`, `let name: type = e` | a name that keeps the value it is given; the items and fields of a list, record or map it holds may be given values (§3.4) |
 | `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list starts with no items, a map with no keys and a record empty; anything else must be given a value before it is read |
-| `name = e`, `name.field = e`, `name[i] = e` | gives a var, its field or its item a new value |
-| `x += e`, `-=`, `*=`, `/=` | `x = x + e`, with x's place worked out once (§7.5) |
+| `name = e`, `name.field = e`, `name[i] = e` | gives a var a new value; gives a field or an item of the record, list or map a name holds a new value (§7.5) |
+| `x += e`, `-=`, `*=`, `/=` | `x = x + e`, with x's place worked out once (§7.5); `l += m` adds m's items to the list l holds |
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is yes |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
@@ -229,8 +229,9 @@ lower title capitalize trim trim_start trim_end remove_prefix remove_suffix leng
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
 rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs power min max grouped
 fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days add_months`.
-Lists and sets: `count join first last filled index_of append without reversed sorted sum smallest largest any all union
-intersection difference`. Empty, faults and output: `either fail print`.
+Lists and sets: `count join first last filled index_of append insert remove_at clear copy without reversed sorted sum
+smallest largest any all union intersection difference`; `append`, `insert`, `remove_at` and `clear` change the list
+they are given, the others give a new one. Empty, faults and output: `either fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
 one-character boxes. Their positions count from 0, as a list's do, and `find` and `index_of` give -1 for none. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).
@@ -275,7 +276,7 @@ assembler).
 
 ## Bytecode
 
-Version 7 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 8 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),

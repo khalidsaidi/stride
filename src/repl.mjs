@@ -1,15 +1,17 @@
 // `stride repl` (§17.14): a session to try Stride in, as Python's, Node's and JShell's are. What is typed is kept as
 // a script that grows: a declaration or a statement is checked with everything kept before it and, when it has no
-// mistake and its run does not fault, kept; an expression is shown its value and not kept. The session is run from
+// mistake and its run does not fault, kept; an expression is shown its value, and kept only when it is a call of a
+// library function that changes its list or map. The session is run from
 // its start each time with what fixed it the first time: the libraries as they were when first used, the answers
 // kept, the date the session began (or --today). A run is the same for the same of these (§13), so each kept entry
 // does what it did once, and its prints are shown once, when it is typed. :reload reads the libraries again. An
-// entry that is not kept, an expression among them, keeps no answer; :undo forgets the answers of what it forgets.
+// entry that is not kept keeps no answer; :undo forgets the answers of what it forgets.
 // A name not used yet is not a mistake here (§11, W004–W007). Input ends at :quit or the end of stdin; lines go on
 // while a bracket, brace or parenthesis is open.
 import { compile, diskRead, LANGUAGE } from "./compile.mjs";
 import { parseExpression } from "./syntax.mjs";
 import { load, run } from "../runtime/vm.mjs";
+import { NATIVES } from "../runtime/natives.mjs";
 
 const HELP = `Type a declaration or a statement to keep it, or an expression to see its value.
   :list            what is kept, numbered
@@ -114,7 +116,9 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
       } else err(`no command ${cmd}; :help lists them`);
       continue;
     }
-    // An expression: its value, and nothing kept. One that gives no value (print(1)) is a statement.
+    // An expression: its value. A call of a library function that changes its list or map (append(l, x)) is kept
+    // too, as the statement it is, so that the list stays changed (§3.4). One that gives no value (print(1)) is a
+    // statement.
     const alone = parseExpression(t, -1);
     if (!alone.empty && !alone.rest && !alone.mistakes.length) {
       const r = attempt(`print(\n${t}\n)`);
@@ -125,6 +129,11 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
         else {
           for (const line of r.result.prints.slice(shownPrints, -1)) out(line);
           out(r.result.prints.at(-1) ?? "");
+          if (alone.tree.kind === "call" && alone.tree.target.kind === "name" && NATIVES[alone.tree.target.name]?.changes) {
+            answers = r.answers;
+            kept.push({ text: t, answers });
+            shownPrints = r.result.prints.length - 1; // kept without the print of its value
+          }
         }
         continue;
       }

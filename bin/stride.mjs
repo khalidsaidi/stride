@@ -26,6 +26,7 @@ import { SourceFile, Diagnostics, KIND, plural, faultWords } from "../src/source
 import { parseExpression } from "../src/syntax.mjs";
 import { showFunction } from "../src/ir.mjs";
 import { VERSION, OP_NAME } from "../runtime/bytecode.mjs";
+import { holdsItself } from "../runtime/values.mjs";
 import { disassemble, load, run, boxValues, textOf } from "../runtime/vm.mjs";
 
 // ----- output (§17.11): results to stdout, everything about them to stderr
@@ -881,12 +882,15 @@ function writing(path, write) {
   }
 }
 
+// What a trace shows for a record that holds itself (§3.4.6).
+const ITSELF = "(holds itself)";
+
 // Each instruction the machine runs, with its function, address, name, the top of the stack, and the locals it
 // changes, by name (§17). The trace is called before each instruction runs, so a line is printed when the next
 // one starts, once what it changed is known.
 function traceTo(p) {
-  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
-  const snap = (v) => JSON.stringify(v ?? null);
+  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
+  const snap = (v) => (holdsItself(v) ? ITSELF : JSON.stringify(v ?? null));
   let pending = null;
   const flush = () => {
     if (!pending) return;
@@ -908,15 +912,16 @@ function traceTo(p) {
 // a function with its arguments and what it gives back; each call of the library with what it gives. A loop's own
 // bookkeeping (its counter going up, its item taken) is not a statement of the program and is not shown as one.
 function sourceTrace() {
-  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
-  const snap = (locals) => new Map([...locals].map(([l, v]) => [l, JSON.stringify(v ?? null)]));
+  const shown = (v) => (holdsItself(v) ? ITSELF : typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
+  const snapOne = (v) => (holdsItself(v) ? ITSELF : JSON.stringify(v ?? null));
+  const snap = (locals) => new Map([...locals].map(([l, v]) => [l, snapOne(v)]));
   const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");
   const frames = [];
   const pad = () => "  ".repeat(Math.max(0, frames.length - 1));
   const where = (node) => `${node.file?.name ?? ""}:${node.span.line}  ${(node.file?.line?.(node.span.line) ?? "").trim()}`;
   const settle = (f) => {
     if (!f?.pending) return;
-    const changed = [...f.pending.locals].filter(([l, v]) => named(l) && f.pending.before.get(l) !== JSON.stringify(v ?? null)).map(([l, v]) => `${l.name} = ${shown(v)}`);
+    const changed = [...f.pending.locals].filter(([l, v]) => named(l) && f.pending.before.get(l) !== snapOne(v)).map(([l, v]) => `${l.name} = ${shown(v)}`);
     if (changed.length) err(`${pad()}      ${changed.join(", ")}`);
     f.pending = null;
   };

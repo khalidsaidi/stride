@@ -6,5 +6,7 @@ var s = r
 s.name = "y"
 print(r.name)
 print(s.name)
+s = new p { name: "z" }
+print(r.name)
 # rule 3.4
-# prints ["x", "y"]
+# prints ["y", "y", "y"]

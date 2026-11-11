@@ -30,6 +30,11 @@ export function test() {
     if (!k.includes('k.stride:1  let value = upper("ada")\n    · upper("ada") gives "ADA"\n      value = "ADA"')) problems.push(`the known let is not traced:\n${k}`);
     if (turns.join(",") !== "1,2,3") problems.push(`the one-line loop's turns: ${turns.join(",")}:\n${k}`);
     if (/i = 4/.test(k)) problems.push(`the counter is shown past the loop:\n${k}`);
+    // A library call that changes its list is shown with the list as it was given; the names that hold the list
+    // are shown with what it holds after the statement (§3.4).
+    writeFileSync(join(dir, "s.stride"), "var a = [1, 2]\nlet b = a\nappend(a, 3)\nprint(b)\n");
+    const sh = stride("run", "s.stride", "--trace").stderr;
+    if (!sh.includes("s.stride:3  append(a, 3)\n    · append([1, 2], 3) gives [1, 2, 3]\n      a = [1, 2, 3], b = [1, 2, 3]")) problems.push(`a list changed in place is not traced as it was and as it is:\n${sh}`);
     // Turns of loops whose bodies are empty are shown too, each with its own values; a loop of no turns, none.
     writeFileSync(join(dir, "e.stride"), 'for i in 1..3 { }\nfor each i, x in [10, 20, 30] { }\nfor a in 1..2 {\n  for b in 1..0 { }\n}\nprint("done")\n');
     const e = stride("run", "e.stride", "--trace").stderr.split("\n");

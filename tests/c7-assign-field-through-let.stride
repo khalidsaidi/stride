@@ -1,0 +1,25 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address {
+  city: text
+}
+record person {
+  name: text
+  age: number
+  home: address
+}
+let p = new person { name: "A" }
+p.name = "B"
+p.home.city = "Paris"
+print(p)
+let l = [1, 2]
+l[0] = 5
+l[2] = 6
+l += [7]
+print(l)
+let m = {"a": 1}
+m["b"] = 2
+print(m)
+
+# rule 7.5 7.3 3.4.3
+# prints ["person { name: B, age: , home: address { city: Paris } }", "[5, 2, 6, 7]", "{a: 1, b: 2}"]

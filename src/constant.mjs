@@ -64,7 +64,7 @@ function value(e, env, visiting) {
       if (!sym) return undefined;
       if (env.has(sym)) return env.get(sym);
       if (sym.kind === "const") {
-        if (sym.known) return sym.value;
+        if (sym.known) return copy(sym.value); // a constant's own value is never the one handed out (§3.4)
         if (visiting.has(sym)) return undefined; // a constant made of itself: reported by the checker
         visiting.add(sym);
         const v = value(sym.node.value, env, visiting);
@@ -76,7 +76,8 @@ function value(e, env, visiting) {
         visiting.add(sym);
         try {
           const v = value(sym.node.value, env, visiting);
-          return v === undefined ? undefined : placed(v, sym.type);
+          // A list may be changed after the let is made (§3.4): what it holds then is not known.
+          return v === undefined || (Array.isArray(v) && !isSet(placed(v, sym.type))) ? undefined : placed(v, sym.type);
         } finally {
           visiting.delete(sym);
         }
@@ -127,7 +128,7 @@ function value(e, env, visiting) {
       if (l === undefined || a === undefined || b === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const [x, y] = sliceBounds(l, a, b);
-        return sliced(l, x, e.exclusive ? y - 1 : y).map(copy);
+        return sliced(l, x, e.exclusive ? y - 1 : y);
       });
     }
     case "index": {

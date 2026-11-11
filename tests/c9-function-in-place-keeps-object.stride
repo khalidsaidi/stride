@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define counter(l: list of number) -> function() -> number {
+  return function() -> number {
+    append(l, count(l))
+    return count(l)
+  }
+}
+let seen = [0]
+let next = counter(seen)
+next()
+print(next())
+print(seen)
+# rule 9.11 3.4
+# prints ["3", "[0, 1, 2]"]

@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const START = [0]
+define grown(x: number, l: list of number = [1], m: list of number = START) -> list of number {
+  append(l, x)
+  append(m, x)
+  return l + m
+}
+print(grown(2))
+print(grown(3))
+# rule 3.4.1 9.2
+# prints ["[1, 2, 0, 2]", "[1, 3, 0, 3]"]

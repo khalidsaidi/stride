@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l = [1, 2, 3]
+let same = l
+append(l, 4)
+insert(l, 0, 0)
+insert(l, count(l), 5)
+print(same)
+print(remove_at(l, 1))
+print(same)
+print(append(l, 6) == same)
+var m = {"a": 1, "b": 2}
+let also = m
+remove(m, "a")
+print(also)
+print(count(remove(m, "zz")))
+clear(m)
+clear(l)
+print(same)
+print(also)
+print(count(clear([1])))
+let src = [3, 1, 2]
+let kept = [sorted(src), reversed(src), without(src, 1), filled(src), src[0..0]]
+print(src)
+print(count(kept))
+# rule 14.4 14.4.1 3.4 14.0.5
+# prints ["[0, 1, 2, 3, 4, 5]", "1", "[0, 2, 3, 4, 5]", "yes", "{b: 2}", "1", "[]", "{}", "0", "[3, 1, 2]", "5"]

@@ -276,6 +276,8 @@ export function lower(resolved, diagnostics, options = {}) {
     if (target.kind === "name") {
       const dst = ctx.locals.get(target.symbol);
       let value = expr(s.value, ctx);
+      // l += m adds m's items to the list l holds (§6.5.1), and l holds it still.
+      if (s.inPlace) return emit(ctx, { op: "eval", value: withAt(IR.native("extend", [held(dst), value]), placeOf(s, s.opSpan)), node: s });
       if (s.op) value = withAt(IR.binary(s.op, held(dst), value), placeOf(s, s.opSpan));
       emit(ctx, { op: "set", dst, outer, value: placeAs(value, target.symbol?.type, s.value.type), node: s });
       return;
@@ -293,7 +295,8 @@ export function lower(resolved, diagnostics, options = {}) {
     for (const st of steps) {
       if (st.kind === "field") {
         const entry = { field: st.fieldIndex, name: st.name };
-        if (type?.t === "record") entry.ensure = type.decl;
+        // A record is made where a var, a field or an item holds empty (§7.5.1); another name keeps what it holds.
+        if (type?.t === "record" && (path.length || x.symbol.kind === "var")) entry.ensure = type.decl;
         path.push(entry);
         type = type?.decl?.fields[st.fieldIndex]?.type;
       } else {
@@ -313,7 +316,7 @@ export function lower(resolved, diagnostics, options = {}) {
       // The place's current value, read through the same temporaries.
       let read = held(dst);
       for (const p of path) read = p.field !== undefined ? IR.field(read, p.field, p.name) : IR.item(read, withAt(IR.local(p.into), p.index.at));
-      value = withAt(IR.binary(s.op, read, value), placeOf(s, s.opSpan));
+      value = withAt(s.inPlace ? IR.native("extend", [read, value]) : IR.binary(s.op, read, value), placeOf(s, s.opSpan));
     }
     emit(ctx, { op: "store", dst, outer, path, value: placeAs(value, type, s.value.type), node: s });
   }

@@ -293,7 +293,8 @@ Hi Bo
 
 A parameter may have a default; arguments are given in order, then by name. A function without `-> type` has its
 result worked out from its returns. `define biggest<t>(l: list of t) -> t` is generic: `t` is worked out at each
-call (§9.5). A value given to a function is a copy, so a function never changes what it was given (§3.4).
+call (§9.5). A list, a record or a map given to a function is the caller's own: what the function changes in it,
+the caller sees (§3.4).
 A function reads the program's own names (an answer, a let, a var), and may change its vars (§9.1).
 
 ## 7. Lists, records and sets
@@ -302,7 +303,9 @@ Lists count from 0: `l[0]` is the first item and `l[count(l) - 1]` the last. A p
 fault (§6.9.2), so check `i < count(l)` where a row may not be there. A list grows as items are added (`l += [x]`,
 `append(l, x)`, `l[count(l)] = x`). `l[a..b]` is the items a to b, and `l[a..<b]` stops before b; `for i in
 0..<count(l)` takes every position.
-Lists and records are values: `var b = a` copies, and `==` compares items:
+Lists, records and maps are shared, as in Python, JavaScript and Java: `var b = a` makes `b` the same list as
+`a`, and `copy(a)` makes another with the same items (§3.4). A `let` keeps its list, whose items may still change.
+`==` compares items:
 
 ```stride
 options colour {
@@ -315,27 +318,31 @@ record person {
   age: number
 }
 var names: list of text = ["Ada", "Bo"]
-var copy = names
-copy[2] = "Cy"
+let same = names
+let other = copy(names)
+append(same, "Cy")
 print(names)
-print(copy)
-print(copy[1..<3])
-print(names == ["Ada", "Bo"])
+print(other)
+print(names[1..<3])
+print(other == ["Ada", "Bo"])
 let p = new person { name: "Ada", age: 36 }
 print(p.name)
 let warm: set of colour = ["red", "green"]
 print("green" in warm)
-print([upper(x) for each x in copy if x != "Bo"])
+print([upper(x) for each x in names if x != "Bo"])
 ```
 ```output
-[Ada, Bo]
 [Ada, Bo, Cy]
+[Ada, Bo]
 [Bo, Cy]
 yes
 Ada
 yes
 [ADA, CY]
 ```
+
+`append(l, x)`, `insert(l, position, x)`, `remove_at(l, position)`, `clear(l)` and `l += m` change the list
+itself; `sorted`, `reversed`, `filled`, `without`, a slice and `l + m` give a new list (§14.4).
 
 A map holds values under keys (§3.10). Reading a key it does not have gives empty:
 

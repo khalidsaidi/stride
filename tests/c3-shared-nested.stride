@@ -10,4 +10,4 @@ var inner = outer[0]
 inner[0] = 5
 print(outer[0][0])
 # rule 3.4
-# prints ["a", "1"]
+# prints ["z", "5"]

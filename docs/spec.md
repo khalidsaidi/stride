@@ -117,10 +117,31 @@ ten, of absolute value below 10^34, and a multiple of 10^-6176 (its power of ten
 - 3.3.5. A number's words (§3.5) are its shortest exact decimal: no exponent, no trailing zeros after the point,
   no point when whole, a `-` when negative: `2.5`, `-3`, `1000000`, `0.000001`.
 
-3.4. **Values are values.** A list or a record is a value, not a place: `var b = a` makes `b` a copy of `a`;
-passing a list to a function passes a copy; changing `b`, or a function changing its copy, never changes `a`.
-`for each x in l` goes through the items `l` holds when the loop starts; changing `l` inside the loop changes `l`,
-not the items the loop goes through.
+3.4. **Lists, records and maps are shared.** A list, a record or a map is one object, however many names,
+parameters, fields and items hold it. `var b = a` makes `b` the same list as `a`: `b[0] = 9` is seen through `a`. A
+function given a list, a record or a map may change it, and its caller sees the change. A value put into a field
+or an item, returned, or kept by a function written in place (§9.11) is the same object, never a copy of it.
+- 3.4.1. **What is written out is new each time it runs.** A list literal, a map literal, `new R { … }`, a
+  comprehension, `l + m`, a slice, and every library function that gives a list or a map without saying it
+  changes the one it was given (§14.4) make a new object at each evaluation: `let row = [0, 0]` in a loop makes a
+  list at every turn. A new list holds the items it is made of, not copies of them: after `let m = l[0..1]`,
+  `m[0]` and `l[0]` are the same record. A parameter's default (§9.2) is made at each call that uses it. A
+  constant (§5.3) gives a new copy of its value wherever it is read, so nothing a program does changes it.
+- 3.4.2. **`copy(x)`** (§14.4) gives a list, a record or a map made anew with everything inside it copied too:
+  after `var b = copy(a)`, changing `b` changes nothing of `a`.
+- 3.4.3. **What a name fixes.** A `let`, a parameter, a loop's item and a name a function written in place keeps
+  fix which object the name holds, not what the object holds: its fields and items are given values through any
+  of them (§7.5). Only a `var` is given another value.
+- 3.4.4. Words, numbers, dates, yes-no, options and sets never change: an operation on one gives another value.
+  `==` compares what two values hold (§6.6), whether or not they are the same object.
+- 3.4.5. `for each x in l` goes through the items `l` holds when the loop starts; adding or removing items of `l`
+  inside the loop changes `l`, not the items the loop goes through. Each x is the item itself: `x.n = 1` changes
+  the record in the list.
+- 3.4.6. **A record that holds itself.** A record put into its own field, directly or through lists, maps and
+  other records (`r.next = r`), holds itself. Its fields are read and set as any record's; `copy` copies it as a
+  record that holds itself; `r == r` is yes, as any value equals itself. It has no words and no end to compare:
+  printing it or putting it into words is F024, and so is comparing it with another record when the comparison
+  comes round to it again (one a field decides before that gives its yes or no).
 
 3.5. **A value's words** (what `fill` writes and `{…}` puts in): text as it is; a number as §3.3.5; a date as
 `YYYY-MM-DD`; `yes`/`no` as `yes`/`no`; an option as its value; a set as its option values in declaration order (§3.8),
@@ -166,7 +187,7 @@ first.
 
 3.10. **Maps.** `map of K to V` holds values of type V, each under its own key of type K: words, a number, a date,
 a yes-no or an option (another type of key is S209). It holds any number of keys, in the order they were first
-given. A map is a value, as a list is: placing it copies it, `==` compares keys and values, and one with no keys
+given. A map is shared, as a list is (§3.4); `==` compares keys and values, and one with no keys
 is a map, not empty (§3.2). A `var` of a map type declared without a value starts with no keys.
 
 ## 4. Files
@@ -278,7 +299,7 @@ a is empty; `if c then a else b` works out `c`, then only the chosen branch.
 what was empty (`empty where a number is needed: the left side of +`). These are F023 when an operand is empty:
 - `+ - * / // %` and `-x`, of numbers; `+` joining words or lists; `< <= > >=`;
 - `x in s` and `x not in s` when s is empty, or when s is words and x is empty (§6.8);
-- `r.f` when r is empty (§6.9.1); `l[i]` and `l[a..b]` when l, i, a or b is empty (§6.9.2, §6.9.3); an item set at
+- `r.f` when r is empty (§6.9.1), and `r.f = v` when r is empty and not a var (§7.5.1); `l[i]` and `l[a..b]` when l, i, a or b is empty (§6.9.2, §6.9.3); an item set at
   an empty position or under an empty key, or in an empty list or map (§7.5);
 - a loop's bound, and what `for each` or a comprehension goes through (§7.11, §6.12);
 - an argument of a library function that needs a value (§14.0.3).
@@ -324,7 +345,8 @@ and, for r, rounded.
 `text`. A number and words is S372 (write `"…{n}…"`).
 
 6.5.1. **Lists.** `l + m`, with l and m lists whose item types have a join (§3.9; S373 otherwise), is a new list:
-l's items, then m's. `l += m` is `l = l + m`.
+l's items, then m's; l and m are not changed. `l += m` adds m's items to the list l holds, which every other name
+that holds it sees; l need not be a var (§7.5), and an empty l or m is F023.
 
 6.6. **Equality** `==`, `!=`: of two values of one type, or words with words, or an option with words (the words
 checked against the set's values: S386), or two options of different sets (their words compared); else S378 (yes-no with words S376; a set with `==` against words S377).
@@ -364,7 +386,7 @@ is S352.
 6.11.1. **Map literal** `{k: v, …}`: its key type is the join of its keys' types and its value type the join of
 its values' (S361 when two have none); a key written twice keeps its last value. `{}` takes its type from where it
 stands. `m[k]` is the value under k, or empty when m has no such key, an empty k among them (a key of another type
-is S358; an empty m is F023); `m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is
+is S358; an empty m is F023); `m[k] = v` puts v under k in the map itself, adding the key when it is new (an empty key is
 F023); `m[k].f = v` makes
 the record under a new key (§7.5.1). `for each k in m` goes through m's keys in their order, and
 `for each k, v in m` gives each key and the value under it; a comprehension does the same
@@ -418,7 +440,8 @@ brace may follow its last statement on the same line (`if c { print(1) }`).
 a name followed by zero or more `.field`s; any other shape is S010. S319 stands for a target of that shape that
 cannot receive an answer.
 
-7.3. **let** `let name [":" type] "=" expr`: a name for a value that does not change.
+7.3. **let** `let name [":" type] "=" expr`: a name that keeps the value it is given. When the value is a list, a
+record or a map, its items and fields may still be given values (§3.4.3).
 
 7.4. **var** `var name ":" type ["=" expr]` or `var name "=" expr`: a name for a value that may change. Without a
 value, a list starts with no items, a map with no keys and a record empty; anything else must be given one before it is read (S407). `var x = empty`
@@ -427,9 +450,15 @@ any depth (`[]`, `[empty, empty]`, `[[empty]]`), is S328; with a type, `let xs: 
 empty]` is valid. In these empty-type inference cases, an inferred function result is S344 (§9.6), and a generic
 call is S368 (§9.5.1).
 
-7.5. **assign** `target "=" expr`, `target op= expr` (op `+ - * /`): target a var, a var's field or a var's item
-(S345–S349). `x += e` is `x = x + e` with x's place worked out once. An answer, a let, a constant, a parameter, a
-loop's counter, an item, a collected list's items cannot be given a value (S345, S346, S348).
+7.5. **assign** `target "=" expr`, `target op= expr` (op `+ - * /`): target a var, or a field or an item reached
+from a name (S345–S349). `x += e` is `x = x + e` with x's place worked out once; with x a list it adds e's items
+to that list (§6.5.1). Only a var is given another value: an answer, a let, a constant, a parameter, a loop's
+counter or an item named alone is not (S345), but for `l += m` with l a let, a parameter or an item that holds a
+list. A field or an item is given a value through any name that holds the record, list or map — a var, a let, a
+parameter, a loop's item, a name of the program read in a function, a name a function written in place keeps
+(§3.4.3) — but not through a constant (S347), and an answer is never changed: a field a question is asked into
+(S348), a collected list, its items and their fields, through the collect's name for them or a `for each`'s
+(S346). A character of words is not a place (S349).
 `l[i] = v` with i from 0 to `count(l) - 1` replaces that item, and with i `count(l)` adds v after the last; i not
 whole or outside 0 to `count(l)` is F005; l or i empty is F023.
 
@@ -452,13 +481,14 @@ happens:
      person, then its `home` an address, then `city` is set. Only a place that is not there faults: a position past
      the items is F020, whether or not records would be made after it. So `var p: person` then `p.name = "Ada"`
      gives p the name Ada; `var xs: list of person = [empty]` then `xs[0].name = "Ada"` makes `xs[0]` a
-     person named Ada; `xs[1].name = "Ada"` on that list is F020.
+     person named Ada; `xs[1].name = "Ada"` on that list is F020. A name that is not a var keeps what it holds:
+     a field set through a let, a parameter or a loop's item that holds empty is F023, as a field read of it is.
 
    So: `xs[i] = v` checks i with F005; `xs[i].name = v` reads i (F004, or F020 past the items) and then sets the
    field; `xs[i][j].name = v` reads both i and j (F004 or F020). With i = -1, `xs[i] = v` is F005, and
    `xs[i].name = v` is F004.
 2. **The value.** Only then is the right-hand expression evaluated.
-3. **Placing.** The value is converted (a list of words in quotes to a set, §3.6) and copied (§3.4).
+3. **Placing.** The value is converted (a list of words in quotes to a set, §3.6).
 4. **Storing.** The place takes the value.
 
 So `xs[i] = 1 / z` with i = -1 and z = 0 stops with F005 at `xs[i]`, and `1 / z` is never worked out.
@@ -489,7 +519,7 @@ match on an option with no `else` that misses options gives warning W001.
 7.11. **for** `for i in a..b { }`, `for i in a..<b { }`: a and b are worked out once, a then b, before the first turn, and never again;
 i then takes each whole number from a to b, or with `..<` from a to before b (`for i in 0..<count(l)` gives every position of l); none when a > b, or with `..<` when a ≥ b. Changing what a or b was made of inside the loop does
 not change its turns: with `var stop = 1`, `for i in 1..stop { stop += 1 }` runs once and leaves `stop` 2. a and b
-are numbers (S313); a non-whole bound is F004 and an empty one F023: empty is never taken as 0 or as a loop of no turns. Each bound is evaluated and checked completely before the next is evaluated: an empty or non-whole first bound faults before the second bound is worked out. `for each` works out its list once, before the first turn (§3.4). **for each** `for each [n,] x in l { }`: l a list or a set (S314), §3.4; n is the item's position, from 0. An empty l is F023 (`for each x in l ?? []` runs no turns); so is the l of a comprehension (§6.12).
+are numbers (S313); a non-whole bound is F004 and an empty one F023: empty is never taken as 0 or as a loop of no turns. Each bound is evaluated and checked completely before the next is evaluated: an empty or non-whole first bound faults before the second bound is worked out. `for each` works out its list once, before the first turn (§3.4.5). **for each** `for each [n,] x in l { }`: l a list or a set (S314), §3.4.5; n is the item's position, from 0. An empty l is F023 (`for each x in l ?? []` runs no turns); so is the l of a comprehension (§6.12).
 
 7.11.1. **while** `while c { }`: c, a yes-no (S311), is worked out before each turn; the body runs as long as it
 is yes. A question asked in the body has its own key in each turn (`name[0]`, `name[1]`, …, §8.6). A loop that
@@ -520,7 +550,8 @@ faults "F013"`): S370 does not apply there.
 its default or is empty). Each `expect` is its own sub-run: what its expression does — questions reached, words
 printed — is dropped when it ends; box operations are refused by §4.3. The `let`s run on the file's one path,
 and each expectation starts from the state the lets before it left. Nothing it did changes
-the test file's names (a function changes only its copies, §3.4). An `expect … faults` catches the fault at its boundary: when it
+the test file's names: the sub-run works on its own copy of every list, record and map they hold (§3.4), and what
+it changes in them is dropped with it. An `expect … faults` catches the fault at its boundary: when it
 matches, the expectation passes and the file goes on with the next statement; when the expression finishes
 without a fault, or with another fault, the expectation fails and the file goes on. A plain `expect e` whose e
 faults fails, and the file goes on. A fault outside any `expect` (in a `let`) stops the file: the expectations
@@ -672,11 +703,12 @@ that leaves the argument out; a required parameter after one with a default is S
 
 9.4. **Calls**: positional arguments first, then named `name: e` (S390). A named argument names a parameter (S388,
 with a hint) not given already (S389). Every parameter without a default is given (S365). At most 255 arguments
-and 255 parameters (S601). Each argument fits its parameter (S367). A value given goes as a copy (§3.4).
+and 255 parameters (S601). Each argument fits its parameter (S367). A list, a record or a map given is the caller's own (§3.4): what the function changes in it, the caller
+sees.
 
 9.4.1. **Binding, step by step.** The arguments are bound in the order they are written, positional then named,
 each completely before the next is worked out: the argument's expression is evaluated, then at once converted to
-its parameter (a list of words in quotes to a set, §3.6) and copied (§3.4); only then is the next argument evaluated. Parameters not given take their defaults after the
+its parameter (a list of words in quotes to a set, §3.6); only then is the next argument evaluated. Parameters not given take their defaults after the
 last argument is bound (a default is known and cannot fault). The function's body starts after every parameter is
 bound. So in `takes_one(xs[z - 1], 1 / z)` with z zero, the run stops with F004 at `xs[z - 1]`, and `1 / z` is never worked
 out.
@@ -730,7 +762,9 @@ written where a value goes; its result's type may be left out, as a named functi
 have no defaults. One put straight into a `let` or `var` may call itself by that name. It reads and changes the program's top-level names as any function does (§9.1). A `var` of the
 function or loop around it is shared: the function and the code around it read and change the one var, which
 lives as long as either uses it; each run of the var's declaration makes a new one. Another name around it (a
-let, a parameter, a loop's counter or item) does not change, and the function has its value. One put straight
+let, a parameter, a loop's counter or item) is not given another value, and the function keeps the value it has
+when the function is made: a list, a record or a map kept is the same object (§3.4), so what either changes in
+it the other sees. One put straight
 into a `let` or `var` names its questions by that name, another by `function` (§8.6.2). Two function values are
 equal when they are the same function over the same vars and equal values.
 
@@ -849,7 +883,8 @@ words given to `print`, and a fault or none.
 | F019 | the machine stopped on something else (a machine fault) |
 | F022 | a function called through a name that holds none |
 | F020 | an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[2].name = v` when xs holds 2): a program fault |
-| F023 | empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value |
+| F023 | empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value |
+| F024 | a record that holds itself (§3.4.6) printed, put into words, or compared with another all the way round |
 
 ## 14. The standard library
 
@@ -861,8 +896,8 @@ words given to `print`, and a fault or none.
 - 14.0.3. **Empty.** A function needs a value for every parameter: an empty argument is F023, naming the function
   and the parameter (`empty where words are needed: upper's t`); `upper(name ?? "")` gives it one. Only these take
   empty: `either` (both), `filled` (its list: `filled(empty)` is a list with no items), `text_of` (no characters),
-  `print`, `fail`'s message (no words), the `x` of `index_of`, `append` and `without`, the key of `has` and
-  `remove` (no key is empty), and `sorted`'s `descending` (empty counts as no). An empty item in a list is another
+  `print`, `copy`, `fail`'s message (no words), the `x` of `index_of`, `append`, `insert` and `without`, the key of
+  `has` and `remove` (no key is empty), and `sorted`'s `descending` (empty counts as no). An empty item in a list is another
   matter: `join`, `first`, `last`, `filled`, `count`, `reversed`, `index_of`, `without`, `any` and `all` take a
   list that holds empty items; `sorted`, `sum`, `smallest` and `largest` need every item (F023). Words of no
   characters and a list with no items are values (§3.2): `upper("")` is `""` and `count([])` is 0.
@@ -877,7 +912,8 @@ words given to `print`, and a fault or none.
 - 14.0.5. Answer conversion never faults (§8.7). Operations and functions using the converted value can fault
   under their own rules, including the control-argument checks of §14.0.3.1: `divide(1, n)` faults when an answer
   supplies zero. A program's own mistake that the compiler cannot see faults too (§13.4).
-  Every native here is pure but `today`, `fail` and `print` (§9.9).
+  Every native here is pure but `today`, `fail` and `print` (§9.9); `append`, `insert`, `remove_at`, `clear` and
+  `remove` change the list or map they are given (§3.4), and no other function does.
 - 14.0.7. **Examples.** Every entry of these tables has at least one example in `lib/std.stride`, a line
   `# example: e gives w` (what `stride eval` shows for e), `# example: s prints w`, or `# example: e faults F…`,
   above the function's declaration; the examples may use the declarations `std.stride` writes out with them, and
@@ -958,12 +994,16 @@ entry says "or a set" (its items are then options).
 | `count(l: list of T or set) -> number` | how many items, or options chosen |
 | `join(l: list of T or set, separator: text = ", ") -> text` | T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out); no items: no characters |
 | `first(l: list of T or set) -> T`, `last(l: list of T or set) -> T` | the first, the last item; empty when there is none |
-| `filled(l: list of T) -> list of T` | the items that are not empty, in order; `""` and `[]` are not empty and stay; l empty: a list with no items |
+| `filled(l: list of T) -> list of T` | a new list of the items that are not empty, in order; `""` and `[]` are not empty and stay; l empty: a list with no items |
 | `index_of(l: list of T, x: T) -> number` | the position of the first item equal to x (§6.6); -1 when none |
-| `append(l: list of T, x: T) -> list of T` | the list with x after its last item |
-| `without(l: list of T, x: T) -> list of T` | the list without the items equal to x |
-| `reversed(l: list of T) -> list of T` | the items in the other order |
-| `sorted(l: list of T, descending: yes-no = no) -> list of T` | T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`) |
+| `append(l: list of T, x: T) -> list of T` | puts x after the last item of l itself, and gives l |
+| `insert(l: list of T, position: number, x: T) -> list of T` | puts x before the item at the position in l itself (at `count(l)`: after the last), and gives l; a position not whole or outside 0 to `count(l)` is F005 |
+| `remove_at(l: list of T, position: number) -> T` | takes the item at the position out of l itself, and gives the item; a position not whole or outside 0 to `count(l) - 1` is F004 |
+| `clear(l: list of T) -> list of T`, `clear(m: map of K to V) -> map of K to V` | takes every item out of l itself, or every key out of m itself, and gives it |
+| `copy(x: T) -> T` | a list, a record or a map made anew, with everything inside it copied too (§3.4.2); any other value, x itself |
+| `without(l: list of T, x: T) -> list of T` | a new list of the items not equal to x; l is not changed |
+| `reversed(l: list of T) -> list of T` | a new list of the items in the other order; l is not changed |
+| `sorted(l: list of T, descending: yes-no = no) -> list of T` | T a number, a date or words (else S367): a new list of the items in order (§6.7); l is not changed; equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`) |
 | `sorted(l: list of R, by: "field", descending: yes-no = no) -> list of R` | R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; an empty item, or one whose field is empty, is F023 |
 | `sum(l: list of number) -> number` | the items added up; no items: 0; an empty item is F023 (`sum(filled(l))`) |
 | `smallest(l: list of T) -> T`, `largest(l: list of T) -> T` | T a number, a date or words: the least, the greatest of the items; no items: empty; an empty item is F023 |
@@ -979,7 +1019,7 @@ entry says "or a set" (its items are then options).
 | `keys(m: map of K to V) -> list of K` | m's keys, in the order they were first given |
 | `values(m: map of K to V) -> list of V` | m's values, in the order of their keys |
 | `has(m: map of K to V, key: K) -> yes-no` | whether m has the key |
-| `remove(m: map of K to V, key: K) -> map of K to V` | m without the key; m itself is not changed |
+| `remove(m: map of K to V, key: K) -> map of K to V` | takes the key out of m itself, and gives m |
 | `count(m)` | the number of keys |
 
 ### 14.5 Empty, faults and output
@@ -1209,11 +1249,11 @@ its call: the function's name in the call.
 | S342 | a returned value of another type | Of the function's result type. |
 | S343 | returns whose types have no join | A function's worked-out result is the join of its returns (§3.9); or write `-> type`. |
 | S344 | a function returning only empty | Write its result type. |
-| S345 | a value given to an answer, let, constant, parameter, counter or item | The message says what it is and what to do. |
+| S345 | a value given to an answer, let, constant, parameter, counter or item | Only a var is given another value; the message says what the name is and what to do. |
 | S346 | a collected list changed | Its items are answers. |
-| S347 | a field or item of a non-var changed | Only a var's fields and items change. |
+| S347 | an item of a constant changed | A constant's items do not change; `copy(c)` gives a list that can. |
 | S348 | an asked field given a value | An answer cannot be changed. |
-| S349 | a value given to something that is not a place | Only a var, its field or its item. |
+| S349 | a value given to something that is not a place | Only a var, a field or an item of a list or map. |
 | S350 | a value given from a call with no result | The function gives nothing. |
 | S351 | a value of another type given | The place's type. |
 | S352 | `{…}` of a list, record or no value | Put in words, a number, a date or an option. |
@@ -1277,7 +1317,7 @@ its call: the function's name in the call.
 | W005 | a field asked and never read | Warning: Use it, or do not ask it. |
 | W006 | a collected item asked and never read | Warning: The same. |
 | W007 | a let or var never used | Warning: Remove it. |
-| F001–F020 | §13.4 | |
+| F001–F024 | §13.4 | |
 
 ## 17. The command line
 
@@ -1461,7 +1501,9 @@ stdout each file it would change. `stride test --match words` runs only the test
 17.14. **stride repl** is a session. Each line, or each set of lines until its brackets close, is an entry.
 - A declaration, `use`, `let`, `var`, `ask` or other statement is compiled as the end of a script (§4.6) holding
   every entry kept before it, and run; it is kept when it has no mistake and its run does not fault.
-- An expression's value is printed on stdout, as `print` would print it; an expression is not kept.
+- An expression's value is printed on stdout, as `print` would print it. A call of `append`, `insert`,
+  `remove_at`, `clear` or `remove` is then kept, as the statement it is, so the list or map stays changed (§3.4);
+  any other expression is not kept.
 - An entry with a mistake or a fault is said on stderr, and nothing of it is kept: no name, no value, no answer.
 - **Each kept entry runs once.** The session is run from its start with what it had the first time: each
   library as it was when the session first read it, the answers kept, and the date the session began (or
@@ -1572,7 +1614,7 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 
 ## 18. Bytecode
 
-18.1. Version 7. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
+18.1. Version 8. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
 it does not know; a section that holds more or fewer bytes than it says is refused. The program and code sections
 must be there, each once; a tag that comes twice is refused. The places section may be left out: then no fault
 has a source place. The compiler always writes it. Sections may come in any order.

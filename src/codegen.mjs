@@ -1,4 +1,4 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 7) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 8) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.

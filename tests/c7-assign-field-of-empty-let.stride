@@ -1,0 +1,15 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { n: number }
+define set(r: p) {
+  r.n = 1
+}
+var v: p
+v.n = 0
+set(v)
+print(v)
+var w: p
+set(w)
+# rule 7.5.1 F023
+# prints ["p { n: 1 }"]
+# fault F023 at 5:3 a record is needed
