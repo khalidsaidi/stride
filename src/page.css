@@ -85,3 +85,6 @@ aside.questions .nav { flex: none; margin: 0; padding: 10px 20px; background: #f
   aside.questions .body { padding: 12px 20px 6px; }
   aside.questions .nav { margin: 0; padding: 8px 20px; }
 }
+/* Its writer's page: each box's name on it, small. */
+.annotationLayer section:has(> .boxname) { overflow: visible; }
+.annotationLayer .boxname { position: absolute; left: 0; top: -8px; padding: 0 2px; font: 8px/9px ui-monospace, monospace; color: #fff; background: rgb(26 86 219 / 85%); white-space: nowrap; pointer-events: none; z-index: 2; }

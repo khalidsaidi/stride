@@ -72,7 +72,8 @@ stride new consent --pdf consent.pdf
 
 writes `consent.boxes.json` (the header), `consent.stride` and a test in `consent.tests/`. The program it writes
 asks one question for the first text box, named after the box, and skips every other box. A PDF does not say which
-printed words stand beside which box: you read the form and write them. For a PDF with a box "name" beside the
+printed words stand beside which box: you read the form and write them. `stride run consent.stride` shows the form with
+each box's name on it, so you see which box is which; the compiled workflow (`stride run consent.sbc`) does not. For a PDF with a box "name" beside the
 words "Full name" and a check box "agree" beside "I agree to the terms", the program, with the form's words put in,
 is:
 

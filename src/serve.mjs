@@ -19,9 +19,9 @@ const BUILT_IN = typeof STRIDE_PAGE !== "undefined" ? STRIDE_PAGE : null;
 const pdfjsDir = () => dirname(createRequire(import.meta.url).resolve("pdfjs-dist/package.json"));
 
 const escaped = (t) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const PAGE = (name, today) => `<!doctype html>
+const PAGE = (name, today, writing) => `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escaped(name)}: workflow</title><link rel="stylesheet" href="/app.css">${today ? `<meta name="stride-today" content="${today}">` : ""}</head>
+<title>${escaped(name)}: workflow</title><link rel="stylesheet" href="/app.css">${today ? `<meta name="stride-today" content="${today}">` : ""}${writing ? `<meta name="stride-writing" content="yes">` : ""}</head>
 <body>
 <header><h1><span class="code">${escaped(name)}</span> workflow</h1>
 <p class="line"><span class="status">Loading…</span></p>
@@ -102,7 +102,7 @@ export async function serve(programPath, { pdfPath = null, port = 8080, today = 
     const host = (req.headers.host ?? "").replace(/:\d+$/, "");
     if (!["127.0.0.1", "localhost", "[::1]"].includes(host)) return send(res, "text/plain", "not here", 403);
     const path = new URL(req.url, "http://localhost").pathname;
-    if (path === "/") return send(res, "text/html; charset=utf-8", PAGE(name, today));
+    if (path === "/") return send(res, "text/html; charset=utf-8", PAGE(name, today, !fromBytecode));
     if (path === "/app.js") return send(res, "text/javascript", js);
     if (path === "/app.css") return send(res, "text/css", css);
     if (path === "/form.pdf") {

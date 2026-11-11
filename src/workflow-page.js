@@ -77,6 +77,28 @@ try {
       el?.classList.add("asked");
     });
   };
+  // Run from its source, the page is its writer's: each box says its name, as a program writes it, so the writer
+  // sees which box of the form is which.
+  if (document.querySelector('meta[name="stride-writing"]')) {
+    const name = () => {
+      for (const [full, objs] of byName) {
+        const short = full.startsWith(p.prefix) ? full.slice(p.prefix.length) : full;
+        for (const o of objs) {
+          const el = document.querySelector(`[data-element-id="${o.id}"]`);
+          if (!el || el.dataset.named) continue;
+          el.dataset.named = "yes";
+          const input = el.matches("input, textarea, select") ? el : el.querySelector("input, textarea, select");
+          const tick = o.type === "checkbox" || o.type === "radiobutton";
+          const words = tick && o.exportValues ? `${short}  (${o.exportValues})` : short;
+          el.title = words;
+          if (input) input.title = words;
+          // Its last part on the box itself, small; the whole name when pointed at.
+          (el.closest("section") ?? el.parentElement ?? el).append(Object.assign(document.createElement("span"), { className: "boxname", textContent: short.split(".").pop() }));
+        }
+      }
+    };
+    eventBus.on("annotationlayerrendered", name);
+  }
   const unshow = () => document.querySelectorAll(".asked").forEach((x) => x.classList.remove("asked"));
   const today = document.querySelector('meta[name="stride-today"]')?.content ?? null;
   // A run's prints, each time they are other lines than the last run printed; apart from them, its fault in full,
