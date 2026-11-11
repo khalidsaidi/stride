@@ -33,8 +33,9 @@
 //   foreach     = "for" [name ","] name "in" expr block               (what follows "in" has no ".." after its sum)
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = cond | coalesce;  coalesce = or ("??" or)*;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
-//   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum]
-//   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/") unary)*;  unary = "-" unary | postfix
+//   compare     = range [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") range];  range = sum [(".." | "..<") sum]
+//   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/"|"//"|"%") unary)*
+//   unary       = "-" unary | power;  power = postfix ["**" unary]
 //   postfix     = primary ("." word | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
 //   primary     = number | string | "true" | "false" | "null" | "[" [args] "]" | "new" qname "{" fields "}" | name
 //               | "(" expr ")" | "function" "(" [params] ")" ["->" type] block
@@ -56,7 +57,7 @@ const CONTEXTUAL = new Set(["fields", "list", "set", "then", "when"]);
 const QUESTION_TYPES = ["one_of", "any_of", "long_text", "bool", "string", "number", "date", "phone", "email"];
 // Spellings of the ways of asking that Stride does not have, and what it writes for each.
 const OTHER_QUESTION_TYPES = { "one-of": "one_of", "any-of": "any_of", "long-text": "long_text", "yes-no": "bool", text: "string" };
-const PUNCT = ["..<", "..", "??", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
+const PUNCT = ["..<", "..", "??", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "**=", "**", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["import", "export", "record", "enum", "const", "native", "function", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
@@ -151,17 +152,34 @@ export function lex(text, cursor = new Cursor(text), until = null) {
       let value = "";
       while (cursor.at < text.length && /[A-Za-z0-9_]/.test(cursor.peek())) value += cursor.next();
       token = { type: KEYWORDS.has(value) ? "keyword" : "name", value };
-    } else if (/[0-9]/.test(c)) {
-      let value = "";
-      while (/[0-9]/.test(cursor.peek() ?? "")) value += cursor.next();
-      if (cursor.peek() === "." && /[0-9]/.test(cursor.peek(1) ?? "")) {
-        value += cursor.next();
-        while (/[0-9]/.test(cursor.peek() ?? "")) value += cursor.next();
+    } else if (/[0-9]/.test(c) || (c === "." && /[0-9]/.test(cursor.peek(1) ?? ""))) {
+      // A number (§2.5): digits with _ between them, a point, an exponent; or 0x, 0o, 0b and digits of that base.
+      let raw = "";
+      const digits = (of) => {
+        while (of.test(cursor.peek() ?? "") || (cursor.peek() === "_" && of.test(cursor.peek(1) ?? "") && of.test(raw[raw.length - 1] ?? ""))) raw += cursor.next();
+      };
+      const based = c === "0" && { x: /[0-9A-Fa-f]/, o: /[0-7]/, b: /[01]/ }[cursor.peek(1)];
+      if (based && based.test(cursor.peek(2) ?? "")) {
+        raw += cursor.next() + cursor.next();
+        digits(based);
+      } else {
+        digits(/[0-9]/);
+        if (cursor.peek() === "." && /[0-9]/.test(cursor.peek(1) ?? "")) {
+          raw += cursor.next();
+          digits(/[0-9]/);
+        }
+        if (/[eE]/.test(cursor.peek() ?? "") && /^[+-]?[0-9]/.test(text.slice(cursor.at + 1, cursor.at + 3))) {
+          raw += cursor.next();
+          if (/[+-]/.test(cursor.peek())) raw += cursor.next();
+          digits(/[0-9]/);
+        }
       }
       if (/[A-Za-z_]/.test(cursor.peek() ?? "")) {
-        while (/[A-Za-z0-9_]/.test(cursor.peek() ?? "")) value += cursor.next();
-        throw new SyntaxMistake(`"${value}" is not a number, and a name cannot start with a digit`, spanOf(from, cursor.here), "S007");
+        while (/[A-Za-z0-9_]/.test(cursor.peek() ?? "")) raw += cursor.next();
+        throw new SyntaxMistake(`"${raw}" is not a number, and a name cannot start with a digit`, spanOf(from, cursor.here), "S007");
       }
+      const value = plainDigits(raw);
+      if (value === null) throw new SyntaxMistake(`${raw.length > 40 ? `${raw.slice(0, 20)}…` : raw} is 10^34 or more, or finer than 10^-6176; numbers stay below 10^34 and are multiples of 10^-6176`, spanOf(from, cursor.here), "S009");
       if (/^0\d/.test(value)) throw new SyntaxMistake(`${value} has a leading zero; an id with leading zeros is words: "${value}"`, spanOf(from, cursor.here), "S008");
       const significant = value.replace(".", "").replace(/^0+/, "").replace(/0+$/, "").length;
       const intDigits = value.split(".")[0].replace(/^0+/, "").length;
@@ -169,7 +187,7 @@ export function lex(text, cursor = new Cursor(text), until = null) {
       if (intDigits > 34) throw new SyntaxMistake(`${value} is 10^34 or more; numbers stay below 10^34`, spanOf(from, cursor.here), "S009");
       const parsed = D.parseLiteral(value);
       if (parsed.error === "S009") throw new SyntaxMistake(`${value.length > 40 ? `${value.slice(0, 20)}…` : value} is finer than 10^-6176; numbers are multiples of 10^-6176`, spanOf(from, cursor.here), "S009");
-      token = { type: "number", value: parsed.value ?? D.ZERO, raw: value };
+      token = { type: "number", value: parsed.value ?? D.ZERO, raw };
     } else if (c === '"') {
       token = { type: "string", value: lexString(text, cursor) };
     } else {
@@ -191,7 +209,25 @@ export function lex(text, cursor = new Cursor(text), until = null) {
   }
 }
 
-// Words in quotes: text with \" \\ \{ \} \n, and {expression}s, each lexed into tokens of its own.
+// A number as written (§2.5), as plain digits with a point: no _, no exponent, base ten. null when its exponent
+// puts it beyond every number.
+function plainDigits(raw) {
+  const t = raw.replace(/_/g, "");
+  if (/^0[xob]/.test(t)) return BigInt(t).toString();
+  const [mantissa, exponent] = t.split(/[eE]/);
+  let [whole, part = ""] = mantissa.split(".");
+  if (exponent === undefined) return part ? `${whole || "0"}.${part}` : whole;
+  const e = Number(exponent);
+  if (/^0*$/.test(whole + part)) return "0";
+  if (Math.abs(e) > 7000) return null;
+  if (e >= 0) (whole += part.slice(0, e).padEnd(e, "0")), (part = part.slice(e));
+  else (part = whole.slice(Math.max(0, whole.length + e)).padStart(-e, "0") + part), (whole = whole.slice(0, Math.max(0, whole.length + e)));
+  whole = whole.replace(/^0+(?=\d)/, "") || "0";
+  part = part.replace(/0+$/, "");
+  return part ? `${whole}.${part}` : whole;
+}
+
+// Words in quotes: text with \" \\ \{ \} \n \t \r \0 \xNN \u{hex}, and {expression}s, each lexed into tokens of its own.
 function lexString(text, cursor) {
   const open = cursor.here;
   cursor.next();
@@ -208,7 +244,15 @@ function lexString(text, cursor) {
       const at = cursor.here;
       cursor.next();
       const e = cursor.next();
-      const map = { '"': '"', "\\": "\\", "{": "{", "}": "}", n: "\n", t: "\t" };
+      const map = { '"': '"', "\\": "\\", "{": "{", "}": "}", n: "\n", t: "\t", r: "\r", 0: "\0" };
+      if (e === "x") {
+        // \xNN: the character with that code, two hexadecimal digits (§2.6).
+        const m = text.slice(cursor.at).match(/^[0-9A-Fa-f]{2}/);
+        if (!m) throw new SyntaxMistake(`\\x is written \\xNN, with two hexadecimal digits`, spanOf(at, cursor.here), "S003");
+        cursor.next(), cursor.next();
+        buf += String.fromCodePoint(parseInt(m[0], 16));
+        continue;
+      }
       if (e === "u") {
         // \u{h…}: one to six hexadecimal digits, at most 10FFFF, not a surrogate (§2.6).
         const m = text.slice(cursor.at).match(/^\{([0-9A-Fa-f]*)\}/);
@@ -219,7 +263,7 @@ function lexString(text, cursor) {
         buf += String.fromCodePoint(n);
         continue;
       }
-      if (!(e in map)) throw new SyntaxMistake(`\\${e} is not an escape in words in quotes; the ones there are \\" \\\\ \\{ \\} \\n \\t and \\u{hex}`, spanOf(at, cursor.here), "S003");
+      if (!(e in map)) throw new SyntaxMistake(`\\${e} is not an escape in words in quotes; the ones there are \\" \\\\ \\{ \\} \\n \\t \\r \\0 \\xNN and \\u{hex}`, spanOf(at, cursor.here), "S003");
       buf += map[e];
       continue;
     }
@@ -991,7 +1035,7 @@ class Parser {
       return this.node("assign", start, { target, value: this.expr() });
     }
     // x += e is x = x + e with x's place worked out once (§7.5).
-    for (const op of ["+=", "-=", "*=", "//=", "/=", "%="]) {
+    for (const op of ["+=", "-=", "**=", "*=", "//=", "/=", "%="]) {
       if (this.sym(op)) {
         const opTok = this.take();
         return this.node("assign", start, { target, value: this.expr(), op: op.slice(0, -1), opSpan: opTok.span });
@@ -1073,7 +1117,7 @@ class Parser {
   }
 
   compare() {
-    const a = this.sum();
+    const a = this.range();
     const t = this.token;
     // One comparison: a second one after it, of any kind (an order, ==, in), is S014 at its operator.
     const once = (e) => {
@@ -1084,18 +1128,18 @@ class Parser {
     };
     if (t.type === "punct" && ["==", "!=", "<=", ">=", "<", ">"].includes(t.value)) {
       this.take();
-      const b = this.sum();
+      const b = this.range();
       return once({ kind: "binary", op: t.value, a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     if (this.word("in")) {
       this.take();
-      const b = this.sum();
+      const b = this.range();
       return once({ kind: "binary", op: "in", a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     if (this.word("not") && this.peek().type === "keyword" && this.peek().value === "in") {
       this.take();
       this.take();
-      const b = this.sum();
+      const b = this.range();
       return once({ kind: "binary", op: "not in", a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     // x is null, x is empty, x is not None: other languages' tests for no value.
@@ -1105,6 +1149,28 @@ class Parser {
       if ((what.type === "keyword" && what.value === "null") || (what.type === "name" && ["empty", "None", "nil"].includes(what.value))) throw new SyntaxMistake(`"is${not ? " not" : ""} ${what.value}" is written "${not ? "!=" : "=="} null"`, t.span, "S010");
     }
     return a;
+  }
+
+  // a..b, a..<b (§6.17): a range, looser than + and tighter than a comparison. Inside l[ ] the signs are the
+  // slice's (§6.9.3), so there a range is written in brackets.
+  range() {
+    const a = this.sum();
+    if (this.slicing || !(this.sym("..") || this.sym("..<"))) return a;
+    const opTok = this.take();
+    const b = this.sum();
+    if (this.sym("..") || this.sym("..<")) throw new SyntaxMistake("ranges do not chain: a range has two bounds", this.token.span, "S010");
+    return { kind: "binary", op: opTok.value, a, b, opSpan: opTok.span, span: join(a.span, b.span) };
+  }
+
+  // What is read inside brackets of its own is not a slice's bound.
+  unsliced(read) {
+    const was = this.slicing;
+    this.slicing = false;
+    try {
+      return read();
+    } finally {
+      this.slicing = was;
+    }
   }
 
   sum() {
@@ -1126,12 +1192,26 @@ class Parser {
         this.leave();
       }
     }
-    return this.postfix();
+    return this.power();
+  }
+
+  // a ** b (§6.4.2): tighter than * and than the - before it, looser than the - after it; from the right.
+  power() {
+    const a = this.postfix();
+    if (!this.sym("**")) return a;
+    this.enter();
+    try {
+      const opTok = this.take();
+      const b = this.unary();
+      return { kind: "binary", op: "**", a, b, opSpan: opTok.span, span: join(a.span, b.span) };
+    } finally {
+      this.leave();
+    }
   }
 
   // Each field, position or call after a value is one level deeper (§7.1).
   postfix() {
-    let e = this.primary();
+    let e = this.unsliced(() => this.primary());
     let levels = 0;
     try {
       return this.postfixes(e, () => (this.enter(), levels++));
@@ -1154,11 +1234,20 @@ class Parser {
         const open = this.take();
         // l[..b] starts at the first item, l[a..] goes to the last (§6.9.3).
         const first = { kind: "number", value: D.fromInt(0), raw: "0", span: open.span };
-        const index = this.sym("..") || this.sym("..<") ? { ...first, open: true } : this.expr();
+        const bound = () => {
+          const was = this.slicing;
+          this.slicing = true;
+          try {
+            return this.expr();
+          } finally {
+            this.slicing = was;
+          }
+        };
+        const index = this.sym("..") || this.sym("..<") ? { ...first, open: true } : bound();
         if (this.sym("..") || this.sym("..<")) {
           // l[a..b] ends with the item b, l[a..<b] before it (§6.9.3)
           const exclusive = this.take().value === "..<";
-          const to = !exclusive && this.sym("]") ? { kind: "number", value: D.fromInt(2147483647), raw: "2147483647", span: this.token.span, open: true } : this.expr();
+          const to = !exclusive && this.sym("]") ? { kind: "number", value: D.fromInt(2147483647), raw: "2147483647", span: this.token.span, open: true } : bound();
           const end = this.expect("punct", "]");
           e = { kind: "slice", from: index, to, exclusive, target: e, opSpan: open.span, span: join(e.span, end.span) };
           continue;
@@ -1167,7 +1256,7 @@ class Parser {
         e = { kind: "index", index, target: e, opSpan: open.span, span: join(e.span, end.span) };
       } else if (this.sym("(") && !t.broken) {
         this.take();
-        const args = this.args(")", true);
+        const args = this.unsliced(() => this.args(")", true));
         const end = this.expect("punct", ")", '"," or ")"');
         e = { kind: "call", args, target: e, span: join(e.span, end.span) };
       } else return e;
@@ -1275,7 +1364,7 @@ class Parser {
     if (t.type === "punct" && ["+", "-", "*", "/", "<", ">", "==", "!="].includes(t.value)) throw this.mistake("a value");
     // A line that ends on an operator (S015), whatever the next line starts with.
     const before = this.tokens[this.at - 1];
-    const onOperator = t.broken && before?.type === "punct" && ["+", "-", "*", "/", "//", "%", "<", "<=", ">", ">=", "==", "!=", "??"].includes(before.value);
+    const onOperator = t.broken && before?.type === "punct" && ["+", "-", "*", "/", "//", "%", "**", "..", "..<", "<", "<=", ">", ">=", "==", "!=", "??"].includes(before.value);
     if (this.is("end") || (t.broken && t.type === "keyword") || onOperator) {
       const prev = this.tokens[this.at - 1];
       throw new SyntaxMistake(prev?.type === "punct" ? `"${prev.value}" at the end of the line needs a value after it` : "the line ended where a value was expected", prev?.span ?? t.span, prev?.type === "punct" ? "S015" : "S010");

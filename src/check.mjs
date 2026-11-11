@@ -246,6 +246,7 @@ export function check(resolved, diagnostics) {
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
           else s.itemSymbol.type = type.key;
         } else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
+        else if (type.t === "range") s.itemSymbol.type = T.NUMBER; // each of its numbers (§6.17)
         else if (type.t === "null") s.itemSymbol.type = T.NULL; // null fits a list (§3.6); F023 when it runs
         else {
           if (!T.isError(type)) err("S314", s.list, `for … in goes through a list, a map, a set of options or a range a..b; ${describeExpr(s.list)} is ${T.describe(type)}`);
@@ -756,6 +757,8 @@ export function check(resolved, diagnostics) {
           e.itemSymbol.type = l.element;
         } else if (l.t === "options") {
           e.itemSymbol.type = T.option(l.set);
+        } else if (l.t === "range") {
+          e.itemSymbol.type = T.NUMBER; // each of its numbers (§6.17)
         } else if (l.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it.
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
@@ -814,6 +817,12 @@ export function check(resolved, diagnostics) {
       return t.result;
     }
     e.callee = sym;
+    // print(a, b, …) (§14.5): any number of values, each one that print shows.
+    if (sym.kind === "native" && sym.name === "print" && e.args.length !== 1 && e.args.every((a) => a.kind !== "named-arg")) {
+      for (const a of e.args) if (a.type?.t === "none") err("S366", a, `${describeExpr(a)} gives no value`);
+      e.printAll = true;
+      return sym.result ?? T.NONE;
+    }
     if (sym.kind === "function" && !sym.checked) {
       if (sym.checking) {
         // A function that reaches itself: the flow check says so; its result is not known here.
@@ -964,7 +973,7 @@ export function check(resolved, diagnostics) {
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
-    if (sym.name === "count" && (l.t === "map" || T.isStringLike(l))) return;
+    if (sym.name === "count" && (l.t === "map" || l.t === "range" || T.isStringLike(l))) return;
     if (sym.name === "clear") {
       if (l.t !== "list" && l.t !== "map" && l.t !== "null") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
       return;
@@ -1024,6 +1033,8 @@ export function check(resolved, diagnostics) {
       case "+":
         if (anyError) return T.isError(a) ? b : a;
         if (a.t === "number" && b.t === "number") return T.NUMBER;
+        // A date and a number of days (§6.4.3).
+        if (a.t === "date" && (b.t === "number" || b.t === "null")) return T.DATE;
         // Lists join (§6.5.1): the join of the elements.
         if (a.t === "list" || b.t === "list") {
           const x = a.t === "list" ? a : T.list(T.NULL);
@@ -1047,10 +1058,18 @@ export function check(resolved, diagnostics) {
       case "/":
       case "//":
       case "%":
+      case "**":
         if (anyError) return T.NUMBER;
         if ((a.t === "number" || a.t === "null") && (b.t === "number" || b.t === "null")) return T.NUMBER;
-        if (e.op === "-" && a.t === "date" && b.t === "date") return err2("S375", "dates are not subtracted; days_between(from, to) counts the days");
+        // A date less a number of days is a date; a date less a date is the days between them (§6.4.3).
+        if (e.op === "-" && a.t === "date" && (b.t === "number" || b.t === "null")) return T.DATE;
+        if (e.op === "-" && a.t === "date" && b.t === "date") return T.NUMBER;
         return err2("S374", `${e.op} is for numbers, not ${T.describe(a)} and ${T.describe(b)}`);
+      case "..":
+      case "..<":
+        // A range's bounds are numbers (§6.17); null fits one, and is F023 when it runs.
+        for (const [x, t] of [[e.a, a], [e.b, b]]) if (t.t !== "number" && t.t !== "null" && !T.isError(t)) err("S700", x, `a range's bounds are numbers; ${describeExpr(x)} is ${T.describe(t)}`);
+        return T.RANGE;
       case "==":
       case "!=": {
         // A set compared with a list of words in quotes: the words are options of its set (§3.6, S386).
@@ -1107,6 +1126,11 @@ export function check(resolved, diagnostics) {
           return T.BOOL;
         }
         if (b.t === "null") return T.BOOL; // null fits a list (§3.6); F023 when it runs
+        // A number among a range's (§6.17).
+        if (b.t === "range") {
+          if (a.t !== "number" && a.t !== "null") return err2("S383", `${describeExpr(e.b)} holds numbers, and this is ${T.describe(a)}`);
+          return T.BOOL;
+        }
         // Words within words, and a key among a map's.
         if (T.isStringLike(b) && (T.isStringLike(a) || a.t === "option" || a.t === "null")) return T.BOOL;
         if (b.t === "map") {

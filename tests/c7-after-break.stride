@@ -5,5 +5,5 @@ for i in 1..2 {
   print("never")
 }
 
-# rule 7.13 S406
-# mistake 5:3 S406
+# rule 7.13 W008
+# warning 5:3 W008

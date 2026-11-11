@@ -308,7 +308,7 @@ export function generate(seed) {
       }
       case "leave":
         // break or continue under a condition: the loop's turns are what the run decides (§7.13).
-        // On the counter, so it is not written out: one written out leaves what follows unreachable (S406).
+        // On the counter, so it is not written out: one written out leaves what follows unreachable (W008).
         return [`${i}if (${ctx.inLoop.counter} == ${r.int(1, 3)}) and ${bool(sc, d)} {`, `${i}  ${r.pick(["break", "continue"])}`, `${i}}`];
       case "rows": {
         // A collect of records: each item's fields asked, then the list read field by field.
@@ -534,7 +534,7 @@ export function generate(seed) {
     const ps = params.map((p, j) => declare(sc, `a${j}`, p, "param"));
     const body = [];
     if (r.chance(0.5)) {
-      // A condition on a parameter: one written out would leave the last return unreachable (S406).
+      // A condition on a parameter: one written out would leave the last return unreachable (W008).
       body.push(`  if (string_of(${use(ps[0])}) == "1") or ${bool(sc, 2)} {`, `    return ${expr(sc, result === "number" ? N : T, 2)}`, `  }`);
     }
     body.push(`  return ${expr(sc, result === "number" ? N : T, 2)}`);

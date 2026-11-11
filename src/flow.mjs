@@ -172,13 +172,13 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     if (fn && fn.result && fn.result.t !== "none" && fn.result.t !== "error" && end.falls) err("S405", fn.node, `${fn.name} gives ${fn.result.t === "record" ? fn.result.decl.name : fn.result.t} on some paths and nothing on others; end every path with a return`);
   }
 
-  // S406 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
-  // condition passes over is not one: it is unreachable code (§11.3.3), checked but not refused.
+  // W008 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
+  // condition passes over is not one: it is unreachable code (§11.3.3), checked and not warned of.
   for (const { body } of bodies) {
     const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" || s.kind === "try" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
     for (const block of blocks) {
       const k = block.findIndex((s) => s.kind === "return" || s.kind === "break" || s.kind === "continue");
-      if (k >= 0 && k + 1 < block.length) err("S406", block[k + 1], "this never runs: a return, break or continue comes before it");
+      if (k >= 0 && k + 1 < block.length) warn("W008", block[k + 1], "this never runs: a return, break or continue comes before it");
     }
   }
 
@@ -203,7 +203,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   function walkFlow(list, unset, fn, exits = null, env = new Map()) {
     let falls = true;
     for (const s of list) {
-      // No path reaches what follows (S406 is the block's own: a statement after a return, break or continue).
+      // No path reaches what follows (W008 is the block's own: a statement after a return, break or continue).
       if (!falls) break;
       for (const e of expressionsOf(s)) {
         if (e.kind === "name" && ["var", "let"].includes(e.symbol?.kind) && unset.has(e.symbol) && !(s.kind === "assign" && s.target === e && !s.op)) {

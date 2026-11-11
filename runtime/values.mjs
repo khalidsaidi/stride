@@ -10,6 +10,7 @@
 //                    a set (`isSet`), the option set's values in `order`
 //   a list           an array of its items
 //   a record         a StrideRecord: its type's name and its fields in declaration order
+//   a range          a StrideRange: its two bounds, whole numbers, and whether it ends before the second (§6.17)
 //
 // A list, a record and a map are shared (§3.4): every name, field and item that holds one holds the same object.
 // The other values are never changed.
@@ -56,6 +57,75 @@ export function dateFrom(s) {
 }
 export const isDate = (v) => v instanceof StrideDate;
 
+// Days since 0001-01-01, for date arithmetic.
+export function dayNumber(d) {
+  const y = d.y - 1;
+  let n = y * 365 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400);
+  for (let m = 1; m < d.m; m++) n += daysIn(d.y, m);
+  return n + d.d - 1;
+}
+// The day that many days after 0001-01-01, or null when it is outside 0001–9999.
+export function fromDayNumber(n) {
+  if (!Number.isInteger(n) || n < 0 || n > 3652058) return null;
+  // Walk years by 400-year cycles of 146097 days, then by years and months.
+  let y = 1 + 400 * Math.floor(n / 146097);
+  n %= 146097;
+  for (;;) {
+    const len = daysIn(y, 2) === 29 ? 366 : 365;
+    if (n < len) break;
+    n -= len;
+    y++;
+  }
+  let m = 1;
+  while (n >= daysIn(y, m)) (n -= daysIn(y, m)), m++;
+  return date(y, m, n + 1);
+}
+
+// A range a..b or a..<b (§6.17): the whole numbers from `from` to `to`, or to before it. It never changes.
+export class StrideRange {
+  constructor(from, to, before) {
+    this.from = from; // a whole number
+    this.to = to; // a whole number
+    this.before = before; // a..<b: it ends before `to`
+  }
+  // The last number it holds: `to`, or the one before it.
+  get last() {
+    return this.before ? D.sub(this.to, D.fromInt(1)) : this.to;
+  }
+  // How many numbers it holds: a number.
+  get count() {
+    const n = D.add(D.sub(this.last, this.from), D.fromInt(1));
+    return D.sign(n) < 0 ? D.ZERO : n;
+  }
+  has(v) {
+    return isNumber(v) && D.isWhole(v) && D.compare(this.from, v) <= 0 && D.compare(v, this.last) <= 0;
+  }
+  // Its numbers, as a list (§6.17.3): of at most 10,000,000.
+  get items() {
+    const n = D.toInt(this.count) ?? Infinity;
+    if (n > 10_000_000) throw new StrideFault("F030", `the range ${this.words} holds more than 10000000 numbers; a list of them is not made`);
+    const out = [];
+    let v = this.from;
+    for (let i = 0; i < n; i++, v = D.add(v, D.fromInt(1))) out.push(v);
+    return out;
+  }
+  get words() {
+    return `${D.words(this.from)}${this.before ? "..<" : ".."}${D.words(this.to)}`;
+  }
+  toJSON() {
+    return this.words;
+  }
+}
+export const isRange = (v) => v instanceof StrideRange;
+// A range from its bounds (§6.17): each a number (F023) and a whole one (F004).
+export function range(a, b, before) {
+  const sign = before ? "..<" : "..";
+  if (isNull(a)) needed("a number is", `the left side of ${sign}`);
+  if (isNull(b)) needed("a number is", `the right side of ${sign}`);
+  for (const v of [a, b]) if (!isNumber(v) || !D.isWhole(v)) throw new StrideFault("F004", `a range's bound is a whole number, and this is ${words(v)}`);
+  return new StrideRange(a, b, before);
+}
+
 // A set of options: the values chosen, in `order` (the option set's values, in declaration order).
 export function set(values, order) {
   const out = order.filter((o) => values.includes(o));
@@ -85,7 +155,7 @@ export function needed(kind, what) {
   throw new StrideFault("F023", `null where ${kind} needed: ${what}`);
 }
 // The kind of value an operation needs, told by the value beside the null one.
-export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) ? "a set is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
+export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) ? "a set is" : v instanceof StrideRange ? "a range is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
 export const isNumber = (v) => v instanceof D.Decimal;
 
 // A map (§3.10): values under keys, in the order the keys were first given. A key is told from another by its
@@ -214,6 +284,7 @@ export function words(v) {
   if (Array.isArray(v)) return v.map(words).join(", ");
   if (v instanceof StrideRecord) return inside(v, () => v.fields.map(words).filter(Boolean).join(", "));
   if (v instanceof StrideFunction) return `function ${v.name}`;
+  if (v instanceof StrideRange) return v.words;
   if (v instanceof StrideMap) return v.pairs.map(([k, x]) => `${words(k)}: ${words(x)}`).join(", ");
   return String(v);
 }
@@ -237,6 +308,8 @@ export function equal(a, b) {
   if (a === b) return true;
   if (isNumber(a) && isNumber(b)) return D.equal(a, b);
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
+  // Ranges that hold the same numbers (§6.17).
+  if (a instanceof StrideRange && b instanceof StrideRange) return D.sign(a.count) === 0 || D.sign(b.count) === 0 ? D.equal(a.count, b.count) : D.equal(a.from, b.from) && D.equal(a.last, b.last);
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
   if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && inside(a, () => a.fields.every((x, i) => equal(x, b.fields[i])));
   if (a instanceof StrideMap && b instanceof StrideMap) return a.entries.size === b.entries.size && a.pairs.every(([k, x]) => b.has(k) && equal(x, b.get(k)));
@@ -312,6 +385,7 @@ export function encode(v, recordNames = () => null) {
   if (v === null || v === undefined) return "null";
   if (isNumber(v)) return D.words(v);
   if (isDate(v)) return v.iso;
+  if (v instanceof StrideRange) return v.words;
   if (typeof v === "boolean") return v ? "true" : "false";
   if (v instanceof StrideRecord) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);

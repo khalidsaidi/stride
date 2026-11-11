@@ -163,6 +163,15 @@ export native function add_months(d: date, n: number) -> date
 # example: count([]) gives 0
 # example: count(null) faults F023
 export native function count(l: any) -> number
+# The whole numbers from `from` to before `to`, `step` apart; a step below 0 counts down.
+# example: range(0, 5) gives [0, 1, 2, 3, 4]
+# example: range(1, 10, 3) gives [1, 4, 7]
+# example: range(5, 0, -2) gives [5, 3, 1]
+# example: range(3, 3) gives []
+# example: range(0, 1, 0) faults F031
+# example: range(0, 2.5) faults F004
+# example: count(1..5) gives 5
+export native function range(from: number, to: number, step: number = 1) -> list<number>
 # A map's keys, in the order they were first given.
 # example: keys({"a": 1, "b": 2}) gives [a, b]
 export native function keys<k, v>(m: map<k, v>) -> list<k>
@@ -246,4 +255,5 @@ export native function either(a: any, b: any) -> any
 # example: fail("stop") faults F013
 export native function fail(message: string)
 # example: print(people[0]) prints person { name: Bo, age: 40 }
+# example: print(1, "a", [2, 3]) prints 1 a [2, 3]
 export native function print(v: any)

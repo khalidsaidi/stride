@@ -1,0 +1,29 @@
+# rule 6.4.3
+let d = date_of(2026, 1, 31)
+let e = date_of(2026, 1, 1)
+expect d + 1 == date_of(2026, 2, 1)
+expect d + 0 == d
+expect d - 31 == date_of(2025, 12, 31)
+expect d + -1 == date_of(2026, 1, 30)
+expect d - -1 == d + 1
+expect d + 365 == add_days(d, 365)
+expect d - e == 30
+expect e - d == -30
+expect d - d == 0
+expect d - e == days_between(e, d)
+expect date_of(2024, 3, 1) - date_of(2024, 2, 1) == 29
+expect d + 1 - d == 1
+expect d - 1 < d
+expect "{d + 1}" == "2026-02-01"
+let half = 0.5
+let none: number = null
+let no_day: date = null
+expect d + half faults "F004"
+expect d - half faults "F004"
+expect date_of(9999, 12, 31) + 1 faults "F011"
+expect date_of(1, 1, 1) - 1 faults "F011"
+expect d + 1e30 faults "F011"
+expect d + none faults "F023"
+expect no_day + 1 faults "F023"
+expect no_day - d faults "F023"
+expect d - no_day faults "F023"

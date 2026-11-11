@@ -1,4 +1,4 @@
-// Stride's bytecode, version 9 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 10 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 9;
+export const VERSION = 10;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];
@@ -102,6 +102,9 @@ export const OP = {
   FN: 64, // v function, v text: push the function as a value, by the name its questions' keys use
   CALL_VALUE: 65, // v count: pop that many values, the turns, the key and a function value; call it (§9.10)
   FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
+  POW: 80, // pop k, pop n: push n to the power k (§6.4.2)
+  RANGE: 81, // pop b, pop a: push the range a..b (§6.17)
+  RANGE_BEFORE: 82, // pop b, pop a: push the range a..<b
   EXPECT_DONE: 62, // v faults: pop the words (plain only) and the value, undo the sub-run, judge it
 };
 
@@ -114,7 +117,7 @@ export const OPERANDS = {
   [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.CELL]: "v", [OP.LOAD_CELL]: "v", [OP.STORE_MAIN]: "v", [OP.ENSURE_MAIN]: "vv", [OP.TRY]: "av", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
 };
 
-export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
+export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "**": OP.POW, "..": OP.RANGE, "..<": OP.RANGE_BEFORE, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
 export const OP_BINARY = Object.fromEntries(Object.entries(BINARY_OPS).map(([k, v]) => [v, k]));
 
 // ----- writing

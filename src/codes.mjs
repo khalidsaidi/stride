@@ -14,7 +14,7 @@ export const CODES = {
     "explanation": ""
   },
   "F004": {
-    "when": "a list position, a slice's bound or a loop bound not a whole number, or a position read that is below 0 or the number of items or more",
+    "when": "a list position, a slice's bound, a loop bound, a range's bound (§6.17), an argument of `range` or the days added to a date (§6.4.3) not a whole number, or a position read that is below 0 or the number of items or more",
     "explanation": ""
   },
   "F005": {
@@ -81,6 +81,14 @@ export const CODES = {
     "when": "null where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for` goes through, an argument of a library function that needs a value",
     "explanation": ""
   },
+  "F030": {
+    "when": "a range of more than 10,000,000 numbers gone through (§6.17.3), or `range` giving a list of more",
+    "explanation": ""
+  },
+  "F031": {
+    "when": "`range` given a step of 0",
+    "explanation": ""
+  },
   "F024": {
     "when": "a record that holds itself (§3.4.6) printed, put into words, or compared with another all the way round",
     "explanation": ""
@@ -95,7 +103,7 @@ export const CODES = {
   },
   "S003": {
     "when": "an escape Stride does not have",
-    "explanation": "Inside \"…\", `\\` is followed by `\"`, `\\`, `{`, `}`, `n`, `t` or `u{hex}`."
+    "explanation": "Inside \"…\", `\\` is followed by `\"`, `\\`, `{`, `}`, `n`, `t`, `r`, `0`, `xNN` or `u{hex}`."
   },
   "S004": {
     "when": "a lone `}` in words",
@@ -622,12 +630,8 @@ export const CODES = {
     "explanation": "`+` adds numbers, joins words, or joins lists whose elements join (§3.9)."
   },
   "S374": {
-    "when": "`- * / // %` of something not a number",
-    "explanation": "They are for numbers."
-  },
-  "S375": {
-    "when": "a date minus a date",
-    "explanation": "`days_between(a, b)`."
+    "when": "`- * / // % **` of something not a number",
+    "explanation": "They are for numbers; `-` also takes a date on its left (§6.4.3)."
   },
   "S376": {
     "when": "bool compared with words",
@@ -705,10 +709,6 @@ export const CODES = {
     "when": "a function giving a value on some paths only",
     "explanation": "End every path with a return."
   },
-  "S406": {
-    "when": "a statement after return, break or continue",
-    "explanation": "It never runs; remove it."
-  },
   "S407": {
     "when": "a let or var read where not every path declared it or gave it a value",
     "explanation": "Declare it, or give it a value, on every path before the read (§12.1.1)."
@@ -749,6 +749,10 @@ export const CODES = {
     "when": "more than 255 arguments or parameters",
     "explanation": "Use a record."
   },
+  "S700": {
+    "when": "a range's bound that is not a number",
+    "explanation": "`a..b` and `a..<b` are ranges of whole numbers (§6.17)."
+  },
   "W001": {
     "when": "a match on an option missing options, without else",
     "explanation": "Warning: nothing happens for those."
@@ -776,6 +780,10 @@ export const CODES = {
   "W007": {
     "when": "a let or var never used",
     "explanation": "Warning: Remove it."
+  },
+  "W008": {
+    "when": "a statement after return, break or continue",
+    "explanation": "Warning: It never runs; remove it, or the return, break or continue before it."
   }
 };
 
@@ -1308,7 +1316,17 @@ export const LIBRARY = [
     "names": [
       "count"
     ],
-    "gives": "how many items, or options chosen"
+    "gives": "how many items, or options chosen; of a range (§6.17), how many numbers it holds"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "range(from: number, to: number, step: number = 1) -> list<number>"
+    ],
+    "names": [
+      "range"
+    ],
+    "gives": "a new list of the whole numbers from `from` to before `to`, `step` apart: `range(0, 3)` is `[0, 1, 2]`, `range(0, 10, 5)` is `[0, 5]`; a step below 0 counts down to after `to`: `range(3, 0, -1)` is `[3, 2, 1]`; no items when `to` is not that way from `from`. Each argument is a whole number (F004); a step of 0 is F031; more than 10,000,000 items is F030"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1573,11 +1591,11 @@ export const LIBRARY = [
   {
     "section": "14.5 Null, faults and output",
     "signatures": [
-      "print(v: any)"
+      "print(v: any, …)"
     ],
     "names": [
       "print"
     ],
-    "gives": "no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only"
+    "gives": "no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only. It takes any number of values, given in order without names: `print(a, b, c)` gives one line, each value as `print` shows it alone, one space between them; `print()` gives a line of no characters"
   }
 ];

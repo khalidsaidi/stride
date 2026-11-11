@@ -6,8 +6,8 @@ x += "b"
 var d: date = today()
 d -= d
 print("{x}{d}")
-# rule 16.2.1 S372 S374 S375
+# rule 16.2.1 S372 S374 S351
 # mistake 4:3 S374
 # label 4:3-4:5 - is for numbers, not number and string
 # mistake 5:3 S372
-# mistake 7:3 S375
+# mistake 7:6 S351

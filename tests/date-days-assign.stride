@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask start: date "Start"
+var due = start
+due += 30
+print(due, due - start)
+due -= 31
+print(due, start - due)
+# rule 6.4.3 7.5
+# answers {"start": "2026-03-01"}
+# prints ["2026-03-31 30", "2026-02-28 1"]

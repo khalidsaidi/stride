@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record p { name: string, n: number }
+let who = new p { name: "Bo", n: 1 }
+print(1, "a", [2, 3])
+print()
+print(who, null, true, date_of(2026, 1, 2))
+print("x", "")
+print([1, 2], {"a": 1})
+# rule 14.5
+# prints ["1 a [2, 3]", "", "p { name: Bo, n: 1 }  true 2026-01-02", "x ", "[1, 2] {a: 1}"]

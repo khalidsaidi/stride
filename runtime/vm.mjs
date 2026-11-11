@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 9) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 10) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -128,8 +128,9 @@ export function run(p, answers = {}, { limit = hostLimit(), depth = DEPTH, trace
   setToday(today);
   resetCalls();
   const prints = [];
-  setPrinter((v) => {
-    const text = printed(v, p.recordNames);
+  setPrinter((values) => {
+    // The values of one print, each as it is shown alone, one space between them (§14.5).
+    const text = values.map((v) => printed(v, p.recordNames)).join(" ");
     prints.push(text);
     watch?.({ kind: "print", text });
   });

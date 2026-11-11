@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask low: number "Low"
+ask high: number "High"
+let r = low..high
+print(r, count(r))
+for i in r {
+  print(i)
+}
+ask age: number "Age"
+print(age in 18..65, age in r)
+# rule 6.17 6.17.1
+# answers {"low": 2, "high": 4, "age": 30}
+# prints ["2..4 3", "2", "3", "4", "true false"]

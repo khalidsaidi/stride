@@ -55,8 +55,18 @@ are names too: a var may be called `string`.
 digit (`0755`) is mistake S008 (an id with leading zeros is words in quotes). A number's significant digits run from its first
 digit that is not 0 to its last digit that is not 0 (`0.00120` has 2, `1200` has 2, `1203` has 4). A number with
 more than 34 significant digits, of 10^34 or more (`1234567890123456789012345678901234000`), or finer than
-10^-6176 (more than 6176 digits after the point, trailing zeros aside) is mistake S009. A number followed directly by a letter or `_` is mistake S007. There are no
-exponents, no hexadecimal, no `_` separators; `-` is an operator (§6.4).
+10^-6176 (more than 6176 digits after the point, trailing zeros aside) is mistake S009. A number followed directly by a letter or `_` is mistake S007.
+`-` is an operator (§6.4). A number is also written in the forms of §2.5.1.
+
+2.5.1. **Other forms of a number.** Each is the same exact decimal (§3.3) as the plain digits it stands for, and
+S007, S008 and S009 apply to it as to them.
+- An exponent: `e` or `E`, an optional `+` or `-`, and digits, after the digits: `1e5` is 100000, `2.5e-3` is
+  0.0025, `1E+2` is 100. An `e` with no digit after it is S007.
+- Another base: `0x` and hexadecimal digits (`0xFF` is 255, in either case of letter), `0o` and octal digits
+  (`0o17` is 15), `0b` and binary digits (`0b1010` is 10). They are whole numbers, with no point and no exponent.
+- `_` between two digits is left out of the value: `1_000_000` is 1000000, `0xFF_FF` is 65535. A `_` at the
+  start or the end of the digits, or two together, is S007.
+- No digit before the point: `.5` is 0.5. `1..5` is still `1`, `..`, `5`, and `5.` is not a number.
 
 2.6. **Words in quotes**: `"` … `"` on one line. A line end before the closing quote is mistake S002. Inside:
 
@@ -67,14 +77,17 @@ exponents, no hexadecimal, no `_` separators; `-` is an operator (§6.4).
 | `\{` `\}` | `{` `}` |
 | `\n` | a line break |
 | `\t` | a tab |
+| `\r` | a carriage return (U+000D) |
+| `\0` | the character U+0000 |
+| `\xNN` | the character with that code, exactly two hexadecimal digits: `\x41` is `A` |
 | `\u{h…}` | the Unicode character with that hexadecimal code, 1 to 6 digits, at most 10FFFF, not D800–DFFF |
 
 Any other `\` is mistake S003; a `\u{…}` out of range or a surrogate is S021. `{expression}` puts the expression's
 words in (§6.10); an unclosed `{` is S005, an empty `{}` S006, a lone `}` S004. A `{` inside the braces opens words
 in quotes of their own only inside a nested `"…"`.
 
-2.7. **Signs**: `..< .. ?? == != <= >= => -> += -= *= /= // { } ( ) [ ] , : . = < > + - * / %`. The longest sign that
-fits is taken (`//` before `/`, `..<` before `..`, `..` before `.`). Any other character outside words in quotes is mistake S001.
+2.7. **Signs**: `..< .. ?? == != <= >= => -> += -= **= ** *= /= // { } ( ) [ ] , : . = < > + - * / %`. The longest sign that
+fits is taken (`//` before `/`, `**` before `*`, `..<` before `..`, `..` before `.`). Any other character outside words in quotes is mistake S001.
 
 2.8. **Raw tokens**: after `form` and after `pdf` at the start of a program, everything up to whitespace, `#` or
 `"` is one token: the form's id (letters, digits, `.`, `-`, `_`, starting with a letter or digit; else S016) and
@@ -94,6 +107,7 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 | `set<S>` | several options of `S`, without repeats, always in S's declaration order (§3.8) | from `any_of` answers, `["a", "b"]` where expected |
 | a record `R` | a value for each field of `R` | `new R { field: e, … }` |
 | `list<T>` | any number of values of type T, in order | `[a, b]` |
+| `range` | the whole numbers between two bounds (§6.17) | `1..5`, `0..<n` |
 
 3.2. **Null.** Every type also has the null value, `null`: no value — an answer not given yet, a field not set.
 Words of no characters `""`, a list with no items `[]`, a set with no options and a map with no keys `{}` are
@@ -261,7 +275,7 @@ string)`, `native function print(v: any)`. A native's parameters may have defaul
 native with as many parameters (S301, S302).
 
 5.6. **Types written**: `string number date bool`, an option set's name, `set<S>` with S an option
-set's name, a record's name, `list<T>`, `map<K, V>` (§3.10), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
+set's name, a record's name, `list<T>`, `map<K, V>` (§3.10), `range` (§6.17), `function(T, …) -> R` (a function as a value, §9.10), a type parameter's name inside its function, and the native-only
 markers `any` and `element` (S214 elsewhere). A name that is not a type is S209. Unless §14 specifies otherwise,
 an `any` result has the first argument's type after binding and conversion; an `element` result has its list-item
 type, or its option type for a set. `either` returns the join of both argument types (§3.9, §14.5).
@@ -279,10 +293,12 @@ coalesce    = or ("??" or)*;
 or          = and ("or" and)*;
 and         = not ("and" not)*;
 not         = "not" not | compare;
-compare     = sum [ ("=="|"!="|"<"|"<="|">"|">=") sum | ["not"] "in" sum ];
+compare     = range [ ("=="|"!="|"<"|"<="|">"|">=") range | ["not"] "in" range ];
+range       = sum [ (".." | "..<") sum ];
 sum         = product (("+"|"-") product)*;
 product     = unary (("*"|"/"|"//"|"%") unary)*;
-unary       = "-" unary | postfix;
+unary       = "-" unary | power;
+power       = postfix [ "**" unary ];
 postfix     = primary ( "." word | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")" )*;
 args        = arg ("," arg)*;  arg = [name ":"] expr;
 primary     = number | string | "true" | "false" | "null" | name | "(" expr ")"
@@ -313,7 +329,7 @@ true; `"{x}"` and `fill`, where null has no words (§3.5); placing it — a `let
 function the program defines, a field of `new`, an item of a list written out; a map read with a key the map does
 not have, which gives null (§6.11.1); and the library functions whose entry says so (§14.0.3).
 
-6.4. **Arithmetic.** Binary `- * / // %` require numbers (S374 otherwise), except date minus date is S375.
+6.4. **Arithmetic.** Binary `- * / // % **` require numbers (S374 otherwise), except `-` with a date on its left (§6.4.3).
 For `+`, the valid operations are described in §6.5 and §6.5.1; number with words is S372, and other unsupported
 combinations are S373:
 
@@ -326,6 +342,7 @@ combinations are S373:
 | `a // b` | q, the greatest whole number ≤ a/b, from the exact quotient (6.4.1) | b = 0: F002; \|q\| ≥ 10^34: F003 |
 | `a % b` | r = a − b·q, exact (6.4.1) | b = 0: F002 |
 | `-a` | negation | |
+| `a ** b` | a to the power b (§6.4.2) | b not whole or beyond ±10000: F008; F003; a = 0 and b < 0: F001 |
 
 6.4.1. **Floor division and remainder are exact.** `a // b` and `a % b` never use the rounded quotient of `/`: q
 is the floor of the exact rational a/b, and r = a − b·q is worked out exactly; only then is the result checked
@@ -343,6 +360,18 @@ and, for r, rounded.
   1 − 10^−34, so the exact product and sum give −10^−34, not a; when either rounds, it may be true or false. For a = 10^34 − 5, b = 1.5 (r = 0.5) `b * q` rounds to
   a − 1, the sum to a − 1 again, and it is false; for a = 10^34 − 1, b = 1.7 (r = 0.4) `b * q` rounds to a, the sum to
   a again, and it is true.
+
+6.4.2. **Power.** `a ** b` is a multiplied by itself b times, b a whole number from -10000 to 10000 (F008
+otherwise); for b below 0 it is 1 divided by a to the power -b; `a ** 0` is 1. It is what `power(a, b)` gives
+(§14.2). `**` binds tighter than `* / // %` and than a `-` before it, and takes its right side first:
+`2 ** 3 ** 2` is `2 ** (3 ** 2)`, 512; `-2 ** 2` is `-(2 ** 2)`, -4, and `(-2) ** 2` is 4; a `-` may follow it:
+`2 ** -1` is 0.5. `x **= e` is `x = x ** e` (§7.5).
+
+6.4.3. **Dates and days.** `d + n` is the day n days after the date d, and `d - n` the day n days before it: a
+date. n is a whole number (F004 otherwise), and a day outside 0001-01-01 to 9999-12-31 is F011. `d - e`, of two
+dates, is the number of days from e to d: `days_between(e, d)` (§14.3), below 0 when d is the earlier. A number
+on the left of a date (`n + d`, `n - d`) is S373 and S374, and so is one date added to another. A null operand is F023
+(§6.3). `d += 1` and `d -= 1` move a var's date (§7.5).
 
 6.5. **Words.** `a + b` with both words (a string, or an option) joins them; the result is
 `string`. A number and words is S372 (write `"…{n}…"`).
@@ -431,6 +460,25 @@ from the left: `a ?? b ?? c` is the first of the three that is not null, and `a 
 `"" ?? "x"` is `""`, and `[] ?? [1]` is `[]`: neither is null (§3.2). `either(a, b)` (§14.5) gives the same value
 and works out both.
 
+6.17. **Ranges.** `a..b` is the range of the whole numbers from a to b, both included, and `a..<b` of those from
+a to before b: a value of type `range`. It holds no numbers when a > b, or with `..<` when a ≥ b. a and b are
+numbers (S700), worked out a then b when the range is made; a null bound is F023 and one that is not whole F004.
+A range never changes (§3.4.4). `..` and `..<` bind looser than `+` and `-` and tighter than a comparison:
+`0..<n + 1` is `0..<(n + 1)`, and `x in 1..5` asks about the range. A range has two bounds: `1..2..3` is S010.
+- 6.17.1. **What a range is used for.** `let r = 1..5` holds it; `for i in r` and a comprehension
+  (`[n * 2 for n in 0..<10]`) go through its numbers in order (§7.11.2); `x in r` and `x not in r` are whether
+  the number x is one of them, a null x and a number that is not whole being none of them (another type of x is
+  S383; a null r is F023); `count(r)` is how many it holds. Its words (§3.5), and what `print` shows, are its
+  bounds as numbers with its sign between them: `1..5`, `0..<10`. Two ranges are equal (§6.6) when they hold the
+  same numbers: `1..<5 == 1..4`, and every range that holds none equals every other. A constant may be a range
+  (§5.3). A range is not a list: it has no positions, and the list functions do not take it (S369); `range(a, b)`
+  (§14.4) and `[i for i in r]` give a list of numbers.
+- 6.17.2. **In a slice.** Inside `l[ ]` the signs `..` and `..<` are the slice's (§6.9.3): `l[a..b]` takes items
+  and makes no range. A range written there stands in brackets of its own.
+- 6.17.3. **How many.** A range may have any bounds; only going through one makes its numbers. Going through a
+  range that holds more than 10,000,000 numbers, where the loop is not a `for i in a..b` written out (§7.11),
+  is F030.
+
 ## 7. Statements
 
 7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
@@ -453,7 +501,7 @@ any depth (`[]`, `[null, null]`, `[[null]]`), is S328; with a type, `let xs: lis
 null]` is valid. In these cases, an inferred function result is S344 (§9.6), and a generic
 call is S368 (§9.5.1).
 
-7.5. **assign** `target "=" expr`, `target op= expr` (op `+ - * /`): target a var, or a field or an item reached
+7.5. **assign** `target "=" expr`, `target op= expr` (op `+ - * / // % **`): target a var, or a field or an item reached
 from a name (S345–S349). `x += e` is `x = x + e` with x's place worked out once; with x a list it adds e's items
 to that list (§6.5.1). Only a var is given another value: an answer, a let, a constant, a parameter, a loop's
 counter or an item named alone is not (S345), but for `l += m` with l a let, a parameter or an item that holds a
@@ -528,11 +576,18 @@ are numbers (S313); a non-whole bound is F004 and a null one F023: null is never
 is true. A question asked in the body has its own key in each turn (`name[0]`, `name[1]`, …, §8.6). A loop that
 never ends runs until its host stops it (F014, §15).
 
+7.11.2. **for over a range that is a value.** `for i in r { }`, with r a range held in a name, given by a call
+or written in brackets (`for i in (1..5)`), goes through r's numbers in order, as a comprehension over a range
+does; `for n, i in r` gives each number's position too, from 0. The range is worked out once, before the first
+turn; a null one is F023, and one of more than 10,000,000 numbers F030 (§6.17.3). `for i in a..b`, written out,
+is the loop of §7.11: it counts, and makes no range.
+
 7.12. **break** ends the innermost `for` or `while`; **continue** goes to its next turn. Outside one, or inside
 a collect, they are S233, S234.
 
 7.13. **return** `return [e]`: ends the function (with e) or the program (no value: S338). e is on the return's
-line. Statements after a `return`, `break` or `continue` in the same block never run (S406).
+line. Statements after a `return`, `break` or `continue` in the same block never run: warning W008. They are
+checked like any others, and the program compiles and runs.
 
 7.14. **call** `f(args)` on its own: a call for what the function does.
 
@@ -871,7 +926,7 @@ words given to `print`, and a fault or none.
 | F001 | division by zero |
 | F002 | floor division or remainder by zero |
 | F003 | a number of absolute value 10^34 or more |
-| F004 | a list position, a slice's bound or a loop bound not a whole number, or a position read that is below 0 or the number of items or more |
+| F004 | a list position, a slice's bound, a loop bound, a range's bound (§6.17), an argument of `range` or the days added to a date (§6.4.3) not a whole number, or a position read that is below 0 or the number of items or more |
 | F005 | a list item set outside 0 to the number of items |
 | F006 | a field read or set on a value that is not a record and not null, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program |
 | F007 | a native given a position that is not a whole number of 0 or more |
@@ -888,6 +943,8 @@ words given to `print`, and a fault or none.
 | F022 | a function called through a name that holds none |
 | F020 | an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[2].name = v` when xs holds 2): a program fault |
 | F023 | null where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a let, parameter or item whose field is set, a list or words indexed or sliced, a position, a bound, a key set, what `for` goes through, an argument of a library function that needs a value |
+| F030 | a range of more than 10,000,000 numbers gone through (§6.17.3), or `range` giving a list of more |
+| F031 | `range` given a step of 0 |
 | F024 | a record that holds itself (§3.4.6) printed, put into words, or compared with another all the way round |
 
 ## 14. The standard library
@@ -997,7 +1054,8 @@ entry says "or a set" (its items are then options).
 
 | Signature | Gives |
 |---|---|
-| `count(l: list<T> or set) -> number` | how many items, or options chosen |
+| `count(l: list<T> or set) -> number` | how many items, or options chosen; of a range (§6.17), how many numbers it holds |
+| `range(from: number, to: number, step: number = 1) -> list<number>` | a new list of the whole numbers from `from` to before `to`, `step` apart: `range(0, 3)` is `[0, 1, 2]`, `range(0, 10, 5)` is `[0, 5]`; a step below 0 counts down to after `to`: `range(3, 0, -1)` is `[3, 2, 1]`; no items when `to` is not that way from `from`. Each argument is a whole number (F004); a step of 0 is F031; more than 10,000,000 items is F030 |
 | `join(l: list<T> or set, separator: string = ", ") -> string` | T a type with words (§3.5): words, a number, a date, a bool, an option; a list of records or of lists is S367. The items' words joined, a null item as no words (`join(filled(l))` leaves null items out); no items: no characters |
 | `first(l: list<T> or set) -> T`, `last(l: list<T> or set) -> T` | the first, the last item; null when there is none |
 | `filled(l: list<T>) -> list<T>` | a new list of the items that are not null, in order; `""` and `[]` are not null and stay; l null: a list with no items |
@@ -1034,7 +1092,7 @@ entry says "or a set" (its items are then options).
 |---|---|
 | `either(a: T, b: T) -> T` | a when it is not null, else b (`a ?? b`, §6.16, with both worked out) |
 | `fail(message: string)` | no value: fault F013 with the message |
-| `print(v: any)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only |
+| `print(v: any, …)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only. It takes any number of values, given in order without names: `print(a, b, c)` gives one line, each value as `print` shows it alone, one space between them; `print()` gives a line of no characters |
 
 ## 15. Limits
 
@@ -1078,7 +1136,7 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
 - S501: the `pdf` line; S502:
   the `form` line; S508: the box name's expression; S511: the button name's expression; S514: the
   entry's value; S323: the second `default`, the first as related code;
-  S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the
+  S372, S374 and S379: the smallest operation that offends, never the statement around it; S413: the
   operation that faults; S407: the read,
   with a label on a path that leaves the name without a value — the branch that skips it, a loop that may run no
   turns, or the declaration when nothing gives it a value (no branch is named where there is none);
@@ -1151,7 +1209,7 @@ its call: the function's name in the call.
 |---|---|---|
 | S001 | a character Stride does not read (or a file not UTF-8) | Outside words in quotes, Stride reads names (a–z, digits, _), numbers, and the signs of §2.7. Put other characters in "…". |
 | S002 | words in quotes not closed on their line | Words in quotes end on their line. Close them with `"`; for a line break inside, write `\n`. |
-| S003 | an escape Stride does not have | Inside "…", `\` is followed by `"`, `\`, `{`, `}`, `n`, `t` or `u{hex}`. |
+| S003 | an escape Stride does not have | Inside "…", `\` is followed by `"`, `\`, `{`, `}`, `n`, `t`, `r`, `0`, `xNN` or `u{hex}`. |
 | S004 | a lone `}` in words | `{` and `}` in words put a value in; a brace itself is written `\{` or `\}`. |
 | S005 | a `{` in words not closed | A value put in words is written `{value}`; close it, or write `\{`. |
 | S006 | `{}` with nothing in it | Put a value between the braces, or write `\{\}`. |
@@ -1283,8 +1341,7 @@ its call: the function's name in the call.
 | S371 | an operand with no value | The function gives nothing. |
 | S372 | `+` of a number and words | Put the number in words: `"…{n}…"`. |
 | S373 | `+` of other types, or of lists whose element types have no join | `+` adds numbers, joins words, or joins lists whose elements join (§3.9). |
-| S374 | `- * / // %` of something not a number | They are for numbers. |
-| S375 | a date minus a date | `days_between(a, b)`. |
+| S374 | `- * / // % **` of something not a number | They are for numbers; `-` also takes a date on its left (§6.4.3). |
 | S376 | bool compared with words | `x == true`, or `x` alone. |
 | S377 | a set compared with `==` against words | Ask whether one is chosen: `"v" in s`. |
 | S378 | values that cannot be compared | Of one type, or words with words, or an option with words or with an option of another set. |
@@ -1304,7 +1361,6 @@ its call: the function's name in the call.
 | S396 | a slice bound that is not a number | `l[a..b]`, `l[a..<b]`, numbers. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
-| S406 | a statement after return, break or continue | It never runs; remove it. |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
 | S412 | an option's printed words, or the words after `faults`, that the compiler cannot work out | They are written out, or made of constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
@@ -1315,6 +1371,7 @@ its call: the function's name in the call.
 | S511 | a radio button the group lacks | The message lists its buttons. |
 | S514 | a list box entry it lacks | The list box's entries. |
 | S601 | more than 255 arguments or parameters | Use a record. |
+| S700 | a range's bound that is not a number | `a..b` and `a..<b` are ranges of whole numbers (§6.17). |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |
@@ -1322,6 +1379,7 @@ its call: the function's name in the call.
 | W005 | a field asked and never read | Warning: Use it, or do not ask it. |
 | W006 | a collected item asked and never read | Warning: The same. |
 | W007 | a let or var never used | Warning: Remove it. |
+| W008 | a statement after return, break or continue | Warning: It never runs; remove it, or the return, break or continue before it. |
 | F001–F024 | §13.4 | |
 
 ## 17. The command line
@@ -1619,7 +1677,7 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 
 ## 18. Bytecode
 
-18.1. Version 9. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
+18.1. Version 10. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
 it does not know; a section that holds more or fewer bytes than it says is refused. The program and code sections
 must be there, each once; a tag that comes twice is refused. The places section may be left out: then no fault
 has a source place. The compiler always writes it. Sections may come in any order.

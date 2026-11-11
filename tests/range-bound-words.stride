@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let r = "a".."z"
+let s = 1..<true
+print(r, s)
+# rule 6.17 S700
+# mistake 3:9 S700
+# mistake 3:14 S700
+# mistake 4:13 S700

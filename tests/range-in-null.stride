@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+let r: range = if n == 1 then 1..2 else null
+print(1 in r)
+# rule 6.17.1 F023
+# fault F023

@@ -2,8 +2,8 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 function f() -> number {
   return 1
-# mistake 6 S406 never runs
+# warning 6 W008 never runs
   return 2
 }
 fill "A" = "{f()}"
-# rule 7.13 S406
+# rule 7.13 W008

@@ -9,7 +9,7 @@ print([a, y])
 print([x])
 print([z])
 print([q])
-# rule 16.2.1 S323 S372 S374 S375 S379
+# rule 16.2.1 S323 S372 S374 S379
 # mistake 3:29 S323
 # label 3:29-3:38 a question has one default
 # label 3:19-3:28 the first default
@@ -17,7 +17,5 @@ print([q])
 # label 4:14-4:21 + adds two numbers or joins two words
 # mistake 5:14 S374
 # label 5:14-5:21 - is for numbers, not string and number
-# mistake 6:10 S375
-# label 6:10-6:27 dates are not subtracted
 # mistake 7:10 S379
 # label 7:10-7:22 < orders two numbers, two dates or two words, not bool and bool

@@ -1,0 +1,23 @@
+# rule 14.4
+expect range(0, 5) == [0, 1, 2, 3, 4]
+expect range(2, 5) == [2, 3, 4]
+expect range(0, 10, 5) == [0, 5]
+expect range(1, 10, 3) == [1, 4, 7]
+expect range(3, 0, -1) == [3, 2, 1]
+expect range(5, 0, -2) == [5, 3, 1]
+expect range(3, 3) == []
+expect range(3, 0) == []
+expect range(0, 3, -1) == []
+expect range(from: 1, to: 3) == [1, 2]
+expect sum(range(1, 101)) == 5050
+expect count(range(0, 4)) == count(0..<4)
+expect append(range(0, 2), 9) == [0, 1, 9]
+let zero = 0
+let half = 0.5
+let none: number = null
+expect range(0, 3, zero) faults "F031"
+expect range(0, half) faults "F004"
+expect range(half, 3) faults "F004"
+expect range(0, 3, half) faults "F004"
+expect range(none, 3) faults "F023"
+expect range(0, 20000000) faults "F030"

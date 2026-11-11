@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function nothing() {
+  print("x")
+}
+print(1, nothing())
+# rule 14.5 S366
+# mistake 6:10 S366

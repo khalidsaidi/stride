@@ -57,7 +57,7 @@ export function comments(text) {
 }
 
 // How tightly each operator binds (§6.1): `if … then … else` loosest (0), a field, a position or a call tightest (8).
-const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7 };
+const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7, "..": 4.5, "..<": 4.5, "**": 7.5 };
 
 export function format(text, name = "program.stride") {
   const diagnostics = new Diagnostics();
@@ -390,10 +390,17 @@ export function format(text, name = "program.stride") {
         return wrap(PRECEDENCE.neg, `-${expr(e.operand, PRECEDENCE.neg)}`);
       case "binary": {
         const p = PRECEDENCE[e.op];
+        // A range has no spaces; one written in brackets keeps them (a slice's bound needs them, §6.9.3).
+        if (e.op === ".." || e.op === "..<") {
+          const range = `${expr(e.a, 5)}${e.op}${expr(e.b, 5)}`;
+          return p < outer || e.parenthesised ? `(${range})` : range;
+        }
+        // a ** b takes its right side first: -a and a ** b stand there bare, and only a value stands on its left.
+        if (e.op === "**") return wrap(p, `${expr(e.a, 8)} ** ${expr(e.b, PRECEDENCE.neg)}`);
         // Comparisons do not chain; arithmetic is left to right, so the right side of - and / needs parentheses
         // at the same precedence.
-        const left = expr(e.a, p === 4 ? 5 : p);
-        const right = expr(e.b, p === 4 ? 5 : p + (["-", "/", "+", "*", "//", "%"].includes(e.op) ? 1 : 0));
+        const left = expr(e.a, p === 4 ? 4.5 : p);
+        const right = expr(e.b, p === 4 ? 4.5 : p + (["-", "/", "+", "*", "//", "%"].includes(e.op) ? 1 : 0));
         return wrap(p, `${left} ${e.op} ${right}`);
       }
       case "field":
@@ -432,9 +439,9 @@ export function format(text, name = "program.stride") {
     return `"${escape(v)}"`;
   }
 
-  // Words as written in quotes (§1.7): \\, \", \n, \t and the braces escaped, so they stay words.
+  // Words as written in quotes (§1.7): \\, \", \n, \t, \r, \0 and the braces escaped, so they stay words.
   function escape(s) {
-    return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\{/g, "\\{").replace(/\}/g, "\\}")
+    return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "\\r").replace(/\0/g, "\\0").replace(/\{/g, "\\{").replace(/\}/g, "\\}")
       .replace(/[\u0000-\u001f\u007f]/g, (c) => `\\u{${c.codePointAt(0).toString(16)}}`);
   }
 }

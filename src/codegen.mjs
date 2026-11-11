@@ -1,9 +1,9 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 9) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 10) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
 import { BINARY_OPS, FIELD_STARTS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
-import { D, isNumber, isDate, isSet } from "../runtime/values.mjs";
+import { D, isNumber, isDate, isSet, isRange } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
@@ -285,6 +285,7 @@ export function generate(program, pdf, debug = null) {
       else if (isNumber(v)) emit(OP.NUMBER, N(v));
       else if (isDate(v)) (emit(OP.TEXT, T(v.iso)), emit(OP.NATIVE, nativeIndex("date_from_iso"), 1));
       else if (typeof v === "string") emit(OP.TEXT, T(v));
+      else if (isRange(v)) (value(v.from), value(v.to), emit(v.before ? OP.RANGE_BEFORE : OP.RANGE));
       else if (isSet(v)) {
         // A set keeps its options' declaration order (§3.8): its values, then the order, made a set.
         v.forEach(value);

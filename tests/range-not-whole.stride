@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask high: number "High"
+let r = 1..<high
+print(r)
+# rule 6.17 F004
+# answers {"high": 2.5}
+# fault F004

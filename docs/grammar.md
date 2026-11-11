@@ -55,6 +55,7 @@ A field's name may be any word, a keyword among them: `r.default` (§2.3.2).
 | `set<S>`, S an option set's name | several of its options (an `any_of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
 | `list<T>` | values of type T, as many as are added |
+| `range` | the whole numbers between two bounds: `1..5`, `0..<n`; `for i in r`, `x in r`, `count(r)`, `[n * 2 for n in r]` (§6.17) |
 | `map<K, V>` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
 | `function(T, …) -> R` | a function as a value: `function apply(f: function(number) -> number, n: number)` |
 
@@ -131,7 +132,7 @@ string`. A native's parameter may be `any`; its result may be `any` (the type of
 | `let name = e`, `let name: type = e` | a name that keeps the value it is given; the items and fields of a list, record or map it holds may be given values (§3.4) |
 | `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list starts with no items, a map with no keys and a record null; anything else must be given a value before it is read |
 | `name = e`, `name.field = e`, `name[i] = e` | gives a var a new value; gives a field or an item of the record, list or map a name holds a new value (§7.5) |
-| `x += e`, `-=`, `*=`, `/=` | `x = x + e`, with x's place worked out once (§7.5); `l += m` adds m's items to the list l holds |
+| `x += e`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=` | `x = x + e`, with x's place worked out once (§7.5); `l += m` adds m's items to the list l holds |
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is true |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is true |
@@ -195,12 +196,16 @@ cannot change them. A list is collected once, into a var declared as a list of r
 ## Expressions
 
 Loosest first (§6.1): `if c then a else b`; `??`; `or`; `and`; `not`; comparisons `== != < <= > >=`, `in`, `not in`,
-`== null`, `!= null` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 0),
+`== null`, `!= null` (they do not chain); ranges `a..b`, `a..<b`; `+ -`; `* / // %`; unary `-`; `**` (from the right); then `.field`, `[n]` (from 0),
 `[a..b]`, `[a..<b]` and calls; then values: numbers, `"words"`, `true`, `false`, `null`, names, `[a, b]`,
 `[e for x in l if c]`, `new record { field: e, … }`, `( … )`.
 
 - `+` adds numbers, joins words, or joins two lists (§6.5.1); `- * / // %` are for
   numbers. `//` is floor division and `%` its remainder, both exact (§6.4.1). Dividing by zero is a fault.
+- `a ** b` is a to the power b, b a whole number: `2 ** 10`, `2 ** -1` is 0.5, `-2 ** 2` is -4 (§6.4.2).
+- A date and a number of days: `d + 30`, `d - 1` are dates, and `d - e`, of two dates, the days between them (§6.4.3).
+- `a..b` and `a..<b` are ranges, values of type `range`: `let r = 1..5`, `x in 1..5`, `count(r)` (§6.17).
+- Numbers are written `12`, `1.5`, `.5`, `1e5`, `2.5e-3`, `0xFF`, `0o17`, `0b1010`, `1_000_000`: each an exact decimal (§2.5.1).
 - `< <= > >=` compare two numbers, two dates, or two words by code points (§6.7).
 - `==` and `!=` compare values of one type; an option is compared with one of its own values, checked.
 - `"x" in s` asks whether an option is among those of a set of options, or a value among a list's items.
@@ -210,7 +215,7 @@ Loosest first (§6.1): `if c then a else b`; `??`; `or`; `and`; `not`; compariso
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
 - `l[n]` is the item at position n, the first at 0; a position outside the list is a fault (§6.9.2). `l[a..b]`
   is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for r in reps if r.copies]` makes a list (§6.12).
-- `"Line {n + 1}"` puts any value's words into words. `\"`, `\\`, `\{`, `\}`, `\n`, `\t` and `\u{h…}` stand
+- `"Line {n + 1}"` puts any value's words into words. `\"`, `\\`, `\{`, `\}`, `\n`, `\t`, `\r`, `\0`, `\xNN` and `\u{h…}` stand
   for themselves (§2.6).
 
 ## What is worked out when
@@ -277,7 +282,7 @@ assembler).
 
 ## Bytecode
 
-Version 9 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 10 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),

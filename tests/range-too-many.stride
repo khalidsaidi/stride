@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let r = 0..10000000
+print(count(r), 5 in r)
+for i in r {
+  print(i)
+}
+# rule 6.17.3 F030
+# prints ["10000001 true"]
+# fault F030

@@ -644,8 +644,8 @@ export function lower(resolved, diagnostics, options = {}) {
           return withAt(IR.callv([expr(e.target, ctx), join(ctx.prefix), join(suffix(ctx)), ...given]), placeOf(e, e.target.span));
         }
         const sym = e.callee;
-        const params = sym.params ?? [];
-        const bound = e.bound ?? e.args;
+        const params = e.printAll ? [] : sym.params ?? [];
+        const bound = e.printAll ? [] : e.bound ?? e.args;
         // Every argument bound to its parameter (defaults filled in, §9.4.1), each placed as its parameter's type.
         const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), params[i]?.type, a.param.defaultExpr.type) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), params[i]?.type, a.type)));
         // Arguments are worked out as written, left to right, whatever parameters they bind (§9.4.1).
@@ -654,6 +654,8 @@ export function lower(resolved, diagnostics, options = {}) {
         const ordered = (x, offset = 0) => (order.some((k, i) => k !== i) ? { ...x, order: [...Array(offset).keys(), ...order.map((k) => k + offset)] } : x);
         const at = placeOf(e, e.target.span);
         if (sym.kind === "native") {
+          // print(a, b, …) (§14.5): the values of one line, worked out left to right.
+          if (e.printAll) return withAt(IR.native("print_all", [IR.list(e.args.map((a) => expr(a, ctx)))]), at);
           if (sym.name === "sorted" && e.sortField !== undefined) return withAt(IR.native("sorted_by", [args[0], IR.constant(V.num(e.sortField)), args[1]]), at);
           // Words in quotes given to a set operation are made the set they name (§3.6).
           if (e.setOperand) args.forEach((a, i) => bound[i]?.type?.t === "list" && (args[i] = placeAs(a, e.setOperand, bound[i].type)));

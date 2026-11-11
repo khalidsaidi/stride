@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask low: number "Low"
+let r = low..3
+print(r)
+# rule 6.17 F023
+# fault F023

@@ -1,0 +1,11 @@
+# rule 2.6
+expect length("\r") == 1
+expect length("\0") == 1
+expect "\x41" == "A"
+expect "\x41\x62" == "Ab"
+expect "\xe9" == "\u{e9}"
+expect "\r" == "\u{d}"
+expect "\0" == "\u{0}"
+expect "\x0a" == "\n"
+expect "a\rb" != "ab"
+expect "\x7B" == "\{"

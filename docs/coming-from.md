@@ -31,7 +31,13 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `enum` | `enum colour { "red" "Red" … }`: each option its value and the words a person reads |
 | `import x`, `require` | `import "x"`, `import "x" as m` (a file in `lib/`); `export function …` |
 | `try`/`catch`, exceptions | `try { } catch problem { }`; `fail("why")` raises a fault; one not caught stops the run |
-| `print`, `console.log`, `fmt.Println` | `print(x)` |
+| `print`, `console.log`, `fmt.Println` | `print(x)`; `print(a, b, c)` gives one line, a space between the values |
+| `1e5`, `0xFF`, `0b1010`, `1_000_000`, `.5` | the same; every number is an exact decimal |
+| `"\r"`, `"\0"`, `"\x41"` | the same, beside `\n`, `\t` and `\u{41}` |
+| `2 ** 10`, `Math.pow(2, 10)`, `x **= 2` | `2 ** 10`, `power(2, 10)`, `x **= 2`; `-2 ** 2` is -4, as in Python |
+| `range(0, 10, 2)`, `1..5`, `1...5`, `1 until 5`, `x in range(1, 6)` | `range(0, 10, 2)` is a list; `1..5` and `1..<5` are ranges, values: `let r = 1..5`, `for i in r { }`, `x in 1..5`, `count(r)` |
+| `d + timedelta(days=7)`, `d.AddDays(7)`, `(d2 - d1).days` | `d + 7`, `d - 7`; `d2 - d1` is the number of days |
+| code after `return` (an error in Go's vet, Swift, Kotlin, C#: a warning) | a warning (W008); the program still runs |
 | `input()`, `args`, `stdin` | `ask name: string "Your name"`; answered at the terminal, as `name=Ada`, or from JSON |
 | `# comment`, `// comment` | `# comment` |
 

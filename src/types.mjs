@@ -6,6 +6,7 @@
 //   options(set)                     several options of one set (an any_of answer)
 //   record(decl)                     a record's named fields
 //   list(element)                    values of one type, in order
+//   range                            the whole numbers between two bounds (§6.17)
 //   null                            the type of `null`: fits every type
 //   any                              only in a native function's parameters: takes any value
 //   none                             what a function with no result gives
@@ -18,6 +19,7 @@ export const STRING = { t: "string" };
 export const NUMBER = { t: "number" };
 export const DATE = { t: "date" };
 export const BOOL = { t: "bool" };
+export const RANGE = { t: "range" };
 export const NULL = { t: "null" };
 export const ANY = { t: "any" };
 // Only as a native's result: the type of the items of the list (or the options of the set) given first.

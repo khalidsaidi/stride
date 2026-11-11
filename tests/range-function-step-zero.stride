@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask step: number "Step"
+print(range(0, 3, step))
+# rule 14.4 F031
+# answers {"step": 0}
+# fault F031

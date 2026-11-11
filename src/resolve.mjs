@@ -288,6 +288,8 @@ export function resolve(loaded, diagnostics) {
         if (sym?.kind === "record") return sym.type ?? T.record(sym.decl);
         if (sym?.kind === "enum") return sym.type;
         if (sym?.kind === "typevar") return sym.type;
+        // `range` is a type's name only where a type is written (§5.6): a function may be called range.
+        if (node.name === "range") return T.RANGE;
         if (node.name === "element") {
           err("S214", unit.file, node.span, "element is only for the natives of the standard library");
           return T.ERROR;

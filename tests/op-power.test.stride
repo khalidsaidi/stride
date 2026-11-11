@@ -1,0 +1,25 @@
+# rule 6.4.2
+expect 2 ** 10 == 1024
+expect 2 ** 10 == power(2, 10)
+expect 2 ** 3 ** 2 == 512
+expect (2 ** 3) ** 2 == 64
+expect -2 ** 2 == -4
+expect (-2) ** 2 == 4
+expect 2 ** -1 == 0.5
+expect 2 ** -2 == 0.25
+expect 2 * 3 ** 2 == 18
+expect 10 - 2 ** 3 == 2
+expect 7 ** 0 == 1
+expect 0 ** 0 == 1
+expect 1.5 ** 2 == 2.25
+expect 10 ** 33 == 1e33
+let n: number = null
+let half = 0.5
+let big = 10001
+let zero = 0
+expect 2 ** half faults "F008"
+expect 2 ** big faults "F008"
+expect 10 ** 34 faults "F003"
+expect zero ** -1 faults "F001"
+expect n ** 2 faults "F023"
+expect 2 ** n faults "F023"

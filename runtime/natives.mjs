@@ -6,7 +6,8 @@
 // A native given null where it needs a value faults (F023, §14.0.3) before anything else: `takes` names each
 // parameter and the kind of value it needs. Then it checks its control arguments — positions, places, widths,
 // paddings, patterns — and faults when one is wrong (§14.0.3.1).
-import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, StrideRange, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside, dayNumber, fromDayNumber } from "./values.mjs";
+import { power } from "./ops.mjs";
 
 export { StrideFault, StrideRecord, isNull };
 export const stringOf = words;
@@ -58,29 +59,6 @@ export function resetCalls() {
 
 export function setPrinter(f) {
   printer = f ?? (() => {});
-}
-
-// Days since 0001-01-01, for date arithmetic.
-function dayNumber(d) {
-  const y = d.y - 1;
-  const days = y * 365 + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400);
-  let n = days;
-  for (let m = 1; m < d.m; m++) n += daysIn(d.y, m);
-  return n + d.d - 1;
-}
-function fromDayNumber(n) {
-  // Walk years by 400-year cycles of 146097 days, then by years and months.
-  let y = 1 + 400 * Math.floor(n / 146097);
-  n %= 146097;
-  for (;;) {
-    const len = daysIn(y, 2) === 29 ? 366 : 365;
-    if (n < len) break;
-    n -= len;
-    y++;
-  }
-  let m = 1;
-  while (n >= daysIn(y, m)) (n -= daysIn(y, m)), m++;
-  return date(y, m, n + 1);
 }
 
 // years_between (§14.3): anniversaries of from on or before to; an anniversary on a day the year lacks falls on the
@@ -286,19 +264,7 @@ export const NATIVES = {
   power: {
     pure: true,
     takes: "n:n k:n",
-    fn: (n, k) => {
-      const times = D.toInt(k);
-      if (times === null || Math.abs(times) > 10_000) throw new StrideFault("F008", `power: the power is a whole number from -10000 to 10000, and this is ${words(k)}`);
-      return numberOp(() => {
-        let out = num(1);
-        let base = n;
-        for (let e = Math.abs(times); e > 0; e = Math.floor(e / 2)) {
-          if (e % 2) out = D.mul(out, base);
-          base = D.mul(base, base);
-        }
-        return times < 0 ? D.div(num(1), out) : out;
-      });
-    },
+    fn: (n, k) => power(n, k, "power"),
   },
   add_days: {
     pure: true,
@@ -312,7 +278,25 @@ export const NATIVES = {
   },
 
   // ----- lists and sets (§14.4)
-  count: { pure: true, takes: "l:l", fn: (l) => num(l instanceof StrideMap ? l.entries.size : typeof l === "string" ? chars(l).length : l.length) },
+  // The whole numbers from `from` to before `to`, `step` apart (§14.4): counting down when step is below 0.
+  range: {
+    pure: true,
+    takes: "from:n to:n step:n",
+    fn: (from, to, step) => {
+      for (const [v, name] of [[from, "from"], [to, "to"], [step, "step"]]) if (!D.isWhole(v)) throw new StrideFault("F004", `range: ${name} is a whole number, and this is ${words(v)}`);
+      if (D.sign(step) === 0) throw new StrideFault("F031", "range: step is 0, and a range of steps of 0 never ends");
+      const up = D.sign(step) > 0;
+      const span = D.sub(to, from);
+      if (D.sign(span) !== D.sign(step)) return [];
+      // How many: the steps that fit before `to`, and the first.
+      const steps = numberOp(() => D.floorDiv(D.sub(span, num(up ? 1 : -1)), step));
+      if (D.compare(steps, num(10_000_000)) >= 0) throw new StrideFault("F030", "range: the list would hold more than 10000000 numbers");
+      const out = [];
+      for (let v = from, i = D.toInt(steps); i >= 0; i--, v = D.add(v, step)) out.push(v);
+      return out;
+    },
+  },
+  count: { pure: true, takes: "l:l", fn: (l) => (l instanceof StrideRange ? l.count : num(l instanceof StrideMap ? l.entries.size : typeof l === "string" ? chars(l).length : l.length)) },
   // Maps (§14.4.1).
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
   map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, v), m) }, // a map being written out: its next key
@@ -376,7 +360,9 @@ export const NATIVES = {
   // ----- null, faults and output (§14.5)
   either: { pure: true, takes: "a:V b:V", fn: (a, b) => (isNull(a) ? b : a) },
   fail: { pure: false, statement: true, takes: "message:T", fn: (message) => { throw new StrideFault("F013", text(message)); } },
-  print: { pure: false, statement: true, takes: "v:V", fn: (v) => { printer(v); return null; } },
+  print: { pure: false, statement: true, takes: "v:V", fn: (v) => { printer([v]); return null; } },
+  // print(a, b, …) (§14.5): the values of one line, in a list.
+  print_all: { pure: false, internal: true, fn: (values) => { printer(values); return null; } },
   // The key of a call that can reach questions (§8.6.2): its name where it stands; a second call there, name#2.
   call_key: {
     pure: false,
@@ -393,7 +379,7 @@ export const NATIVES = {
   loop_bound: { pure: true, internal: true, fn: (v) => { if (isNull(v)) needed("a number is", "a loop's bound"); if (whole(v) === null) throw new StrideFault("F004", `a loop's bound is a whole number, and this is ${words(v)}`); return v; } },
   // What a for or a comprehension goes through (§7.11, §6.12): there (F023).
   // The items a list holds when the loop starts are the ones it goes through (§3.4.5).
-  each_of: { pure: true, internal: true, fn: (v) => (isNull(v) ? needed("a list is", "what for goes through") : Array.isArray(v) && !isSet(v) ? [...v] : v) },
+  each_of: { pure: true, internal: true, fn: (v) => (isNull(v) ? needed("a list is", "what for goes through") : v instanceof StrideRange ? v.items : Array.isArray(v) && !isSet(v) ? [...v] : v) },
   // The last position of l[a..<b] (§6.9.3): b - 1, b a number (F023).
   slice_end: { pure: true, internal: true, fn: (v) => D.sub(v ?? needed("a number is", "a bound of [ .. ]"), num(1)) },
   // A date constant, from its words: the compiler's.

@@ -1,0 +1,23 @@
+# rule 2.5.1
+expect 1e5 == 100000
+expect 2.5e-3 == 0.0025
+expect 1E+2 == 100
+expect 0e9 == 0
+expect 1.50e1 == 15
+expect 0xFF == 255
+expect 0xff == 255
+expect 0o17 == 15
+expect 0b1010 == 10
+expect 1_000_000 == 1000000
+expect 0xFF_FF == 65535
+expect 1_0.2_5 == 10.25
+expect .5 == 0.5
+expect .5e1 == 5
+expect 1 + .25 == 1.25
+expect "{1e3}" == "1000"
+expect "{2.5e-3}" == "0.0025"
+expect 1e33 * 10 faults "F003"
+expect count(1..5) == 5
+let xs = [10, 20, 30]
+expect xs[0x1] == 20
+expect xs[1..0b10] == [20, 30]
