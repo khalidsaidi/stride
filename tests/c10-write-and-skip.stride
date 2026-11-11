@@ -13,10 +13,10 @@ if c {
 }
 skip "E" because "first"
 tick "E" when c
-# rule 10.4 10.4.3 S512
+# rule 10.4 10.4.3 W008
 # box A text near C
 # box B text near C
 # box D text near C
 # box E check near C
-# mistake 6 S512 skipped after it is written
-# mistake 15 S512 written after it is skipped
+# warning 6 W008 skipped after it is written
+# warning 15 W008 written after it is skipped

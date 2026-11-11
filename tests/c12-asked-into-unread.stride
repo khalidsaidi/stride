@@ -3,5 +3,5 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r { a: text }
 var v: r
 ask v.a: text "A"
-# rule 12.1 S409 S411
-# mistake 5 S409
+# rule 12.1 W005 W007
+# warning 5 W005

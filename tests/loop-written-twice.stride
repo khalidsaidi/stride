@@ -4,8 +4,8 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 # box Name2 text near Name
 for i in 1..2 {
   ask name: text "Name"
-# mistake 8 S512 written twice
+# warning 8 W008 written twice
   fill "Name1" = name
 }
 fill "Name2" = "x"
-# rule 10.4 S512
+# rule 10.4 W008

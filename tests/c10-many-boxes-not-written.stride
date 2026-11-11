@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask a: text "Name"
 fill "Name" = a
-# rule 10.5 S516 S515
+# rule 10.5 W010 W009
 # box Name text near Name
 # box B00 text near B
 # box B01 text near B
@@ -46,44 +46,44 @@ fill "Name" = a
 # box B39 text near B
 # box B40 text near B
 # box B41 text near B
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S515
-# mistake 1 S516
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W009
+# warning 1 W010

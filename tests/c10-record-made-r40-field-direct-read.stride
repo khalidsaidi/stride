@@ -8,6 +8,6 @@ if a > 5 {
   fill "B" = "old"
 }
 fill "B" = "x"
-# rule 10.4 S512
+# rule 10.4 W008
 # box B text near Age
-# mistake 10:1 S512
+# warning 10:1 W008

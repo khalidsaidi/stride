@@ -22,7 +22,7 @@ pick "K6" "A" when d > date_of(99, 12, 30) and d < date_of(100, 1, 2)
 pick "K6" "B" when yes
 pick "K7" "A" when n > 1 and n < 1.000000000000000000000000000000002
 pick "K7" "B" when yes
-# rule 10.4.1 10.4.2 S512
+# rule 10.4.1 10.4.2 W008
 # box K1 radio:A near N T D O A B
 # box K1 radio:B near N T D O A B
 # box K2 radio:A near N T D O A B
@@ -37,5 +37,5 @@ pick "K7" "B" when yes
 # box K6 radio:B near N T D O A B
 # box K7 radio:A near N T D O A B
 # box K7 radio:B near N T D O A B
-# mistake 22 S512
-# mistake 24 S512
+# warning 22 W008
+# warning 24 W008

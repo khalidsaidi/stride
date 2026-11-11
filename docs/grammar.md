@@ -259,19 +259,19 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
   into a var; a box filled with yes-no, a set, a list or a record.
 - **Flow:** a function that reaches itself; something that must be known before the form opens and is not; a let
   or var read where not every path has given it a value; a function with a result that does not return one on
-  every path; a statement after a return, break or continue; an answer, a let or a var never used; a field asked
-  and never read anywhere; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
+  every path; a statement after a return, break or continue; a constant's value or a default that faults, such as `const X = 1 / 0` (§11.3).
 - **The PDF** (against the header): a box the PDF does not have (with the nearest one); a statement of the wrong
-  kind for its box; a button a radio group does not have; a box written twice, or a question asked twice, on one
-  path through the program; a box neither written nor skipped; a question's printed words not among those
+  kind for its box; a button a radio group does not have; a question asked twice on one
+  path through the program; a question's printed words not among those
   the header lists beside the boxes its answer goes into; an option's not among those beside the box it ticks or picks; a list box filled
   with an entry it does not have; a program written for another PDF.
 
 Limits (§15): nesting 200 deep, 255 arguments or parameters, a list's most 1000, 1 to 1000 options in a set,
 words of 100,000 characters, numbers of 34 significant digits.
 
-Warnings do not stop the compiler: a match with no else that misses options, a function never called, a
-constant never used.
+Warnings do not stop the compiler: a match with no else that misses options; a function, a constant, an answer,
+a let or a var never used; a field asked and never read; a box written twice on one path; a box the program
+neither writes nor skips. Stride is no stricter than the form (§10.4).
 
 ## The compiler
 

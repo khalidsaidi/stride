@@ -16,7 +16,7 @@ export function test() {
   for (const x of all) if (!names.has(x.name)) problems.push(`the example "${x.text}" is of ${x.name}, which §14 does not have`);
   const head = setup();
   for (const x of all) {
-    // The setup's names are read after the example, which a let left unread would be a mistake (S411).
+    // The setup's names are read after the example, which a let left unread would be a mistake (W007).
     const source = `${head}\n${x.verb === "gives" ? `print(${x.expr})` : x.expr}\nprint(count(warm) + count(cool) + count(people))\n`;
     {
       const out = compile(source, "example.stride", {});

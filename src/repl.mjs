@@ -5,7 +5,7 @@
 // kept, the date the session began (or --today). A run is the same for the same of these (§13), so each kept entry
 // does what it did once, and its prints are shown once, when it is typed. :reload reads the libraries again. An
 // entry that is not kept, an expression among them, keeps no answer; :undo forgets the answers of what it forgets.
-// A name not used yet is not a mistake here (§11, S408–S411). Input ends at :quit or the end of stdin; lines go on
+// A name not used yet is not a mistake here (§11, W004–W007). Input ends at :quit or the end of stdin; lines go on
 // while a bracket, brace or parenthesis is open.
 import { compile, diskRead, LANGUAGE } from "./compile.mjs";
 import { parseExpression } from "./syntax.mjs";

@@ -4,5 +4,5 @@ var l: list of text most 2
 collect x in l "More?" {
   ask x: text "X"
 }
-# rule S410
-# mistake 5 S410
+# rule W006
+# warning 5 W006

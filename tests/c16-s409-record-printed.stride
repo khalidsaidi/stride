@@ -14,5 +14,5 @@ print(x)
 var y: q
 ask y.b: text "B"
 print(y.a)
-# rule 16.4 S409
-# mistake 15 S409
+# rule 16.4 W005
+# warning 15 W005

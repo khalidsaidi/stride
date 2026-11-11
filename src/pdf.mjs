@@ -387,7 +387,8 @@ const WORDS = {
 };
 
 export function checkPdf(program, header, diagnostics, { discover = false } = {}) {
-  const err = (code, node, message, notes) => !discover && diagnostics.add(KIND.PDF, node?.file ?? null, node?.span ?? null, message, notes, code);
+  // A code W… is a warning: the program compiles all the same.
+  const err = (code, node, message, notes) => !discover && (code.startsWith("W") ? diagnostics.warn(KIND.PDF, node?.file ?? null, node?.span ?? null, message, notes ?? [], code) : diagnostics.add(KIND.PDF, node?.file ?? null, node?.span ?? null, message, notes, code));
   const once = new Set();
   const errOnce = (code, key, node, message, notes) => {
     if (once.has(key)) return;
@@ -716,7 +717,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
           if (!found) errOnce("S503", `skip\t${full}`, s.node?.box ?? s.node, `skips "${full.slice(prefix.length)}", which the PDF does not have${didYouMean(full.slice(prefix.length), shortNames)}`);
           else {
             for (const b of found) done.add(keyOf(b));
-            // A box written and skipped on one path (§10.4): S512 at the later; skips again are harmless.
+            // A box written and skipped on one path (§10.4): W008 at the later; skips again are harmless.
             const k = targetOf(found[0], full);
             const picked = (st.picks.get(k) ?? []).find((c) => together([c, ...c.facts, ...st.facts]));
             const w = under(st.written.get(k), st);
@@ -851,7 +852,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
         else done.add(k);
         // What one path writes (§10.4): fill and tick always; a pick only when its condition is yes. A pick whose
         // condition depends on an answer splits the path: on one it is picked, the answer taken to be what makes it
-        // so, on the other not. Two picks in one radio group on one path are S512, whatever their buttons.
+        // so, on the other not. Two picks in one radio group on one path are W008, whatever their buttons.
         const target = targetOf(box, full);
         if (s.op !== "fill") {
           // The options that tick or pick it: those its condition tests, through lets too, and, when the condition
@@ -862,7 +863,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
         }
         if (s.op === "pick") {
           // A pick selects only when its condition is yes (§10.4.1): one known to be no selects nothing; two in
-          // one group are S512 only when both can be yes on one run, with what each path knew (§10.4.2).
+          // one group are W008 only when both can be yes on one run, with what each path knew (§10.4.2).
           if (value !== true && !isTop(value)) continue;
           const now = { ...condition(fn, s.cond, st, true), stmt: s, facts: st.facts };
           const before = st.picks.get(target) ?? [];
@@ -1018,7 +1019,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
 
   function twice(s, target, full, first, how, message = null) {
     const short = full.slice(prefix.length);
-    errOnce("S512", `twice\t${target}\t${s.node?.span?.start}`, s.node, message ?? `"${short}" is ${how} when the form is filled one way`, [{ file: first.node?.file, span: first.node?.span, message: "first here" }, ...fromCalls()]);
+    errOnce("W008", `twice\t${target}\t${s.node?.span?.start}`, s.node, message ?? `"${short}" is ${how} when the form is filled one way`, [{ file: first.node?.file, span: first.node?.span, message: "first here" }, ...fromCalls()]);
   }
 
   // ----- conditions on answers (§10.4.1)
@@ -1508,8 +1509,8 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
 
   // Every box written or skipped somewhere.
   const missing = header.boxes.filter((b) => !done.has(keyOf(b)));
-  for (const b of missing.slice(0, 40)) err("S515", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}${b.near?.[0] ? `, beside "${b.near[0].slice(0, 60)}"` : ""}) is neither written nor skipped`);
-  if (missing.length > 40) err("S516", program.formNode ?? null, `and ${plural(missing.length - 40, "more box", "more boxes")} neither written nor skipped`);
+  for (const b of missing.slice(0, 40)) err("W009", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}${b.near?.[0] ? `, beside "${b.near[0].slice(0, 60)}"` : ""}) is neither written nor skipped`);
+  if (missing.length > 40) err("W010", program.formNode ?? null, `and ${plural(missing.length - 40, "more box", "more boxes")} neither written nor skipped`);
 
   // Printed words beside the boxes each question's answers go into; each option's beside its box. A question
   // asked in several turns is reported once.

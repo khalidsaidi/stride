@@ -4,7 +4,8 @@ Stride is a small programming language for turning a fillable PDF form into a gu
 which questions to ask and which box each answer goes in, and the person filling the form answers them one at a
 time. The filled PDF downloads from the page; the original is never changed.
 
-Before a workflow runs, Stride checks it against the form, so no box is missed or written twice.
+Before a workflow runs, Stride checks it against the form: a box the form does not have is a mistake, and it
+warns of a box you have not got to or may write twice. It is no stricter than the form itself.
 
 ```stride
 form consent

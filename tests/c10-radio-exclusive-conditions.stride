@@ -17,7 +17,7 @@ pick "Q" "A" when n > 0
 pick "Q" "B" when n > 5
 pick "R" "A" when c or d
 pick "R" "B" when not c
-# rule 10.4.1 10.4.2 S512
+# rule 10.4.1 10.4.2 W008
 # box K radio:A near N
 # box K radio:B near N
 # box L radio:A near C D
@@ -30,5 +30,5 @@ pick "R" "B" when not c
 # box Q radio:B near N
 # box R radio:A near C D
 # box R radio:B near C D
-# mistake 17 S512 may be picked again in its radio group
-# mistake 19 S512 may be picked again in its radio group
+# warning 17 W008 may be picked again in its radio group
+# warning 19 W008 may be picked again in its radio group

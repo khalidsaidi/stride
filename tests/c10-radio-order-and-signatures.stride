@@ -37,7 +37,7 @@ if o == "a" {
 pick "K8" "A" when o == "b"
 pick "K9" "A" when o in ["a", "b"]
 pick "K9" "B" when o == "b"
-# rule 10.4.1 10.4.2 10.4.3 S512
+# rule 10.4.1 10.4.2 10.4.3 W008
 # box K1 radio:A near N
 # box K2 radio:A near N
 # box K2 radio:B near N
@@ -54,4 +54,4 @@ pick "K9" "B" when o == "b"
 # box K8 radio:A near O A B C
 # box K9 radio:A near O A B C
 # box K9 radio:B near O A B C
-# mistake 39 S512
+# warning 39 W008

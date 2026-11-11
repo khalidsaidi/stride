@@ -91,7 +91,7 @@ function starter(name, header, withQuestion = true) {
   const question = first ? nameOf(says) : null;
   const lines = [`form ${name}`, `pdf ${header.pdf}`];
   if (prefix) lines.push(`fields ${quote(prefix)}`);
-  lines.push("", "# Every box of the form is written or skipped once on every way through (stride explain S516). Replace", "# each skip with the question and the write that fill its box; stride check says what is still wrong.", "# A question's words are the form's own: write them as the form prints them.", "");
+  lines.push("", "# Every box of the form is listed here. Replace each skip with the question and the write that fill its", "# box; stride check warns of any box the program no longer mentions (stride explain W009).", "# A question's words are the form's own: write them as the form prints them.", "");
   if (first) lines.push(`ask ${question}: text ${quote(says)}`, `fill ${quote(short(first.field))} = ${question}`, "");
   for (const f of fields) if (!first || f !== first.field) lines.push(`skip ${quote(short(f))} because "not filled yet"`);
   const test = first ? { answers: { [question]: "Ada Lovelace" }, boxes: { [short(first.field)]: "Ada Lovelace" } } : { answers: {}, boxes: {} };

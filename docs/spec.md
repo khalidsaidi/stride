@@ -787,8 +787,10 @@ from a set (`join(s, ", ")`) are proved like any others, each set its options al
 does not restrict its possible words: a failed check does not stop the run. Empty clears the box and is always
 allowed.
 
-10.4. Following every path through the program with every answer unknown: a box is written at most once on each
-path (S512); a question asked at most once (S507).
+10.4. Following every path through the program with every answer unknown: a question is asked at most once on
+each path (S507); a box written twice on one path is a warning (W008), and the later write is the one that
+stays. **Stride is no stricter than the form**: a form lets a person leave a box empty or write over it, so
+these are warnings, and the program compiles.
 - 10.4.0. **Which paths.** The PDF check tracks current var values and uses pure-call results it can determine
   independently of answers and impure operations. A determined condition follows its selected branch; an
   undetermined condition follows both. These additional facts do not make values known under §11.1.
@@ -820,17 +822,19 @@ path (S512); a question asked at most once (S507).
   not a call with effects) and nothing it reads has changed between the two; separate impure calls are never
   taken to give the same value. The search over the unknowns is complete: there is no size past which a possible
   double selection is accepted.
-- 10.4.2. **Radio groups.** Selection is per group: two picks that write one radio group on one execution are S512,
-  whatever their buttons. S512 for two picks means a double selection is possible, or that the check could not
+- 10.4.2. **Radio groups.** Selection is per group: two picks that write one radio group on one execution are W008,
+  whatever their buttons. W008 for two picks means a double selection is possible, or that the check could not
   prove the picks exclude each other by §10.4.1; it does not claim a run that picks twice was found. A choice the
   check cannot read is written so it can: each pick in its own branch of one `if … else` or `match`. Coverage (§10.5) is per button: each button is covered by a reachable `pick` of it, or by
   a `skip` of its group. A reachable `pick` covers its button whatever its condition: `pick "K" "A" when no`
-  selects nothing and covers A, and is not S515. A `pick` in code that never runs (§11.3.3) covers nothing.
-- 10.4.3. **Write and skip.** A box (a radio group as one) written and skipped on one path is S512, at the later of
+  selects nothing and covers A, and is not W009. A `pick` in code that never runs (§11.3.3) covers nothing.
+- 10.4.3. **Write and skip.** A box (a radio group as one) written and skipped on one path is W008, at the later of
   the two; paths that exclude each other may write it on one and skip it on another. A box skipped again is
   harmless.
 
-10.5. Every box of the PDF is written or skipped on some path (S515, S516).
+10.5. A box of the PDF that the program neither writes nor skips anywhere is a warning (W009, W010): the form
+lets it stay empty, and the warning says which boxes the program has not got to. `skip` says a box is left
+empty on purpose.
 
 10.6. A question's printed words are the form's own. Which printed words stand beside a box is not in a PDF: the
 header lists them (a box's `near`) when whoever prepared it gave them. Where it does, a question's printed words
@@ -1139,8 +1143,8 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
   token met beyond the 200th level, with what surrounds it — an inner value after brackets, or the operator that
   crosses the limit; it need not be an opening bracket;
 - S401 and S402: the call that closes the circle (in S402, the call in the first function of the circle in the
-  order the file declares them); S518: the option's own line in its set or block; S515 and
-  S516: the program's first line (the header), with the box named in the message; S501: the `pdf` line; S502:
+  order the file declares them); S518: the option's own line in its set or block; W009 and
+  W010: the program's first line (the header), with the box named in the message; S501: the `pdf` line; S502:
   the `form` line; S503 and S508: the box name's expression; S511: the button name's expression; S514: the
   entry's value; S517: the question's printed words; S323: the second `default`, the first as related code;
   S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the operation that faults; S602: the loop whose turns passed the budget, the call whose working out did, the statement where the
@@ -1387,10 +1391,6 @@ its call: the function's name in the call.
 | S405 | a function giving a value on some paths only | End every path with a return. |
 | S406 | a statement after return, break or continue | It never runs; remove it. |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
-| S408 | an answer never used | Write it, use it, or do not ask it. |
-| S409 | a field asked and never read | Use it, or do not ask it. |
-| S410 | a collected item asked and never read | The same. |
-| S411 | a let or var never used | Remove it. |
 | S412 | a known value that changes between turns of a loop | Box names and printed words in a loop are made from its counter, words and constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
@@ -1400,10 +1400,7 @@ its call: the function's name in the call.
 | S508 | a box the PDF lacks | The message gives the nearest. |
 | S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group. |
 | S511 | a radio button the group lacks | The message lists its buttons. |
-| S512 | a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1) | The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`. |
 | S514 | a list box entry it lacks | The list box's entries. |
-| S515 | a box neither written nor skipped | Write it, or `skip "box" because "…"`. |
-| S516 | more such boxes | Counted after the first 40. |
 | S517 | printed words not beside the boxes of their answer | The question's words are the form's own: they must be among the words the header lists beside a box the answer goes into. If the form does print them there, add them to that box's `near` in the header; if not, the answer is going into the wrong box. |
 | S518 | an option's printed words not beside its box | The same, for an option and the box it ticks or picks. |
 | S601 | more than 255 arguments or parameters | Use a record. |
@@ -1411,6 +1408,13 @@ its call: the function's name in the call.
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |
+| W004 | an answer never used | Warning: Write it, use it, or do not ask it. |
+| W005 | a field asked and never read | Warning: Use it, or do not ask it. |
+| W006 | a collected item asked and never read | Warning: The same. |
+| W007 | a let or var never used | Warning: Remove it. |
+| W008 | a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1) | Warning: The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`. |
+| W009 | a box neither written nor skipped | Warning: Write it, or `skip "box" because "…"`. |
+| W010 | more such boxes | Warning: Counted after the first 40. |
 | F001–F020 | §13.4 | |
 
 ## 17. The command line
@@ -1606,7 +1610,7 @@ stdout each file it would change. `stride test --match words` runs only the test
   kept with them; if they give the session a mistake or a fault, the session stays as it was, and that is said.
 - **Answers.** An `ask` asks its question there and then, as §17.12 asks. The answers an entry is given are kept
   when the entry is, and not otherwise; `:undo` forgets the last entry and the answers it brought.
-- S408–S411 (a name, answer, function or constant not used yet) are not given in a session.
+- W004–W007 (a name, answer, function or constant not used yet) are not given in a session.
 - `:list` shows what is kept, numbered; `:answers` the answers kept; `:reset` forgets everything, answers and the
   libraries read; `:help` lists these; `:quit` or the end of stdin ends it.
 - `--use` and `--today` are as `eval`'s; the session stands in the folder it is run in (§4.7).

@@ -12,9 +12,9 @@ pick "K" "A" when big(n)
 pick "K" "B" when not big(n)
 pick "L" "A" when late(d)
 pick "L" "B" when not late(d)
-# rule 10.4.1 S512
+# rule 10.4.1 W008
 # box K radio:A near N
 # box K radio:B near N
 # box L radio:A near D
 # box L radio:B near D
-# mistake 14:1 S512
+# warning 14:1 W008

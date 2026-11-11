@@ -10,11 +10,11 @@ pick "K2" "A" when m is empty
 pick "K2" "B" when m is not empty
 pick "K3" "A" when t > "{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}{w}"
 pick "K3" "B" when yes
-# rule 10.4.1 10.4.2 S512
+# rule 10.4.1 10.4.2 W008
 # box K1 radio:A near N
 # box K1 radio:B near N
 # box K2 radio:A near M
 # box K2 radio:B near M
 # box K3 radio:A near T
 # box K3 radio:B near T
-# mistake 12 S512
+# warning 12 W008

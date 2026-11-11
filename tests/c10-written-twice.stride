@@ -3,6 +3,6 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask a: text "Name"
 fill "Name" = a
 fill "Name" = a
-# rule 10.4 S512
+# rule 10.4 W008
 # box Name text near Name
-# mistake 5 S512
+# warning 5 W008

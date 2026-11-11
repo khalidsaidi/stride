@@ -29,6 +29,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     if (++turnsFollowed > TURNS) throw new AnalysisLimit("the flow phase following loop turns", `${TURNS.toLocaleString("en")} turns`, s);
   };
   const err = (code, node, message, notes) => diagnostics.add(KIND.FLOW, node?.file ?? null, node?.span ?? null, message, notes, code);
+  const warn = (code, node, message, notes = []) => diagnostics.warn(KIND.FLOW, node?.file ?? null, node?.span ?? null, message, notes, code);
   const functions = resolved.units.flatMap((r) => r.functions);
   const declaredOn = new Set(); // the lets and vars declared on the path being walked (§12.1.1)
   // Why a let or var may have no value: the latest construct that leaves it so on some path, for S407's words.
@@ -674,20 +675,20 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       if (s.kind === "ask") {
-        if (s.symbol && !reads.has(s.symbol) && !session) err("S408", s.target, `${s.symbol.name} is asked, but its answer is never used`);
+        if (s.symbol && !reads.has(s.symbol) && !session) warn("W004", s.target, `${s.symbol.name} is asked, but its answer is never used`);
         if (s.fieldPath) {
           const base = s.target.symbol?.type;
           let type = base;
           for (const name of s.fieldPath.slice(0, -1)) type = type?.decl?.fields.find((f) => f.name === name)?.type;
           const last = s.fieldPath.at(-1);
-          if (type?.t === "record" && !fieldReads.has(`${type.decl.name}.${last}`) && !session) err("S409", s.target, `${s.target.names.join(".")} is asked, but no ${type.decl.name}'s ${last} is ever read`);
+          if (type?.t === "record" && !fieldReads.has(`${type.decl.name}.${last}`) && !session) warn("W005", s.target, `${s.target.names.join(".")} is asked, but no ${type.decl.name}'s ${last} is ever read`);
         }
         // A collected item that is not a record goes into its list: reading the list reads it.
         const item = s.target.names.length === 1 && s.target.symbol?.kind === "item" ? s.target.symbol : null;
-        if (item && !reads.has(item) && !(item.collected && reads.has(item.node.listSymbol)) && !session) err("S410", s.target, `${item.name} is asked, but never read`);
+        if (item && !reads.has(item) && !(item.collected && reads.has(item.node.listSymbol)) && !session) warn("W006", s.target, `${item.name} is asked, but never read`);
       }
-      // A var asked into is reported by its fields (S409), once, not again as unused.
-      if ((s.kind === "let" || s.kind === "var") && s.symbol && !reads.has(s.symbol) && !s.symbol.collectedBy && !askedInto.has(s.symbol) && !session) err("S411", { file: s.file, span: nameSpan(s.file, s.span, s.name) }, `${s.name} is never used`);
+      // A var asked into is reported by its fields (W005), once, not again as unused.
+      if ((s.kind === "let" || s.kind === "var") && s.symbol && !reads.has(s.symbol) && !s.symbol.collectedBy && !askedInto.has(s.symbol) && !session) warn("W007", { file: s.file, span: nameSpan(s.file, s.span, s.name) }, `${s.name} is never used`);
     }
   }
 
@@ -705,7 +706,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
 
   // ----- warnings: what runs, but likely not as meant
 
-  const warn = (code, node, message) => diagnostics.warn(KIND.FLOW, node?.file ?? null, node?.span ?? null, message, [], code);
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       if (s.kind === "match" && s.missing?.length) warn("W001", s, `this match has no else, and nothing happens when ${describeExpr(s.subject)} is ${s.missing.join(" or ")}`);

@@ -769,22 +769,6 @@ export const CODES = {
     "when": "a let or var read where not every path declared it or gave it a value",
     "explanation": "Declare it, or give it a value, on every path before the read (§12.1.1)."
   },
-  "S408": {
-    "when": "an answer never used",
-    "explanation": "Write it, use it, or do not ask it."
-  },
-  "S409": {
-    "when": "a field asked and never read",
-    "explanation": "Use it, or do not ask it."
-  },
-  "S410": {
-    "when": "a collected item asked and never read",
-    "explanation": "The same."
-  },
-  "S411": {
-    "when": "a let or var never used",
-    "explanation": "Remove it."
-  },
   "S412": {
     "when": "a known value that changes between turns of a loop",
     "explanation": "Box names and printed words in a loop are made from its counter, words and constants."
@@ -821,21 +805,9 @@ export const CODES = {
     "when": "a radio button the group lacks",
     "explanation": "The message lists its buttons."
   },
-  "S512": {
-    "when": "a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1)",
-    "explanation": "The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`."
-  },
   "S514": {
     "when": "a list box entry it lacks",
     "explanation": "The list box's entries."
-  },
-  "S515": {
-    "when": "a box neither written nor skipped",
-    "explanation": "Write it, or `skip \"box\" because \"…\"`."
-  },
-  "S516": {
-    "when": "more such boxes",
-    "explanation": "Counted after the first 40."
   },
   "S517": {
     "when": "printed words not beside the boxes of their answer",
@@ -864,6 +836,34 @@ export const CODES = {
   "W003": {
     "when": "a constant never used",
     "explanation": "Warning."
+  },
+  "W004": {
+    "when": "an answer never used",
+    "explanation": "Warning: Write it, use it, or do not ask it."
+  },
+  "W005": {
+    "when": "a field asked and never read",
+    "explanation": "Warning: Use it, or do not ask it."
+  },
+  "W006": {
+    "when": "a collected item asked and never read",
+    "explanation": "Warning: The same."
+  },
+  "W007": {
+    "when": "a let or var never used",
+    "explanation": "Warning: Remove it."
+  },
+  "W008": {
+    "when": "a box written twice on one path; two picks of one radio group not proved to exclude each other (§10.4.1)",
+    "explanation": "Warning: The notes show where first, and the calls. Picks the check cannot prove exclusive go in the branches of one `if … else` or `match`."
+  },
+  "W009": {
+    "when": "a box neither written nor skipped",
+    "explanation": "Warning: Write it, or `skip \"box\" because \"…\"`."
+  },
+  "W010": {
+    "when": "more such boxes",
+    "explanation": "Warning: Counted after the first 40."
   }
 };
 

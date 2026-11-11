@@ -16,10 +16,10 @@ if "b" in s {
 if s == ["a", "b"] {
   fill "Y" = "ab"
 }
-# rule 10.4.1 10.4.3 6.6 S512
+# rule 10.4.1 10.4.3 6.6 W008
 # box X text near S A B
 # box Y text near S A B
-# mistake 17:3 S512
+# warning 17:3 W008
 # run a
 # answers {"s": ["a"]}
 # boxes {"X": "1"}

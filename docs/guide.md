@@ -87,8 +87,8 @@ fill "name" = full_name
 skip "agree" because "not filled yet"
 ```
 
-It compiles as it is. Every box is written or skipped once on every way through the program (§10), so it starts
-by skipping every box but one; replace each skip with what fills it:
+It compiles as it is. It starts by skipping every box but one, so you see every box the form has; replace each
+skip with what fills it. A box the program never mentions is only a warning (§10.5): the form lets it stay empty.
 
 ```stride form
 form consent
@@ -372,7 +372,7 @@ pad_left(t: text, width: number, padding: text = " ") -> text    14.1 Words
 ## 11. Mistakes and faults
 
 A **mistake** is found by the compiler, before anything runs: it has a code, the place, and labels on the related
-code; `stride explain S512` says what the code means and what to do. `--json` gives them all in the command's one JSON document (§16.2).
+code; `stride explain W008` says what the code means and what to do. `--json` gives them all in the command's one JSON document (§16.2).
 
 ```stride form mistake=S508
 form consent
@@ -566,9 +566,9 @@ write the same boxes.
 
 - `fill "box" = e` writes words into a text box or a list box; `tick "box" when c` ticks a check box; `pick
   "group" "button" when c` chooses a radio button; `skip "box" because "why"` leaves one alone.
-- **Every box once on every way through.** The compiler follows every way the answers can take the program and
-  proves each box is written at most once on each, and every box is written or skipped somewhere (§10). A box
-  written twice when some answers are given is a mistake, found before anyone fills the form.
+- **No stricter than the form.** A box the PDF does not have is a mistake. A box the program never mentions, or
+  one it can write twice when some answers are given, is a warning (§10): the form lets a box stay empty, and
+  the later write stays.
 - **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
   on the page and on the form. Stride does not read them off the PDF: you do. When a header lists the words beside
   a box (its `"near"`: you may add them, or a tool that prepares forms may), a question whose answer goes into that

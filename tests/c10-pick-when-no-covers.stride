@@ -6,10 +6,10 @@ if no {
   pick "J" "A" when yes
 }
 pick "J" "B" when yes
-# rule 10.4.2 10.5 S515
+# rule 10.4.2 10.5 W009
 # box K radio:A
 # box K radio:B
 # box J radio:A
 # box J radio:B
-# mistake 1 S515 J
-# boxes {"K": "B"}
+# warning 1 W009 J
+# boxes {"K": "B", "J": "B"}
