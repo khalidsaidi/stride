@@ -390,7 +390,8 @@ export function format(text, name = "program.stride") {
 
   function str(e) {
     if (e.kind === "plain-string") return plain(e.value);
-    if (e.kind === "name") return e.name;
+    // Known words written as an expression (§7.9.1): a constant, an item of a constant list.
+    if (e.kind !== "string") return expr(e);
     return `"${e.parts.map((p) => (typeof p === "string" ? escape(p) : `{${expr(p)}}`)).join("")}"`;
   }
 

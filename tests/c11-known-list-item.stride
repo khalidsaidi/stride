@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const QUESTIONS = ["First?", "Second?"]
+const BOXES = ["A", "B"]
+for i in 1..2 {
+  ask ok: yes-no QUESTIONS[i]
+  tick BOXES[i] when ok
+}
+# rule 11.1 7.9.1
+# box A check
+# box B check
+# run second
+# answers {"ok[2]": "yes"}
+# boxes {"B": "Yes"}

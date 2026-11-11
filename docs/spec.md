@@ -485,11 +485,11 @@ unticked.
 
 7.9. **skip** `skip "box" because "reason"`: a box the workflow leaves alone.
 
-7.9.1. **Words, or a name that holds them.** Where a statement takes words that must be known before the form
-opens (§11.2) — a box's name and a button's, a question's printed words, a check's message, a skip's reason, a
-collect's questions, the words after `faults` — they are written in quotes, or as a name that holds them: after
-`const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box. So a box whose name in the PDF is a
-machine's is named once, in the writer's own words.
+7.9.1. **Words, or an expression that gives them.** Where a statement takes words that must be known before the
+form opens (§11.2) — a box's name and a button's, a question's printed words, a check's message, a skip's reason,
+a collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
+a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box; with
+`const QUESTIONS = ["First?", "Second?"]`, `ask ok: yes-no QUESTIONS[i]` asks each in its turn of a loop.
 
 7.10. **if** `if c { … } [else if … | else { … }]`; **match** `match e { "a", "b" => { … } … [else => { … }] }`:
 e an option or words (S329); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
@@ -861,8 +861,9 @@ question it follows.
 11.1. Known: words, numbers, `yes`, `no`, `empty`; constants; lets made of known values; the counters of loops
 that ask or write boxes; the numbers of a collect's or for each's items; the items of a `for each` over a known
 list, when it asks or writes boxes (`for each b in ["Race", "Age"] { tick b when b in why }`); pure natives of known values; list
-literals of known values; parameters every call gives a known value. Not known: answers, vars, items, fields, list
-items, records made with `new`, calls of Stride functions. The one exception is a box's or a button's name: there a
+literals of known values; parameters every call gives a known value. An item of a known list at a known position is known
+(`QUESTIONS[i]`, with QUESTIONS a constant list and i such a loop's counter). Not known: answers, vars, a
+collect's items, fields, records made with `new`, calls of Stride functions. The one exception is a box's or a button's name: there a
 call of a pure Stride function (§9.9) on known values is known too, so a function can build a row's box names
 (`fill "Make{suffix(n)}" = v.make`). A known value is therefore a scalar, an option, a set, or
 a list of known values (§8.6.3 encodes each).

@@ -1126,11 +1126,11 @@ class Parser {
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.
-  // Words a statement needs known before the form opens (§11.2): in quotes, or the name of a constant that holds them.
+  // Words a statement needs known before the form opens (§11.2): in quotes, or an expression that starts with a
+  // name and gives them (a constant, an item of a constant list).
   wordsOrName(what) {
     if (!this.is("name")) return this.string(what);
-    const t = this.take();
-    return { kind: "name", name: t.value, span: t.span };
+    return this.expr();
   }
 
   string(what = "words in quotes") {

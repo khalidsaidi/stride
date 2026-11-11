@@ -331,7 +331,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         if ((c.kind === "function" && !(calls && c.impure === false)) || (c.kind === "native" && !NATIVES[c.name]?.pure)) return false;
       }
       // A list literal of known values is known (§11.1); its items are checked as they come.
-      if (x.kind === "field" || x.kind === "index" || x.kind === "new" || x.kind === "comprehension" || x.kind === "slice") return false;
+      // An item of a known list at a known position is known; its list and position are checked as they come.
+      if (x.kind === "field" || x.kind === "new" || x.kind === "comprehension" || x.kind === "slice") return false;
     }
     return true;
   }
