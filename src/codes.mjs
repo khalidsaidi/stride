@@ -781,10 +781,6 @@ export const CODES = {
     "when": "more than 255 arguments or parameters",
     "explanation": "Use a record."
   },
-  "S602": {
-    "when": "compiler analysis limit exceeded (§15.1)",
-    "explanation": "The message names the check and the budget. Split the work: fewer turns, fewer vars that differ between paths, a smaller working out."
-  },
   "W001": {
     "when": "a match on an option missing options, without else",
     "explanation": "Warning: nothing happens for those."

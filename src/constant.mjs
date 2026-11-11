@@ -7,7 +7,7 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as textOf, list, isEmpty, mostOf, whole, copy, num, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as textOf, list, isEmpty, mostOf, whole, copy, set, isSet } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.7.2, §3.8): a list widened to the type's
 // mosts (F017 when it holds more), a list of options made the set.
@@ -35,20 +35,6 @@ export function knownPlaced(expr, type, env = new Map()) {
   }
 }
 
-// A check the compiler must make that would pass its budget (§15.1): compilation stops with S602 at `node`.
-export class AnalysisLimit extends Error {
-  constructor(check, budget, node) {
-    super(`compiler analysis limit exceeded: ${check} would pass its budget of ${budget}`);
-    this.node = node;
-  }
-}
-// One working out's work (§15.1): each expression.
-const FUEL = 100_000;
-let fuel = FUEL;
-const spend = () => {
-  if (--fuel < 0) throw new AnalysisLimit("working out a value before the form opens", `${FUEL.toLocaleString("en")} steps`, root);
-};
-
 const faultOf = (e, f) => {
   try {
     return f();
@@ -61,38 +47,12 @@ const faultOf = (e, f) => {
 
 // `env` gives the value of a name that is known (a loop's counter in one turn). What is known (§11.1) leaves out
 // fields, list items, records made with new and calls of Stride functions.
-let root = null;
 export function evaluate(expr, env = new Map()) {
-  fuel = FUEL;
-  root = expr;
   return value(expr, env, new Set());
 }
 
 function value(e, env, visiting) {
-  spend();
   switch (e.kind) {
-    case "comprehension": {
-      // Its own loop, as the machine runs it (§6.12): each item in turn, those the if takes, the list's most.
-      const l = value(e.list, env, visiting);
-      if (l === undefined) return undefined;
-      const items = Array.isArray(l) ? l : [];
-      const out = [];
-      for (const [k, item] of items.entries()) {
-        spend();
-        const inner = new Map(env);
-        inner.set(e.itemSymbol, copy(item));
-        if (e.indexSymbol) inner.set(e.indexSymbol, num(k + 1));
-        if (e.condition) {
-          const c = value(e.condition, inner, visiting);
-          if (c === undefined) return undefined;
-          if (c !== true) continue;
-        }
-        const v = value(e.value, inner, visiting);
-        if (v === undefined) return undefined;
-        out.push(copy(v));
-      }
-      return list(out, Number.isFinite(e.type?.most) ? e.type.most : Array.isArray(l) ? mostOf(l) : 0);
-    }
     case "number":
       return e.value;
     case "yes-no":

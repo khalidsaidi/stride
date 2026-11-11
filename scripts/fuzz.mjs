@@ -15,6 +15,6 @@ for (const b of bugs) {
   console.log(`BUG seed ${b.seed}: ${b.problem}`);
   if (show) console.log(`${b.source}${b.answers ? ` answers: ${JSON.stringify(b.answers)}` : ""}`);
 }
-console.log(`${runs} programs from seed ${seed}: ${counts.agreed} agreed, ${counts.budget} stopped at a compiler budget (S602), ${counts.exhausted} exhausted, ${counts.bug} bugs`);
+console.log(`${runs} programs from seed ${seed}: ${counts.agreed} agreed, ${counts.exhausted} exhausted, ${counts.bug} bugs`);
 console.log(`${compared} runs compared; how they ended: ${Object.entries(faults).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ")}`);
 process.exit(bugs.length ? 1 : 0);

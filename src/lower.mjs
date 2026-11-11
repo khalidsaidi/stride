@@ -18,7 +18,7 @@
 import * as V from "../runtime/values.mjs";
 import { KIND } from "./source.mjs";
 import { evaluate } from "./constant.mjs";
-import { textOf, NATIVES } from "../runtime/natives.mjs";
+import { textOf } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
 export function lower(resolved, diagnostics, options = {}) {
@@ -45,8 +45,8 @@ export function lower(resolved, diagnostics, options = {}) {
   // Where lowering stands: the function being built and its current block; what each name is (a local, or a
   // value known before the form opens); the key prefix of the questions asked here (an expression), the turns of
   // the loops around them (expressions, outermost first), and the items of lists being asked about.
-  const context = (fn, extra = {}) => ({ fn, block: fn.entry, locals: new Map(), known: new Map(), prefix: IR.constant(""), suffixes: [], items: new Map(), ...extra });
-  const child = (ctx, extra = {}) => ({ ...ctx, locals: new Map(ctx.locals), known: new Map(ctx.known), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
+  const context = (fn, extra = {}) => ({ fn, block: fn.entry, locals: new Map(), prefix: IR.constant(""), suffixes: [], items: new Map(), ...extra });
+  const child = (ctx, extra = {}) => ({ ...ctx, locals: new Map(ctx.locals), items: new Map(ctx.items), suffixes: [...ctx.suffixes], ...extra });
 
   function emit(ctx, stmt) {
     if (ctx.block.term) ctx.block = ctx.fn.block(); // after a return: a block nothing reaches, which is not generated
@@ -65,7 +65,7 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // A value known before the form opens (a constant), for what must be one: an option's printed words.
   function knownText(ctx, e, why) {
-    const v = evaluate(e, ctx.known);
+    const v = evaluate(e);
     if (v === undefined) {
       if (diagnostics.empty) err("S412", e, `${why} must be known before the form opens: words, or constants`);
       return "";
@@ -119,21 +119,7 @@ export function lower(resolved, diagnostics, options = {}) {
         return lowerAsk(s, ctx);
       case "let":
       case "var": {
-        // A let known before the form opens is its value; one declared in two branches is a place both write.
-        // Placed as its declared type, as any value is: a list of options made the set, a list widened (§3.7, §3.8).
-        if (s.kind === "let" && s.symbol?.known && !s.symbol.branchDeclared && evaluate(s.value, ctx.known) !== undefined) {
-          const placed = placeAs(IR.constant(evaluate(s.value, ctx.known)), s.symbol.type, s.value.type, s.value);
-          try {
-            ctx.known.set(s.symbol, placed.e === "native" ? NATIVES[placed.name].fn(...placed.args.map((a) => a.v)) : placed.v);
-            // Traced (§17.7), it is a statement too: worked out as written, its value given to a local of its name
-            // that nothing reads, so the trace shows it and its calls. Every use still takes the known value.
-            if (options.trace) emit(ctx, { op: "set", dst: ctx.fn.local(s.name, s.symbol.type), value: placeAs(expr(s.value, ctx), s.symbol.type, s.value.type, s.value), node: s });
-            return;
-          } catch (e) {
-            if (!(e instanceof V.StrideFault)) throw e;
-            // A fault placing it is left to the run, where it stands.
-          }
-        }
+        // One declared in two branches is a place both write.
         const l = (s.symbol?.branchDeclared && ctx.locals.get(s.symbol)) || ctx.fn.local(s.name, s.symbol?.type);
         ctx.locals.set(s.symbol, l);
         emit(ctx, { op: "set", dst: l, value: s.value ? placeAs(expr(s.value, ctx), s.symbol?.type, s.value.type, s.value) : initial(s.symbol?.type), node: s });
@@ -364,11 +350,6 @@ export function lower(resolved, diagnostics, options = {}) {
 
   function lowerFor(s, ctx) {
     const counter = ctx.fn.local(s.counter, s.symbol.type);
-    counter.counter = true; // known in every turn (§11.1): the PDF check keeps turns apart by it
-    // A loop that asks or writes boxes (its counter may name them) with bounds known before the form opens:
-    // finitely many turns, which the PDF check follows every one of (§10). One that does neither needs no turn
-    // kept apart.
-    counter.bounded = !!s.unroll && V.whole(evaluate(s.from, ctx.known) ?? null) !== null && V.whole(evaluate(s.to, ctx.known) ?? null) !== null;
     const last = ctx.fn.local(`${s.counter}.to`, s.symbol.type);
     // The bounds, once, from then to, each a whole number (§7.11: F004).
     emit(ctx, { op: "set", dst: counter, value: withAt(IR.native("loop_bound", [expr(s.from, ctx)]), placeOf(s.from, s.from.span)), node: s });
@@ -387,26 +368,7 @@ export function lower(resolved, diagnostics, options = {}) {
     jumpTo(inner, step, s);
     emit(inner, { op: "set", dst: counter, value: IR.binary("+", IR.local(counter), IR.constant(V.num(1))), node: s });
     if (!inner.block.term) inner.block.term = { op: "jump", to: head, node: s };
-    // Turns not known before the form opens (§11.1): the PDF check follows it as running any number of turns, its
-    // counter and every local its body changes undetermined at its head (§10.4.0).
-    const knownBounds = V.whole(evaluate(s.from, ctx.known) ?? null) !== null && V.whole(evaluate(s.to, ctx.known) ?? null) !== null;
-    if (!knownBounds) head.widen = [counter, ...changedIn(body, new Set([head, exit]))];
     ctx.block = exit;
-  }
-
-  // The locals the blocks from `start` give a value, short of the blocks in `stop`.
-  function changedIn(start, stop) {
-    const out = new Set();
-    const seen = new Set(stop);
-    for (const work = [start]; work.length; ) {
-      const b = work.pop();
-      if (!b || seen.has(b)) continue;
-      seen.add(b);
-      for (const st of b.stmts) if (st.dst) out.add(st.dst);
-      const t = b.term;
-      if (t) work.push(t.to, t.yes, t.no);
-    }
-    return out;
   }
 
   // The key an item of a list has, when the list is a name: reps, or inside an item, reps[2].children.
@@ -420,8 +382,6 @@ export function lower(resolved, diagnostics, options = {}) {
   function lowerEach(s, ctx) {
     const listLocal = ctx.fn.local("each", s.list.type);
     const k = ctx.fn.local(s.index ?? "k", null);
-    k.counter = true; // the item's number, known in every turn (§11.1)
-    k.bounded = !!s.unroll; // asking or writing boxes, every turn followed: never past the list's most (§3.7)
     emit(ctx, { op: "set", dst: listLocal, value: expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
     const head = ctx.fn.block();
@@ -465,8 +425,6 @@ export function lower(resolved, diagnostics, options = {}) {
       ctx.block = first;
     }
     const k = ctx.fn.local(s.index ?? "k", null);
-    k.counter = true; // the item's number, known in every turn (§11.1)
-    k.bounded = !!s.unroll; // asking or writing boxes, every turn followed: never past the list's most (§3.7)
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -559,7 +517,6 @@ export function lower(resolved, diagnostics, options = {}) {
       }
       case "name": {
         const sym = e.symbol;
-        if (ctx.known.has(sym)) return IR.constant(ctx.known.get(sym));
         if (sym.kind === "const") return IR.constant(sym.value ?? null);
         const l = ctx.locals.get(sym);
         if (!l) {

@@ -16,8 +16,7 @@
 // wrong, and the person would read a cascade instead of the cause.
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve as resolvePath, sep } from "node:path";
-import { Diagnostics, SourceFile, KIND } from "./source.mjs";
-import { AnalysisLimit } from "./constant.mjs";
+import { Diagnostics, SourceFile } from "./source.mjs";
 import { load } from "./load.mjs";
 import { resolve } from "./resolve.mjs";
 import { check } from "./check.mjs";
@@ -59,15 +58,7 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
   file.depth = depth;
   const out = { diagnostics, program: null, questions: [], bytecode: null, phases: [], resolved: null };
   const phase = (n) => out.phases.push(n);
-  try {
-    return phases(out, file, diagnostics, phase);
-  } catch (e) {
-    // A check the compiler must make passed its budget: no bytecode, nothing taken as proved (§15.1).
-    if (!(e instanceof AnalysisLimit)) throw e;
-    out.bytecode = null;
-    diagnostics.add(KIND.LIMIT, e.node?.file ?? file, e.node?.span ?? null, e.message, [], "S602");
-    return out;
-  }
+  return phases(out, file, diagnostics, phase);
 
   function phases(out, file, diagnostics, phase) {
   const loaded = load(file, diagnostics, { read, libDir: [libDirOf(name, dir), ...libraries.filter((d) => resolvePath(d) !== resolvePath(libDirOf(name, dir)))], stdPath });

@@ -1015,20 +1015,6 @@ entry says "or a set" (its items are then options).
 | depth of calls | 200 (F015) |
 | mistakes reported | 20; the rest are counted |
 
-15.1. **Analysis budgets.** The checks the compiler must make (§10, §11) work within these budgets. A check that
-would pass one stops compilation with S602, naming the check and the budget; no bytecode is produced, and nothing
-is taken as proved.
-
-| Budget | Counts | |
-|---|---|---|
-| working out a value before the form opens | the expressions of one working out of a constant, a default or another value that must be known (§11.2) | 100,000 (S602) |
-| loop turns in the flow phase | turns actually followed one by one (§11.3.6) over the whole flow phase, every repeated visit of the analysis counted, not the size of the written range; a safe summary or an early exit is allowed | 100,000 (S602) |
-| paths in the PDF check | paths the PDF check keeps apart at one analysis point in one context (§10.4.0): one call of a function, one turn of each loop it follows by known turns; separate calls and known loop turns are not alternative paths at one point | 100,000 (S602) |
-| loop turns in the PDF check | paths the PDF check follows into the head of a loop (§10.4.0), over the whole check, every visit counted, known turns and turns of a loop whose turns are not known alike | 100,000 (S602) |
-| a pure call in the PDF check | steps of the intermediate form's interpreter working out one pure call whose arguments are determined (§10.4.0) | 100,000 (S602) |
-| one proof that conditions exclude each other | search and formula nodes of one radio-overlap proof (§10.4.1, §10.4.2): each choice of an unknown, each part of a condition looked at; exhaustion is S602, never "no clash" | 100,000 (S602) |
-| answer values for one choice box | combinations of answer values tried to prove the words of one choice box write (§10.3); an any-of answer counts every set of its options | 4,096 (S602) |
-
 ## 16. Mistakes, warnings and how they are shown
 
 16.1. **A mistake** stops the compiler after its phase: syntax, libraries, names, types, flow, the PDF check. A
@@ -1307,7 +1293,6 @@ its call: the function's name in the call.
 | S511 | a radio button the group lacks | The message lists its buttons. |
 | S514 | a list box entry it lacks | The list box's entries. |
 | S601 | more than 255 arguments or parameters | Use a record. |
-| S602 | compiler analysis limit exceeded (§15.1) | The message names the check and the budget. Split the work: fewer turns, fewer vars that differ between paths, a smaller working out. |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |

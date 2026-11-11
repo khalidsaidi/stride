@@ -16,25 +16,18 @@
 import { KIND, nameSpan } from "./source.mjs";
 import { describeExpr } from "./check.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
-import { evaluate, knownPlaced, AnalysisLimit } from "./constant.mjs";
+import { evaluate } from "./constant.mjs";
 import * as V from "../runtime/values.mjs";
 
 
 // `session`: the program is `stride repl`'s, read as it is typed (§17.14): a name not used yet is not a mistake.
 export function flow(resolved, diagnostics, { session = false } = {}) {
-  // The turns followed one by one over the whole flow phase, every walk and every visit again counted (§15.1).
-  const TURNS = 100_000;
-  let turnsFollowed = 0;
-  const turn = (s) => {
-    if (++turnsFollowed > TURNS) throw new AnalysisLimit("the flow phase following loop turns", `${TURNS.toLocaleString("en")} turns`, s);
-  };
   const err = (code, node, message, notes) => diagnostics.add(KIND.FLOW, node?.file ?? null, node?.span ?? null, message, notes, code);
   const warn = (code, node, message, notes = []) => diagnostics.warn(KIND.FLOW, node?.file ?? null, node?.span ?? null, message, notes, code);
   const functions = resolved.units.flatMap((r) => r.functions);
   const declaredOn = new Set(); // the lets and vars declared on the path being walked (§12.1.1)
   // Why a let or var may have no value: the latest construct that leaves it so on some path, for S407's words.
   const cause = new Map(); // symbol -> { kind: "declared" | "if" | "match" | "loop", node }
-  const union = (sets) => new Set(sets.flatMap((x) => [...x]));
   // What is known before the form opens (§11.1) of a condition, a bound, a subject, a list or an argument: never
   // a call of a Stride function, even one standing alone, whose value the run gives.
   const know = (e, env) => (e?.kind === "call" && e.callee?.kind === "function" ? undefined : evaluate(e, env));
@@ -139,41 +132,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     return out;
   };
 
-  // ----- 1. no function reaches itself (Tarjan's strongly connected components)
+  // ----- 1. which functions each function calls
 
   const calls = new Map(functions.map((f) => [f, callsIn(f.node.body)]));
-  {
-    let index = 0;
-    const stack = [];
-    const info = new Map();
-    const strong = (v) => {
-      info.set(v, { index, low: index, on: true });
-      index++;
-      stack.push(v);
-      for (const c of calls.get(v) ?? []) {
-        const w = c.callee;
-        if (!info.has(w)) {
-          strong(w);
-          info.get(v).low = Math.min(info.get(v).low, info.get(w).low);
-        } else if (info.get(w).on) info.get(v).low = Math.min(info.get(v).low, info.get(w).index);
-      }
-      if (info.get(v).low === info.get(v).index) {
-        const component = [];
-        let w;
-        do {
-          w = stack.pop();
-          info.get(w).on = false;
-          component.push(w);
-        } while (w !== v);
-        // A function may call itself, and functions each other: the run's depth is what stops one that never ends
-        // (F015).
-        if (component.length > 1 || (calls.get(v) ?? []).some((c) => c.callee === v)) {
-          for (const f of component) f.recursive = true;
-        }
-      }
-    };
-    for (const f of functions) if (!info.has(f)) strong(f);
-  }
 
   // ----- 2. effects
 
@@ -231,7 +192,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     }
   }
 
-  // ----- 3. known before the form opens
+  // ----- 3. the parameters that name a function's boxes and questions (they tell its calls' questions apart, §8.6)
 
   for (const f of functions) f.staticParams = new Set();
   const fnOf = new Map(); // a node's function, for parameters
@@ -259,9 +220,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "expect":
           need(s.fault, "the fault a test expects");
           break;
-        case "for":
-          if (s.unroll) (need(s.from, "the bounds of a loop that asks or writes boxes"), need(s.to, "the bounds of a loop that asks or writes boxes"));
-          break;
         default:
           break;
       }
@@ -269,52 +227,11 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     }
   }
 
-  // A let whose value is known is known itself.
+  // A let made of such a parameter passes it on.
   const lets = new Map();
   for (const { fn, body } of bodies) for (const s of statements(body)) if (s.kind === "let" && s.symbol) lets.set(s.symbol, { s, fn });
 
-  // Whether a name is known before the form opens, given the parameters known so far.
-  function knownName(sym, fn, seen = new Set()) {
-    switch (sym.kind) {
-      case "const":
-        return true;
-      case "counter":
-        return !!sym.node.unroll;
-      case "index":
-        return !!sym.node.unroll;
-      // The item of a for each over a known list (a list written out): each turn's item is known (§11.1).
-      case "item":
-        return sym.node.kind === "for-each" && !!sym.node.unroll && !seen.has(sym) && (seen.add(sym), known(sym.node.list, fn, seen));
-      case "param":
-        return [...(fn?.staticParams ?? [])].includes(sym);
-      case "let": {
-        if (seen.has(sym)) return false;
-        seen.add(sym);
-        const l = lets.get(sym);
-        return !!l && known(l.s.value, l.fn, seen);
-      }
-      default:
-        return false;
-    }
-  }
-
-  // `calls`: a call of a pure Stride function on known values counts too (a box's name, §11.2).
-  function known(e, fn, seen = new Set(), calls = false) {
-    for (const x of subexpressions(e)) {
-      if (x.kind === "name" && x.symbol && !knownName(x.symbol, fn, seen)) return false;
-      if (x.kind === "call") {
-        const c = x.callee;
-        if (!c) continue;
-        if ((c.kind === "function" && !(calls && c.impure === false)) || (c.kind === "native" && !NATIVES[c.name]?.pure)) return false;
-      }
-      // A list literal of known values is known (§11.1); its items are checked as they come.
-      // An item of a known list at a known position is known; its list and position are checked as they come.
-      if (x.kind === "field" || x.kind === "new" || x.kind === "comprehension" || x.kind === "slice") return false;
-    }
-    return true;
-  }
-
-  // Parameters become known from where they are needed, and from calls that pass them on, until nothing changes.
+  // A parameter that a box's name or a question's words are made of, and one passed on to such a parameter.
   for (let changed = true; changed; ) {
     changed = false;
     const mark = (e, fn) => {
@@ -344,27 +261,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       }
     }
   }
-
-  const unknownPart = (e, fn) => {
-    for (const x of subexpressions(e)) {
-      if (x.kind === "name" && x.symbol && !knownName(x.symbol, fn)) return x;
-      if (x.kind === "call" && x.callee && (x.callee.kind === "function" || !NATIVES[x.callee.name]?.pure)) return x;
-      if (["field", "index", "list", "new"].includes(x.kind)) return x;
-    }
-    return e;
-  };
-  const reason = (x) => {
-    const sym = x.symbol;
-    if (!sym) return x.kind === "call" ? `${describeExpr(x)} runs when the form is filled` : `${describeExpr(x)} is known only when the form is filled`;
-    if (sym.kind === "answer") return `${sym.name} is an answer, known only when the form is filled`;
-    if (sym.kind === "var") return `${sym.name} is a var, which can change as the form is filled`;
-    if (sym.kind === "counter" || sym.kind === "index") return `${sym.name} counts a loop that neither asks nor writes boxes, so it runs when the form is filled`;
-    if (sym.kind === "item") return `${sym.name} is an item of a list, known only when the form is filled`;
-    return `${sym.name} is not known before the form opens`;
-  };
-  // What a box's name or a question's words are made of is worked out as the program runs: nothing here must be
-  // known beforehand. The parameters marked above still name a function's questions apart (§8.6).
-  for (const [sym, l] of lets) sym.known = !sym.branchDeclared && known(l.s.value, l.fn);
 
   // ----- 4. vars given a value before they are read; returns; nothing after a return
 
@@ -421,11 +317,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
           unset.delete(s.symbol);
           if (s.kind === "var" && !s.value && s.symbol && !["list", "record"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
           if (s.symbol) declaredOn.add(s.symbol);
-          // A let made of known values is known from here on this path (§11.1), placed as its type (§3.7.2).
-          if (s.kind === "let" && s.symbol?.known) {
-            const v = knownPlaced(s.value, s.symbol.type, env);
-            if (v !== undefined) env.set(s.symbol, v);
-          }
           break;
         case "break":
           exits?.breaks.push(new Set(unset));
@@ -498,39 +389,11 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "for-each":
         case "while":
         case "collect": {
-          const turns = knownTurns(s, env);
-          if (!turns) {
-            // Turns not known before the form opens: it may run none, and what it gives a value is not certain
-            // after it. Its body is still checked, once, with what it does not know left unknown.
-            const r = walkFlow(s.body, new Set(unset), fn, { breaks: [], continues: [] }, new Map(env));
-            // What only its body gives a value is left without one when it runs no turns.
-            for (const v of unset) if (r.falls && !r.unset.has(v)) cause.set(v, { kind: "loop", node: s });
-            break;
-          }
-          // Each turn starts from what the turn before left at its end or at a continue; the loop ends after its
-          // last turn or at a break. No path out of it at all: every path returned.
-          // A body that never reads its counter or item gives every turn that starts alike the same end: once a
-          // turn starts as the one before did, the turns left change nothing.
-          let start = new Set(unset);
-          const breaks = [];
-          const same = !readsTurn(s);
-          for (const bind of turns) {
-            if (!start) break;
-            const ex = { breaks: [], continues: [] };
-            const turnEnv = new Map(env);
-            bind(turnEnv);
-            const r = walkFlow(s.body, new Set(start), fn, ex, turnEnv);
-            breaks.push(...ex.breaks);
-            const next = [...(r.falls ? [r.unset] : []), ...ex.continues];
-            const was = start;
-            start = next.length ? union(next) : null;
-            if (same && start && start.size === was.size && [...start].every((v) => was.has(v))) break;
-          }
-          const after = [...(start ? [start] : []), ...breaks];
-          if (after.length) {
-            unset.clear();
-            for (const v of union(after)) unset.add(v);
-          } else falls = false;
+          // Turns not known before the form opens: it may run none, and what it gives a value is not certain
+          // after it. Its body is still checked, once, with what it does not know left unknown.
+          const r = walkFlow(s.body, new Set(unset), fn, { breaks: [], continues: [] }, new Map(env));
+          // What only its body gives a value is left without one when it runs no turns.
+          for (const v of unset) if (r.falls && !r.unset.has(v)) cause.set(v, { kind: "loop", node: s });
           break;
         }
         case "return":
@@ -541,34 +404,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       }
     }
     return { unset, falls };
-  }
-
-  // A loop's turns when they are known before the form opens: a for with known bounds, a for each over a known
-  // list; each turn a binding of its counter, or of its item and number, made as it is walked. Null when not
-  // known, or for a collect, whose turns are the answers'. Every turn is walked, however many (§11.3.2).
-  function knownTurns(s, env) {
-    if (s.kind === "for") {
-      const from = V.whole(know(s.from, env) ?? null), to = V.whole(know(s.to, env) ?? null);
-      if (from === null || to === null) return null;
-      return (function* () {
-        for (let i = from; i <= to; i++) yield (turn(s), (e) => s.symbol && e.set(s.symbol, V.num(i)));
-      })();
-    }
-    if (s.kind === "for-each") {
-      const l = know(s.list, env);
-      if (l === undefined || (l !== null && !Array.isArray(l))) return null;
-      return (function* () {
-        for (const [k, item] of (l ?? []).entries()) yield (turn(s), (e) => (e.set(s.itemSymbol, item), s.indexSymbol && e.set(s.indexSymbol, V.num(k + 1))));
-      })();
-    }
-    return null;
-  }
-
-  // Whether a loop's body reads its counter, item or number anywhere, so that its turns may differ.
-  function readsTurn(s) {
-    const mine = new Set([s.symbol, s.itemSymbol, s.indexSymbol].filter(Boolean));
-    for (const t of statements(s.body)) for (const e of expressionsOf(t)) if (e.kind === "name" && mine.has(e.symbol)) return true;
-    return false;
   }
 
   // The lets and vars a block declares at its own level or in its branches (not inside loops, whose names end
@@ -594,6 +429,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     into.clear();
     for (const v of after) into.add(v);
   }
+
 
   // ----- 5. every answer used; every answered field read
 

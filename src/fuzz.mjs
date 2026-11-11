@@ -8,8 +8,7 @@
 // matches, loops, for eaches, collects, comprehensions and every kind of box write, each name used after it is
 // declared and every answer and let read. Expressions are made by type, to a depth, from what is in scope.
 //
-// A program a check stops at its budget (S602, §15.1) is counted apart, not a bug. A run the machine exhausts
-// (F014, F015) is not compared (§19.1.1).
+// A run the machine exhausts (F014, F015) is not compared (§19.1.1).
 import { compile } from "./compile.mjs";
 import { load, run, boxValues } from "../runtime/vm.mjs";
 import { interpretProgram } from "./interpret.mjs";
@@ -560,8 +559,6 @@ export function fuzzOne(seed) {
   }
   const mistakes = build.diagnostics.sorted().filter((d) => d.severity === "error");
   if (mistakes.length) {
-    // A check stopped at its budget proves nothing either way, whatever it found before it stopped (§15.1).
-    if (mistakes.some((m) => m.code === "S602")) return { seed, outcome: "budget", source };
     return { seed, outcome: "bug", problem: `a mistake on a program meant to be valid: ${mistakes.slice(0, 3).map((m) => `${m.line}:${m.column} ${m.code} ${m.message}`).join("; ")}`, source };
   }
 
@@ -612,7 +609,7 @@ export function fuzzOne(seed) {
 }
 
 export function fuzz({ runs = 100, seed = 1 } = {}) {
-  const counts = { agreed: 0, budget: 0, exhausted: 0, bug: 0 };
+  const counts = { agreed: 0, exhausted: 0, bug: 0 };
   const bugs = [];
   const faults = {}; // runs compared, by the fault they stopped on: how much of the machine's checking was met
   let compared = 0;

@@ -301,7 +301,6 @@ class Parser {
 
   name(what = "a name (letters, digits and _)") {
     if (this.is("name")) {
-      const t = this.token;
       return this.take().value;
     }
     if (this.is("keyword")) throw new SyntaxMistake(`"${this.token.value}" is a word of the language, and cannot be a name`, this.token.span, "S013");

@@ -17,7 +17,6 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, basename } from "node:path";
 import { run, boxValues } from "../runtime/vm.mjs";
 import { dateFrom, D } from "../runtime/values.mjs";
-import { interpretProgram } from "./interpret.mjs";
 
 export function testsOf(programPath) {
   const dir = programPath.replace(/\.(stride|sbc)$/, ".tests");
@@ -25,14 +24,11 @@ export function testsOf(programPath) {
   return { dir, files: readdirSync(dir).filter((f) => f.endsWith(".json")).sort().map((f) => join(dir, f)) };
 }
 
-// Runs one test on a loaded program; gives the list of what differs (empty when it passes). With the program's
-// intermediate form (`ir`: { program, boxes }), the test runs there too, and any difference between the two runs
-// is a fault in the compiler, said as such.
-export function runTest(p, test, ir = null, override = null) {
+// Runs one test on a loaded program; gives the list of what differs (empty when it passes).
+export function runTest(p, test, override = null) {
   const problems = [];
   const today = test.today ?? override;
   const result = run(p, test.answers ?? {}, { today });
-  if (ir) problems.push(...crossCheck(p, result, interpretProgram(ir.program, test.answers ?? {}, ir.boxes, { today })));
   if (test.fault !== undefined && result.fault?.code !== test.fault) problems.push(result.fault ? `the run stopped with ${result.fault.code}, expected ${test.fault}` : `the run finished, expected it to stop with ${test.fault}`);
   if (test.prints !== undefined && JSON.stringify(result.prints) !== JSON.stringify(test.prints)) problems.push(`the run printed ${JSON.stringify(result.prints)}, expected ${JSON.stringify(test.prints)}`);
   if (result.fault && test.fault === undefined) problems.push(`the run stopped: ${result.fault.message} (${result.fault.file}:${result.fault.line})${(result.fault.stack ?? []).slice(1).map((f) => `, called from ${f.function} at ${f.file}:${f.line}`).join("")}`);
@@ -66,32 +62,6 @@ export function runTest(p, test, ir = null, override = null) {
   return { problems, steps: result.steps, values };
 }
 
-// The machine's run against the intermediate form's, everything §19.1 compares: the questions reached with their
-// keys, printed words, values, defaults, checks and unreadable marks; every print; the fault, its code, message and
-// every place of its stack; and, when the run did not stop, every box. Any difference is a fault in the compiler.
-function crossCheck(p, vm, ir) {
-  const out = [];
-  const fault = (f) => (f ? JSON.stringify({ code: f.code, message: f.message, stack: (f.stack ?? []).map((x) => [x.function, x.file, x.line, x.column]) }) : "none");
-  if (fault(vm.fault) !== fault(ir.fault)) out.push(`compiler fault: the machine stops with ${fault(vm.fault)} and the intermediate form with ${fault(ir.fault)}`);
-  const steps = (r) => r.steps.map((s) => JSON.stringify([s.key, s.printed, s.value, s.default, s.failed, s.unreadable ?? null]));
-  const [a, b] = [steps(vm), steps(ir)];
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    if (a[i] === b[i]) continue;
-    out.push(`compiler fault: question ${i + 1} is ${a[i] ?? "not asked"} in the machine and ${b[i] ?? "not asked"} in the intermediate form`);
-    break;
-  }
-  if (JSON.stringify(vm.prints) !== JSON.stringify(ir.prints)) out.push(`compiler fault: the machine prints ${JSON.stringify(vm.prints)} and the intermediate form ${JSON.stringify(ir.prints)}`);
-  if (vm.fault || ir.fault) return out;
-  const values = boxValues(p, vm.writes);
-  for (const [name, v] of Object.entries(values)) {
-    const kind = p.boxes.find((x) => x.name === name)?.kind;
-    const w = ir.writes.has(name) ? ir.writes.get(name) : kind === "fill" ? "" : "Off";
-    if (w !== v) out.push(`compiler fault: "${name.slice(p.prefix.length)}" holds ${JSON.stringify(v)} in the machine and ${JSON.stringify(w)} in the intermediate form`);
-  }
-  for (const name of ir.writes.keys()) if (!(name in values)) out.push(`compiler fault: the intermediate form writes "${name.slice(p.prefix.length)}", which the machine does not`);
-  return out;
-}
-
 // A test file's expectations, in order (§7.17.1): those a fault in a let kept from running are "not run".
 export function expectResults(program, results) {
   const count = program.main.blocks.reduce((n, b) => n + b.stmts.filter((s) => s.op === "expect").length, 0);
@@ -105,7 +75,7 @@ export const parseDigits = (text) => JSON.parse(text, (k, v, context) => (typeof
 
 // `today`: the --today date, for the tests that do not give their own. Every test's own date is checked before any
 // test runs (§17.1): `usage` lists the bad ones, and then nothing runs.
-export function runTests(p, programPath, only = [], ir = null, { today = null } = {}) {
+export function runTests(p, programPath, only = [], { today = null } = {}) {
   const { dir, files } = testsOf(programPath);
   const loaded = [];
   for (const file of files) {
@@ -127,7 +97,7 @@ export function runTests(p, programPath, only = [], ir = null, { today = null } 
     ...loaded.filter((x) => x.test && "today" in x.test && todayMistake(x.test.today)).map((x) => `${x.file}: "today" ${todayMistake(x.test.today, "today")}`),
   ];
   if (usage.length) return { dir, results: [], usage };
-  const results = loaded.map((x) => (x.test ? { name: x.name, file: x.file, ...runTest(p, x.test, ir, today) } : x));
+  const results = loaded.map((x) => (x.test ? { name: x.name, file: x.file, ...runTest(p, x.test, today) } : x));
   return { dir, results };
 }
 

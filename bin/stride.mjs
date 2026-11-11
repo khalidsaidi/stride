@@ -782,12 +782,10 @@ async function main(argv) {
         if (found.files.length > 1 && !json) out(bold(file));
         // A compiled program, shared without its source: its tests run in the machine (§17.17).
         if (!r.out) r.out = { program: { test: false }, ir: null };
-        // A test file: each expect a sub-run, reported in order, the same in the machine and the intermediate form.
+        // A test file: each expect a sub-run, reported in order.
         if (r.out.program.test) {
           const vm = run(r.p, {}, { today });
-          const ir = interpretProgram(r.out.program, {}, r.out.boxes, { today });
           const results = expectResults(r.out.program, vm.results ?? []);
-          const same = JSON.stringify(results) === JSON.stringify(expectResults(r.out.program, ir.results ?? []));
           results.forEach((x, i) => {
             const name = `${i + 1}${x.line ? ` (line ${x.line})` : ""}`;
             if (match && !name.includes(match)) return;
@@ -798,12 +796,10 @@ async function main(argv) {
             if (!json) out(`${ok ? green("ok") : red(x.result === "fail" ? "FAIL" : "not run")}   ${name}${x.why ? `: ${x.why}` : ""}`);
           });
           if (vm.fault) (entry.ok = false), json ? entry.tests.push({ name: "the file", ok: false, problems: [faultWords(vm.fault)] }) : err(errRed(faultWords(vm.fault)));
-          if (!same) (entry.ok = false), (failed++), json ? entry.tests.push({ name: "the engines", ok: false, problems: ["the machine and the intermediate form disagree: a compiler fault"] }) : err(errRed("the machine and the intermediate form disagree: a compiler fault"));
           if (entry.tests.some((t) => !t.ok)) entry.ok = false;
           continue;
         }
-        // Each test runs in the machine and in the compiler's intermediate form; they must agree.
-        const { dir, results, usage: bad } = runTests(r.p, file, names, r.out.ir === null ? null : { program: r.out.program, boxes: r.out.boxes }, { today });
+        const { dir, results, usage: bad } = runTests(r.p, file, names, { today });
         if (bad) return usage("test", bad.join("\n"));
         if (!results.length && one) return fail(`${file}: no tests in ${dir}`);
         for (const t of results) {

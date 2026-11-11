@@ -36,7 +36,6 @@
 // must compile clean, and every run then goes through both engines — the machine and the intermediate form's
 // interpreter — which must give
 // the golden results above and agree with each other on every question, box, print and fault (§19.1).
-import { AnalysisLimit } from "./constant.mjs";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
