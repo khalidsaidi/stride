@@ -174,6 +174,15 @@ function execute(p, answers, limit, depth, trace, prints) {
     throw new StrideFault(code, message);
   };
 
+  // Which box each answer went into, as the run found it: the writes made of a question's answer, by its key.
+  const links = [];
+  const lastKey = [];
+  const pending = [];
+  const linked = (box) => {
+    for (const [q, direct] of pending) if (lastKey[q] !== undefined) links.push({ key: lastKey[q], box, direct: !!direct });
+    pending.length = 0;
+  };
+
   const boxAt = (name) => {
     const i = p.boxIndex.get(p.prefix + words(name));
     if (i === undefined) fault("F016", `the program writes the box "${words(name)}", which it does not know`);
@@ -216,7 +225,7 @@ function execute(p, answers, limit, depth, trace, prints) {
       const pop = () => stack.pop();
       switch (op) {
         case OP.HALT:
-          return { steps, writes, results, fault: null };
+          return { steps, writes, results, links, fault: null };
         case OP.TEXT:
           stack.push(p.texts[ins.a]);
           break;
@@ -380,7 +389,7 @@ function execute(p, answers, limit, depth, trace, prints) {
         case OP.RETURN_NONE: {
           const v = op === OP.RETURN ? pop() : null;
           frames.pop();
-          if (!frames.length) return { steps, writes, results, fault: null };
+          if (!frames.length) return { steps, writes, results, links, fault: null };
           stack.push(v);
           break;
         }
@@ -401,9 +410,13 @@ function execute(p, answers, limit, depth, trace, prints) {
           // The default only when the answers do not hold the key at all.
           const value = has ? given.value : def !== undefined ? def : q.type === "any-of" ? set([], q.options.map((o) => o.value)) : null;
           steps.push({ question: q, index: ins.a, key, printed: shown, value, default: def, answered: has, failed: [], unreadable: given.unreadable });
+          lastKey[ins.a] = key;
           stack.push(value);
           break;
         }
+        case OP.FROM:
+          pending.push([ins.a, ins.b]);
+          break;
         case OP.CHECK_FAILED: {
           const message = words(pop());
           const step = [...steps].reverse().find((x) => x.index === ins.a);
@@ -423,24 +436,30 @@ function execute(p, answers, limit, depth, trace, prints) {
         }
         case OP.FILL:
           writes.set(ins.a, { kind: "fill", value: words(pop()) });
+          linked(ins.a);
           break;
         case OP.TICK: {
           const on = truthy(pop());
           writes.set(ins.a, { kind: "tick", value: on ? p.boxes[ins.a].on ?? "Yes" : "Off", on });
+          linked(ins.a);
           break;
         }
         case OP.PICK:
           if (truthy(pop())) writes.set(ins.a, { kind: "pick", value: p.texts[ins.b] });
+          linked(ins.a);
           break;
         case OP.FILL_AT: {
           const v = pop();
-          writes.set(boxAt(pop()), { kind: "fill", value: words(v) });
+          const b = boxAt(pop());
+          writes.set(b, { kind: "fill", value: words(v) });
+          linked(b);
           break;
         }
         case OP.TICK_AT: {
           const on = truthy(pop());
           const b = boxAt(pop());
           writes.set(b, { kind: "tick", value: on ? p.boxes[b].on ?? "Yes" : "Off", on });
+          linked(b);
           break;
         }
         case OP.PICK_AT: {
@@ -448,6 +467,7 @@ function execute(p, answers, limit, depth, trace, prints) {
           const button = words(pop());
           const b = boxAt(pop());
           if (cond) writes.set(b, { kind: "pick", value: button });
+          linked(b);
           break;
         }
         default:
@@ -471,7 +491,7 @@ function execute(p, answers, limit, depth, trace, prints) {
       continue;
     }
     // A fault stops the run, and nothing it wrote counts (§13.4).
-    return { steps, writes: new Map(), results, fault: f };
+    return { steps, writes: new Map(), results, links, fault: f };
   }
 }
 

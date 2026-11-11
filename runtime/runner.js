@@ -52,7 +52,7 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
   const noted = (s) => notesOf(s).map((m) => el("p", { className: "check", role: "alert", textContent: m }));
 
   function render() {
-    const { steps, fault } = run(p, answers, { today });
+    const { steps, fault, links } = run(p, answers, { today });
     at = Math.max(0, Math.min(at, steps.length));
     panel.replaceChildren();
     const close = el("button", { type: "button", className: "close", textContent: "×" });
@@ -91,7 +91,8 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
     }
     const step = steps[at];
     const q = step.question;
-    const into = p.linksOf.get(step.key) ?? [];
+    // The boxes this answer goes into: those the program names outright, else those this run wrote from it.
+    const into = p.linksOf.get(step.key) ?? (links ?? []).filter((l) => l.key === step.key);
     if (into.length) show(p.boxes[(into.find((l) => l.direct) ?? into[0]).box].name);
     else unshow?.();
     body.append(el("p", { className: "where", textContent: `Question ${at + 1} of ${steps.length}` }), el("h2", { textContent: step.printed }));

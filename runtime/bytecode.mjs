@@ -90,6 +90,7 @@ export const OP = {
   EXPECT: 61, // a after, v faults: a test file's expectation starts, its own sub-run (§7.17.1); a fault in it
   //            undoes the sub-run, is judged, and the run goes on at `after`. `faults` is 0 for a plain expect,
   //            else the index of the fault's code or words plus one
+  FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
   EXPECT_DONE: 62, // v faults: pop the words (plain only) and the value, undo the sub-run, judge it
 };
 
@@ -99,7 +100,7 @@ export const OPERANDS = {
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
-  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v",
+  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv",
 };
 
 export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
@@ -390,6 +391,7 @@ export function verify(p) {
         case OP.ASK:
         case OP.ASK_DEFAULT:
         case OP.CHECK_FAILED:
+        case OP.FROM:
           check(args[0] < p.questions.length, "question");
           break;
         case OP.FILL:
@@ -448,7 +450,7 @@ function stackEffect(op, args) {
       return [1, 1];
     case OP.ENSURE_ITEM: case OP.CHECK_SLOT:
       return [2, 2];
-    case OP.ENSURE_RECORD: case OP.EXPECT:
+    case OP.ENSURE_RECORD: case OP.EXPECT: case OP.FROM:
       return [0, 0];
     case OP.EXPECT_DONE:
       return [args[0] ? 1 : 2, 0];
@@ -621,6 +623,7 @@ function note(p, fn, op, args) {
     case OP.ASK:
     case OP.ASK_DEFAULT:
     case OP.CHECK_FAILED:
+    case OP.FROM:
       return `${p.questions[args[0]]?.name} (${p.questions[args[0]]?.type})`;
     case OP.FILL:
     case OP.TICK:

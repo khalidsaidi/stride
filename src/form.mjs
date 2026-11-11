@@ -93,6 +93,10 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
         continue;
       }
       if (!["fill", "tick", "pick"].includes(s.op)) continue;
+      // The questions this write is made of, for the run to say which box an answer went into (codegen.mjs).
+      const made = s.op === "fill" ? s.value : s.cond;
+      const given = s.op === "fill" && made?.e === "local" && from.get(made.l)?.size === 1 && [...from.get(made.l)][0].dst === made.l;
+      s.sources = [...asksIn(made)].map((a) => ({ q: a.q, direct: given }));
       const short = wordsOf(s.box);
       if (short === undefined) continue; // worked out as the program runs: the run looks it up
       const full = prefix + short;

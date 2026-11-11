@@ -65,6 +65,7 @@ export function generate(program, pdf) {
       ins.push(i);
       return i;
     };
+    const from = (s) => (s.sources ?? []).forEach((x) => questionIndex.has(x.q) && emit(OP.FROM, questionIndex.get(x.q), x.direct ? 1 : 0));
     const label = () => ({ op: "label" });
     const placeLabel = (l) => ins.push(l);
     const jumpTo = (op, l) => {
@@ -342,21 +343,26 @@ export function generate(program, pdf) {
         // would be F016 if it ran.
         // A box named by known words is written by its number; one whose name is worked out as the program runs
         // (Name{n} in a loop) by its name, found when it runs.
+        // Before each write, the questions whose answers it is made of (form.mjs): the run says which box an
+        // answer went into, for the page to show.
         case "fill":
-          if (IR.isConst(s.box) && boxIndex.has(program.prefix + s.box.v)) return expr(s.value), emit(OP.FILL, boxIndex.get(program.prefix + s.box.v));
+          if (IR.isConst(s.box) && boxIndex.has(program.prefix + s.box.v)) return expr(s.value), from(s), emit(OP.FILL, boxIndex.get(program.prefix + s.box.v));
           expr(s.box);
           expr(s.value);
+          from(s);
           return emit(OP.FILL_AT);
         case "tick":
-          if (IR.isConst(s.box) && boxIndex.has(program.prefix + s.box.v)) return expr(s.cond), emit(OP.TICK, boxIndex.get(program.prefix + s.box.v));
+          if (IR.isConst(s.box) && boxIndex.has(program.prefix + s.box.v)) return expr(s.cond), from(s), emit(OP.TICK, boxIndex.get(program.prefix + s.box.v));
           expr(s.box);
           expr(s.cond);
+          from(s);
           return emit(OP.TICK_AT);
         case "pick":
-          if (IR.isConst(s.box) && IR.isConst(s.button) && boxIndex.has(program.prefix + s.box.v)) return expr(s.cond), emit(OP.PICK, boxIndex.get(program.prefix + s.box.v), T(s.button.v));
+          if (IR.isConst(s.box) && IR.isConst(s.button) && boxIndex.has(program.prefix + s.box.v)) return expr(s.cond), from(s), emit(OP.PICK, boxIndex.get(program.prefix + s.box.v), T(s.button.v));
           expr(s.box);
           expr(s.button);
           expr(s.cond);
+          from(s);
           return emit(OP.PICK_AT);
         case "eval":
           expr(s.value);
