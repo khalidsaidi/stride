@@ -1167,14 +1167,14 @@ export const LIBRARY = [
   {
     "section": "14.2 Numbers",
     "signatures": [
-      "min(a: number, b: number) -> number",
-      "max(a: number, b: number) -> number"
+      "min(a, b) -> number",
+      "max(a, b) -> number"
     ],
     "names": [
       "min",
       "max"
     ],
-    "gives": "the smaller, the larger"
+    "gives": "the smaller, the larger of two numbers; given one list of numbers, the smallest, the largest of its items (no items, or one that is not a number: F023)"
   },
   {
     "section": "14.2 Numbers",

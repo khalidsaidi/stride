@@ -113,6 +113,12 @@ function sortItems(l, key, descending) {
 // its parameters, each `name:kind`, the kind of value it needs — t words, n a number, d a date, l a list, m a map,
 // s a set, v any value — in a capital when it takes null too; given null where it needs a value, the call is F023
 // (§14.0.3). `as`: the name its faults give it.
+function extreme(name, a, b, keeps) {
+  const all = Array.isArray(a) ? a : [a, b];
+  if (!all.length || all.some((x) => !isNumber(x))) throw new StrideFault("F023", `null where a number is needed: ${name} takes two numbers, or a list of numbers with at least one`);
+  return all.reduce((x, y) => (keeps(x, y) ? x : y));
+}
+
 export const NATIVES = {
   // ----- words (§14.1)
   upper: { pure: true, takes: "t:t", fn: (t) => text(t).toUpperCase() },
@@ -221,8 +227,9 @@ export const NATIVES = {
   floor: { pure: true, takes: "n:n", fn: (n) => D.floor(n) },
   whole: { pure: true, takes: "n:n", fn: (n) => D.trunc(n) },
   abs: { pure: true, takes: "n:n", fn: (n) => (D.sign(n) < 0 ? D.neg(n) : n) },
-  min: { pure: true, takes: "a:n b:n", fn: (a, b) => (D.compare(a, b) <= 0 ? a : b) },
-  max: { pure: true, takes: "a:n b:n", fn: (a, b) => (D.compare(a, b) >= 0 ? a : b) },
+  // The smaller, the larger: of two numbers, or of a list's.
+  min: { pure: true, takes: "a:V b:V", fn: (a, b) => extreme("min", a, b, (x, y) => D.compare(x, y) <= 0) },
+  max: { pure: true, takes: "a:V b:V", fn: (a, b) => extreme("max", a, b, (x, y) => D.compare(x, y) >= 0) },
   grouped: {
     pure: true,
     takes: "n:n places:n",

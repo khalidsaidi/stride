@@ -971,7 +971,7 @@ words given to `print`, and a fault or none.
 | `whole(n: number) -> number` | n with its fraction cut off, towards zero |
 | `abs(n: number) -> number` | n without its sign |
 | `power(n: number, k: number) -> number` | n multiplied by itself k times, k a whole number from -10000 to 10000 (F008 otherwise); k below 0: 1 over that; k 0: 1 |
-| `min(a: number, b: number) -> number`, `max(a: number, b: number) -> number` | the smaller, the larger |
+| `min(a, b) -> number`, `max(a, b) -> number` | the smaller, the larger of two numbers; given one list of numbers, the smallest, the largest of its items (no items, or one that is not a number: F023) |
 | `grouped(n: number, places: number = 0) -> string` | n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008 |
 | `fixed(n: number, places: number = 0) -> string` | the same without separators: `1234.50` |
 | `divide(a: number, b: number) -> number` | `a / b` (§6.4, F001) |

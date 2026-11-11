@@ -116,10 +116,12 @@ export native function abs(n: number) -> number
 # example: power(2, 10) gives 1024
 export native function power(n: number, k: number) -> number
 # example: min(2, 5) gives 2
-export native function min(a: number, b: number) -> number
+# example: min([3, 1, 2]) gives 1
+export native function min(a: any, b: number = null) -> number
 # example: max(2, 5) gives 5
 # example: max(2, null) faults F023
-export native function max(a: number, b: number) -> number
+# example: max([3, 1, 2]) gives 3
+export native function max(a: any, b: number = null) -> number
 # example: grouped(1234.5, 2) gives 1,234.50
 export native function grouped(n: number, places: number = 0) -> string
 # example: fixed(1234.5, 2) gives 1234.50
