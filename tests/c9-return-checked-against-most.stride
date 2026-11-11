@@ -6,6 +6,6 @@ define keep(xs: list of number) -> list of number most 1 {
 ask z: number "Z"
 let l = keep([z, z])
 fill "A" = count(l)
-# rule 9.4.2 9.5.2 F017
+# rule 9.4.2 F017
 # answers {"z": "1"}
 # fault F017

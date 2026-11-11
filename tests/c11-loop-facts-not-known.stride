@@ -6,7 +6,7 @@ for i in 1..2 {
 for each n, x in ["A", "B"] {
   fill "{x}" = "{n}"
 }
-# rule 11.3.6 11.2 11.1
+# rule 11.2 11.1
 # box A text
 # box B text
 # run all

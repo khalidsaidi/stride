@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 for i in 1..2 {
   fill "A{i}" = "x"
 }
-# rule 11.3.6 11.1 11.2
+# rule 11.1 11.2
 # box A1 text
 # box A2 text
 # run counter of a box-writing loop names its boxes
