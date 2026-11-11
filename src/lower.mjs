@@ -154,6 +154,8 @@ export function lower(resolved, diagnostics, options = {}) {
         return lowerIf(s, ctx);
       case "match":
         return lowerMatch(s, ctx);
+      case "while":
+        return lowerWhile(s, ctx);
       case "for":
         return lowerFor(s, ctx);
       case "for-each":
@@ -337,6 +339,29 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // A counted loop: its head tests the counter, its body runs, the counter goes up, back to the head. A loop
   // with effects gives each turn's questions the turn in their key: other_act[1].
+  // while c { … } (§7.11.1): the condition before each turn. A loop that asks or writes boxes counts its turns, so
+  // each turn's questions have their own keys (name[1], name[2], …).
+  function lowerWhile(s, ctx) {
+    const turn = s.unroll ? ctx.fn.local("while#turn", { t: "number" }) : null;
+    if (turn) emit(ctx, { op: "set", dst: turn, value: IR.constant(V.num(1)), node: s });
+    const head = ctx.fn.block();
+    head.loopHead = true;
+    const body = ctx.fn.block();
+    const step = ctx.fn.block();
+    const exit = ctx.fn.block();
+    jumpTo(ctx, head, s);
+    const at = child(ctx, { block: head });
+    const cond = expr(s.condition, at);
+    at.block.term = { op: "branch", cond, yes: body, no: exit, node: s };
+    const inner = child(ctx, { block: body, loop: { exit, next: step } });
+    if (turn) inner.suffixes.push(join(IR.constant("["), IR.local(turn), IR.constant("]")));
+    lowerBlock(s.body, inner);
+    jumpTo(inner, step, s);
+    if (turn) emit(inner, { op: "set", dst: turn, value: IR.binary("+", IR.local(turn), IR.constant(V.num(1))), node: s });
+    if (!inner.block.term) inner.block.term = { op: "jump", to: head, node: s };
+    ctx.block = exit;
+  }
+
   function lowerFor(s, ctx) {
     const counter = ctx.fn.local(s.counter, s.symbol.type);
     counter.counter = true; // known in every turn (§11.1): the PDF check keeps turns apart by it

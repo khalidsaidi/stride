@@ -269,7 +269,7 @@ export function resolve(loaded, diagnostics) {
   function givesValue(body) {
     for (const s of body) {
       if (s.kind === "return" && s.value) return true;
-      const inner = s.kind === "if" ? [...s.then, ...s.otherwise] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect"].includes(s.kind) ? s.body : [];
+      const inner = s.kind === "if" ? [...s.then, ...s.otherwise] : s.kind === "match" ? s.arms.flatMap((a) => a.body) : ["for", "for-each", "collect", "while"].includes(s.kind) ? s.body : [];
       if (givesValue(inner)) return true;
     }
     return false;
@@ -482,6 +482,13 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(s.subject, scope, unit);
         s.arms.forEach((a, i) => inBranch(s, i, () => a.body.forEach((t) => resolveStatement(t, scope, unit))));
         return;
+      case "while": {
+        resolveExpr(s.condition, scope, unit);
+        const inner = new Scope(scope, "block");
+        inner.loop = "while";
+        resolveBlock(s.body, inner, unit);
+        return;
+      }
       case "for": {
         resolveExpr(s.from, scope, unit);
         resolveExpr(s.to, scope, unit);
@@ -554,7 +561,7 @@ export function resolve(loaded, diagnostics) {
             err("S234", unit.file, s.span, `${s.kind} cannot end a collect: it ends when the person says there is no other`);
             return;
           }
-          if (x.loop === "for" || x.loop === "for-each") {
+          if (x.loop === "for" || x.loop === "for-each" || x.loop === "while") {
             inLoop = true;
             break;
           }
@@ -668,7 +675,7 @@ export function resolve(loaded, diagnostics) {
   function findInner(scope, name) {
     for (let s = scope; s; s = s.parent) {
       for (const st of s.statements ?? []) {
-        if (!["for", "for-each", "collect"].includes(st.kind)) continue;
+        if (!["for", "for-each", "collect", "while"].includes(st.kind)) continue;
         if (st.counter === name || st.item === name || st.index === name || laterNames(st.body).has(name)) return st;
       }
     }

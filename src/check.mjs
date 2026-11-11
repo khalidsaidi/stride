@@ -238,6 +238,9 @@ export function check(resolved, diagnostics) {
         return block(s.otherwise, ctx);
       case "match":
         return match(s, ctx);
+      case "while":
+        condition(s.condition, ctx, "while");
+        return block(s.body, ctx);
       case "for": {
         const a = expr(s.from, ctx), b = expr(s.to, ctx);
         // Empty fits a number (§3.6): an empty bound is F004 when it runs (§7.11), S413 when known.

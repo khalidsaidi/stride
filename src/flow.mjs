@@ -51,6 +51,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       case "for":
       case "for-each":
       case "collect":
+      case "while":
         return s.body;
       default:
         return [];
@@ -77,8 +78,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       fill: () => [s.box, s.value],
       tick: () => [s.box, s.condition],
       pick: () => [s.box, s.button, s.condition],
-      skip: () => [s.box, s.reason],
       if: () => [s.condition],
+      while: () => [s.condition],
       match: () => [s.subject],
       for: () => [s.from, s.to],
       "for-each": () => [s.list],
@@ -164,30 +165,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
           info.get(w).on = false;
           component.push(w);
         } while (w !== v);
-        // S401 at each function's call of itself; S402 at the call, in the circle's first-declared function, that
-        // starts the circle, named by the shortest way back to it (§16.2.1).
-        for (const f of component) {
-          const self = (calls.get(f) ?? []).find((c) => c.callee === f);
-          if (self) err("S401", self, `${f.name} calls itself; a function may not, so that every program ends (a loop does what is needed)`);
-        }
-        if (component.length > 1) {
-          const first = functions.find((f) => component.includes(f));
-          const at = (calls.get(first) ?? []).find((c) => c.callee !== first && component.includes(c.callee));
-          const back = new Map([[at.callee, null]]);
-          for (const queue = [at.callee]; queue.length && !back.has(first); ) {
-            const x = queue.shift();
-            for (const c of calls.get(x) ?? []) if (component.includes(c.callee) && !back.has(c.callee)) (back.set(c.callee, x), queue.push(c.callee));
-          }
-          const names = [first.name];
-          for (let x = back.get(first) ?? null, way = []; ; x = back.get(x)) {
-            if (x === null) {
-              names.push(...way.reverse());
-              break;
-            }
-            way.push(x.name);
-          }
-          err("S402", at, `functions cannot call each other in a circle (${[...names, first.name].join(" calls ")}): a program must end`);
-        }
+        // A function may call itself, and functions each other: the run's depth is what stops one that never ends
+        // (F015).
         if (component.length > 1 || (calls.get(v) ?? []).some((c) => c.callee === v)) {
           for (const f of component) f.recursive = true;
         }
@@ -248,7 +227,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       if (s.kind === "collect") s.unroll = true;
-      if ((s.kind === "for" || s.kind === "for-each") && hasEffects(s.body)) s.unroll = true;
+      if ((s.kind === "for" || s.kind === "for-each" || s.kind === "while") && hasEffects(s.body)) s.unroll = true;
     }
   }
 
@@ -399,7 +378,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // S406 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
   // condition passes over is not one: it is unreachable code (§11.3.3), checked but not refused.
   for (const { body } of bodies) {
-    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
+    const blocks = [body, ...[...statements(body)].flatMap((s) => (s.kind === "if" ? [s.then, s.otherwise] : s.kind === "match" ? s.arms.map((a) => a.body) : ["while", "for", "for-each", "collect"].includes(s.kind) ? [s.body] : []))];
     for (const block of blocks) {
       const k = block.findIndex((s) => s.kind === "return" || s.kind === "break" || s.kind === "continue");
       if (k >= 0 && k + 1 < block.length) err("S406", block[k + 1], "this never runs: a return, break or continue comes before it");
@@ -517,6 +496,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         }
         case "for":
         case "for-each":
+        case "while":
         case "collect": {
           const turns = knownTurns(s, env);
           if (!turns) {

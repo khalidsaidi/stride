@@ -1,0 +1,35 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var n = 27
+var steps = 0
+while n != 1 {
+  n = if n % 2 == 0 then n / 2 else 3 * n + 1
+  steps += 1
+}
+print(steps)
+var i = 0
+while yes {
+  i += 1
+  if i == 3 {
+    continue
+  }
+  if i > 5 {
+    break
+  }
+  print(i)
+}
+var total = 0
+var more = yes
+while more {
+  ask amount: number "Amount"
+  total += either(amount, 0)
+  more = amount is not empty
+}
+print(total)
+while yes {
+}
+# rule 7.11.1 F014
+# run two amounts
+# answers {"amount[1]": "5", "amount[2]": "7"}
+# prints ["111", "1", "2", "4", "5", "12"]
+# fault F014

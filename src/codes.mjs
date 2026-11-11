@@ -741,14 +741,6 @@ export const CODES = {
     "when": "`sorted(l, by: \"f\")` with f not a field of l's records, not known before the form opens, or not a number, date or words",
     "explanation": "`by` names a field of the list's record type, in plain words, whose values can be ordered."
   },
-  "S401": {
-    "when": "a function calling itself",
-    "explanation": "Every program ends; a function may not call itself."
-  },
-  "S402": {
-    "when": "functions calling each other in a circle",
-    "explanation": "The same, through others."
-  },
   "S405": {
     "when": "a function giving a value on some paths only",
     "explanation": "End every path with a return."

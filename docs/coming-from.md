@@ -1,8 +1,7 @@
 # Stride for someone who knows Go, Java, JavaScript or Python
 
 Stride looks like the languages you know, and most of what you would write works as you expect. Where it differs,
-it differs on purpose: a Stride program is a form's workflow, run in a stranger's browser, and the compiler must
-prove before anyone fills the form that every box is written once and every run ends. This page shows the familiar
+it differs on purpose: a Stride program is a form's workflow, run in a stranger's browser. This page shows the familiar
 idioms, the differences, and what to write instead. Every example here is run by Stride's test suite. The guide
 (`stride guide`) and the specification (`spec.md`) say the rest.
 
@@ -188,21 +187,17 @@ fault F013: born after the day
 
 A test can say a fault is what it expects: `expect age_on(...) faults "F013"` (`stride guide tests`).
 
-## Every run ends
+## Loops and recursion
 
-There is no `while` and no recursion (a function may not call itself, directly or through others). A `for` loop's
-bounds are worked out once, when it starts; `for each` goes through the items the list held then; a `collect` asks
-for rows up to the list's `most`. So every run ends, and a run is also limited to 2,000,000 instructions (F014) and
-calls 200 deep (F015). What you would write with `while`:
+`for i in a..b`, `for each x in list`, `while c`, and functions that call themselves, as you know them. A `for`
+loop's bounds are worked out once, when it starts; `for each` goes through the items the list held then. A run
+that never ends is stopped: after 2,000,000 instructions (F014), or calls 200 deep (F015).
 
 ```stride
 define digits_of(n: number) -> number {
   var left = n
   var count = 0
-  for i in 1..40 {
-    if left < 1 {
-      break
-    }
+  while left >= 1 {
     left = left // 10
     count = count + 1
   }

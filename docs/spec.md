@@ -498,7 +498,11 @@ i then takes each whole number from a to b; none when a > b. Changing what a or 
 not change its turns: with `var stop = 1`, `for i in 1..stop { stop += 1 }` runs once and leaves `stop` 2. a and b
 are numbers (S313); an empty or non-whole bound is F004: empty is never taken as 0 or as a loop of no turns. Each bound is evaluated and checked completely before the next is evaluated: an empty or non-whole first bound faults before the second bound is worked out. `for each` works out its list once, before the first turn (§3.4). **for each** `for each [n,] x in l { }`: l a list or a set (S314), §3.4.
 
-7.12. **break** ends the innermost `for` or `for each`; **continue** goes to its next turn. Outside one, or inside
+7.11.1. **while** `while c { }`: c, a yes-no (S311), is worked out before each turn; the body runs as long as it
+is yes. A question asked in the body has its own key in each turn (`name[1]`, `name[2]`, …, §8.6). A loop that
+never ends is stopped by the run's limit of instructions (F014).
+
+7.12. **break** ends the innermost `for`, `for each` or `while`; **continue** goes to its next turn. Outside one, or inside
 a collect, they are S233, S234.
 
 7.13. **return** `return [e]`: ends the function (with e) or the program (no value: S338). e is on the return's
@@ -748,7 +752,7 @@ returned is never a mistake, and its call is a value like any other: with `defin
 is worked out) gives no value: its call is a statement, and used as a value it is a mistake: S324 when a `let` or
 `var` keeps it, S370 anywhere the table of §16.4 names no more particular code.
 
-9.7. A function may not reach itself, directly or through others (S401, S402).
+9.7. A function may call itself, directly or through others. Calls deeper than 200 stop the run (F015).
 
 9.8. `r.f(args)` is `f(r, args)`. A library kept under a name lends its functions to such calls; two such
 libraries with the same function is S113.
@@ -1074,9 +1078,7 @@ irs-2848.stride:42:17: mistake S318: the record representative has no field nmae
 - S015: the operator the line ends on; S014: the second comparison's operator; S011: the `=`; S019: the first
   token met beyond the 200th level, with what surrounds it — an inner value after brackets, or the operator that
   crosses the limit; it need not be an opening bracket;
-- S401 and S402: the call that closes the circle (in S402, the call in the first function of the circle in the
-  order the file declares them); S518: the option's own line in its set or block; W009 and
-  W010: the program's first line (the header), with the box named in the message; S501: the `pdf` line; S502:
+- S501: the `pdf` line; S502:
   the `form` line; S503 and S508: the box name's expression; S511: the button name's expression; S514: the
   entry's value; S517: the question's printed words; S323: the second `default`, the first as related code;
   S372, S374, S375 and S379: the smallest operation that offends, never the statement around it; S413: the operation that faults; S602: the loop whose turns passed the budget, the call whose working out did, the statement where the
@@ -1316,8 +1318,6 @@ its call: the function's name in the call.
 | S396 | a slice bound that is not a number | `l[a..b]`, numbers. |
 | S398 | a comprehension that asks, writes boxes or collects | A comprehension makes a value; use for each. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not known before the form opens, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
-| S401 | a function calling itself | Every program ends; a function may not call itself. |
-| S402 | functions calling each other in a circle | The same, through others. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
 | S406 | a statement after return, break or continue | It never runs; remove it. |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |

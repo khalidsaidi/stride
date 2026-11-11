@@ -258,8 +258,8 @@ small
 large
 ```
 
-There is no `while`: every loop has bounds known when it starts (`for`, `for each`, `collect`), so every program
-ends.
+`while c { … }` runs its body as long as c is yes. A run that never ends is stopped: after 2,000,000
+instructions (F014), or calls 200 deep (F015).
 
 ## 6. Functions
 
@@ -645,8 +645,8 @@ Linux. Other platforms are outside this release's scope.
 
 | | |
 |---|---|
-| loops | `for`, `for each`, `collect` only: bounds known when the loop starts; no `while` |
-| recursion | none: a function may not call itself, directly or through others (S401, S402) |
+| loops | `for`, `for each`, `while`, `collect`; a run is stopped after 2,000,000 instructions (F014) |
+| recursion | a function may call itself; calls deeper than 200 stop the run (F015) |
 | function values | none (§9.10, section 8 above) |
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |
 | the PDF | never changed; only its boxes are filled |

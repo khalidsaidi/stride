@@ -228,6 +228,11 @@ export function format(text, name = "program.stride") {
           close(arm, `${indent}  `);
         }
         return close(s, indent);
+      case "while":
+        put(s, indent, `while ${expr(s.condition)} {`);
+        opening(s);
+        block(s.body, `${indent}  `);
+        return close(s, indent);
       case "for":
         put(s, indent, `for ${s.counter} in ${expr(s.from)}..${expr(s.to)} {`);
         opening(s);

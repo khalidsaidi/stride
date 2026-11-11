@@ -27,6 +27,7 @@
 //   if          = "if" expr block ["else" (if | block)]
 //   match       = "match" expr "{" (plain ("," plain)* "=>" block | "else" "=>" block)* "}"
 //   for         = "for" name "in" expr ".." expr block
+//   while       = "while" expr block
 //   foreach     = "for" "each" [name ","] name "in" expr block
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = or;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
@@ -44,11 +45,11 @@ export const KEYWORDS = new Set([
   "and", "as", "ask", "break", "check", "collect", "const", "continue", "default", "define", "each", "else",
   "empty", "expect", "export", "fields", "fill", "for", "form", "if", "in", "is", "let", "list", "match", "most",
   "native", "new", "no", "not", "of", "options", "or", "pdf", "pick", "record", "return", "set", "then", "tick",
-  "use", "var", "when", "yes",
+  "use", "var", "when", "while", "yes",
 ]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
 const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "/=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
-const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
+const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
   constructor(message, span, code = "S010") {
@@ -645,6 +646,12 @@ class Parser {
           return this.match();
         case "for":
           return this.peek().type === "keyword" && this.peek().value === "each" ? this.forEach() : this.forLoop();
+        case "while": {
+          // while c { … }: the body again and again, as long as c is yes (§7.11.1).
+          const start = this.take();
+          const condition = this.condition();
+          return this.node("while", start, { condition, body: this.block() });
+        }
         case "collect":
           return this.collect();
         case "return":
@@ -663,7 +670,7 @@ class Parser {
     const value = ["number", "string"].includes(t.type) || (t.type === "punct" && ["[", "-"].includes(t.value)) || (t.type === "keyword" && ["yes", "no", "empty", "not", "new"].includes(t.value));
     const prevTok = this.tokens[this.at - 1];
     if (value && (t.broken || !prevTok || (prevTok.type === "punct" && prevTok.value === "{"))) return this.node("call-statement", t, { call: this.expr() });
-    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, collect, return, break, continue)", "a call"]);
+    throw this.mistake(["a statement (ask, let, var, fill, tick, pick, if, match, for, while, collect, return, break, continue)", "a call"]);
   }
 
   // expect e ["words"]   expect e faults "code or words"   (§7.17)

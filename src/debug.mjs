@@ -60,7 +60,7 @@ function follow(prepared, answers, { today, breakpoints, stopOnEntry, stop, prin
       const f = frames.at(-1);
       f.locals = e.locals;
       // A loop's own work is not a place to stop (§17.7).
-      if (!e.node?.span?.line || (["for", "for-each", "collect"].includes(e.node.kind) && e.op === "set")) return;
+      if (!e.node?.span?.line || (["for", "for-each", "collect", "while"].includes(e.node.kind) && e.op === "set")) return;
       const same = f.node === e.node;
       f.node = e.node;
       const path = pathOf(e.node);
