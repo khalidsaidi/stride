@@ -1,6 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-const c = [1, 2]
-fill "A" = count(c)
+record person { name: text }
+const c = new person { name: "a" }
+fill "A" = c.name
 # rule S306 16.4 5.3
-# mistake 3 S306
+# mistake 4 S306
+# mistake 4 S304

@@ -295,14 +295,12 @@ class Parser {
     const found = t.type === "end" ? "the end of the file" : t.type === "string" ? "words in quotes" : `"${t.value}"`;
     // An "=" where none is wanted is a comparison written with one sign.
     if (t.type === "punct" && t.value === "=") return new SyntaxMistake(`"=" gives a value; to compare, write "=="`, t.span, "S011");
-    if (t.type === "name" && capitalised(t.value)) return new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
     return new SyntaxMistake(`${found} is not understood here; expected ${Array.isArray(expected) ? either(expected) : expected}`, t.span, "S010");
   }
 
   name(what = "a name (letters, digits and _)") {
     if (this.is("name")) {
       const t = this.token;
-      if (capitalised(t.value)) throw new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
       return this.take().value;
     }
     if (this.is("keyword")) throw new SyntaxMistake(`"${this.token.value}" is a word of the language, and cannot be a name`, this.token.span, "S013");
@@ -1020,7 +1018,6 @@ class Parser {
       if (this.sym(".") && this.peek().type === "name") {
         this.take();
         const n = this.take();
-        if (capitalised(n.value)) throw new SyntaxMistake(`"${n.value}": names start with a small letter or _, or are written wholly in capitals`, n.span, "S012");
         e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span };
       } else if (this.sym("[") && !t.broken) {
         const open = this.take();
@@ -1051,7 +1048,6 @@ class Parser {
     const one = () => {
       if (named && this.is("name") && this.peek().type === "punct" && this.peek().value === ":") {
         const n = this.take();
-        if (capitalised(n.value)) throw new SyntaxMistake(`"${n.value}": names start with a small letter or _, or are written wholly in capitals`, n.span, "S012");
         this.take();
         const value = this.expr();
         return { kind: "named-arg", name: n.value, value, span: join(n.span, value.span) };
@@ -1089,8 +1085,6 @@ class Parser {
         return this.node("new", start, { type, fields });
       }
     }
-    // A name is never written with a capital and a small letter, where it is used as where it is defined (§2.1).
-    if (t.type === "name" && capitalised(t.value)) throw new SyntaxMistake(`"${t.value}": names start with a small letter or _, or are written wholly in capitals`, t.span, "S012");
     if (t.type === "name") return (this.take(), { kind: "name", name: t.value, span: t.span });
     if (this.sym("[")) {
       const start = this.take();
@@ -1163,8 +1157,6 @@ class Parser {
   }
 }
 
-// A name that starts with a capital and holds a small letter (S012); names wholly in capitals are allowed (§2.1).
-const capitalised = (v) => /^[A-Z]/.test(v) && /[a-z]/.test(v);
 
 function join(a, b) {
   return { line: a.line, col: a.col, endLine: b.endLine, endCol: b.endCol, start: a.start, end: b.end };

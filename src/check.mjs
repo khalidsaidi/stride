@@ -84,7 +84,7 @@ export function check(resolved, diagnostics) {
     if (sym.declaredType && !fitsAt(sym.node.value, type, sym.declaredType)) err("S305", sym.node.value, `${sym.name} is declared ${T.describe(sym.declaredType)}, and its value is ${T.describe(type)}`);
     else if (sym.declaredType) optionLiteral(sym.node.value, sym.declaredType);
     sym.type = sym.declaredType ?? type;
-    if (["record", "list", "options"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, yes or no; ${sym.name} is ${T.describe(sym.type)}`);
+    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, yes or no, a set, or a list of them; ${sym.name} is ${T.describe(sym.type)}`);
     return sym.type;
   }
 
@@ -876,7 +876,7 @@ export function check(resolved, diagnostics) {
     const element = l.t === "list" ? l.element : l.t === "options" ? T.option(l.set) : null;
     const hasWords = (t) => T.isTextLike(t) || ["number", "date", "yes-no", "option", "empty", "error"].includes(t.t);
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
-    const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "without", "reversed", "sorted", "smallest", "largest"];
+    const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "without", "reversed", "sorted", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
     if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "empty") {
       err("S369", bound[0], `${sym.name} takes a list${SET_FUNCTIONS.includes(sym.name) ? " or a set of options" : ""}, and this is ${T.describe(l)}`);
@@ -887,8 +887,8 @@ export function check(resolved, diagnostics) {
       err("S369", bound[0], `${sym.name} takes a list, and this is ${T.describe(l)}; count, join, first and last take a set`);
       return;
     }
-    if (["index_of", "without"].includes(sym.name) && element?.t === "option" && bound[1]) optionLiteral(bound[1], element);
-    if (["index_of", "without"].includes(sym.name) && element && bound[1]?.type && !T.isError(bound[1].type) && !T.join(element, bound[1].type)) err("S367", bound[1], `${sym.name} looks for one of the items, which are ${T.describe(element)}, and this is ${T.describe(bound[1].type)}`);
+    if (["index_of", "append", "without"].includes(sym.name) && element?.t === "option" && bound[1]) optionLiteral(bound[1], element);
+    if (["index_of", "append", "without"].includes(sym.name) && element && bound[1]?.type && !T.isError(bound[1].type) && !T.join(element, bound[1].type)) err("S367", bound[1], `${sym.name} ${sym.name === "append" ? "adds" : "looks for"} one of the items, which are ${T.describe(element)}, and this is ${T.describe(bound[1].type)}`);
     if (sym.name === "join" && element && !hasWords(element)) err("S367", bound[0], `join puts items' words together, and the items are ${T.describe(element)}, which have no words`);
     // A set has words too: its options' values in declaration order (§3.5).
     if (sym.name === "text_of" && !hasWords(l) && l.t !== "options") err("S367", bound[0], `text_of gives a value's words, and ${T.describe(l)} has none`);

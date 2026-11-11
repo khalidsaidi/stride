@@ -156,6 +156,8 @@ export native define last(l: any) -> element
 export native define filled(l: any) -> any
 # example: index_of([5, 6, 7], 6) gives 2
 export native define index_of(l: any, x: any) -> number
+# example: append(filled(["a", "", ""]), "b") gives [a, b]
+export native define append(l: any, x: any) -> any
 # example: without([1, 2, 1], 1) gives [2]
 export native define without(l: any, x: any) -> any
 # example: reversed([1, 2, 3]) gives [3, 2, 1]

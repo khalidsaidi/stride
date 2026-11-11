@@ -1,7 +1,20 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-const l = [1, 2]
-fill "A" = "{count(l)}"
-
-# rule 5.3 S306
-# mistake 3:1 S306
+options color { "r" "Red"  "g" "Green" }
+const DAYS = ["Mon", "Tue", "Wed"]
+const PRIMES: list of number most 5 = [2, 3, 5]
+const WARM: set of color = ["r"]
+const NESTED = [[1, 2], [3]]
+print(DAYS[2])
+print(count(PRIMES))
+print("r" in WARM)
+print(NESTED[1][2])
+for each d in DAYS { print(d) }
+define f() -> text { return DAYS[3] }
+print(f())
+var l = DAYS
+l[1] = "Sun"
+print(DAYS[1])
+print(l[1])
+# rule 5.3
+# prints ["Tue", "3", "yes", "2", "Mon", "Tue", "Wed", "Wed", "Mon", "Sun"]

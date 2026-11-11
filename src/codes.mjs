@@ -125,10 +125,6 @@ export const CODES = {
     "when": "`=` where a comparison is meant",
     "explanation": "`=` gives a var a value; to compare, write `==`."
   },
-  "S012": {
-    "when": "a name starting with a capital and holding a small letter",
-    "explanation": "Names start with a small letter or `_`, or are written wholly in capitals (`MOST`)."
-  },
   "S013": {
     "when": "a keyword where a name is meant",
     "explanation": "Keywords (§2.3) are the language's words; choose another name."
@@ -386,8 +382,8 @@ export const CODES = {
     "explanation": "Fix the type or the value."
   },
   "S306": {
-    "when": "a constant that is a record, list or set",
-    "explanation": "Constants are words, numbers, dates, yes or no."
+    "when": "a constant that is a record",
+    "explanation": "Constants are words, numbers, dates, yes or no, sets, and lists of them."
   },
   "S307": {
     "when": "`fill` with yes-no",
@@ -1403,6 +1399,16 @@ export const LIBRARY = [
       "index_of"
     ],
     "gives": "the position of the first item equal to x (§6.6); 0 when none"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "append(l: list of T, x: T) -> list of T most same"
+    ],
+    "names": [
+      "append"
+    ],
+    "gives": "the list with x after its last item; the list already holding its most: F017"
   },
   {
     "section": "14.4 Lists and sets",

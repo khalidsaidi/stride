@@ -298,7 +298,7 @@ const MAX_PATHS = 100_000; // paths kept apart at one point, in one call and tur
 const MAX_TURNS = 100_000; // turns of loops the PDF check follows, over the whole check (§15.1)
 const MAX_PROOF = 100_000; // steps of one search for conditions that can hold together (§15.1)
 const MAX_WORKING = 100_000; // steps of the interpreter working out one pure call (§15.1)
-const KEEPS_MOST = new Set(["sorted", "sorted_by", "reversed", "filled", "without", "widen"]);
+const KEEPS_MOST = new Set(["sorted", "sorted_by", "reversed", "filled", "append", "without", "widen"]);
 
 // ----- the values an answer can be, ordered, for the picks of a radio group (§10.4.1)
 

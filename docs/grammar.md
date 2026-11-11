@@ -36,7 +36,7 @@ without a `use`. Declarations may be used before the line they stand on (§5.7).
 
 Whitespace and line breaks are free between tokens, except that a line break before `[` or `(` ends the
 expression before it, and a `return`'s value is on its line (§1.4); `#` starts a comment to the end of the line.
-Names are ASCII: a small letter or `_`, then letters, digits and `_`; or wholly capitals, digits and `_` (`MOST`)
+Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`)
 (§2.1). Keywords cannot be names (§2.3): `and as ask because break check collect const continue default define
 each else empty export expect fields fill for form if in is let list match most native new no not of options or
 pdf pick record return set skip then tick use var when yes`. `option`, `any`, `another` and `faults` are keywords
@@ -234,7 +234,7 @@ lower title capitalize trim trim_start trim_end remove_prefix remove_suffix leng
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
 rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs min max grouped
 fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days`.
-Lists and sets: `count join first last filled index_of without reversed sorted smallest largest any all union
+Lists and sets: `count join first last filled index_of append without reversed sorted smallest largest any all union
 intersection difference`. Empty, faults and output: `either otherwise fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of

@@ -333,7 +333,7 @@ const mistakesOf = (ctx) => (ctx.out?.diagnostics.sorted() ?? []).filter((d) => 
 // checked so.
 function renameOf(doc, symbol, name) {
   if (symbol.unit?.std || symbol.kind === "native") return { error: `${symbol.name} is the standard library's: it is not renamed` };
-  if (!/^([a-z_][A-Za-z0-9_]*|[A-Z][A-Z0-9_]*)$/.test(name) || KEYWORDS.has(name)) return { error: `${name} is not a name Stride takes (§2.1)` };
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) || KEYWORDS.has(name)) return { error: `${name} is not a name Stride takes (§2.1)` };
   if (entryOf(name)) return { error: `${name} is the standard library's ${name}: another name keeps both` };
   if (name === symbol.name) return { changes: {} };
   const before = contextsFor(doc, symbol);

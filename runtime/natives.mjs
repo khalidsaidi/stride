@@ -291,6 +291,14 @@ export const NATIVES = {
   last: { pure: true, fn: (l) => { const a = asList(l); return a.length ? a[a.length - 1] : null; } },
   filled: { pure: true, fn: (l) => listLike(asList(l).filter((x) => !isEmpty(x)), l) },
   index_of: { pure: true, fn: (l, x) => num(asList(l).findIndex((y) => equal(y, x)) + 1) },
+  append: {
+    pure: true,
+    fn: (l, x) => {
+      const items = asList(l);
+      if (items.length >= mostOf(l)) throw new StrideFault("F017", `the list holds its most, ${mostOf(l)}, and cannot take one more item`);
+      return list([...items, x], mostOf(l));
+    },
+  },
   without: { pure: true, fn: (l, x) => listLike(asList(l).filter((y) => !equal(y, x)), l) },
   reversed: { pure: true, fn: (l) => list([...asList(l)].reverse(), mostOf(l)) },
   sorted: { pure: true, fn: (l, descending) => sortItems(l, (v) => v, descending === true) },

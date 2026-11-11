@@ -32,10 +32,8 @@ one column, a tab is one column, a character outside the Basic Multilingual Plan
 
 ## 2. Lexical elements
 
-2.1. **Names**: a letter `a`–`z` or `_`, then letters `a`–`z`, `A`–`Z`, digits and `_`; or a name written
-wholly in capitals, digits and `_`, starting with a capital (`MOST`, `MAX_ROWS`, `W2`), the usual way to write a
-constant and allowed for any name. A name starting with a capital and holding a small letter (`Name`, `MaxRows`)
-is S012; a name holding a character outside ASCII is S001, with the rule stated.
+2.1. **Names**: a letter `a`–`z`, `A`–`Z` or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`,
+`W2`). A name holding a character outside ASCII is S001, with the rule stated.
 
 2.2. **Hyphenated words**: `long-text`, `yes-no`, `one-of`, `any-of` are each one token, a type name.
 
@@ -260,7 +258,7 @@ least 1 and at most 1000 options (S235), the same bound as a list's most. A ques
 printed words are the words beside the box on the PDF (§10.6).
 
 5.3. **const**: `"const" name [":" type] "=" expr`. Its value is known before the form opens (§11): words, a
-number, a date, yes or no (S306); worked out at compile time (S304); not made of itself (S303).
+number, a date, yes or no, a set, or a list of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
 
 5.4. **define**: `"define" name ["<" name ("," name)* ">"] "(" [param ("," param)*] ")" ["->" type] block`.
 `param = name ":" type ["=" expr]`. §9.
@@ -1062,6 +1060,7 @@ entry says "or a set" (its items are then options).
 | `first(l: list of T or set) -> T`, `last(l: list of T or set) -> T` | the first, the last item; empty when there is none |
 | `filled(l: list of T) -> list of T most same` | the items that are not empty, in order |
 | `index_of(l: list of T, x: T) -> number` | the position of the first item equal to x (§6.6); 0 when none |
+| `append(l: list of T, x: T) -> list of T most same` | the list with x after its last item; the list already holding its most: F017 |
 | `without(l: list of T, x: T) -> list of T most same` | the list without the items equal to x |
 | `reversed(l: list of T) -> list of T most same` | the items in the other order |
 | `sorted(l: list of T, descending: yes-no = no) -> list of T most same` | T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order; **empty items come last**, in their order, ascending or descending |
@@ -1225,7 +1224,6 @@ its call: the function's name in the call.
 | S009 | a number of more than 34 significant digits, or a number literal or constant of 10^34 or more or finer than 10^-6176 | Numbers are exact to 34 digits and below 10^34; longer digits are an id: write them in quotes. |
 | S010 | anything the grammar does not allow there | The message says what was found and what could stand there. |
 | S011 | `=` where a comparison is meant | `=` gives a var a value; to compare, write `==`. |
-| S012 | a name starting with a capital and holding a small letter | Names start with a small letter or `_`, or are written wholly in capitals (`MOST`). |
 | S013 | a keyword where a name is meant | Keywords (§2.3) are the language's words; choose another name. |
 | S014 | comparisons chained | `a < b < c` is written `a < b and b < c`. |
 | S015 | a line ending on an operator with no operand following it | An operator needs a value after it, on the same line or the next. |
@@ -1290,7 +1288,7 @@ its call: the function's name in the call.
 | S303 | a constant made of itself | A constant's value cannot need itself. |
 | S304 | a constant not known before the form opens | Constants are made of words, numbers and other constants. |
 | S305 | a constant's value not of its type | Fix the type or the value. |
-| S306 | a constant that is a record, list or set | Constants are words, numbers, dates, yes or no. |
+| S306 | a constant that is a record | Constants are words, numbers, dates, yes or no, sets, and lists of them. |
 | S307 | `fill` with yes-no | A yes-no goes into a check box: `tick "box" when c`. |
 | S308 | `fill` with several options | `fill "box" = join(s, ", ")`, or a tick for each option. |
 | S309 | `fill` with a list or record | Fill a box with one value: `l[1].name`, `join(…)`. |
