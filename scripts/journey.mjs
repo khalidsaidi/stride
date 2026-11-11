@@ -58,7 +58,7 @@ try {
   // 2. Learn.
   expect("stride help", stride(["help"]), (x) => x.status === 0 && x.stdout.includes("stride repl") && x.stdout.includes("--terminal") && !x.stdout.includes("preview"));
   expect("no preview command", stride(["preview", "x.stride"]), (x) => x.status === 2 && x.stderr.startsWith("stride: no command preview"));
-  expect("the built-in guide", stride(["guide", "coming-from"]), (x) => x.status === 0 && x.stdout.includes("Values are copied, never shared"));
+  expect("the built-in guide", stride(["guide", "coming-from"]), (x) => x.status === 0 && x.stdout.includes("Lists, records and maps are shared"));
   expect("a guide topic", stride(["guide", "positions"]), (x) => x.stdout.startsWith("## Positions count from 0"));
   expect("the library's docs", stride(["doc", "pad_left"]), (x) => x.stdout.includes('pad_left("7", 3, "0") gives 007'));
   expect("trying an expression", stride(["eval", "1 / 3 * 3"]), (x) => x.stdout === "0.9999999999999999999999999999999999\n");
