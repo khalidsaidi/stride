@@ -696,5 +696,5 @@ export function boxValues(p, writes) {
 export function faultWords(f) {
   const at = (x) => (x.line ? `${x.function}, ${x.file}:${x.line}:${x.column}` : x.function); // no place: §18.1
   const stack = f.stack?.length ? f.stack : [{ function: "main", file: f.file, line: f.line, column: f.column }];
-  return [`fault ${f.code}: ${f.message}`, `  at ${at(stack[0])}`, ...stack.slice(1).map((x) => `  called from ${at(x)}`)].join("\n");
+  return [`error ${f.code}: ${f.message}`, `  at ${at(stack[0])}`, ...stack.slice(1).map((x) => `  called from ${at(x)}`)].join("\n");
 }

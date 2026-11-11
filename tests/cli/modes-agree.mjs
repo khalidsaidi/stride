@@ -64,7 +64,7 @@ export function test() {
     if (!prompted.includes("Age 1 [0]")) problems.push(`the prompt did not ask the question whose default faults: ${prompted.slice(-300)}`);
     // Run on its default, it faults, the same in every engine: the run and the debugger say it alike.
     const faulted = [stride(["run", "people.stride", "likes=red", "ask_person.name=Bo"]), stride(["debug", "people.stride", "likes=red", "ask_person.name=Bo"], "c\n")];
-    const said = (r) => r.stderr.slice(r.stderr.indexOf("fault F001")).replace(/\n\(debug\)[\s\S]*$/, "").trim();
+    const said = (r) => r.stderr.slice(r.stderr.indexOf("error F001")).replace(/\n\(debug\)[\s\S]*$/, "").trim();
     if (faulted.some((r) => r.status !== 1) || said(faulted[0]) !== said(faulted[1]) || !said(faulted[0]).includes("at main, people.stride:18:11")) problems.push(`the fault, run and debugged: ${JSON.stringify(said(faulted[0]))} and ${JSON.stringify(said(faulted[1]))}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });

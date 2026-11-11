@@ -26,7 +26,7 @@ export function test() {
       }
       const runs = [["vm", run(load(out.bytecode), {}, { today: EXAMPLE_TODAY })]];
       for (const [engine, r] of runs) {
-        const got = x.verb === "faults" ? r.fault?.code ?? "no fault" : r.fault ? `fault ${r.fault.code}` : r.prints[0];
+        const got = x.verb === "faults" ? r.fault?.code ?? "no fault" : r.fault ? `error ${r.fault.code}` : r.prints[0];
         if (got !== x.want) problems.push(`${x.text}: ${engine} gives ${JSON.stringify(got)}`);
       }
     }

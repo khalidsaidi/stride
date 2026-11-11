@@ -44,7 +44,7 @@ export function test() {
   if (!all.some(([t]) => t === SECTION.PLACES)) problems.push("the compiler wrote no places section");
   try {
     const x = run(load(build(head, all.filter(([t]) => t !== SECTION.PLACES))), {});
-    if (x.fault?.code !== "F001") problems.push(`without places: expected the run to fault F001, got ${JSON.stringify(x.fault)}`);
+    if (x.fault?.code !== "F001") problems.push(`without places: expected the run to error F001, got ${JSON.stringify(x.fault)}`);
     else if (x.fault.line !== null || x.fault.column !== null || x.fault.file !== null || x.fault.stack.some((f) => f.line !== null)) problems.push(`without places: the fault has a place ${x.fault.file}:${x.fault.line}:${x.fault.column}`);
   } catch (e) {
     problems.push(`without places: refused: ${e.message}`);

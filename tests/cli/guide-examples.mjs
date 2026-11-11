@@ -61,10 +61,10 @@ export function test() {
         const r = stride("run", file, ...(answers ? ["answers.json"] : []));
         if (r.stdout !== (b.output ?? "")) problems.push(`${where}: stride run gives on stdout\n${r.stdout}instead of\n${b.output ?? ""}`);
         if (r.stderr !== (b.stderr ?? "")) problems.push(`${where}: stride run gives on stderr\n${r.stderr}instead of\n${b.stderr ?? ""}`);
-        if (r.status !== (b.stderr && /^fault /m.test(b.stderr) ? 1 : 0)) problems.push(`${where}: stride run exits ${r.status}`);
+        if (r.status !== (b.stderr && /^error [A-Z]/m.test(b.stderr) ? 1 : 0)) problems.push(`${where}: stride run exits ${r.status}`);
       } else {
         const r = stride("check", file);
-        if (mistake ? !(r.status === 1 && r.stderr.includes(`mistake ${mistake}`)) : r.status !== 0) problems.push(`${where}: stride check exits ${r.status}${mistake ? `, expected ${mistake}` : ""}: ${r.stderr.slice(0, 300)}`);
+        if (mistake ? !(r.status === 1 && r.stderr.includes(`error ${mistake}`)) : r.status !== 0) problems.push(`${where}: stride check exits ${r.status}${mistake ? `, expected ${mistake}` : ""}: ${r.stderr.slice(0, 300)}`);
       }
     }
     }

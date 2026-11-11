@@ -209,9 +209,9 @@ function golden(want, got, prefix, mode) {
   const say = (m) => problems.push(`${want.name}, ${mode}: ${m}`);
   if (want.fault) {
     const f = faultView(got.fault);
-    if (!f) say(`expected the fault ${want.fault.code ?? ""} ${want.fault.words}, and the run ended`);
+    if (!f) say(`expected the error ${want.fault.code ?? ""} ${want.fault.words}, and the run ended`);
     else {
-      if (want.fault.code && f.code !== want.fault.code) say(`expected the fault ${want.fault.code}, got ${f.code} ${f.message}`);
+      if (want.fault.code && f.code !== want.fault.code) say(`expected the error ${want.fault.code}, got ${f.code} ${f.message}`);
       if (want.fault.words && !f.message.includes(want.fault.words)) say(`expected the fault's message to hold "${want.fault.words}", got "${f.message}"`);
       if (want.fault.line && (f.line !== want.fault.line || (want.fault.column && f.column !== want.fault.column))) say(`expected the fault at ${want.fault.line}:${want.fault.column}, got ${f.line}:${f.column}`);
       if (want.stack && !same(f.stack, want.stack)) say(`expected the stack ${JSON.stringify(want.stack)}, got ${JSON.stringify(f.stack)}`);
@@ -360,7 +360,7 @@ export function runMachine(path) {
     return { name, rules, problems };
   }
   const r = run(load(m.bytecode), {});
-  if (r.fault?.code !== m.fault) problems.push(`expected the fault ${m.fault}, got ${r.fault ? `${r.fault.code} ${r.fault.message}` : "none"}`);
+  if (r.fault?.code !== m.fault) problems.push(`expected the error ${m.fault}, got ${r.fault ? `${r.fault.code} ${r.fault.message}` : "none"}`);
   return { name, rules, problems };
 }
 

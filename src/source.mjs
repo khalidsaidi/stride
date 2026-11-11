@@ -107,7 +107,7 @@ export class Diagnostic {
     const warning = this.severity === "warning";
     const red = (t) => (color ? `\x1b[${warning ? 33 : 31}m${t}\x1b[0m` : t);
     const dim = (t) => (color ? `\x1b[2m${t}\x1b[0m` : t);
-    const out = [`${place(this.file, this.span)}: ${warning ? "warning" : "mistake"}${this.code ? ` ${this.code}` : ""}: ${red(this.message)}`];
+    const out = [`${place(this.file, this.span)}: ${warning ? "warning" : "error"}${this.code ? ` ${this.code}` : ""}: ${red(this.message)}`];
     if (this.file && this.span) out.push(...excerpt(this.file, this.span, dim, "^", this.placeLabel));
     for (const n of this.notes) {
       if (n.file && n.span) out.push(...excerpt(n.file, n.span, dim, "-", n.message, n.file !== this.file));

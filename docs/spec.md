@@ -113,7 +113,7 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 Words of no characters `""`, a list with no items `[]`, a set with no options and a map with no keys `{}` are
 values, not null: `"" == null` and `[] == null` are false (§6.6), `length("")` and `count([])` are 0. `x == null`
 and `x != null` test it; `x ?? y` gives y in its place (§6.16). Null counts as false in a condition (§6.15) and
-has no words (§3.5); any other operation that needs a value and is given null is fault F023 (§6.3).
+has no words (§3.5); any other operation that needs a value and is given null is error F023 (§6.3).
 
 3.3. **Numbers.** A number is an exact decimal: a whole number of at most 34 significant digits times a power of
 ten, of absolute value below 10^34, and a multiple of 10^-6176 (its power of ten is from -6176 up).
@@ -121,7 +121,7 @@ ten, of absolute value below 10^34, and a multiple of 10^-6176 (its power of ten
   (§3.3.3.1).
 - 3.3.2. `/` gives the exact quotient rounded once (§3.3.3.1). `1 / 3 * 3` is
   `0.9999999999999999999999999999999999`.
-- 3.3.3. A result whose absolute value, after its rounding, is 10^34 or more is fault F003.
+- 3.3.3. A result whose absolute value, after its rounding, is 10^34 or more is error F003.
 - 3.3.3.1. **One rounding.** A result that is not a number is rounded once, from its exact value, to the nearest
   value that has at most 34 significant digits and is a multiple of 10^-6176, both at once; of two equally near,
   the one whose last digit is even. Only then is the size checked (§3.3.3). A result that rounds to nothing is `0`.
@@ -1273,7 +1273,7 @@ through it is (§7.11); items may be null. No list given is changed.
 | Signature | Gives |
 |---|---|
 | `either(a: T, b: T) -> T` | a when it is not null, else b (`a ?? b`, §6.16, with both worked out) |
-| `fail(message: string)` | no value: fault F013 with the message, as `throw message` (§7.19) |
+| `fail(message: string)` | no value: error F013 with the message, as `throw message` (§7.19) |
 | `error(message: string, code: string = "F013") -> error` | an error (§3.11) with that message and code, for `throw`; a null message is no words, a null or empty code F013 |
 | `print(v: any, …)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only. It takes any number of values, given in order without names: `print(a, b, c)` gives one line, each value as `print` shows it alone, one space between them; `print()` gives a line of no characters |
 
@@ -1301,7 +1301,7 @@ and records every mistake it can (the parser stops after 20 syntax mistakes, §1
 16.2. **Shown** as:
 
 ```
-irs-2848.stride:42:17: mistake S318: the record representative has no field nmae; did you mean name?
+irs-2848.stride:42:17: error S318: the record representative has no field nmae; did you mean name?
   42 |   fill "Name" = r.nmae
      |                 ^^^^^^ no field nmae
   12 | record representative {
@@ -1373,7 +1373,7 @@ code's explanation below.
 first:
 
 ```
-fault F001: division by zero
+error F001: division by zero
   at half, irs-2848.stride:3:12
   called from main, irs-2848.stride:7:12
 ```
@@ -1709,7 +1709,7 @@ with its signatures, what it gives and its examples (§14.0.7).
 
 17.11. **Output.** What a command gives goes to stdout: a run's questions, prints and boxes, a value, test
 results, a map, a header, help asked for. Everything about it goes to stderr: mistakes, warnings, faults, the
-trace, what a command did (`x.stride: no mistakes`), prompts.
+trace, what a command did (`x.stride: no errors`), prompts.
 - stdout is written whole before stride exits, to a terminal, a file or a pipe.
 - A reader that closes the pipe early ends stride at once, quietly: with 1 when a failure (a mistake, a fault,
   what went wrong) was already said, else 0.

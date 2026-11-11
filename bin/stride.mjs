@@ -218,7 +218,7 @@ function report(mistakes) {
   process.exitCode = 1;
   for (const m of mistakes.slice(0, SHOWN)) err(`${m.format({ color: colours.err })}\n`);
   if (mistakes.length > SHOWN) err(`and ${mistakes.length - SHOWN} more`);
-  err(errRed(`${mistakes.length} mistake${mistakes.length === 1 ? "" : "s"}`));
+  err(errRed(`${mistakes.length} error${mistakes.length === 1 ? "" : "s"}`));
 }
 
 // ----- answers (§17.12)
@@ -568,11 +568,11 @@ async function main(argv) {
         else if (r.error) err(r.error);
         else if (r.mistakes) report(r.mistakes);
         else {
-          status(`${errGreen(`${file}: no mistakes`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")})` : ""}`);
+          status(`${errGreen(`${file}: no errors`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")})` : ""}`);
         }
       }
       if (json) out(JSON.stringify({ ok: bad === 0, files }));
-      else if (found.files.length > 1) status(bad ? errRed(`${bad} of ${found.files.length} files have mistakes`) : errGreen(`${plural(found.files.length, "file")}, no mistakes`));
+      else if (found.files.length > 1) status(bad ? errRed(`${bad} of ${found.files.length} files have errors`) : errGreen(`${plural(found.files.length, "file")}, no mistakes`));
       return bad ? 1 : 0;
     }
 

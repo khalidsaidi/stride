@@ -88,16 +88,16 @@ export function test() {
     const line = (g) => g?.slice(0, 4).join(" ");
     want.forEach((re, i) => !re.test(line(src.got?.[i]) ?? "") && problems.push(`from source, ${re}: ${line(src.got?.[i])}`));
     const [, , , , , , mistake, mended, pdfChanged, back] = src.got ?? [];
-    if (mistake?.[1] !== 422 || !/mistake S\d{3}/.test(mistake[4])) problems.push(`an edit with a mistake, at the reload: ${JSON.stringify(mistake)}`);
+    if (mistake?.[1] !== 422 || !/error S\d{3}/.test(mistake[4])) problems.push(`an edit with a mistake, at the reload: ${JSON.stringify(mistake)}`);
     if (mended?.[1] !== 200) problems.push(`mended, at the reload: ${JSON.stringify(mended)}`);
-    if (pdfChanged?.[1] !== 422 || !pdfChanged[4].includes("mistake S501")) problems.push(`a program for another PDF, at the reload: ${JSON.stringify(pdfChanged)}`);
+    if (pdfChanged?.[1] !== 422 || !pdfChanged[4].includes("error S501")) problems.push(`a program for another PDF, at the reload: ${JSON.stringify(pdfChanged)}`);
     if (back?.[1] !== 200) problems.push(`put back, at the reload: ${JSON.stringify(back)}`);
     if (sbc.got?.[0]?.[1] !== 200 || sbc.got[0][3] !== readFileSync(join(dir, "consent.sbc")).length || sbc.got?.[1]?.[1] !== 200) problems.push(`the compiled program, with only its PDF: ${JSON.stringify(sbc)}`);
     if (today.got?.[1]?.[1] !== 403) problems.push(`asked under another site's name, it must refuse: ${JSON.stringify(today.got?.[1])}`);
     if (!today.got?.[0]?.[4].includes('<meta name="stride-today" content="2026-02-03">')) problems.push(`--today in the page: ${JSON.stringify(today.got)}`);
     if (other.exit !== 1 || !other.stderr.includes("is not the PDF")) problems.push(`another PDF: ${JSON.stringify(other)}`);
     if (sbcOther.exit !== 1 || !sbcOther.stderr.includes("is not the PDF consent.sbc was compiled for")) problems.push(`the compiled program with another PDF: ${JSON.stringify(sbcOther)}`);
-    if (bad.exit !== 1 || !/mistake S\d{3}/.test(bad.stderr)) problems.push(`a program with mistakes is not served: ${JSON.stringify(bad)}`);
+    if (bad.exit !== 1 || !/error S\d{3}/.test(bad.stderr)) problems.push(`a program with mistakes is not served: ${JSON.stringify(bad)}`);
     // The terminal, and the usage mistakes of the other place.
     const cmd = (args) => spawnSync("node", [cli, "run", ...args], { cwd: dir, encoding: "utf8", timeout: 30_000, env: { ...process.env, BROWSER: "none" } });
     let r = cmd(["consent.stride", "--terminal", "name=Ada"]);

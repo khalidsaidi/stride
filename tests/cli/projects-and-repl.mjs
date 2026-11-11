@@ -70,7 +70,7 @@ export function test() {
     r = stride(["repl"], { cwd: top, input: session });
     const outLines = r.stdout.split("\n");
     check("the session's values", r.status === 0 && outLines[0] === "Bo" && outLines[1] === "42" && outLines[2] === "printed once" && outLines[3] === "41", r);
-    check("the session's mistakes kept nothing", r.stderr.includes("mistake S201") && r.stderr.includes("fault F001") && r.stdout.includes("3  print(\"printed once\")") && !r.stdout.includes("nosuch"), r);
+    check("the session's mistakes kept nothing", r.stderr.includes("error S201") && r.stderr.includes("error F001") && r.stdout.includes("3  print(\"printed once\")") && !r.stdout.includes("nosuch"), r);
     check("the session asked its question", r.stderr.includes("Your age"), r);
     // A call that changes a list is shown its value and kept, so the list stays changed; another call is not kept.
     r = stride(["repl"], { cwd: top, input: "let l = [1]\nappend(l, 2)\ncount(l)\nremove_at(l, 0)\nl\n:list\n" });

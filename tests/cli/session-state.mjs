@@ -73,7 +73,7 @@ export function test() {
     expect(4, "x after the library changed: the let ran once", (s) => s.out === "1\n");
     expect(5, "the library as the session first read it", (s) => s.out === "1\n");
     expect(7, "after :reload, the library as it is now", (s) => s.out === "2\n");
-    expect(10, "the entry that faulted", (s) => s.errs.includes("fault F001") && s.errs.includes("not kept"));
+    expect(10, "the entry that faulted", (s) => s.errs.includes("error F001") && s.errs.includes("not kept"));
     expect(11, "a failed entry keeps no answer", (s) => s.out === "{}\n");
     expect(12, "trying again asks again", (s) => s.errs.includes("Who"));
     expect(14, "a kept entry keeps its answer", (s) => s.out === '{"probe.who":"Grace"}\n');

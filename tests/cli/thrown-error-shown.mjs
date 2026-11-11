@@ -22,7 +22,7 @@ print(open("a"))
 `);
   const problems = [];
   const r = spawnSync("node", [cli, "run", file], { encoding: "utf8", timeout: 20_000 });
-  const want = "fault NOFILE: no file called a\n  at open, thrown.stride:3:5\n  called from main, thrown.stride:8:7";
+  const want = "error NOFILE: no file called a\n  at open, thrown.stride:3:5\n  called from main, thrown.stride:8:7";
   if (r.status !== 1 || !r.stderr.includes(want) || r.stdout.trim() !== "closed") problems.push(`run: expected exit 1, "closed" and ${JSON.stringify(want)}, got ${r.status} ${JSON.stringify(r.stdout)} ${JSON.stringify(r.stderr)}`);
   const j = spawnSync("node", [cli, "run", "--json", file], { encoding: "utf8", timeout: 20_000 });
   let fault = null;

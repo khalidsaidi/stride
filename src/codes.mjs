@@ -1806,7 +1806,7 @@ export const LIBRARY = [
     "names": [
       "fail"
     ],
-    "gives": "no value: fault F013 with the message, as `throw message` (§7.19)"
+    "gives": "no value: error F013 with the message, as `throw message` (§7.19)"
   },
   {
     "section": "14.5 Null, faults and output",

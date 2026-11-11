@@ -240,7 +240,7 @@ item of a list it answers (`representatives[0].name` for the first), or after th
 
 ## The standard library
 
-`lib/std.stride`, there in every file; §14 gives every signature; a function given null where it needs a value is fault F023 (§14.0.3). Words: `upper
+`lib/std.stride`, there in every file; §14 gives every signature; a function given null where it needs a value is error F023 (§14.0.3). Words: `upper
 lower title capitalize trim trim_start trim_end remove_prefix remove_suffix length chars character slice digits
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
 rest_lines word word_count pad_left string_of number_of`. Numbers: `round ceil floor whole abs power min max grouped

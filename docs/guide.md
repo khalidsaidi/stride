@@ -452,7 +452,7 @@ fill "nmae" = full_name
 gives, from `stride check consent.stride`:
 
 ```
-consent.stride:5:6: mistake S508: the PDF has no box "nmae"; did you mean name?
+consent.stride:5:6: error S508: the PDF has no box "nmae"; did you mean name?
   5 | fill "nmae" = full_name
     |      ^^^^^^ the PDF has no box "nmae"
   stride explain S508
@@ -469,7 +469,7 @@ ask n: number "How many people"
 print(share(100, n))
 ```
 ```stderr
-fault F001: division by zero
+error F001: division by zero
   at share, guide.stride:2:16
   called from main, guide.stride:5:7
 ```
@@ -530,7 +530,7 @@ refused: only 100 left
 asked for 300
 ```
 ```stderr
-fault F013: nothing more to do
+error F013: nothing more to do
   at main, guide.stride:21:1
 ```
 
@@ -542,7 +542,7 @@ fault F013: nothing more to do
 | a fault | as it runs, on some answers | the run stops; nothing it wrote counts; the page says so and keeps the answers |
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
 | an answer that is not a number or a date | as it runs | it is null, and marked unreadable |
-| computing with null (`total + 1`, `upper(name)` before the question is answered) | as it runs | fault F023; `total ?? 0`, `name ?? ""` or `if name != null` gives it a value |
+| computing with null (`total + 1`, `upper(name)` before the question is answered) | as it runs | error F023; `total ?? 0`, `name ?? ""` or `if name != null` gives it a value |
 
 A program can also guard against faults before they happen (`if n != 0`, `??`), and stops itself with `throw "why"` (or `fail("why")`, the same) when it must. A test can say a fault is expected (`expect …
 faults`, below).
@@ -647,7 +647,7 @@ negative number is never an option: `stride eval -1`.
 | | |
 |---|---|
 | stdout | what the command gives: a program's prints and report, a value, test results, docs |
-| stderr | mistakes, warnings, faults, the trace, and what a command did (`no mistakes`, `made …`) |
+| stderr | mistakes, warnings, faults, the trace, and what a command did (`no errors`, `made …`) |
 | `--quiet`, `-q` | no warnings, and nothing about what a command did; never its results, mistakes or faults |
 | `--json` | stdout is one JSON document (`check`, `compile`, `run`, `test`, `eval`, `map`) |
 | `--color=auto`, `always`, `never` | colour; auto colours a terminal unless `NO_COLOR` is set |
@@ -778,4 +778,4 @@ Linux. Other platforms are outside this release's scope.
 | the PDF | never changed; only its boxes are filled |
 | a run | calls at most 10,000 deep (F015); no limit of instructions unless the host sets one (F014) |
 | values | numbers below 10^34 with 34 digits |
-| errors | at most 20 mistakes shown; the rest are counted |
+| errors | at most 20 errors shown; the rest are counted |

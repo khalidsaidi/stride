@@ -37,18 +37,18 @@ export function test() {
     r = stride(["check", "warn.stride", "-q"]);
     check("-q on check: nothing at all", r.status === 0 && r.stdout === "" && r.stderr === "", r);
     r = stride(["check", "warn.stride"]);
-    check("check: the status on stderr", r.status === 0 && r.stdout === "" && /warn\.stride: no mistakes/.test(r.stderr), r);
+    check("check: the status on stderr", r.status === 0 && r.stdout === "" && /warn\.stride: no errors/.test(r.stderr), r);
 
     // A mistake: on stderr, nothing on stdout, even with --quiet.
     writeFileSync(join(dir, "bad.stride"), "print(nosuch)\n");
     for (const q of [[], ["-q"]]) {
       r = stride(["run", "bad.stride", ...q]);
-      check(`a mistake ${q.join(" ")}`, r.status === 1 && r.stdout === "" && r.stderr.includes("mistake S201"), r);
+      check(`a mistake ${q.join(" ")}`, r.status === 1 && r.stdout === "" && r.stderr.includes("error S201"), r);
     }
     // A fault: the lines before it on stdout, the fault on stderr, even with --quiet.
     writeFileSync(join(dir, "fault.stride"), 'ask n: number "N"\nprint("before")\nprint(10 / n)\n');
     r = stride(["run", "fault.stride", "n=0", "-q"]);
-    check("a fault", r.status === 1 && r.stdout === "before\n" && r.stderr.startsWith("fault F001: division by zero"), r);
+    check("a fault", r.status === 1 && r.stdout === "before\n" && r.stderr.startsWith("error F001: division by zero"), r);
 
     // --json: one document on stdout, nothing on stderr.
     const json = (args, what, test) => {

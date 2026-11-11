@@ -78,7 +78,7 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
   const said = (mistakes, before) =>
     mistakes.slice(0, 5).forEach((d) => {
       const line = d.span?.line ? d.span.line - before : null;
-      err(`mistake ${d.code}: ${d.message}${line && line > 0 ? ` (line ${line}, column ${d.span.col})` : ""}`);
+      err(`error ${d.code}: ${d.message}${line && line > 0 ? ` (line ${line}, column ${d.span.col})` : ""}`);
     });
 
   for (;;) {
@@ -125,7 +125,7 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
       const noValue = r.mistakes?.every((d) => ["S366", "S370"].includes(d.code));
       if (!r.mistakes || !noValue) {
         if (r.mistakes) said(r.mistakes, r.before + 1);
-        else if (r.result.fault) err(`fault ${r.result.fault.code}: ${r.result.fault.message}`);
+        else if (r.result.fault) err(`error ${r.result.fault.code}: ${r.result.fault.message}`);
         else {
           for (const line of r.result.prints.slice(shownPrints, -1)) out(line);
           out(r.result.prints.at(-1) ?? "");
@@ -146,7 +146,7 @@ export function repl({ use = null, today = null, readLine, out, err, prompt, con
     }
     for (const line of r.result.prints.slice(shownPrints)) out(line);
     if (r.result.fault) {
-      err(`fault ${r.result.fault.code}: ${r.result.fault.message} (not kept)`);
+      err(`error ${r.result.fault.code}: ${r.result.fault.message} (not kept)`);
       continue;
     }
     answers = r.answers;

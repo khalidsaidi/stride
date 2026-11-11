@@ -75,7 +75,7 @@ try {
   expect("answers from a file", stride(["run", "bills/split.stride", "answers.json"]), (x) => x.stdout === "Ada owes 33.33\nBo owes 33.33\nCy owes 33.33\n");
   expect("answers on stdin", stride(["run", "bills/split.stride", "-"], { input: readFileSync(join(work, "answers.json"), "utf8") }), (x) => x.stdout.split("\n").length === 4);
   expect("answers typed in turn", stride(["run", "bills/split.stride", "--prompt"], { input: "60\nAda\nyes\nBo\nno\n" }), (x) => x.stdout === "Ada owes 30.00\nBo owes 30.00\n" && x.stderr.includes("The bill"));
-  expect("a fault, on stderr", stride(["run", "bills/split.stride", "total=-10", "people[0]=Ada"]), (x) => x.status === 1 && x.stdout === "" && x.stderr.includes("fault F013: a bill is never below zero"));
+  expect("a fault, on stderr", stride(["run", "bills/split.stride", "total=-10", "people[0]=Ada"]), (x) => x.status === 1 && x.stdout === "" && x.stderr.includes("error F013: a bill is never below zero"));
   // 5. Tests.
   write("bills/split.tests/two.json", JSON.stringify({ answers: { total: "90", "people[0]": "Ada", "people[0]#another": "yes", "people[1]": "Bo", "people[1]#another": "no" }, prints: ["Ada owes 45.00", "Bo owes 45.00"] }));
   write("bills/split.tests/nobody.json", JSON.stringify({ answers: { total: "-1", "people[0]": "Ada" }, fault: "F013" }));

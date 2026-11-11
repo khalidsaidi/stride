@@ -150,7 +150,7 @@ a
 -1
 ```
 ```stderr
-fault F004: position 4 is outside the list: it holds 4
+error F004: position 4 is outside the list: it holds 4
   at main, guide.stride:12:9
 ```
 
@@ -238,7 +238,7 @@ print(age_on(born, date_of(2026, 5, 1)))
 36
 ```
 ```stderr
-fault F013: born after the day
+error F013: born after the day
   at age_on, guide.stride:3:5
   called from main, guide.stride:9:7
 ```

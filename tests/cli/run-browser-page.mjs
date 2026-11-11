@@ -149,7 +149,7 @@ export function test() {
     const mended = got["default faults, kept then mended"];
     want("its question is asked first", mended.seen[0]?.includes("Full name"), mended.seen);
     want("kept at its default, the fault is shown after it", mended.seen[1]?.includes("These questions stopped working"), mended.seen);
-    want("the fault in the console in full", mended.console.some((c) => c.startsWith("error fault F001: division by zero") && /at tenth, faulty\.stride:6:\d+/.test(c) && /called from main, faulty\.stride:8:\d+/.test(c)), mended.console);
+    want("the fault in the console in full", mended.console.some((c) => c.startsWith("error error F001: division by zero") && /at tenth, faulty\.stride:6:\d+/.test(c) && /called from main, faulty\.stride:8:\d+/.test(c)), mended.console);
     want("Back to the question, changed: the PDF holds 10 / 4", mended.pdf?.name === "2.5", mended);
     want("a print after an answer, in the console", got.prints.console.includes("log seen: Ada"), got.prints.console);
     const moved = got["new edition"];
@@ -170,7 +170,7 @@ export function test() {
     want("the PDF replaced between the requests: refused in the page", swap.seen[0]?.includes("is not the one this workflow is for") && !swap.seen[0]?.includes("Different name"), swap);
     const stable = got["a stable print"].console;
     want("a stable print, logged once while a fault comes and goes", stable.filter((c) => c === "log same").length === 1, stable);
-    want("the fault, each time it comes, in full", stable.filter((c) => c.startsWith("error fault F013: zero\n  at main, stable.stride:7:")).length === 2, stable);
+    want("the fault, each time it comes, in full", stable.filter((c) => c.startsWith("error error F013: zero\n  at main, stable.stride:7:")).length === 2, stable);
     const changing = got["a changing print"].console;
     want("a changing print, each time", changing.includes("log seen: Ada") && changing.includes("log seen: Bo"), changing);
     // Bytecode where source is needed: a usage mistake, never an internal one.

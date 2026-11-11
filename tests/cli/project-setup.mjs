@@ -28,7 +28,7 @@ export function test() {
     expect(["new", "hello"], 1, "is there already");
     expect(["new", "bad name"], 2, "is not a form id");
     expect(["new", "consent", "--pdf", "consent.pdf"], 0, "consent.boxes.json");
-    expect(["check", "consent.stride"], 0, "no mistakes (1 question, 2 boxes)");
+    expect(["check", "consent.stride"], 0, "no errors (1 question, 2 boxes)");
     expect(["test", "consent.stride"], 0, "1 test passed");
     expect(["map", "consent.stride"], 0, "name                                 = name");
     expect(["map", "consent.stride"], 0, "not written\n  agree");
@@ -54,7 +54,7 @@ export function test() {
     for (const [form, described] of [["kw", "For"], ["braces", "Name {n}"], ["marks", 'Say "hi" \\ {x} }']]) {
       writeFileSync(join(dir, `${form}-src.pdf`), tinyPdf({ described }));
       expect(["new", form, "--pdf", `${form}-src.pdf`], 0, `made ${form}.stride`);
-      expect(["check", `${form}.stride`], 0, "no mistakes (1 question");
+      expect(["check", `${form}.stride`], 0, "no errors (1 question");
       expect(["test", `${form}.stride`], 0, "1 test passed");
     }
     expect(["header", "none.pdf"], 2, "no such file");
