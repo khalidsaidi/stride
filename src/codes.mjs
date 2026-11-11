@@ -563,7 +563,7 @@ export const CODES = {
   },
   "S353": {
     "when": "a function that cannot be passed, used as a value",
-    "explanation": "One with a type parameter, or the standard library's: call it, or wrap it in a function of your own."
+    "explanation": "One with a type parameter, or taking values of any type: call it, or wrap it in a function of your own."
   },
   "S354": {
     "when": "`-` before something not a number",

@@ -18,7 +18,7 @@
 import * as V from "../runtime/values.mjs";
 import { KIND } from "./source.mjs";
 import { evaluate } from "./constant.mjs";
-import { textOf } from "../runtime/natives.mjs";
+import { textOf, NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
 export function lower(resolved, diagnostics, options = {}) {
@@ -106,6 +106,21 @@ export function lower(resolved, diagnostics, options = {}) {
     for (const p of sym.params) ctx.locals.set(p, fn.param(p.name, p.type));
     lowerBlock(sym.node.body, ctx);
     if (!ctx.block.term) ctx.block.term = { op: "return", value: null };
+    return fn;
+  }
+
+  // One of the standard library's functions as a value (§9.10): a function that calls it with what it is given.
+  function nativeOf(sym) {
+    if (functions.has(sym)) return functions.get(sym);
+    const fn = new IR.Fn(sym.name, { result: sym.result, pure: !!NATIVES[sym.name]?.pure });
+    fn.keyName = sym.name;
+    functions.set(sym, fn);
+    program.functions.push(fn);
+    fn.entry = fn.block();
+    const call = IR.native(sym.name, sym.params.map((p) => IR.local(fn.param(p.name, p.type))));
+    const gives = sym.result && sym.result.t !== "none";
+    if (!gives) fn.entry.stmts.push({ op: "eval", value: call, node: null });
+    fn.entry.term = { op: "return", value: gives ? call : null };
     return fn;
   }
 
@@ -518,7 +533,7 @@ export function lower(resolved, diagnostics, options = {}) {
         return withAt(IR.concat(parts), placeOf(e, e.span));
       }
       case "name": {
-        if (e.functionValue) return IR.fnref(functionOf(e.functionValue));
+        if (e.functionValue) return IR.fnref(e.functionValue.kind === "native" ? nativeOf(e.functionValue) : functionOf(e.functionValue));
         const sym = e.symbol;
         if (sym.kind === "const") return IR.constant(sym.value ?? null);
         const l = ctx.locals.get(sym);

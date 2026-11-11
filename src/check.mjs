@@ -575,9 +575,15 @@ export function check(resolved, diagnostics) {
         const sym = e.symbol;
         if (!sym) return T.ERROR;
         if (sym.kind === "const") return constType(sym);
+        // One of the standard library's, when its types are plain ones (§9.10): upper, round, year.
         if (sym.kind === "native") {
-          err("S353", e, `${sym.name} is the standard library's; to pass it, wrap it in a function of your own`);
-          return T.ERROR;
+          const plain = (t) => t && !["any", "element", "error", "typevar"].includes(t.t) && (t.t !== "list" || plain(t.element));
+          if (!sym.params.every((p) => plain(p.type)) || (sym.result && sym.result.t !== "none" && !plain(sym.result))) {
+            err("S353", e, `${sym.name} takes values of any type, so it is called, not passed; wrap it in a function of your own`);
+            return T.ERROR;
+          }
+          e.functionValue = sym;
+          return T.fn(sym.params.map((p) => p.type), sym.result ?? T.NONE);
         }
         // A function's name where a value goes is the function itself (§9.10).
         if (sym.kind === "function") {

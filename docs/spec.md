@@ -685,7 +685,9 @@ parameter, kept in a `let` or a `var`, held in a record's field or a list, and r
 their parameters' types and their results are. A name that holds a function is called as a function is, its
 values given in order: `f(x)` (the wrong number of values is S365, a value of another type S367, a name that
 holds no function S228). A function that asks questions may be passed like any other; its questions are named
-by it (§8.6.2). A function with a type parameter, and one of the standard library's, is called, not passed (S353).
+by it (§8.6.2). One of the standard library's functions is passed the same way (`apply(upper, t)`). A function
+with a type parameter, and a library function that takes values of any type (`count`, `print`), is called, not
+passed (S353).
 Calling through a name that holds no function when the program runs stops the run with F022.
 
 ## 10. Boxes
@@ -1164,7 +1166,7 @@ its call: the function's name in the call.
 | S350 | a value given from a call with no result | The function gives nothing. |
 | S351 | a value of another type given | The place's type. |
 | S352 | `{…}` of a list, record or no value | Put in words, a number, a date or an option. |
-| S353 | a function that cannot be passed, used as a value | One with a type parameter, or the standard library's: call it, or wrap it in a function of your own. |
+| S353 | a function that cannot be passed, used as a value | One with a type parameter, or taking values of any type: call it, or wrap it in a function of your own. |
 | S354 | `-` before something not a number | Only numbers are negated. |
 | S355 | `not` of something not yes-no | `not` is for conditions. |
 | S356 | `is empty` of a call with no result | It gives no value to test. |
