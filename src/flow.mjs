@@ -317,13 +317,14 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     }
   }
 
-  function known(e, fn, seen = new Set()) {
+  // `calls`: a call of a pure Stride function on known values counts too (a box's name, §11.2).
+  function known(e, fn, seen = new Set(), calls = false) {
     for (const x of subexpressions(e)) {
       if (x.kind === "name" && x.symbol && !knownName(x.symbol, fn, seen)) return false;
       if (x.kind === "call") {
         const c = x.callee;
         if (!c) continue;
-        if (c.kind === "function" || (c.kind === "native" && !NATIVES[c.name]?.pure)) return false;
+        if ((c.kind === "function" && !(calls && c.impure === false)) || (c.kind === "native" && !NATIVES[c.name]?.pure)) return false;
       }
       // A list literal of known values is known (§11.1); its items are checked as they come.
       if (x.kind === "field" || x.kind === "index" || x.kind === "new" || x.kind === "comprehension" || x.kind === "slice") return false;
@@ -380,7 +381,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     return `${sym.name} is not known before the form opens`;
   };
   for (const r of required) {
-    if (!known(r.expr, r.fn)) {
+    if (!known(r.expr, r.fn, new Set(), r.why === "a box's name" || r.why === "a button's name")) {
       const x = unknownPart(r.expr, r.fn);
       err("S403", r.expr, `${r.why} must be known before the form opens; ${reason(x)}`);
     }

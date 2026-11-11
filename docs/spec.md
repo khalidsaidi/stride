@@ -857,7 +857,9 @@ question it follows.
 11.1. Known: words, numbers, `yes`, `no`, `empty`; constants; lets made of known values; the counters of loops
 that ask or write boxes; the numbers of a collect's or for each's items; pure natives of known values; list
 literals of known values; parameters every call gives a known value. Not known: answers, vars, items, fields, list
-items, records made with `new`, calls of Stride functions. A known value is therefore a scalar, an option, a set, or
+items, records made with `new`, calls of Stride functions. The one exception is a box's or a button's name: there a
+call of a pure Stride function (§9.9) on known values is known too, so a function can build a row's box names
+(`fill "Make{suffix(n)}" = v.make`). A known value is therefore a scalar, an option, a set, or
 a list of known values (§8.6.3 encodes each).
 
 11.2. Must be known: a box's and a button's name, a question's printed words and an option's, the questions of a

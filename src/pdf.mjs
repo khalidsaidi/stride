@@ -746,7 +746,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
 
   function boxName(s, name) {
     if (isTop(name) || typeof name !== "string") {
-      errOnce("S403", `name\t${s.node?.span?.start}`, s.node, "this box's name depends on an answer, so the PDF check cannot tell which box it is; it must be known before the form opens");
+      errOnce("S403", `name\t${s.node?.span?.start}`, s.node, "the PDF check cannot tell which box this is: its name depends on an answer, or working it out faults; it must be known before the form opens");
       return null;
     }
     return prefix + name;

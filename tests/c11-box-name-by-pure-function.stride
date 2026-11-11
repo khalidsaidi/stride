@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define suffix(n: number) -> text {
+  return if n == 1 then "" else "_{n}"
+}
+ask a: text "A"
+for n in 1..3 {
+  fill "Make{suffix(n)}" = "{a}{n}"
+}
+# rule 11.1
+# box Make text
+# box Make_2 text
+# box Make_3 text
+# run one
+# answers {"a": "x"}
+# boxes {"Make": "x1", "Make_2": "x2", "Make_3": "x3"}

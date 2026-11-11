@@ -577,6 +577,23 @@ write the same boxes.
 - **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", up to the list's
   most; a `for each` then fills one row of boxes per item, `"Name{n}"`.
 
+  ```
+  record vehicle { vin: text, make: text }
+  var vehicles: list of vehicle most 5
+  collect n, v in vehicles "Add another vehicle?" {
+    ask v.vin: text "Vehicle Identification Number"
+    ask v.make: text "Make"
+  }
+  # The form calls its rows' boxes "Make", "Make_2", "Make_3" …: a function builds the names.
+  define row(n: number) -> text {
+    return if n == 1 then "" else "_{n}"
+  }
+  for n in 1..5 {
+    fill "Vehicle Identification Number{row(n)}" = vehicles[n].vin
+    fill "Make{row(n)}" = vehicles[n].make
+  }
+  ```
+
 ```stride form
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
