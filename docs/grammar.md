@@ -108,7 +108,7 @@ its items; each call works out what `t` is from its arguments (§9.5). A functio
 type has the join of its returns' types (§3.9, §9.6).
 
 A function sees its parameters, its own names, its file's declarations, and the program's top-level names (an
-answer, a let, a var), which it reads and does not change. A function may call itself. A function is a value too: its name can be passed,
+answer, a let, a var); it may give the program's var a new value. A function may call itself. A function is a value too: its name can be passed,
 kept and called through (§9.10).
 
 `r.label()` calls `label(r)`: any function can be called on its first argument. A library kept under a name

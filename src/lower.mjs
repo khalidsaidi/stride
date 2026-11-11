@@ -268,11 +268,15 @@ export function lower(resolved, diagnostics, options = {}) {
   // position in a temporary as it is worked out (`into`), and reads the place's current value through them.
   function lowerAssign(s, ctx) {
     const target = s.target;
+    // The program's var, changed in a function: where the program holds it (§9.1).
+    const root = (function rootOf(e) { return e.kind === "name" ? e : rootOf(e.target); })(target);
+    const outer = ctx.fnSym && root.symbol?.program && !ctx.locals.has(root.symbol) ? root.symbol : null;
+    const held = (dst) => (outer ? IR.outer(outer) : IR.local(dst));
     if (target.kind === "name") {
       const dst = ctx.locals.get(target.symbol);
       let value = expr(s.value, ctx);
-      if (s.op) value = withAt(IR.binary(s.op, IR.local(dst), value), placeOf(s, s.opSpan));
-      emit(ctx, { op: "set", dst, value: placeAs(value, target.symbol?.type, s.value.type, s.value), node: s });
+      if (s.op) value = withAt(IR.binary(s.op, held(dst), value), placeOf(s, s.opSpan));
+      emit(ctx, { op: "set", dst, outer, value: placeAs(value, target.symbol?.type, s.value.type, s.value), node: s });
       return;
     }
     const steps = [];
@@ -306,11 +310,11 @@ export function lower(resolved, diagnostics, options = {}) {
     let value = expr(s.value, ctx);
     if (s.op) {
       // The place's current value, read through the same temporaries.
-      let read = IR.local(dst);
+      let read = held(dst);
       for (const p of path) read = p.field !== undefined ? IR.field(read, p.field, p.name) : IR.item(read, withAt(IR.local(p.into), p.index.at));
       value = withAt(IR.binary(s.op, read, value), placeOf(s, s.opSpan));
     }
-    emit(ctx, { op: "store", dst, path, value: placeAs(value, type, s.value.type, s.value), node: s });
+    emit(ctx, { op: "store", dst, outer, path, value: placeAs(value, type, s.value.type, s.value), node: s });
   }
 
   // expect e / expect e faults "…" (§7.17): the test runner runs each as its own sub-run.
@@ -435,9 +439,13 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // For each item of a list (or option of a set): its number counts from 1 to the list's length.
   function lowerEach(s, ctx) {
-    const listLocal = ctx.fn.local("each", s.list.type);
-    const k = ctx.fn.local(s.index ?? "k", null);
-    emit(ctx, { op: "set", dst: listLocal, value: expr(s.list, ctx), node: s });
+    // Over a map: its keys, in their order; with two names, each key and the value under it.
+    const overMap = s.list.type?.t === "map";
+    const mapLocal = overMap ? ctx.fn.local("map", s.list.type) : null;
+    const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key, most: 1000 } : s.list.type);
+    const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
+    if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
+    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(1)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -448,12 +456,19 @@ export function lower(resolved, diagnostics, options = {}) {
     head.term = { op: "branch", cond: IR.binary("<=", IR.local(k), IR.native("count", [IR.local(listLocal)])), yes: body, no: exit, node: s };
     const inner = child(ctx, { block: body, loop: { exit, next: step, tries: ctx.tries ?? 0 } });
     const itemLocal = ctx.fn.local(s.item, s.itemSymbol.type);
-    emit(inner, { op: "set", dst: itemLocal, value: IR.item(IR.local(listLocal), IR.local(k)), node: s });
+    if (overMap && s.indexSymbol) {
+      const keyLocal = ctx.fn.local(s.index, s.indexSymbol.type);
+      emit(inner, { op: "set", dst: keyLocal, value: IR.item(IR.local(listLocal), IR.local(k)), node: s });
+      emit(inner, { op: "set", dst: itemLocal, value: IR.item(IR.local(mapLocal), IR.local(keyLocal)), node: s });
+      inner.locals.set(s.indexSymbol, keyLocal);
+    } else {
+      emit(inner, { op: "set", dst: itemLocal, value: IR.item(IR.local(listLocal), IR.local(k)), node: s });
+      if (s.indexSymbol) inner.locals.set(s.indexSymbol, k);
+    }
     inner.locals.set(s.itemSymbol, itemLocal);
-    if (s.indexSymbol) inner.locals.set(s.indexSymbol, k);
     // An unrolled for each adds its turn, the item's number, to the keys inside it (§8.6.2).
     if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(k), IR.constant("]")));
-    const base = listKey(s.list, ctx);
+    const base = overMap ? null : listKey(s.list, ctx);
     if (base) inner.items.set(s.itemSymbol, { base: join(base, IR.constant("["), IR.local(k), IR.constant("]")), suffixes: inner.suffixes.length });
     lowerBlock(s.body, inner);
     jumpTo(inner, step, s);
@@ -629,7 +644,7 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.indexSymbol) inner.locals.set(e.indexSymbol, index);
         return {
           e: "comp",
-          list: expr(e.list, ctx),
+          list: e.overMap ? IR.native("keys", [expr(e.list, ctx)]) : expr(e.list, ctx),
           item,
           index,
           cond: e.condition ? expr(e.condition, inner) : null,

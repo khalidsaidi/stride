@@ -251,10 +251,14 @@ export function check(resolved, diagnostics) {
       case "for-each": {
         const type = expr(s.list, ctx);
         if (type.t === "list") s.itemSymbol.type = type.element;
-        else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
+        else if (type.t === "map") {
+          // A map's keys, in their order; with two names, each key and the value under it (§7.11).
+          if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
+          else s.itemSymbol.type = type.key;
+        } else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
         else if (type.t === "empty") s.itemSymbol.type = T.EMPTY; // no turns (§3.6)
         else {
-          if (!T.isError(type)) err("S314", s.list, `for each goes through a list or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}${type.t === "map" ? `: go through keys(${describeExpr(s.list)})` : ""}`);
+          if (!T.isError(type)) err("S314", s.list, `for each goes through a list, a map or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}`);
           s.itemSymbol.type = T.ERROR;
         }
         return block(s.body, ctx);
@@ -465,11 +469,8 @@ export function check(resolved, diagnostics) {
       err("S204", target, `${name} is kept as it was when the function was made: the function reads it, and does not change it; give the new value back with return`);
       return;
     }
-    if (ctx.fn && rootOf(target)?.symbol?.program) {
-      const name = rootOf(target).symbol.name;
-      err("S204", target, `${name} is the program's: a function reads it, and does not change it; give the new value back with return`);
-      return;
-    }
+    // A function may change the program's var (§9.1): what it holds is then the run's business.
+    if (ctx.fn && rootOf(target)?.symbol?.program) rootOf(target).symbol.changedInFunction = true;
     if (target.kind === "name") {
       const sym = target.symbol;
       if (!sym) return;
@@ -766,11 +767,16 @@ export function check(resolved, diagnostics) {
         } else if (l.t === "options") {
           e.itemSymbol.type = T.option(l.set);
           most = Math.max(1, l.set.options.length);
+        } else if (l.t === "map" && !e.indexSymbol) {
+          // A map's keys, in their order.
+          e.itemSymbol.type = l.key;
+          e.overMap = true;
+          most = 1000;
         } else if (l.t === "empty") {
           e.itemSymbol.type = T.EMPTY; // no items (§3.6)
           most = 0;
         } else {
-          if (!T.isError(l)) err("S314", e.list, `for each goes through a list or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
+          if (!T.isError(l)) err("S314", e.list, l.t === "map" ? `a comprehension goes through a map's keys, by one name: [… for each k in ${describeExpr(e.list)}], with ${describeExpr(e.list)}[k] for the value` : `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
         }
         if (e.condition) condition(e.condition, ctx, "a comprehension's if");

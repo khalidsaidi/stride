@@ -93,6 +93,8 @@ export const OP = {
   KEEP: 67, // v count: pop that many values and a function value; push the function keeping them (§9.11)
   TRY: 68, // a catch, v local: a fault from here to TRY_DONE goes on at the catch, its words in the local (§7.18)
   TRY_DONE: 69, // the try is over
+  STORE_MAIN: 70, // v local: pop a value into the program's own local (a function changing the program's var)
+  ENSURE_MAIN: 71, // v local, v record: ENSURE_RECORD on the program's own local
   FN: 64, // v function, v text: push the function as a value, by the name its questions' keys use
   CALL_VALUE: 65, // v count: pop that many values, the turns, the key and a function value; call it (§9.10)
   FROM: 63, // v question, v as given: the write that follows is made from that question's answer (as given, or not)
@@ -105,7 +107,7 @@ export const OPERANDS = {
   [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
-  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.TRY]: "av", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
+  [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.STORE_MAIN]: "v", [OP.ENSURE_MAIN]: "vv", [OP.TRY]: "av", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
 };
 
 export const BINARY_OPS = { "+": OP.ADD, "-": OP.SUB, "*": OP.MUL, "/": OP.DIV, "//": OP.FLOOR_DIV, "%": OP.MOD, "==": OP.EQ, "!=": OP.NE, "<": OP.LT, "<=": OP.LE, ">": OP.GT, ">=": OP.GE, in: OP.IN, "not in": OP.NOT_IN };
@@ -388,8 +390,9 @@ export function verify(p) {
         case OP.FN:
           check(args[0] < p.functions.length, "function");
           break;
-        case OP.LOAD_MAIN:
+        case OP.LOAD_MAIN: case OP.STORE_MAIN: case OP.ENSURE_MAIN:
           check(args[0] < p.functions[0].localNames.length, "the program's local");
+          if (op === OP.ENSURE_MAIN) check(args[1] < p.records.length, "record");
           break;
         case OP.CALL:
           check(args[0] < p.functions.length, "function");
@@ -464,7 +467,9 @@ function stackEffect(op, args) {
       return [1, 1];
     case OP.ENSURE_ITEM: case OP.CHECK_SLOT:
       return [2, 2];
-    case OP.ENSURE_RECORD: case OP.EXPECT: case OP.FROM: case OP.TRY: case OP.TRY_DONE:
+    case OP.STORE_MAIN:
+      return [1, 0];
+    case OP.ENSURE_MAIN: case OP.ENSURE_RECORD: case OP.EXPECT: case OP.FROM: case OP.TRY: case OP.TRY_DONE:
       return [0, 0];
     case OP.EXPECT_DONE:
       return [args[0] ? 1 : 2, 0];

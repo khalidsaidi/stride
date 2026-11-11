@@ -4,11 +4,9 @@ var m: map of text to number = {"a": 1}
 print(m[3])
 m["b"] = "two"
 let bad = {"a": 1, 2: 3}
-for each x in m {
-  print(x)
-}
+print([v for each k, v in m])
 # rule 3.10 6.11.1 S358 S361
 # mistake 4:9 S358
 # mistake 5:10 S351
 # mistake 6:20 S361
-# mistake 7:15 S314
+# mistake 7:27 S314

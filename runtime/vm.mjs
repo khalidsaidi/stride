@@ -439,6 +439,17 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           entered(frames.at(-1), args);
           break;
         }
+        case OP.STORE_MAIN:
+          frames[0].locals[ins.a] = copy(pop());
+          frames[0].given?.add(ins.a);
+          break;
+        case OP.ENSURE_MAIN: {
+          if (isEmpty(frames[0].locals[ins.a])) {
+            const r = p.records[ins.b];
+            frames[0].locals[ins.a] = emptyRecord(r.name, r.mosts, r.fields);
+          }
+          break;
+        }
         case OP.LOAD_MAIN:
           stack.push(frames[0].locals[ins.a] ?? null);
           break;

@@ -27,5 +27,12 @@ define total<k>(m: map of k to number) -> number {
   return sum(values(m))
 }
 print(total(ages) + total({1: 2, 3: 4}))
+for each name in other {
+  print(name)
+}
+for each name, age in other {
+  print("{name} is {age}")
+}
+print([other[k] + 1 for each k in other if k != "Bo"])
 # rule 3.10 6.11.1 14.4.1
-# prints ["{Ann: 31, Bo: 41, Cy: 25}", "yes", "3", "yes", "[Ann, Cy]", "[31, 25]", "3", "yes", "{x: tally { n: 2 }}", "yes", "62"]
+# prints ["{Ann: 31, Bo: 41, Cy: 25}", "yes", "3", "yes", "[Ann, Cy]", "[31, 25]", "3", "yes", "{x: tally { n: 2 }}", "yes", "62", "Ann", "Bo", "Cy", "Ann is 31", "Bo is 41", "Cy is 25", "[32, 26]"]

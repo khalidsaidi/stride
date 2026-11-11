@@ -280,7 +280,7 @@ Hi Bo
 A parameter may have a default; arguments are given in order, then by name. A function without `-> type` has its
 result worked out from its returns. `define biggest<t>(l: list of t) -> t` is generic: `t` is worked out at each
 call (§9.5). A value given to a function is a copy, so a function never changes what it was given (§3.4).
-A function reads the program's own names (an answer, a let, a var) and does not change them (§9.1).
+A function reads the program's own names (an answer, a let, a var), and may change its vars (§9.1).
 
 ## 7. Lists, records and sets
 
@@ -328,8 +328,8 @@ ages["Cy"] = 25
 ages["Ann"] = ages["Ann"] + 1
 print(ages["Ann"])
 print(ages["Zed"] is empty)
-for each name in keys(ages) {
-  print("{name}: {ages[name]}")
+for each name, age in ages {
+  print("{name}: {age}")
 }
 print(has(ages, "Bo"))
 ```

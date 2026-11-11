@@ -17,7 +17,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `for i := 0; i < n; i++`, `for i in range(n)` | `for i in 1..n { }` |
 | `for x in xs`, `xs.forEach` | `for each x in xs { }`, `for each i, x in xs { }` |
 | `while`, recursion | `while c { }`; a function may call itself |
-| `dict`, `map[K]V`, `Map` | `map of text to number`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `keys(m)` |
+| `dict`, `map[K]V`, `Map` | `map of text to number`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for each k, v in m { }` |
 | `lambda`, `func(x) { }`, `x => …` | `function(x: number) -> number { return x * 2 }` |
 | `def f(a, b=2):`, `func f(a int) int` | `define f(a: number, b: number = 2) -> number { }` |
 | `xs.map(f)`, `filter`, list comprehensions | `[f(x) for each x in xs if x > 0]` |

@@ -252,9 +252,9 @@ const showPath = (path) => path.map((p) => (p.field !== undefined ? `.${p.name}`
 export function showStatement(s) {
   switch (s.op) {
     case "set":
-      return `%${s.dst.name} = ${showExpr(s.value)}`;
+      return `%${s.outer ? `program ${s.outer.name}` : s.dst.name} = ${showExpr(s.value)}`;
     case "store":
-      return `%${s.dst.name}${showPath(s.path)} = ${showExpr(s.value)}`;
+      return `%${s.outer ? `program ${s.outer.name}` : s.dst.name}${showPath(s.path)} = ${showExpr(s.value)}`;
     case "append":
       return `%${s.dst.name} <- ${showExpr(s.value)}`;
     case "ask":

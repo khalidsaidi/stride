@@ -275,9 +275,10 @@ export function generate(program, pdf, debug = null) {
     // To the place a path names (§7.5.1), leaving the record or list that holds its last step on the stack: every
     // step but the last a read — a position there checked (F004) and present (F020) — and a record made where a
     // place on the way holds empty.
-    function navigate(dst, path) {
-      if (path[0]?.field !== undefined && path[0].ensure) emit(OP.ENSURE_RECORD, local(dst), recordIndex(path[0].ensure));
-      emit(OP.LOAD, local(dst));
+    const mainSlot = (sym) => mainSlots.get(program.outer.get(sym));
+    function navigate(dst, path, outer) {
+      if (path[0]?.field !== undefined && path[0].ensure) emit(outer ? OP.ENSURE_MAIN : OP.ENSURE_RECORD, outer ? mainSlot(outer) : local(dst), recordIndex(path[0].ensure));
+      emit(outer ? OP.LOAD_MAIN : OP.LOAD, outer ? mainSlot(outer) : local(dst));
       for (const p of path.slice(0, -1)) {
         if (p.field !== undefined) {
           if (p.ensureNext) emit(OP.ENSURE_FIELD, p.field, recordIndex(p.ensureNext));
@@ -322,9 +323,9 @@ export function generate(program, pdf, debug = null) {
           return emit(OP.TRY_DONE);
         case "set":
           expr(s.value);
-          return emit(OP.STORE, local(s.dst));
+          return s.outer ? emit(OP.STORE_MAIN, mainSlot(s.outer)) : emit(OP.STORE, local(s.dst));
         case "store":
-          navigate(s.dst, s.path);
+          navigate(s.dst, s.path, s.outer);
           return setLast(s.path, () => expr(s.value));
         case "append":
           expr(s.value);

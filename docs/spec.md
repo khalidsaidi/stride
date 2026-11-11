@@ -354,7 +354,9 @@ is S352.
 its values' (S361 when two have none); a key written twice keeps its last value. `{}` takes its type from where it
 stands. `m[k]` is the value under k, or empty when m has no such key (a key of another type is S358);
 `m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is F004); `m[k].f = v` makes
-the record under a new key (§7.5.1).
+the record under a new key (§7.5.1). `for each k in m` goes through m's keys in their order, and
+`for each k, v in m` gives each key and the value under it; a comprehension goes through the keys
+(`[m[k] for each k in m]`).
 
 6.12. **Comprehension** `[e for each [n,] x in l if c]` (l a list or a set): for each item x of l (n counting from 1) for which c is
 yes, the value of e, in order. Its type is `list of` e's type `most` l's most when l is a list, and, when l is a set, the number of options its
@@ -642,8 +644,8 @@ is empty (never a fault):
 ## 9. Functions
 
 9.1. A function sees its parameters, its own names, its file's declarations, and the names the program defines at
-its top level (an answer, a let, a var), with the value each has when the function runs. It reads them and does not
-change them (S204); a name defined inside a loop is known only there (§12.2). A function used before the line
+its top level (an answer, a let, a var), with the value each has when the function runs, and may give the
+program's var a new value, as the program itself does; a name defined inside a loop is known only there (§12.2). A function used before the line
 that defines a name it reads is S202.
 
 9.2. **Parameters** with a default `name: type = e`: e worked out by the compiler (S393), of the parameter's type;
@@ -1122,7 +1124,7 @@ its call: the function's name in the call.
 | S201 | a name not defined | The message gives the nearest name visible here. |
 | S202 | a name used before the line that defines it | Statements run in order; move the use after the definition. |
 | S203 | a name defined in a loop used after it | A loop's names are known only inside it; collect into a var declared before. |
-| S204 | a program's name a function cannot use | A function reads the program's top-level names and does not change them: return the new value. A parameter's default is worked out by the compiler, so it reads none. |
+| S204 | a name a function cannot change | A function written in place keeps the names around it as they were when it was made, and does not change them: return the new value. A parameter's default is worked out by the compiler, so it reads none of the program's names. |
 | S205 | a name defined twice | One name, one thing, in a function or program; rename one. |
 | S206 | a local name hiding its file's declaration | Rename the local. |
 | S207 | two declarations of one name | Rename one; the note shows the other. |

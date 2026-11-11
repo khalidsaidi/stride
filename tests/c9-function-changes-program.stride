@@ -1,10 +1,23 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var total = 10
-define bump() -> number {
-  total = total + 1
-  return total
+record box {
+  n: number
 }
-print(bump())
-# rule 9.1 S204
-# mistake 5:3 S204
+var total = 10
+var b: box
+var log: list of text = []
+var later: number
+define bump(by: number) {
+  total += by
+  b.n = total
+  log[count(log) + 1] = "bumped {by}"
+  later = 5
+}
+bump(1)
+bump(2)
+print(total)
+print(b)
+print(log)
+print(later)
+# rule 9.1
+# prints ["13", "box { n: 13 }", "[bumped 1, bumped 2]", "5"]
