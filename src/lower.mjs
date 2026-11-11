@@ -595,11 +595,9 @@ export function lower(resolved, diagnostics, options = {}) {
         }
         const fn = functionOf(sym);
         if (!sym.effects) return withAt(ordered(IR.call(fn, args)), at);
-        // §8.6.2: a call that can reach questions adds its segment, function(name=value;…) with every parameter that
-        // names boxes or questions in declaration order, then the turns of the loops around it.
-        const keyed = params.map((p, i) => (sym.staticParams.has(p) ? [IR.constant(`${p.name}=`), IR.key(args[i])] : null)).filter(Boolean);
-        const shown = keyed.flatMap((a, i) => (i ? [IR.constant(";"), ...a] : a));
-        const key = join(ctx.prefix, IR.constant(`${keyName(sym)}(`), shown, IR.constant(")"), suffix(ctx), IR.constant("."));
+        // §8.6.2: a call that can reach questions adds its segment: the function's name, then the turns of the loops
+        // around it; a second call of it there in the same run is name#2, a third name#3.
+        const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(keyName(sym)), suffix(ctx))]), IR.constant("."));
         return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...args]), 2), at);
       }
       case "list":

@@ -11,8 +11,8 @@
 //   - a function with a result returns one on every path; nothing stands after a return;
 //   - every answer is used, and every field a question answers is read somewhere.
 //
-// It marks: fn.effects, fn.staticParams (a Set of parameter symbols), loop.unroll (the loops and collects whose
-// counter is known), let.known.
+// It marks: fn.effects, and loop.unroll (the loops and collects that ask or write boxes, whose questions are
+// named by turn).
 import { KIND, nameSpan } from "./source.mjs";
 import { describeExpr } from "./check.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
@@ -189,76 +189,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     for (const s of statements(body)) {
       if (s.kind === "collect") s.unroll = true;
       if ((s.kind === "for" || s.kind === "for-each" || s.kind === "while") && hasEffects(s.body)) s.unroll = true;
-    }
-  }
-
-  // ----- 3. the parameters that name a function's boxes and questions (they tell its calls' questions apart, §8.6)
-
-  for (const f of functions) f.staticParams = new Set();
-  const fnOf = new Map(); // a node's function, for parameters
-  const required = []; // { expr, fn, why }
-  for (const { fn, body } of bodies) {
-    for (const s of statements(body)) {
-      const need = (e, why) => e && required.push({ expr: e, fn, why });
-      switch (s.kind) {
-        case "ask":
-          need(s.printed, "a question's printed words");
-          if (s.set?.anonymous) for (const o of s.set.options) need(o.printed, "an option's printed words");
-          break;
-        case "fill":
-        case "tick":
-          need(s.box, "a box's name");
-          break;
-        case "pick":
-          need(s.box, "a box's name");
-          need(s.button, "a button's name");
-          break;
-        case "collect":
-          need(s.another, "the question that asks for another item");
-          if (s.any) need(s.any, "the question that asks whether there are any");
-          break;
-        case "expect":
-          need(s.fault, "the fault a test expects");
-          break;
-        default:
-          break;
-      }
-      for (const e of expressionsOf(s)) if (e.kind === "name") fnOf.set(e, fn);
-    }
-  }
-
-  // A let made of such a parameter passes it on.
-  const lets = new Map();
-  for (const { fn, body } of bodies) for (const s of statements(body)) if (s.kind === "let" && s.symbol) lets.set(s.symbol, { s, fn });
-
-  // A parameter that a box's name or a question's words are made of, and one passed on to such a parameter.
-  for (let changed = true; changed; ) {
-    changed = false;
-    const mark = (e, fn) => {
-      for (const x of subexpressions(e)) {
-        if (x.kind === "name" && x.symbol?.kind === "param" && fn && fn.params.includes(x.symbol) && !fn.staticParams.has(x.symbol)) {
-          fn.staticParams.add(x.symbol);
-          changed = true;
-        }
-        if (x.kind === "name" && x.symbol?.kind === "let") {
-          const l = lets.get(x.symbol);
-          if (l && !l.marking) {
-            l.marking = true;
-            mark(l.s.value, l.fn);
-            l.marking = false;
-          }
-        }
-      }
-    };
-    for (const r of required) mark(r.expr, r.fn);
-    for (const { fn, body } of bodies) {
-      for (const c of callsIn(body)) {
-        c.callee.params.forEach((p, i) => {
-          // The argument bound to the parameter, named ones by their name (§9.4).
-          const a = (c.bound ?? c.args)[i];
-          if (c.callee.staticParams.has(p) && a && a.kind !== "default-of") mark(a, fn);
-        });
-      }
     }
   }
 

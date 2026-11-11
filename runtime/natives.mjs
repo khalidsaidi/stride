@@ -79,6 +79,12 @@ function todayDate() {
 
 // Where print's words go: the engine sets it for each run (§13.1).
 let printer = () => {};
+// How many times each call that can reach questions has been made in this run, by its key (§8.6.2).
+let callCounts = new Map();
+export function resetCalls() {
+  callCounts = new Map();
+}
+
 export function setPrinter(f) {
   printer = f ?? (() => {});
 }
@@ -317,6 +323,16 @@ export const NATIVES = {
   either: { pure: true, fn: (a, b) => (isEmpty(a) ? b : a) },
   fail: { pure: false, statement: true, fn: (message) => { throw new StrideFault("F013", text(message)); } },
   print: { pure: false, statement: true, fn: (v) => { printer(v); return null; } },
+  // The key of a call that can reach questions (§8.6.2): its name where it stands; a second call there, name#2.
+  call_key: {
+    pure: false,
+    internal: true,
+    fn: (base) => {
+      const n = (callCounts.get(base) ?? 0) + 1;
+      callCounts.set(base, n);
+      return n === 1 ? base : `${base}#${n}`;
+    },
+  },
   // A list placed where a list type is expected (§3.7.2, §3.7.7): the type's mosts, outer to inner, as "4,3"; each
   // level widened, F017 when a level holds a larger most.
   widen: { pure: true, internal: true, fn: (v, shape) => widenTo(v, text(shape).split(",").map((m) => (m === "?" ? m : Number(m)))) },

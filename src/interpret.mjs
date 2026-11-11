@@ -7,7 +7,7 @@
 //   - the conformance suite runs every test here and in the machine, and they must agree on
 //     every question, box, print and fault (docs/spec.md §19.1): generated code that does not do what the
 //     intermediate form says is a fault in the compiler, caught where it starts.
-import { NATIVES, setToday, setPrinter } from "../runtime/natives.mjs";
+import { NATIVES, setToday, setPrinter, resetCalls } from "../runtime/natives.mjs";
 import { binary, unary, truthy } from "../runtime/ops.mjs";
 import { convert } from "../runtime/vm.mjs";
 import { StrideFault, StrideRecord, isEmpty, words, printed, copy, list, mostOf, set, whole, encode, dateFrom, num, expectation, emptyRecord } from "../runtime/values.mjs";
@@ -387,6 +387,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
 // back, as the machine gives it, not thrown; nothing the run wrote counts.
 export function interpretProgram(program, answers, boxes, { today = null, limit = 2_000_000, watch = null, onWrite = null } = {}) {
   setToday(today);
+  resetCalls();
   const collected = { steps: [], prints: [] };
   try {
     const r = interpret(program, program.main, [], { answers, boxes, limit, watch, onWrite });

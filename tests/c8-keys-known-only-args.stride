@@ -6,7 +6,7 @@ define line(who: text, n: number = 2) {
 }
 line("spouse")
 line(n: 3, who: "child")
-# rule 8.6.2 8.6.3 9.2 9.4
-# answers {"line(who=\"spouse\";n=2).name": "A", "line(who=\"child\";n=3).name": "B"}
-# asked ["line(who=\"spouse\";n=2).name", "line(who=\"child\";n=3).name"]
+# rule 8.6.2 9.2 9.4
+# answers {"line.name": "A", "line#2.name": "B"}
+# asked ["line.name", "line#2.name"]
 # boxes {"Name2": "A", "Name3": "B"}

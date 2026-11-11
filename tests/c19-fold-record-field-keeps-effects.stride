@@ -15,8 +15,8 @@ fill "C" = [1 / z, 2][2]
 # rule 19.1 6.2 9.9 F001
 # run faults
 # answers {"z": "0"}
-# asked ["z", "f().q"]
+# asked ["z", "f.q"]
 # fault F001 at 13:25
 # run fine
-# answers {"z": "4", "f().q": "1"}
+# answers {"z": "4", "f.q": "1"}
 # boxes {"A": "2", "B": "2", "C": "2"}

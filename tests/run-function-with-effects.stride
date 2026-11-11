@@ -6,7 +6,7 @@ define row(n: number) {
 }
 row(1)
 row(2)
-# answers {"row(n=2).name": "b"}
+# answers {"row#2.name": "b"}
 # boxes {"Name2": "b"}
-# asked ["row(n=1).name", "row(n=2).name"]
+# asked ["row.name", "row#2.name"]
 # rule 8.6.2 9.9

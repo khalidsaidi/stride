@@ -76,7 +76,7 @@ export function test() {
     expect(10, "the entry that faulted", (s) => s.errs.includes("fault F001") && s.errs.includes("not kept"));
     expect(11, "a failed entry keeps no answer", (s) => s.out === "{}\n");
     expect(12, "trying again asks again", (s) => s.errs.includes("Who"));
-    expect(14, "a kept entry keeps its answer", (s) => s.out === '{"probe().who":"Grace"}\n');
+    expect(14, "a kept entry keeps its answer", (s) => s.out === '{"probe.who":"Grace"}\n');
     expect(16, ":undo forgets its answers", (s) => s.out === "{}\n");
   } finally {
     rmSync(top, { recursive: true, force: true });

@@ -554,9 +554,8 @@ construction. A question reached again with a key already asked in the run has t
 ```
 key      = (segment ".")* (tail | item turns) | (segment ".")* list generated;
 segment  = call turns | item turns;
-call     = function "(" [arg (";" arg)*] ")";
+call     = function ["#" whole];              # the function; its second call there in a run is #2
 function = [library ":"] name;                 # library: the use path, e.g. people or forms/irs
-arg      = name "=" value;
 item     = name "[" whole "]";                 # a collect's list and the item's number
 tail     = name ("." name)* turns;
 generated = ("#any" | "[" whole "]#another") turns;   # a collect's own questions
@@ -566,52 +565,14 @@ turns    = ("[" whole "]")*;                   # loop turns, outermost first
 
 8.6.2. **Construction.** The key of a question is built from the run's position, outermost first:
 - each call, on the path from the program's start to the question, of a function that can reach a question (it
-  asks or collects, or calls a function that can) adds the segment `function(args)`, with an empty argument list
-  when the function has no naming parameters: `first().name` and `second().name` are two questions. A call of
-  a function that cannot reach a question adds nothing, since no key is built inside it;
+  asks or collects, or calls a function that can) adds the segment `function.`: `first.name` and `second.name`
+  are two questions. A second call of the function at the same place in the key, in one run, is `function#2.`, a
+  third `function#3.`: with `define yes_no(words: text) { ask answer: yes-no words … }`, three calls ask
+  `yes_no.answer`, `yes_no#2.answer` and `yes_no#3.answer`. A call of a function that cannot reach a question
+  adds nothing;
 - the function is written by its name, after its library's use path and `:` when it is declared in a library
-  (`people:line_2(…)`), so two libraries' functions of one name never share a key; the program's own functions
-  and the standard library's are written by their names alone;
-- args are the function's naming parameters — those a box's name or a question's printed words in it are made
-  of, and those it passes on to such a parameter of another function — every one, in the order the function declares them, each
-  `name=value`, whether the call gave it by position, by name or by its default (§9.2): the key depends on the
-  values, never on how the call was written;
-- each collect item the question is in adds the segment `list[n]`;
-- the loops (`for`, `for each`) between one segment (or the start) and the next add their turns to that next
-  segment, or to the tail: `[i]` for a `for` (its counter's value) and `[n]` for a `for each` (the item's number);
-- the tail is the question's name, or the field path it answers (`r.name` is written `name` after its item
-  segment), then its turns. A question that answers a collect's item itself (a scalar collect, `collect x in names
-  "…" { ask x: text "Name" }`) has no tail: its key ends with the item segment, `names[1]`.
-- **A collect's own questions** are written with `#`, which no name or field can hold: `list#any` and
-  `list[n]#another`, followed by the turns of the loops between the segment before them (or the start) and the
-  collect, outermost first, as any key's last part carries its turns. In
-
-  ```
-  for i in 1..2 {
-    var names: list of text most 2
-    collect x in names any "Any?" "Another?" { ask x: text "Name" }
-    fill "Name{i}" = first(names)
-  }
-  ```
-
-  answered `names#any[1]` yes, `names[1][1]` "Ada", `names[1]#another[1]` no, and the same in the second turn, the
-  questions are `names#any[1]`, `names[1][1]`, `names[1]#another[1]`, `names#any[2]`, `names[1][2]`,
-  `names[1]#another[2]`: every turn its own key. With `most 1` instead, `#another` is never asked (§8.5.1): the
-  questions are `names#any[1]`, `names[1][1]`, `names#any[2]`, `names[1][2]`. A record field called `another` or `any` is an ordinary tail, `rows[1].another`, and can never
-  meet them.
-
-8.6.3. **Values in a key.** Every type a naming parameter's value can have has one encoding. A number by its words
-(§3.3.5); a date `YYYY-MM-DD`; `yes`, `no`; empty by its type: an empty list `[]`, an empty set `{}`, and empty of
-every other type (words, a number, a date, yes-no, an option, a record) `empty`, so each value has one encoding; a
-list as `[` its items' encodings
-joined by `,` `]` (`[]` when it holds none; its most is not part of the key); a set as `{` its options' encodings
-in declaration order (§3.8) joined by `,` `}`; a record as its name, then `{` each field `name=encoding` in the
-record's declaration order, joined by `;` `}`; words and options as a JSON string literal: `"` … `"`, with exactly this mapping, the one JSON.stringify uses: `"`
-as `\"`, `\` as `\\`, U+0008 as `\b`, U+0009 `\t`, U+000A `\n`, U+000C `\f`, U+000D `\r`, every other
-character U+0000–U+001F as `\u00` and two small hexadecimal digits (`\u001f`), and every other character, `/` and
-U+007F and everything outside ASCII included, as itself. So a line break is always `\n`, never `\u000a`. So the arguments
-`("a,b", "c")` and `("a", "b,c")` give `f(x="a,b";y="c")` and `f(x="a";y="b,c")`, which differ, and no value can
-end a segment early.
+  (`people:line_2.`), so two libraries' functions of one name never share a key;
+- the turns of the loops around a question or a call follow it, `[1]`, `[2]`, …, outermost first.
 
 Since every word is quoted, the signs `[ ] { } , ; = ( ) .` of the encodings can never come from a value, and
 two different values of one type give different encodings — with one deliberate exception: a list's most is not
