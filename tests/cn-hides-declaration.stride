@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-const limit = 3
-let limit = 4
-print("{limit}")
-
-# rule 12.3 S206
-# mistake 4:5 S206

@@ -1,0 +1,33 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define total() -> number {
+  return 3
+}
+define f(total: number) -> number {
+  let total = total + 1
+  return total
+}
+var n = 10
+n %= 4
+n //= 2
+if n == 1 {
+  let t = 1
+  print(t)
+}
+if n == 1 {
+  let t = "two"
+  print(t)
+}
+let xs = [
+  1,
+  2,
+]
+for i in 1..2 {
+  let n = i * 100
+  print(n)
+}
+print(f(1,) + total())
+print(xs)
+print(n)
+# rule 12.3 7.5
+# prints ["1", "two", "100", "200", "5", "[1, 2]", "1"]

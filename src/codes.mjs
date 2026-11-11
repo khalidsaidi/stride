@@ -234,12 +234,8 @@ export const CODES = {
     "explanation": "A loop's names are known only inside it; collect into a var declared before."
   },
   "S205": {
-    "when": "a name defined twice",
-    "explanation": "One name, one thing, in a function or program; rename one."
-  },
-  "S206": {
-    "when": "a local name hiding its file's declaration",
-    "explanation": "Rename the local."
+    "when": "two questions of one name",
+    "explanation": "A question's name is its key; give the second another name."
   },
   "S207": {
     "when": "two declarations of one name",

@@ -559,7 +559,7 @@ export function lower(resolved, diagnostics, options = {}) {
     };
     const shape = mostsOf(type);
     // The bare `empty` where a list of no stated most goes is a list with no items, of most 0 (§3.7.3.1).
-    if (!Number.isFinite(shape[0]) && type?.t === "list" && from?.t === "empty") return IR.constant(V.list([], 0));
+    if (!Number.isFinite(shape[0]) && type?.t === "list" && from?.t === "empty") return IR.constant(V.list([], 2147483647));
     if (!shape.length) return x;
     if (mostsOf(from).join(",") === shape.join(",")) return x;
     // F017 stands at the expression placed (§16.3.1).
@@ -693,7 +693,7 @@ export function lower(resolved, diagnostics, options = {}) {
         return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));
       case "list":
         // Each item widened to the literal's element type (§3.9).
-        return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type, x)), Math.max(1, e.items.length));
+        return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type, x)), 2147483647);
       case "new": {
         const decl = e.recordSymbol.decl;
         const record = IR.record(decl, decl.fields.map((f) => {

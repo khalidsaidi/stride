@@ -227,10 +227,6 @@ export function resolve(loaded, diagnostics) {
           const outer = scope.lookup(p.name);
           // Native signatures have no body or local bindings (date_of's year parameter is alongside year()).
           if (sym.kind === "function" && outer?.kind === "module") err("S110", unit.file, p.span, `${p.name} names the library brought in by use … as ${p.name}; give the parameter another name`);
-          else if (sym.kind === "function" && outer?.unit === unit && ["record", "options", "const", "function", "native"].includes(outer.kind)) {
-            const span = { ...p.span, end: p.span.start + p.name.length, endLine: p.span.line, endCol: p.span.col + p.name.length };
-            err("S206", unit.file, span, `${p.name} is ${what(outer)} (line ${outer.line}); give the parameter another name`);
-          }
           fnScope.names.set(p.name, param);
         }
         sym.params.push(param);
@@ -422,18 +418,17 @@ export function resolve(loaded, diagnostics) {
   }
 
   function declare(scope, sym, unit) {
-    // A name may not be defined again in the same function or program body, even in another block: it would
-    // hide the first, and an answer's key would be ambiguous.
+    // A name defined again hides the one before it from there on, as a name in a block hides one outside it.
+    // Two questions of one name in one body would have one key (§8.6): that is S205.
     for (let s = scope; s && (s.kind === "block" || s.kind === "main" || s.kind === "function"); s = s.parent) {
       const clash = s.own(sym.name);
-      if (clash) {
+      if (clash && clash.kind === "answer" && sym.kind === "answer") {
         err("S205", unit.file, nameSpan(unit.file, sym.span, sym.name), `${sym.name} is already ${what(clash)}, defined on line ${clash.line}`, [{ file: clash.file, span: clash.span, message: `${sym.name} is defined here` }]);
         return false;
       }
       if (s.kind !== "block") break;
     }
-    // A file's own declarations are not hidden by a local name; what it brings in from a library may be, but not
-    // a library's `as` name, which names nothing else (§4.5).
+    // A library's `as` name names nothing else (§4.5).
     const outer = scope.parent?.lookup(sym.name);
     if (outer?.kind === "module") {
       err("S110", unit.file, sym.span, `${sym.name} names the library brought in by use … as ${sym.name}; give ${what(sym)} another name`);
@@ -441,10 +436,6 @@ export function resolve(loaded, diagnostics) {
       sym.type = T.ERROR;
       sym.refused = true;
       scope.names.set(sym.name, sym);
-      return false;
-    }
-    if (outer && outer.unit === unit && ["record", "options", "const", "function", "native"].includes(outer.kind)) {
-      err("S206", unit.file, nameSpan(unit.file, sym.span, sym.name), `${sym.name} is ${what(outer)} (${outer.unit === unit ? `line ${outer.line}` : outer.file.name}); give ${what(sym)} another name`);
       return false;
     }
     scope.names.set(sym.name, sym);

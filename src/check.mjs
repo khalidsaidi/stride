@@ -726,8 +726,8 @@ export function check(resolved, diagnostics) {
           if (!j) err("S361", item, `a list's items join into one type; this is ${T.describe(t)}, and the items before are ${T.describe(element)}`);
           else element = j;
         }
-        // A literal's most is its number of items (§3.7, §3.7.1).
-        return T.list(element, Math.max(1, e.items.length));
+        // A list written out grows like any other: only a declared most limits a list (§3.7).
+        return T.list(element, T.NO_MOST);
       }
       case "cond": {
         condition(e.condition, ctx, "if … then");
@@ -758,10 +758,10 @@ export function check(resolved, diagnostics) {
         let most = 1;
         if (l.t === "list") {
           e.itemSymbol.type = l.element;
-          most = l.most;
+          most = T.NO_MOST;
         } else if (l.t === "options") {
           e.itemSymbol.type = T.option(l.set);
-          most = Math.max(1, l.set.options.length);
+          most = T.NO_MOST;
         } else if (l.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it.
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
@@ -770,7 +770,7 @@ export function check(resolved, diagnostics) {
           most = T.NO_MOST;
         } else if (l.t === "empty") {
           e.itemSymbol.type = T.EMPTY; // no items (§3.6)
-          most = 0;
+          most = T.NO_MOST;
         } else {
           if (!T.isError(l)) err("S314", e.list, `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
@@ -1037,8 +1037,7 @@ export function check(resolved, diagnostics) {
           const element = T.join(x.element, y.element);
           // No join stands at the second value (§3.9 rule 5).
           if (!element) return (err("S373", e.b, `+ joins lists whose items join into one type; these hold ${T.describe(x.element)} and ${T.describe(y.element)}`), T.ERROR);
-          const most = x.most + y.most;
-          return T.list(element, Math.min(most, T.NO_MOST));
+          return T.list(element, T.NO_MOST);
         }
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";

@@ -21,12 +21,11 @@ function noOp(op, a, b) {
 export function binary(op, a, b) {
   switch (op) {
     case "+": {
-      // Lists join, always (§6.5.1): the most is the sum; an empty operand that is not a list adds most 0.
+      // Lists join, always (§6.5.1).
       if (Array.isArray(a) || Array.isArray(b)) {
         const x = Array.isArray(a) ? a : [];
         const y = Array.isArray(b) ? b : [];
-        const most = (Array.isArray(a) ? mostOf(a) : 0) + (Array.isArray(b) ? mostOf(b) : 0);
-        return list([...x, ...y], most);
+        return list([...x, ...y], 2147483647);
       }
       // Numbers or words: empty gives the other (§6.3).
       if (isEmpty(a) && !Array.isArray(a)) return b === "" ? null : b;

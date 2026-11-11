@@ -297,8 +297,8 @@ export const NATIVES = {
   // Maps (§14.4.1). A map given is not changed: remove gives a new one.
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
   map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, copy(v)), m) }, // a map being written out: its next key
-  keys: { pure: true, fn: (m) => { const k = m instanceof StrideMap ? m.pairs.map(([key]) => key) : []; return list(k, Math.max(1, k.length)); } },
-  values: { pure: true, fn: (m) => { const v = m instanceof StrideMap ? m.pairs.map(([, x]) => copy(x)) : []; return list(v, Math.max(1, v.length)); } },
+  keys: { pure: true, fn: (m) => { const k = m instanceof StrideMap ? m.pairs.map(([key]) => key) : []; return list(k, NO_MOST); } },
+  values: { pure: true, fn: (m) => { const v = m instanceof StrideMap ? m.pairs.map(([, x]) => copy(x)) : []; return list(v, NO_MOST); } },
   has: { pure: true, fn: (m, k) => m instanceof StrideMap && m.has(k) },
   remove: { pure: true, fn: (m, k) => { const out = m instanceof StrideMap ? copy(m) : new StrideMap(); out.remove(k); return out; } },
   join: { pure: true, fn: (l, sep) => result(asList(l).filter((x) => !isEmpty(x)).map(words).join(sep === undefined ? ", " : text(sep))) },

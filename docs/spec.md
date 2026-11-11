@@ -137,7 +137,8 @@ joined by `, `; empty as no words. A list or a record has no words (mistake S309
 3.7. **How many a list holds.** A list holds any number of items, and grows as items are added:
 `var l: list of number`, then `l += [x]` or `l = append(l, x)`. A list type may state a smaller most, `list of
 text most 4`: a var, a field or a result declared so holds at most that many.
-- 3.7.1. A list literal's most is its number of items.
+- 3.7.1. Only a declared most limits a list: one written out, joined with `+`, or given by a comprehension grows
+  like any other.
 - 3.7.2. How many items a list holds is checked where it is placed, as the program runs: a list of more items
   than the most of the var, field, parameter or result it is given to stops the run with F017 at that place. The compiler does not compare mosts.
 - 3.7.3. A parameter `list of T` takes a list of any length. The bare word `empty` where a list is expected is a
@@ -787,10 +788,9 @@ A branch whose condition is written out (`if yes`) is taken as written (§11.3.3
 12.2. A name is known from the statement that defines it on (S202 says where it is). A name defined inside a loop
 is known only there (S203).
 
-12.3. A name is not defined twice in one function or program body (S205), and does not hide its file's
-declarations (S206); it may hide what a library brings in.
-A parameter of a Stride function is a local name: one hiding its file's declaration is S206, while it may hide
-an imported name.
+12.3. A name defined again hides the one before it from there on: a `let` or `var` of a name already defined, a
+name in a loop's block hiding one outside it, a parameter or local hiding a declaration of its file. Two
+questions of one name in one function or program body are S205: they would have one key (§8.6).
 
 12.4. The same question asked, or the same let or var declared, in branches that exclude each other (the arms of
 one if or match) is one answer or one name, of one type (S315).
@@ -1120,8 +1120,7 @@ its call: the function's name in the call.
 | S201 | a name not defined | The message gives the nearest name visible here. |
 | S202 | a name used before the line that defines it | Statements run in order; move the use after the definition. |
 | S203 | a name defined in a loop used after it | A loop's names are known only inside it; collect into a var declared before. |
-| S205 | a name defined twice | One name, one thing, in a function or program; rename one. |
-| S206 | a local name hiding its file's declaration | Rename the local. |
+| S205 | two questions of one name | A question's name is its key; give the second another name. |
 | S207 | two declarations of one name | Rename one; the note shows the other. |
 | S208 | a declaration named like a type | `text`, `number`, … are types. |
 | S209 | a type that is not one | Types are §5.6; the message gives the nearest. |

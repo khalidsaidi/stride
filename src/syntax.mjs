@@ -52,7 +52,7 @@ export const KEYWORDS = new Set([
 // `for each`, `when` and `then`. Anywhere else each is a name like any other.
 const CONTEXTUAL = new Set(["each", "fields", "list", "most", "of", "set", "then", "when"]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
-const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "/=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
+const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
@@ -932,10 +932,10 @@ class Parser {
       return this.node("assign", start, { target, value: this.expr() });
     }
     // x += e is x = x + e with x's place worked out once (§7.5).
-    for (const op of ["+=", "-=", "*=", "/="]) {
+    for (const op of ["+=", "-=", "*=", "//=", "/=", "%="]) {
       if (this.sym(op)) {
         const opTok = this.take();
-        return this.node("assign", start, { target, value: this.expr(), op: op[0], opSpan: opTok.span });
+        return this.node("assign", start, { target, value: this.expr(), op: op.slice(0, -1), opSpan: opTok.span });
       }
     }
     if (this.sym("==")) throw new SyntaxMistake(`${"=="} on its own does nothing; to give a value, write "="`, this.token.span, "S023");
@@ -1123,6 +1123,7 @@ class Parser {
     out.push(one());
     while (this.sym(",")) {
       this.take();
+      if (this.sym(close)) break; // a comma after the last one
       out.push(one());
     }
     return out;
