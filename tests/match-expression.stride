@@ -1,0 +1,51 @@
+function word(n: number) -> string {
+  return match n { 1 => "one", 2, 3 => "few", else => "many" }
+}
+print(word(1) + " " + word(3) + " " + word(9))
+let d = match (1, 2) {
+  (2, 1) => "swapped"
+  (1, 2) => "pair"
+  else => "other"
+}
+print(d)
+let none = match 5 { 1 => "one" }
+print(none == null)
+var calls = 0
+function next() -> number {
+  calls += 1
+  return calls
+}
+let once = match next() { 2 => "two", 1 => "one", else => "more" }
+print("{once} {calls}")
+const LIMIT = 10
+let size = match 10 { LIMIT => "limit", -1 => "below", else => "other" }
+print(size)
+let day = match date_of(2026, 1, 2) { date_of(2026, 1, 1) => 1, date_of(2026, 1, 2) => 2 }
+print(day)
+let flag = match 1 > 0 { true => "yes", false => "no" }
+print(flag)
+let items = match "b" { "a" => [1], "b" => [], else => null }
+print(items)
+match true {
+  true => {
+    print("true arm")
+  }
+  false => {
+    print("false arm")
+  }
+}
+match (1, "a") {
+  (1, "a"), (2, "b") => {
+    print("tuple arm")
+  }
+}
+match date_of(2026, 1, 2) {
+  date_of(2026, 1, 2) => {
+    print("date arm")
+  }
+  else => {
+    print("else arm")
+  }
+}
+# rule 6.18 7.10.1 7.10
+# prints ["one few many", "pair", "true", "one 1", "limit", "2", "yes", "[]", "true arm", "tuple arm", "date arm"]

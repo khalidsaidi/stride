@@ -254,8 +254,8 @@ export const CODES = {
     "explanation": "Types are §5.6; the message gives the nearest."
   },
   "S210": {
-    "when": "`set<…>` of something that is not an option set",
-    "explanation": "`set<S>` takes an option set's name."
+    "when": "`set<…>` of something that is not an option set, words, numbers, dates or bools",
+    "explanation": "`set<S>` takes an option set's name, or `string`, `number`, `date` or `bool`."
   },
   "S214": {
     "when": "`any` or `element` outside the natives",
@@ -450,8 +450,8 @@ export const CODES = {
     "explanation": "`var l: list<string>`."
   },
   "S329": {
-    "when": "`match` on something that is not an option or words",
-    "explanation": "Use if."
+    "when": "a `match` arm's value of a type that does not compare with the subject",
+    "explanation": "Each arm's values are of the subject's type."
   },
   "S330": {
     "when": "`else` not last in a match",
@@ -720,6 +720,30 @@ export const CODES = {
   "S413": {
     "when": "a constant's value or a default that faults",
     "explanation": "The compiler works these out; the message gives the fault."
+  },
+  "S740": {
+    "when": "`.0`, `.1`, … of a value that is not a tuple, or a position the tuple has not; `t[0]` of a tuple",
+    "explanation": "A tuple's values are read as `t.0`, `t.1`, counted from 0."
+  },
+  "S741": {
+    "when": "`(a, b) = e`, `let (a, b) = e` or `for (a, b) in l` where e, or l's item, is not a tuple of as many values",
+    "explanation": "As many names as the tuple has values."
+  },
+  "S742": {
+    "when": "a tuple's value given another",
+    "explanation": "A tuple keeps its values; make a new tuple."
+  },
+  "S743": {
+    "when": "`set(l)` of items that are not words, numbers, dates or bools",
+    "explanation": "A set holds values told apart by their words."
+  },
+  "S744": {
+    "when": "a `match` arm's value the compiler cannot work out",
+    "explanation": "An arm's value is written out, a constant, or made of these."
+  },
+  "S745": {
+    "when": "a `match` expression whose arms' types have no join",
+    "explanation": "Every arm gives a value of one type (§3.9)."
   },
   "S501": {
     "when": "the header for another PDF",
@@ -1549,6 +1573,60 @@ export const LIBRARY = [
       "count"
     ],
     "gives": "the number of keys"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "set(items: list<T> = []) -> set<T>"
+    ],
+    "names": [
+      "set"
+    ],
+    "gives": "a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands (`let s = set()` is S328); a null item is F023"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "add(s: set<T>, x: T) -> set<T>"
+    ],
+    "names": [
+      "add"
+    ],
+    "gives": "puts x into s itself, after its other values, when s holds no value equal to it, and gives s; a null x is F023"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "remove(s: set<T>, x: T) -> set<T>"
+    ],
+    "names": [
+      "remove"
+    ],
+    "gives": "takes x out of s itself, when s holds it, and gives s"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "count(s: set<T>) -> number"
+    ],
+    "names": [
+      "count"
+    ],
+    "gives": "how many values s holds"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "union(a: set<T>, b: set<T>) -> set<T>",
+      "intersection(a: set<T>, b: set<T>) -> set<T>",
+      "difference(a: set<T>, b: set<T>) -> set<T>"
+    ],
+    "names": [
+      "union",
+      "intersection",
+      "difference"
+    ],
+    "gives": "a new set of the values of a or b, of both, of a and not b, in a's order then b's; a and b sets of one type (S387)"
   },
   {
     "section": "14.5 Null, faults and output",

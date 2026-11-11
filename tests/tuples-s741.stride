@@ -1,0 +1,20 @@
+let (a, b) = (1, 2, 3)
+print(a + b)
+let (c, d) = 5
+print(c + d)
+var x = 1
+var y = 2
+(x, y) = [1, 2]
+print(x + y)
+for (k, v) in [1, 2] {
+  print(k + v)
+}
+for (p, q) in [(1, 2, 3)] {
+  print(p + q)
+}
+# rule S741 7.3.1 7.5.2 7.11.2
+# mistake 1 S741
+# mistake 3 S741
+# mistake 7 S741
+# mistake 9 S741
+# mistake 12 S741

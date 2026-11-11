@@ -3,7 +3,7 @@
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
 import { BINARY_OPS, FIELD_STARTS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
-import { D, isNumber, isDate, isSet } from "../runtime/values.mjs";
+import { D, isNumber, isDate, isSet, StrideTuple } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
@@ -240,6 +240,11 @@ export function generate(program, pdf, debug = null) {
           placeLabel(end);
           return emit(OP.LOAD, acc);
         }
+        case "bind":
+          // A value kept under a hidden local while another is worked out (a match's subject, §6.18).
+          expr(x.value);
+          emit(OP.STORE, local(x.l));
+          return expr(x.body);
         case "cond": {
           const no = label();
           const end = label();
@@ -294,6 +299,10 @@ export function generate(program, pdf, debug = null) {
       } else if (Array.isArray(v)) {
         v.forEach(value);
         emit(OP.NEW_LIST, v.length);
+      } else if (v instanceof StrideTuple) {
+        // A tuple (§3.11): its values, made a tuple.
+        value(v.items);
+        emit(OP.NATIVE, nativeIndex("tuple_of"), 1);
       } else throw new Error(`cannot generate the constant ${JSON.stringify(v)}`);
     }
 

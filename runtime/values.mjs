@@ -85,7 +85,7 @@ export function needed(kind, what) {
   throw new StrideFault("F023", `null where ${kind} needed: ${what}`);
 }
 // The kind of value an operation needs, told by the value beside the null one.
-export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) ? "a set is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
+export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) || v instanceof StrideSet ? "a set is" : v instanceof StrideTuple ? "a tuple is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
 export const isNumber = (v) => v instanceof D.Decimal;
 
 // A map (§3.10): values under keys, in the order the keys were first given. A key is told from another by its
@@ -121,6 +121,42 @@ export class StrideMap {
   }
 }
 
+// A tuple (§3.11): a fixed number of values, each of its own type, in order. It is never changed.
+export class StrideTuple {
+  constructor(items) {
+    this.items = items;
+  }
+  toJSON() {
+    return this.items;
+  }
+}
+
+// A set of values of one type (§3.12): each value once, in the order first added. A value is told from another
+// by its words, as a map's keys are.
+export class StrideSet {
+  constructor(items = []) {
+    this.entries = new Map(); // a value's words -> the value
+    for (const x of items) this.add(x);
+  }
+  has(x) {
+    return !isNull(x) && this.entries.has(words(x));
+  }
+  add(x) {
+    if (isNull(x)) needed("a value is", "what a set holds");
+    const w = words(x);
+    if (!this.entries.has(w)) this.entries.set(w, x);
+  }
+  remove(x) {
+    if (!isNull(x)) this.entries.delete(words(x));
+  }
+  get items() {
+    return [...this.entries.values()];
+  }
+  toJSON() {
+    return this.items;
+  }
+}
+
 // A var shared by the code that declares it and the functions made in place that use it (§9.11).
 export class Cell {
   constructor(v) {
@@ -148,7 +184,7 @@ export class StrideFunction {
 // that holds itself is copied as one that holds itself. `whole`: what a function value keeps and the vars it shares
 // are copied too, for an expectation's sub-run (§7.17.1).
 export function copy(v, made = new Map(), whole = false) {
-  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || (whole && (v instanceof StrideFunction || v instanceof Cell)))) return v;
+  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || v instanceof StrideTuple || v instanceof StrideSet || (whole && (v instanceof StrideFunction || v instanceof Cell)))) return v;
   if (made.has(v)) return made.get(v);
   if (v instanceof Cell) {
     const out = new Cell(null);
@@ -174,6 +210,13 @@ export function copy(v, made = new Map(), whole = false) {
     for (const x of v.fields) out.fields.push(copy(x, made, whole));
     return out;
   }
+  if (v instanceof StrideTuple) {
+    const out = new StrideTuple([]);
+    made.set(v, out);
+    for (const x of v.items) out.items.push(copy(x, made, whole));
+    return out;
+  }
+  if (v instanceof StrideSet) return new StrideSet(v.items);
   const out = new StrideMap();
   made.set(v, out);
   for (const [k, x] of v.pairs) out.set(k, copy(x, made, whole));
@@ -182,10 +225,10 @@ export function copy(v, made = new Map(), whole = false) {
 
 // Whether a value holds itself (§3.4.6): a tool that shows values says so, and does not follow it.
 export function holdsItself(v, path = new Set()) {
-  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap)) return false;
+  if (isSet(v) || !(Array.isArray(v) || v instanceof StrideRecord || v instanceof StrideMap || v instanceof StrideTuple)) return false;
   if (path.has(v)) return true;
   path.add(v);
-  const found = (Array.isArray(v) ? v : v instanceof StrideRecord ? v.fields : v.pairs.map(([, x]) => x)).some((x) => holdsItself(x, path));
+  const found = (Array.isArray(v) ? v : v instanceof StrideTuple ? v.items : v instanceof StrideRecord ? v.fields : v.pairs.map(([, x]) => x)).some((x) => holdsItself(x, path));
   path.delete(v);
   return found;
 }
@@ -215,6 +258,8 @@ export function words(v) {
   if (v instanceof StrideRecord) return inside(v, () => v.fields.map(words).filter(Boolean).join(", "));
   if (v instanceof StrideFunction) return `function ${v.name}`;
   if (v instanceof StrideMap) return v.pairs.map(([k, x]) => `${words(k)}: ${words(x)}`).join(", ");
+  if (v instanceof StrideTuple) return `(${v.items.map(words).join(", ")})`;
+  if (v instanceof StrideSet) return v.items.map(words).join(", ");
   return String(v);
 }
 
@@ -227,6 +272,8 @@ export function printed(v, recordNames = () => null) {
     return inside(v, () => `${v.type} { ${v.fields.map((f, i) => `${names[i]}: ${printed(f, recordNames)}`).join(", ")} }`);
   }
   if (v instanceof StrideMap) return `{${v.pairs.map(([k, x]) => `${words(k)}: ${printed(x, recordNames)}`).join(", ")}}`;
+  if (v instanceof StrideTuple) return `(${v.items.map((x) => printed(x, recordNames)).join(", ")})`;
+  if (v instanceof StrideSet) return `{${v.items.map(words).join(", ")}}`;
   return words(v);
 }
 
@@ -240,6 +287,8 @@ export function equal(a, b) {
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
   if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && inside(a, () => a.fields.every((x, i) => equal(x, b.fields[i])));
   if (a instanceof StrideMap && b instanceof StrideMap) return a.entries.size === b.entries.size && a.pairs.every(([k, x]) => b.has(k) && equal(x, b.get(k)));
+  if (a instanceof StrideTuple && b instanceof StrideTuple) return a.items.length === b.items.length && a.items.every((x, i) => equal(x, b.items[i]));
+  if (a instanceof StrideSet && b instanceof StrideSet) return a.entries.size === b.entries.size && a.items.every((x) => b.has(x));
   if (a instanceof StrideFunction && b instanceof StrideFunction) return a.target === b.target && a.kept.length === b.kept.length && a.kept.every((k, i) => equal(k, b.kept[i]));
   return a === b;
 }
@@ -308,6 +357,8 @@ export function expectation(faults, value, message, fault) {
 // A question key's encoding of a known value (§8.6.3).
 export function encode(v, recordNames = () => null) {
   if (isSet(v)) return `{${v.map((x) => encode(x)).join(",")}}`;
+  if (v instanceof StrideSet) return `{${v.items.map((x) => encode(x)).join(",")}}`;
+  if (v instanceof StrideTuple) return `(${v.items.map((x) => encode(x, recordNames)).join(",")})`;
   if (Array.isArray(v)) return `[${v.map((x) => encode(x, recordNames)).join(",")}]`;
   if (v === null || v === undefined) return "null";
   if (isNumber(v)) return D.words(v);

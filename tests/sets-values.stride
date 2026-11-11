@@ -1,0 +1,43 @@
+var s: set<number> = set()
+add(s, 3)
+add(s, 1)
+add(s, 3)
+print(s)
+print(1 in s)
+print(2 not in s)
+remove(s, 3)
+remove(s, 9)
+print(count(s))
+for q in set(["b", "a", "b"]) {
+  print(q)
+}
+for i, q in set(["x", "y"]) {
+  print("{i}{q}")
+}
+let a = set([1, 2])
+let b = set([2, 3])
+print(union(a, b))
+print(intersection(a, b))
+print(difference(a, b))
+print(a)
+print(set([1, 2]) == set([2, 1]))
+print(set([1, 2]) == set([1]))
+let same = a
+add(same, 9)
+print(a)
+let c = copy(a)
+add(c, 10)
+print(count(a))
+print([x * 2 for x in a])
+var days: set<date>
+add(days, date_of(2026, 1, 2))
+add(days, date_of(2026, 1, 2))
+print(days)
+print(clear(days))
+print(set([true, false, true]))
+function has_all(have: set<string>, want: list<string>) -> bool {
+  return all([w in have for w in want])
+}
+print(has_all(set(["a", "b"]), ["a"]))
+# rule 3.12 14.4.2 6.8 7.11
+# prints ["{3, 1}", "true", "true", "1", "b", "a", "0x", "1y", "{1, 2, 3}", "{2}", "{1}", "{1, 2}", "true", "false", "{1, 2, 9}", "3", "[2, 4, 18]", "{2026-01-02}", "{}", "{true, false}", "true"]

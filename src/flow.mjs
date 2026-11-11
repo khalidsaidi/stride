@@ -71,7 +71,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       if: () => [s.condition],
       while: () => [s.condition],
       try: () => [],
-      match: () => [s.subject],
+      match: () => [s.subject, ...s.arms.flatMap((a) => a.values ?? [])],
       for: () => [s.from, s.to],
       "for-each": () => [s.list],
       collect: () => (s.any ? [s.any, s.another] : [s.another]),
@@ -106,7 +106,10 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       case "call":
         return e.valueCall ? [e.target, ...e.args] : e.args;
       case "list":
+      case "tuple":
         return e.items;
+      case "match-expr":
+        return [e.subject, ...e.arms.flatMap((a) => [...(a.values ?? []), a.value])];
       case "map":
         return e.entries.flatMap((x) => [x.key, x.value]);
       case "new":
@@ -216,7 +219,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "var":
           // Declared here, on this path (§12.1.1); a var without a value has none yet.
           unset.delete(s.symbol);
-          if (s.kind === "var" && !s.value && s.symbol && !s.symbol.changedInFunction && !s.symbol.shared && !["list", "record", "map"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
+          if (s.kind === "var" && !s.value && s.symbol && !s.symbol.changedInFunction && !s.symbol.shared && !["list", "record", "map", "set"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
           if (s.symbol) declaredOn.add(s.symbol);
           break;
         case "break":
@@ -262,7 +265,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "match": {
           const k = know(s.subject, env);
           if (k !== undefined) {
-            const arm = s.arms.find((a) => a.values?.some((v) => V.equal(v.value, k))) ?? s.arms.find((a) => !a.values);
+            const arm = s.arms.find((a) => a.values?.some((v) => "known" in v && V.equal(v.known, k))) ?? s.arms.find((a) => !a.values);
             const r = arm ? walkFlow(arm.body, new Set(unset), fn, exits, new Map(env)) : { unset: new Set(unset), falls: true };
             for (const a of s.arms) if (a !== arm) for (const x of declaredBy(a.body)) if (!declaredOn.has(x)) r.unset.add(x);
             merge(unset, r);

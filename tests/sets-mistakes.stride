@@ -1,0 +1,16 @@
+let s = set()
+let t = set([[1], [2]])
+let u = set([1, 2])
+add(u, "x")
+print(union(u, set(["a"])))
+print("a" in u)
+remove(u, "a")
+print(s)
+print(t)
+# rule S328 S743 S367 S387 S383 3.12 14.4.2
+# mistake 1 S328
+# mistake 2 S743
+# mistake 4 S367
+# mistake 5 S387
+# mistake 6 S383
+# mistake 7 S367

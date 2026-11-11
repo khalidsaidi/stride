@@ -1,0 +1,4 @@
+let m = {[x]: x for x in [1, 2]}
+print(m)
+# rule 6.12.2 S361
+# mistake 1 S361

@@ -23,6 +23,10 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `xs.indexOf(x)`, `s.find(part)` | `index_of(xs, x)`, `find(s, part)`: the position, or -1 |
 | `while`, recursion | `while c { }`; a function may call itself |
 | `dict`, `map[K]V`, `Map` | `map<string, number>`: `{"a": 1}`, `m["a"]`, `m["b"] = 2`, `has(m, k)`, `for k, v in m { }` |
+| tuples, `(a, b) = (b, a)`, `for k, v in pairs` | `(1, "a")` of type `(number, string)`: `t.0`, `let (a, b) = f()`, `(a, b) = (b, a)`, `for (k, v) in pairs { }` |
+| `set()`, `Set`, `HashSet` | `set<number>`: `set([1, 2])`, `add(s, 3)`, `remove(s, 1)`, `2 in s`, `union(a, b)`, `for x in s { }` |
+| `switch`/`match`/`when` as a value | `let s = match n { 1 => "one", 2, 3 => "few", else => "many" }` |
+| nested and dict comprehensions | `[x * y for x in a for y in b]`, `{k: v for k, v in m if v > 0}` |
 | `lambda`, `func(x) { }`, `x => …` | `function(x: number) -> number { return x * 2 }` |
 | `def f(a, b=2):`, `func f(a int) int` | `function f(a: number, b: number = 2) -> number { }` |
 | `xs.map(f)`, `filter`, list comprehensions | `[f(x) for x in xs if x > 0]` |

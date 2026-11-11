@@ -192,6 +192,21 @@ a bool or an option (another type of key is S209). It holds any number of keys, 
 given. A map is shared, as a list is (§3.4); `==` compares keys and values, and one with no keys
 is a map, not null (§3.2). A `var` of a map type declared without a value starts with no keys.
 
+3.11. **Tuples.** `(T1, T2, …)` is the type of a tuple: two or more values, each of its own type, in order:
+`(number, string)`. A tuple is made by writing its values out (§6.17) and keeps them: no value of it is given
+another (S742). Two tuples of as many values are equal when each value equals the one at its position (§6.6); a
+tuple fits a tuple type of as many values when each value fits its place (§3.6), and two tuple types of as many
+values join position by position (§3.9). `print` gives `(1, a)`. A function gives several values by giving a
+tuple: `function f() -> (number, string)`.
+
+3.12. **Sets of any type.** `set<T>`, T `string`, `number`, `date` or `bool`, holds values of type T, each
+once, in the order they were first added (another T is S210; `set<S>`, S an option set, is the set of §3.8). A
+set is shared, as a list is (§3.4), and is changed by `add` and `remove` (§14.4.2); `==` compares what two sets
+hold, whatever the order; `x in s` asks whether s holds a value equal to x (§6.8); `for x in s` and a
+comprehension go through the values in their order. `print` gives `{1, 2}`. A `var` of a set type declared
+without a value starts with no values, and a set that holds none is a set, not null. Two set types join by what
+they hold (§3.9).
+
 ## 4. Files
 
 4.1. **A program**: `program = "form" id "pdf" sha ["fields" plain] item*;` One per form,
@@ -399,6 +414,16 @@ the record under a new key (§7.5.1). `for k in m` goes through m's keys in thei
 true, the value of e, in order. Its type is a list of e's type. x and n are known only inside it.
 A comprehension may call any function, one that asks included: each call's questions are named apart (§8.6.2).
 
+6.12.1. **Several `for`s.** `[e for x in a for y in b if c]`: each `for` after the first runs inside the one
+before it, for every item that one's `if` lets through, and may use its names; the values of e come in that
+order, in one list: `[x * y for x in [1, 2] for y in [10, 20]]` is `[10, 20, 20, 40]`. Each `for` may have its
+own `if`.
+
+6.12.2. **Map comprehension** `{k: v for x in l if c}`: a map with, for each item, the value of v under the key
+of k, in order; a key given twice keeps its last value, and a null key is F023. Its type is a map of k's type
+(words, a number, a date, a bool or an option, else S361) to v's. It takes the `for`s a comprehension takes, a
+map's `for k, v in m` and several `for`s among them.
+
 6.13. **Conditional** `if c then a else b`: c bool (S310); its type is the join (§3.9) of a's and b's (S394 when
 they have none): `if c then "x" else an_option` is a string; `if c then [null, null] else [1]` is `list<number>`.
 
@@ -431,6 +456,17 @@ from the left: `a ?? b ?? c` is the first of the three that is not null, and `a 
 `"" ?? "x"` is `""`, and `[] ?? [1]` is `[]`: neither is null (§3.2). `either(a, b)` (§14.5) gives the same value
 and works out both.
 
+6.17. **Tuple** `(a, b, …)`: a tuple (§3.11) of the values, worked out left to right; its type is the tuple of
+their types. `(a)` is a alone. `t.0`, `t.1`, … is the value at that position, counted from 0 and written out as
+digits, of the type of that place; a position the tuple has not, or of a value that is not a tuple, is S740, and
+so is `t[0]`. `t.0.1` is position 1 of the tuple at position 0. A null t is F023.
+
+6.18. **Match as an expression** `match e { v1 => a, v2, v3 => b, else => c }`: e is worked out once; the value
+is that of the first arm one of whose values equals e (§6.6), of `else` when none does, and null when there is
+no `else` either. Only the arm chosen is worked out. Arms end with a comma or with the line. The arms' values
+are as in the statement (§7.10, §7.10.1). Its type is the join (§3.9) of the arms' types, taken in order (S745
+when two have none).
+
 ## 7. Statements
 
 7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
@@ -445,6 +481,10 @@ cannot receive an answer.
 
 7.3. **let** `let name [":" type] "=" expr`: a name that keeps the value it is given. When the value is a list, a
 record or a map, its items and fields may still be given values (§3.4.3).
+
+7.3.1. **let and var of a tuple's values.** `let (a, b) = e`, `var (a, b) = e`: e, a tuple of as many values as
+there are names (S741), is worked out once; each name is declared as a let, or a var, holding the value at its
+position, with that place's type.
 
 7.4. **var** `var name ":" type ["=" expr]` or `var name "=" expr`: a name for a value that may change. Without a
 value, a list starts with no items, a map with no keys and a record null; anything else must be given one before it is read (S407). `var x = null`
@@ -501,6 +541,10 @@ with no item, the number of items among them, is F004, §6.9.2); then e is evalu
 (§6.3–§6.5, which may fault: a current value that is null is F023); then steps 3 and 4. The place is never worked out twice: in `xs[next()] += 1` the
 call runs once.
 
+7.5.2. **Assigning a tuple's values.** `(a, b) = e`: e, a tuple of as many values as there are targets (S741),
+is worked out once, whole, before any target is given a value; then each target, left to right, is given the
+value at its position as an assignment gives it (§7.5). `(a, b) = (b, a)` exchanges two vars.
+
 7.6. **fill** `fill "box" = e`: writes e's words (§3.5) into a text box or a list box; a null e leaves it blank. Words the compiler knows are not one of a
 list box's entries are S514; words it cannot tell beforehand go in as they are. e bool is S307, a set
 S308, a list or record S309.
@@ -516,8 +560,13 @@ a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = ful
 `const QUESTIONS = ["First?", "Second?"]`, `ask ok: bool QUESTIONS[i]` asks each in its turn of a loop.
 
 7.10. **if** `if c { … } [else if … | else { … }]`; **match** `match e { "a", "b" => { … } … [else => { … }] }`:
-e an option, words or a number (S329), each arm's values of that kind; values unique (S331), of the set when e is an option (S332); `else` last (S330); a
+e a value of any type, each arm's values of a type that compares with it (S329, §7.10.1); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
 match on an option with no `else` that misses options gives warning W001.
+
+7.10.1. **An arm's values.** Each is words in quotes, a number, or any expression the compiler works out (§11.1;
+one it cannot is S744): `true`, `-1`, a constant's name, `date_of(2026, 1, 2)`, `(1, "a")`. Its type compares
+with the subject's with `==` (§6.6), else S329; an arm is chosen when one of its values equals the subject. So a
+match chooses on a bool, a date or a tuple as it does on words.
 
 7.11. **for** `for i in a..b { }`, `for i in a..<b { }`: a and b are worked out once, a then b, before the first turn, and never again;
 i then takes each whole number from a to b, or with `..<` from a to before b (`for i in 0..<count(l)` gives every position of l); none when a > b, or with `..<` when a ≥ b. Changing what a or b was made of inside the loop does
@@ -527,6 +576,9 @@ are numbers (S313); a non-whole bound is F004 and a null one F023: null is never
 7.11.1. **while** `while c { }`: c, a bool (S311), is worked out before each turn; the body runs as long as it
 is true. A question asked in the body has its own key in each turn (`name[0]`, `name[1]`, …, §8.6). A loop that
 never ends runs until its host stops it (F014, §15).
+
+7.11.2. **for over tuples.** `for (a, b) in l { }`: each item of l, a tuple of as many values as there are
+names (S741), has its values under the names inside the block, each a let of that turn.
 
 7.12. **break** ends the innermost `for` or `while`; **continue** goes to its next turn. Outside one, or inside
 a collect, they are S233, S234.
@@ -1028,6 +1080,18 @@ entry says "or a set" (its items are then options).
 | `remove(m: map<K, V>, key: K) -> map<K, V>` | takes the key out of m itself, and gives m |
 | `count(m)` | the number of keys |
 
+### 14.4.2 Sets of any type
+
+`set<T>` is a set of §3.12.
+
+| Signature | Gives |
+|---|---|
+| `set(items: list<T> = []) -> set<T>` | a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands (`let s = set()` is S328); a null item is F023 |
+| `add(s: set<T>, x: T) -> set<T>` | puts x into s itself, after its other values, when s holds no value equal to it, and gives s; a null x is F023 |
+| `remove(s: set<T>, x: T) -> set<T>` | takes x out of s itself, when s holds it, and gives s |
+| `count(s: set<T>) -> number` | how many values s holds |
+| `union(a: set<T>, b: set<T>) -> set<T>`, `intersection(a: set<T>, b: set<T>) -> set<T>`, `difference(a: set<T>, b: set<T>) -> set<T>` | a new set of the values of a or b, of both, of a and not b, in a's order then b's; a and b sets of one type (S387) |
+
 ### 14.5 Null, faults and output
 
 | Signature | Gives |
@@ -1191,7 +1255,7 @@ its call: the function's name in the call.
 | S207 | two declarations of one name | Rename one; the note shows the other. |
 | S208 | a declaration named like a type | `string`, `number`, … are types. |
 | S209 | a type that is not one | Types are §5.6; the message gives the nearest. |
-| S210 | `set<…>` of something that is not an option set | `set<S>` takes an option set's name. |
+| S210 | `set<…>` of something that is not an option set, words, numbers, dates or bools | `set<S>` takes an option set's name, or `string`, `number`, `date` or `bool`. |
 | S214 | `any` or `element` outside the natives | Write the type. |
 | S215 | an option value twice | Values in a set are unique. |
 | S216 | an empty option value | An option's value is words. |
@@ -1240,7 +1304,7 @@ its call: the function's name in the call.
 | S326 | `var x` without a type or a value | `var x: string`, or `var x = …`. |
 | S327 | `= null` without a type | `var x: string = null`. |
 | S328 | a `let` or `var` without a type whose list value no item tells the type of (`[]`, `[null, null]`, `[[null]]`) | `var l: list<string>`. |
-| S329 | `match` on something that is not an option or words | Use if. |
+| S329 | a `match` arm's value of a type that does not compare with the subject | Each arm's values are of the subject's type. |
 | S330 | `else` not last in a match | `else` comes last. |
 | S331 | a match value twice | Each value once. |
 | S332 | a match value the option can never be | The message lists the set's values. |
@@ -1308,6 +1372,12 @@ its call: the function's name in the call.
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
 | S412 | an option's printed words, or the words after `faults`, that the compiler cannot work out | They are written out, or made of constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
+| S740 | `.0`, `.1`, … of a value that is not a tuple, or a position the tuple has not; `t[0]` of a tuple | A tuple's values are read as `t.0`, `t.1`, counted from 0. |
+| S741 | `(a, b) = e`, `let (a, b) = e` or `for (a, b) in l` where e, or l's item, is not a tuple of as many values | As many names as the tuple has values. |
+| S742 | a tuple's value given another | A tuple keeps its values; make a new tuple. |
+| S743 | `set(l)` of items that are not words, numbers, dates or bools | A set holds values told apart by their words. |
+| S744 | a `match` arm's value the compiler cannot work out | An arm's value is written out, a constant, or made of these. |
+| S745 | a `match` expression whose arms' types have no join | Every arm gives a value of one type (§3.9). |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
 | S508 | a box the PDF lacks | The message gives the nearest. |

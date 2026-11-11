@@ -6,6 +6,8 @@
 //   options(set)                     several options of one set (an any_of answer)
 //   record(decl)                     a record's named fields
 //   list(element)                    values of one type, in order
+//   tuple(elements)                  a fixed number of values, each of its own type (§3.11)
+//   set(element)                     values of one type, each once (§3.12)
 //   null                            the type of `null`: fits every type
 //   any                              only in a native function's parameters: takes any value
 //   none                             what a function with no result gives
@@ -33,6 +35,12 @@ export const record = (decl) => ({ t: "record", decl });
 export const list = (element) => ({ t: "list", element });
 // map<K, V>: values of one type, each under its own key (§3.10).
 export const map = (key, value) => ({ t: "map", key, value });
+// (number, string): a fixed number of values, each of its own type (§3.11).
+export const tuple = (elements) => ({ t: "tuple", elements });
+// set<T>: values of one type, each once (§3.12). A set of an option set's options is `options`.
+export const set = (element) => ({ t: "set", element });
+// The types a map's key or a set's value has: told apart by their words.
+export const isKey = (type) => ["string", "number", "date", "bool", "option", "typevar", "null", "error"].includes(type.t);
 // A function as a value (§9.10): what it takes and what it gives.
 export const fn = (params, result) => ({ t: "function", params, result });
 // A type parameter of a generic function: whatever type each call gives it.
@@ -54,7 +62,10 @@ export function same(a, b) {
     case "record":
       return a.decl === b.decl;
     case "list":
+    case "set":
       return same(a.element, b.element);
+    case "tuple":
+      return a.elements.length === b.elements.length && a.elements.every((x, i) => same(x, b.elements[i]));
     case "map":
       return same(a.key, b.key) && same(a.value, b.value);
     case "function":
@@ -83,7 +94,8 @@ export function unify(param, value, bindings) {
     }
     return false;
   }
-  if (param.t === "list" && value.t === "list") return value.element.t === "null" || unify(param.element, value.element, bindings);
+  if ((param.t === "list" && value.t === "list") || (param.t === "set" && value.t === "set")) return value.element.t === "null" || unify(param.element, value.element, bindings);
+  if (param.t === "tuple" && value.t === "tuple") return param.elements.length === value.elements.length && param.elements.every((p, i) => value.elements[i].t === "null" || unify(p, value.elements[i], bindings));
   if (param.t === "function" && value.t === "function") return param.params.length === value.params.length && param.params.every((p, i) => unify(p, value.params[i], bindings)) && (param.result.t === "none" ? value.result.t === "none" : unify(param.result, value.result, bindings));
   if (param.t === "map" && value.t === "map") return (value.key.t === "null" || unify(param.key, value.key, bindings)) && (value.value.t === "null" || unify(param.value, value.value, bindings));
   return fits(value, substitute(param, bindings));
@@ -93,13 +105,15 @@ export function unify(param, value, bindings) {
 export function substitute(type, bindings) {
   if (type.t === "typevar") return bindings.get(type.sym) ?? type;
   if (type.t === "list") return list(substitute(type.element, bindings));
+  if (type.t === "set") return set(substitute(type.element, bindings));
+  if (type.t === "tuple") return tuple(type.elements.map((x) => substitute(x, bindings)));
   if (type.t === "map") return map(substitute(type.key, bindings), substitute(type.value, bindings));
   if (type.t === "function") return fn(type.params.map((p) => substitute(p, bindings)), substitute(type.result, bindings));
   return type;
 }
 
-export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element)) || (type.t === "map" && (hasTypevar(type.key) || hasTypevar(type.value))) || (type.t === "function" && (type.params.some(hasTypevar) || hasTypevar(type.result)));
-export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "map" ? typevarIn(type.key, sym) || typevarIn(type.value, sym) : type.t === "function" ? type.params.some((p) => typevarIn(p, sym)) || typevarIn(type.result, sym) : type.t === "list" && typevarIn(type.element, sym));
+export const hasTypevar = (type) => type.t === "typevar" || ((type.t === "list" || type.t === "set") && hasTypevar(type.element)) || (type.t === "tuple" && type.elements.some(hasTypevar)) || (type.t === "map" && (hasTypevar(type.key) || hasTypevar(type.value))) || (type.t === "function" && (type.params.some(hasTypevar) || hasTypevar(type.result)));
+export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "map" ? typevarIn(type.key, sym) || typevarIn(type.value, sym) : type.t === "function" ? type.params.some((p) => typevarIn(p, sym)) || typevarIn(type.result, sym) : type.t === "tuple" ? type.elements.some((x) => typevarIn(x, sym)) : (type.t === "list" || type.t === "set") && typevarIn(type.element, sym));
 
 // Whether a value of type `value` can stand where `wanted` is wanted.
 export function fits(value, wanted) {
@@ -112,6 +126,9 @@ export function fits(value, wanted) {
     return value.element.t === "null" || fits(value.element, wanted.element);
   }
   if (wanted.t === "map" && value.t === "map") return (value.key.t === "null" || fits(value.key, wanted.key)) && (value.value.t === "null" || fits(value.value, wanted.value));
+  if (wanted.t === "set" && value.t === "set") return value.element.t === "null" || fits(value.element, wanted.element);
+  // A tuple fits a tuple of as many values, each fitting its place.
+  if (wanted.t === "tuple" && value.t === "tuple") return value.elements.length === wanted.elements.length && value.elements.every((x, i) => fits(x, wanted.elements[i]));
   return same(value, wanted);
 }
 
@@ -126,6 +143,8 @@ export function comparable(a, b) {
   // Records of one type, sets of one option set: by value; lists whose element types join (§3.9, §6.6).
   if (a.t === "list" && b.t === "list") return a.element.t === "null" || b.element.t === "null" || join(a.element, b.element) !== null;
   if (a.t === "map" && b.t === "map") return join(a, b) !== null;
+  if (a.t === "set" && b.t === "set") return join(a, b) !== null;
+  if (a.t === "tuple" && b.t === "tuple") return a.elements.length === b.elements.length && a.elements.every((x, i) => comparable(x, b.elements[i]));
   return same(a, b);
 }
 
@@ -156,6 +175,10 @@ export function describe(type) {
       return `a list of ${describe(type.element)}`;
     case "map":
       return `a map of ${describe(type.key)} to ${describe(type.value)}`;
+    case "set":
+      return `a set of ${describe(type.element)}`;
+    case "tuple":
+      return `(${type.elements.map(describe).join(", ")})`;
     case "function":
       return `a function (${type.params.map(describe).join(", ")})${type.result.t === "none" ? "" : ` -> ${describe(type.result)}`}`;
     case "typevar":
@@ -185,7 +208,16 @@ export function join(a, b) {
   if (isError(a) || isError(b)) return ERROR;
   if (a.t === "null") return b;
   if (b.t === "null") return a;
-  if (same(a, b) && a.t !== "list" && a.t !== "map") return a;
+  if (same(a, b) && !["list", "map", "set", "tuple"].includes(a.t)) return a;
+  if (a.t === "set" && b.t === "set") {
+    const e = join(a.element, b.element);
+    return e ? set(e) : null;
+  }
+  if (a.t === "tuple" && b.t === "tuple") {
+    if (a.elements.length !== b.elements.length) return null;
+    const es = a.elements.map((x, i) => join(x, b.elements[i]));
+    return es.every(Boolean) ? tuple(es) : null;
+  }
   if (a.t === "map" && b.t === "map") {
     const k = join(a.key, b.key), v = join(a.value, b.value);
     return k && v ? map(k, v) : null;

@@ -138,6 +138,8 @@ export const item = (a, i) => ({ e: "item", a, i });
 export const record = (decl, fields) => ({ e: "record", decl, fields });
 export const list = (items) => ({ e: "list", items });
 export const cond = (c, yes, no) => ({ e: "cond", cond: c, yes, no });
+// `value` kept in the local l while `body` is worked out: a value used several times, worked out once.
+export const bind = (l, value, body) => ({ e: "bind", l, value, body });
 export const slice = (a, from, to) => ({ e: "slice", a, from, to });
 
 export const isConst = (x) => x.e === "const";
@@ -167,6 +169,8 @@ export function children(x) {
       return [x.cond, x.yes, x.no];
     case "slice":
       return [x.a, x.from, x.to];
+    case "bind":
+      return [x.value, x.body];
     case "comp":
       return [x.list, ...(x.cond ? [x.cond] : []), x.value];
     default:
@@ -244,6 +248,8 @@ export function showExpr(x) {
       return `(if ${showExpr(x.cond)} then ${showExpr(x.yes)} else ${showExpr(x.no)})`;
     case "slice":
       return `${showExpr(x.a)}[${showExpr(x.from)}..${showExpr(x.to)}]`;
+    case "bind":
+      return `(%${x.l.name} = ${showExpr(x.value)}; ${showExpr(x.body)})`;
     case "comp":
       return `[${showExpr(x.value)} for %${x.index.name}, %${x.item.name} in ${showExpr(x.list)}${x.cond ? ` if ${showExpr(x.cond)}` : ""}]`;
     default:

@@ -1,0 +1,10 @@
+enum color { "red" "Red"  "green" "Green"  "blue" "Blue" }
+let warm: set<color> = ["green", "red"]
+let cool: set<color> = ["blue", "green"]
+print(join(union(warm, cool)))
+print("red" in warm)
+for c in warm {
+  print(c)
+}
+# rule 3.8 3.12
+# prints ["red, green, blue", "true", "red", "green"]

@@ -1,0 +1,4 @@
+var bad: set<list<number>>
+print(bad)
+# rule S210 3.12
+# mistake 1 S210

@@ -20,24 +20,29 @@
 //   const       = "const" name [":" type] "=" expr
 //   native      = "native" "function" name "(" [params] ")" ["->" type]
 //   function    = "function" name ["<" name ("," name)* ">"] "(" [params] ")" ["->" type] block
-//   type        = "list" "<" type ">" | "map" "<" type "," type ">" | "set" "<" qname ">"
-//               | "function" "(" [type ("," type)*] ")" ["->" type] | "any" | qname
+//   type        = "list" "<" type ">" | "map" "<" type "," type ">" | "set" "<" type ">"
+//               | "(" type ("," type)+ ")" | "function" "(" [type ("," type)*] ")" ["->" type] | "any" | qname
 //   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
 //   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
 //   if          = "if" expr block ["else" (if | block)]
-//   match       = "match" expr "{" (plain ("," plain)* "=>" block | "else" "=>" block)* "}"
+//   let         = "let" (name [":" type] | names) "=" expr;  names = "(" name ("," name)+ ")"
+//   assign      = (postfix | "(" postfix ("," postfix)+ ")") "=" expr
+//   match       = "match" expr "{" (values "=>" block | "else" "=>" block)* "}";  values = or ("," or)*
 //   for         = "for" name "in" expr (".." | "..<") expr block
 //   while       = "while" expr block
 //   try         = "try" block "catch" [name] block
-//   foreach     = "for" [name ","] name "in" expr block               (what follows "in" has no ".." after its sum)
+//   foreach     = "for" ([name ","] name | names) "in" expr block     (what follows "in" has no ".." after its sum)
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
 //   expr        = cond | coalesce;  coalesce = or ("??" or)*;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
 //   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum]
 //   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/") unary)*;  unary = "-" unary | postfix
-//   postfix     = primary ("." word | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
+//   postfix     = primary ("." word | "." digits | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
 //   primary     = number | string | "true" | "false" | "null" | "[" [args] "]" | "new" qname "{" fields "}" | name
-//               | "(" expr ")" | "function" "(" [params] ")" ["->" type] block
+//               | "(" expr ")" | "(" expr ("," expr)+ ")" | "function" "(" [params] ")" ["->" type] block
+//               | "[" expr fors "]" | "{" expr ":" expr fors "}" | "{" [expr ":" expr ("," expr ":" expr)*] "}"
+//               | "match" expr "{" ((values | "else") "=>" expr [","])* "}"
+//   fors        = ("for" [name ","] name "in" or ["if" or])+
 import { either } from "./source.mjs";
 import * as D from "../runtime/decimal.mjs";
 
@@ -154,7 +159,9 @@ export function lex(text, cursor = new Cursor(text), until = null) {
     } else if (/[0-9]/.test(c)) {
       let value = "";
       while (/[0-9]/.test(cursor.peek() ?? "")) value += cursor.next();
-      if (cursor.peek() === "." && /[0-9]/.test(cursor.peek(1) ?? "")) {
+      // After a `.`, digits are a tuple's position (§6.17): t.0.1 is position 1 of position 0.
+      const position = prev?.type === "punct" && prev.value === ".";
+      if (!position && cursor.peek() === "." && /[0-9]/.test(cursor.peek(1) ?? "")) {
         value += cursor.next();
         while (/[0-9]/.test(cursor.peek() ?? "")) value += cursor.next();
       }
@@ -377,7 +384,7 @@ class Parser {
     while (!this.is("end") && !(close && this.sym("}"))) {
       const before = this.at;
       try {
-        out.push(this.item());
+        out.push(...[].concat(this.item()));
         this.ownLine();
       } catch (e) {
         if (!(e instanceof SyntaxMistake)) throw e;
@@ -629,12 +636,25 @@ class Parser {
       this.closeAngle();
       return this.node("type-map", start, { key, value });
     }
+    // set<S>, S an option set: several of its options (§3.8); set<T>: values of one type, each once (§3.12).
     if (this.word("set")) {
       this.take();
       this.openAngle("set<S>");
-      const name = this.qname();
+      const element = this.type();
       this.closeAngle();
-      return this.node("type-set", start, { name });
+      return this.node("type-set", start, { name: element.kind === "type-name" ? element.name : null, element });
+    }
+    // (number, string): a tuple (§3.11).
+    if (this.sym("(")) {
+      this.take();
+      const elements = [this.type()];
+      while (this.sym(",")) {
+        this.take();
+        elements.push(this.type());
+      }
+      this.expect("punct", ")", '"," or ")"');
+      if (elements.length < 2) throw new SyntaxMistake("a tuple's type names two or more types: (number, string)", this.from(start), "S010");
+      return this.node("type-tuple", start, { elements });
     }
     if (this.is("name", "any")) {
       this.take();
@@ -690,7 +710,7 @@ class Parser {
       if (this.is("end")) throw this.mistake('"}"');
       const before = this.at;
       try {
-        body.push(this.statement());
+        body.push(...[].concat(this.statement()));
         this.ownLine();
       } catch (e) {
         if (!(e instanceof SyntaxMistake)) throw e;
@@ -837,6 +857,15 @@ class Parser {
   binding() {
     const start = this.take();
     const kind = start.value;
+    // let (a, b) = e (§7.3.1): e once, under a hidden name; then each name is its position of it.
+    if (this.sym("(")) {
+      const names = this.tupleNames();
+      this.expect("punct", "=", '"=" and a tuple');
+      const value = this.expr();
+      const hidden = hiddenName(start);
+      const first = this.node("let", start, { name: hidden, type: null, value, destructure: { kind, names: names.map((n) => n.name) } });
+      return [first, ...names.map((n, i) => ({ kind, span: n.span, name: n.name, type: null, value: positionOf(hidden, i, n.span), hidden: true }))];
+    }
     const name = this.name();
     let type = null;
     if (this.sym(":")) {
@@ -896,21 +925,7 @@ class Parser {
     const arms = [];
     while (!this.sym("}")) {
       const a = this.token;
-      let values = null;
-      if (this.word("else")) this.take();
-      else {
-        // An arm's values: words in quotes, or numbers (§7.10).
-        const value = () => {
-          if (!this.is("number")) return this.plain("words in quotes, or a number");
-          const t = this.take();
-          return { kind: "number", value: t.value, raw: t.raw, span: t.span };
-        };
-        values = [value()];
-        while (this.sym(",")) {
-          this.take();
-          values.push(value());
-        }
-      }
+      const values = this.armValues();
       this.expect("punct", "=>", '"=>" and a block');
       arms.push(this.node("arm", a, { values, body: this.block() }));
     }
@@ -918,11 +933,72 @@ class Parser {
     return this.node("match", start, { subject, arms });
   }
 
+  // An arm's values (§7.10): words in quotes, numbers, or expressions the compiler works out; null for `else`.
+  armValues() {
+    if (this.word("else")) return (this.take(), null);
+    const value = () => {
+      if (this.is("string")) return this.plain("words in quotes, or a number");
+      const next = this.peek();
+      if (this.is("number") && next.type === "punct" && [",", "=>"].includes(next.value)) {
+        const t = this.take();
+        return { kind: "number", value: t.value, raw: t.raw, span: t.span };
+      }
+      if (this.sym("=>") || this.sym("}") || this.sym(",")) throw this.mistake("an arm's value");
+      return this.or();
+    };
+    const values = [value()];
+    while (this.sym(",")) {
+      this.take();
+      values.push(value());
+    }
+    return values;
+  }
+
+  // match e { 1 => "one", 2, 3 => "few", else => "many" } (§6.18): a match that gives a value.
+  matchExpr() {
+    const start = this.take();
+    const subject = this.expr();
+    this.expect("punct", "{");
+    const arms = [];
+    while (!this.sym("}")) {
+      const a = this.token;
+      const values = this.armValues();
+      this.expect("punct", "=>", '"=>" and a value');
+      arms.push(this.node("arm", a, { values, value: this.expr() }));
+      if (this.sym(",")) this.take();
+      else if (!this.sym("}") && !this.token.broken) throw this.mistake(['","', '"}"']);
+    }
+    this.take();
+    return this.node("match-expr", start, { subject, arms });
+  }
+
+  // (a, b, …): the names a tuple's values go by.
+  tupleNames() {
+    const open = this.take();
+    const names = [];
+    do {
+      if (names.length) this.take();
+      const t = this.token;
+      names.push({ name: this.name(), span: t.span });
+    } while (this.sym(","));
+    this.expect("punct", ")", '"," or ")"');
+    if (names.length < 2) throw new SyntaxMistake("a tuple has two or more values: (a, b)", this.from(open), "S010");
+    return names;
+  }
+
   // for i in a..b, or for [n,] x in l: what follows `in` decides, a range having `..` after its first bound (§7.11).
   forLoop() {
     const start = this.take();
-    const [index, item] = this.loopNames();
+    // for (a, b) in l (§7.11.2): each item under a hidden name; a and b are its positions.
+    const names = this.sym("(") ? this.tupleNames() : null;
+    const [index, item] = names ? [null, hiddenName(start)] : this.loopNames();
     this.expect("keyword", "in");
+    if (names) {
+      const list = this.expr();
+      const body = this.block();
+      body.unshift(...names.map((n, i) => ({ kind: "let", span: n.span, name: n.name, type: null, value: positionOf(item, i, n.span), hidden: true })));
+      return this.node("for-each", start, { index, item, list, body, destructure: names.map((n) => n.name) });
+    }
     if (index === null) {
       const at = this.at, found = this.mistakes.length;
       let from = null;
@@ -986,6 +1062,14 @@ class Parser {
   assignOrCall() {
     const start = this.token;
     const target = this.postfix();
+    // (a, b) = e (§7.5.2): e once, under a hidden name; then each target is given its position of it.
+    if (this.sym("=") && target.kind === "tuple") {
+      this.take();
+      const value = this.expr();
+      const hidden = hiddenName(start);
+      const first = this.node("let", start, { name: hidden, type: null, value, destructure: { kind: "assign", targets: target.items } });
+      return [first, ...target.items.map((x, i) => ({ kind: "assign", span: x.span, target: x, value: positionOf(hidden, i, x.span), hidden: true }))];
+    }
     if (this.sym("=")) {
       this.take();
       return this.node("assign", start, { target, value: this.expr() });
@@ -1145,8 +1229,14 @@ class Parser {
       const t = this.token;
       // After a `.`, any word is a field's name (§2.3.2).
       const field = this.sym(".") && ["name", "keyword"].includes(this.peek().type);
-      if (field || ((this.sym("[") || this.sym("(")) && !t.broken)) deeper();
-      if (field) {
+      // After a `.`, digits are a tuple's position (§6.17).
+      const position = this.sym(".") && this.peek().type === "number" && /^\d+$/.test(this.peek().raw);
+      if (field || position || ((this.sym("[") || this.sym("(")) && !t.broken)) deeper();
+      if (position) {
+        this.take();
+        const n = this.take();
+        e = { kind: "index", position: true, index: { kind: "number", value: n.value, raw: n.raw, span: n.span }, target: e, opSpan: n.span, span: join(e.span, n.span) };
+      } else if (field) {
         this.take();
         const n = this.take();
         e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span };
@@ -1215,6 +1305,7 @@ class Parser {
     if (t.type === "keyword") {
       if (t.value === "true" || t.value === "false") return (this.take(), { kind: "bool", value: t.value === "true", span: t.span });
       if (t.value === "null") return (this.take(), { kind: "null", span: t.span });
+      if (t.value === "match") return this.matchExpr();
       if (t.value === "new") {
         const start = this.take();
         const type = this.qname();
@@ -1239,7 +1330,14 @@ class Parser {
       while (!this.sym("}")) {
         const key = this.expr();
         this.expect("punct", ":", '":" and the value under this key');
-        entries.push({ key, value: this.expr() });
+        const value = this.expr();
+        // {k: v for x in l if c} (§6.12.2): a comprehension of pairs, made a map.
+        if (!entries.length && this.word("for")) {
+          const pairs = this.comprehension(start, { kind: "tuple", items: [key, value], span: join(key.span, value.span) }, "}");
+          pairs.asMap = true;
+          return pairs;
+        }
+        entries.push({ key, value });
         if (!this.sym("}")) this.expect("punct", ",", '"," or "}"');
       }
       this.take();
@@ -1249,25 +1347,23 @@ class Parser {
       const start = this.take();
       const items = this.args("]");
       // [e for [n,] x in l if c] (§6.12)
-      if (items.length === 1 && this.word("for")) {
-        this.take();
-        const [index, item] = this.loopNames();
-        this.expect("keyword", "in");
-        const list = this.or();
-        let condition = null;
-        if (this.word("if")) {
-          this.take();
-          condition = this.or();
-        }
-        this.expect("punct", "]", '"]"');
-        return this.node("comprehension", start, { value: items[0], index, item, list, condition });
-      }
+      if (items.length === 1 && this.word("for")) return this.comprehension(start, items[0], "]");
       this.expect("punct", "]", '"," or "]"');
       return this.node("list", start, { items });
     }
     if (this.sym("(")) {
       const start = this.take();
       const e = this.expr();
+      // (a, b, …): a tuple (§6.17).
+      if (this.sym(",")) {
+        const items = [e];
+        while (this.sym(",")) {
+          this.take();
+          items.push(this.expr());
+        }
+        this.expect("punct", ")", '"," or ")"');
+        return this.node("tuple", start, { items });
+      }
       this.expect("punct", ")", '")"');
       // `bareSpan`: the expression without its brackets, the smallest construct a mistake in it names (§16.2.1).
       return { ...e, span: this.from(start), bareSpan: e.bareSpan ?? e.span, parenthesised: true };
@@ -1281,6 +1377,28 @@ class Parser {
       throw new SyntaxMistake(prev?.type === "punct" ? `"${prev.value}" at the end of the line needs a value after it` : "the line ended where a value was expected", prev?.span ?? t.span, prev?.type === "punct" ? "S015" : "S010");
     }
     throw this.mistake("an expression");
+  }
+
+  // The `for`s of a comprehension, after its value, to its closing bracket (§6.12, §6.12.1): each `for` is a
+  // comprehension whose value is the one after it (`nested`), the last one's the value written.
+  comprehension(start, value, close) {
+    const fors = [];
+    while (this.word("for")) {
+      this.take();
+      const [index, item] = this.loopNames();
+      this.expect("keyword", "in");
+      const list = this.or();
+      let condition = null;
+      if (this.word("if")) {
+        this.take();
+        condition = this.or();
+      }
+      fors.push({ index, item, list, condition });
+    }
+    this.expect("punct", close, `"${close}"`);
+    let node = value;
+    for (let i = fors.length - 1; i >= 0; i--) node = this.node("comprehension", start, { value: node, ...fors[i], nested: i < fors.length - 1 });
+    return node;
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.
@@ -1315,6 +1433,11 @@ class Parser {
   }
 }
 
+
+// The name a tuple goes by while its values are given to names of the program's (§7.3.1): no name of a program's.
+const hiddenName = (t) => `$tuple${t.span.line}_${t.span.col}`;
+// Position i of the tuple under a hidden name.
+const positionOf = (hidden, i, span) => ({ kind: "index", position: true, target: { kind: "name", name: hidden, span }, index: { kind: "number", value: D.fromInt(i), raw: String(i), span }, opSpan: span, span });
 
 function join(a, b) {
   return { line: a.line, col: a.col, endLine: b.endLine, endCol: b.endCol, start: a.start, end: b.end };

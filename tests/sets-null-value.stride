@@ -1,0 +1,5 @@
+var s: set<number>
+let n: number = null
+add(s, n)
+# rule 14.4.2 F023
+# fault F023

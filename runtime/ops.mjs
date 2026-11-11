@@ -2,7 +2,7 @@
 // runs them on answers, and the compiler on a constant's value: one definition.
 // An operator given null where it needs a value is F023 (§6.3). One given values it does not take is F018: the
 // checker refuses such a program, so reaching it is a compiler fault.
-import { D, StrideFault, equal, order, truthy, StrideMap, isNull, isNumber, words, needed, kindOf } from "./values.mjs";
+import { D, StrideFault, equal, order, truthy, StrideMap, StrideSet, isNull, isNumber, words, needed, kindOf } from "./values.mjs";
 
 function numberOp(f) {
   try {
@@ -66,7 +66,7 @@ export function binary(op, a, b) {
       if (typeof b === "string") {
         if (isNull(a)) needed("words are", `the left side of ${op}`);
         found = b.includes(words(a));
-      } else found = b instanceof StrideMap ? !isNull(a) && b.has(a) : Array.isArray(b) ? b.some((x) => equal(x, a)) : false;
+      } else found = b instanceof StrideMap || b instanceof StrideSet ? b.has(a) : Array.isArray(b) ? b.some((x) => equal(x, a)) : false;
       return op === "in" ? found : !found;
     }
     default:

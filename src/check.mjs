@@ -128,7 +128,7 @@ export function check(resolved, diagnostics) {
 
   // A type no value tells: the bare null, or a list of such at any depth (§6.11, S328, S344).
   function untold(t) {
-    return t?.t === "null" || (t?.t === "list" && untold(t.element));
+    return t?.t === "null" || ((t?.t === "list" || t?.t === "set") && untold(t.element));
   }
 
   // A function's body, once; a function whose result is worked out from its returns is checked before the first
@@ -246,9 +246,16 @@ export function check(resolved, diagnostics) {
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
           else s.itemSymbol.type = type.key;
         } else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
+        else if (type.t === "set") s.itemSymbol.type = type.element; // in the order first added (§3.12)
         else if (type.t === "null") s.itemSymbol.type = T.NULL; // null fits a list (§3.6); F023 when it runs
         else {
           if (!T.isError(type)) err("S314", s.list, `for … in goes through a list, a map, a set of options or a range a..b; ${describeExpr(s.list)} is ${T.describe(type)}`);
+          s.itemSymbol.type = T.ERROR;
+        }
+        // for (a, b) in l (§7.11.2): each item a tuple of as many values as there are names.
+        const it = s.itemSymbol.type;
+        if (s.destructure && !T.isError(it) && (it.t !== "tuple" || it.elements.length !== s.destructure.length)) {
+          err("S741", s.list, it.t === "tuple" ? `each item is a tuple of ${it.elements.length} values, and ${s.destructure.length} names take them` : `for (a, b) in … takes each item's values apart, and the items are ${T.describe(it)}`);
           s.itemSymbol.type = T.ERROR;
         }
         return block(s.body, ctx);
@@ -346,6 +353,14 @@ export function check(resolved, diagnostics) {
       err("S324", s.value, `${describeExpr(s.value)} gives no value to keep`);
       type = T.ERROR;
     }
+    // (a, b) = e (§7.3.1, §7.5.2): e a tuple of as many values as there are names.
+    if (s.destructure && type && !T.isError(type)) {
+      const n = (s.destructure.names ?? s.destructure.targets).length;
+      if (type.t !== "tuple" || type.elements.length !== n) {
+        err("S741", s.value, type.t === "tuple" ? `this tuple holds ${type.elements.length} values, and ${n} names take them` : `(a, b) = … takes a tuple's values apart, and this is ${T.describe(type)}`);
+        type = T.ERROR;
+      }
+    }
     if (s.declaredType) {
       if (type && !fitsAt(s.value, type, s.declaredType)) err("S325", s.value, `${s.name} is ${T.describe(s.declaredType)}, and this is ${T.describe(type)}`);
       else if (type) optionLiteral(s.value, s.declaredType);
@@ -360,6 +375,9 @@ export function check(resolved, diagnostics) {
       // `[]`, `[[]]`, `[[null]]`: no item says what the list holds, at any depth (§6.11, §7.4).
       err("S328", s.value, `an empty list says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: list<string>`);
       type = T.ERROR;
+    } else if (type.t === "set" && untold(type.element)) {
+      err("S328", s.value, `an empty set says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: set<string>`);
+      type = T.ERROR;
     }
     // One let or var declared in two arms has one type (§12.4, S315).
     if (sym && s.sameAs && sym.type && !T.isError(sym.type) && !T.isError(type) && !T.same(sym.type, type)) err("S315", s, `${s.name} is ${T.describe(sym.type)} where it is declared on line ${sym.line}; declared again in another branch, it must be the same`);
@@ -367,14 +385,40 @@ export function check(resolved, diagnostics) {
   }
 
   function match(s, ctx) {
+    matchArms(s, ctx, (arm) => block(arm.body, ctx));
+  }
+
+  // A match's subject and its arms' values (§7.10), for the statement and the expression (§6.18); `each` is given
+  // every arm after its values. Gives the subject's type.
+  function matchArms(s, ctx, each) {
     const type = expr(s.subject, ctx);
-    if (!T.isError(type) && type.t !== "option" && type.t !== "number" && !T.isStringLike(type)) err("S329", s.subject, `match chooses on an option, on words or on a number; ${describeExpr(s.subject)} is ${T.describe(type)}`);
     const seen = new Map();
+    const known = []; // the values of the arms written as expressions, as the compiler works them out
     s.arms.forEach((arm, i) => {
       if (!arm.values) {
         if (i !== s.arms.length - 1) err("S330", arm, "else comes last in a match");
       } else {
         for (const v of arm.values) {
+          if (v.kind !== "plain-string" && v.kind !== "number") {
+            // An expression of the subject's type, worked out by the compiler.
+            const t = expr(v, ctx);
+            if (T.isError(t) || T.isError(type)) continue;
+            if (!T.comparable(type, t)) {
+              err("S329", v, `${describeExpr(s.subject)} is ${T.describe(type)}, and this arm's value is ${T.describe(t)}`);
+              continue;
+            }
+            const k = evaluate(v);
+            if (k === undefined) {
+              err("S744", v, "an arm's value is one the compiler works out: a value written out, a constant, or made of these");
+              continue;
+            }
+            v.known = k;
+            const first = known.find((x) => V.equal(x.k, k));
+            if (first) err("S331", v, `${V.printed(k)} is in this match twice`, [{ file: v.file, span: first.v.span, message: "first here" }]);
+            else known.push({ k, v });
+            continue;
+          }
+          v.known = v.value;
           // A value of the subject's kind: a number for a number, words for words or an option.
           const numeric = v.kind === "number";
           const shown = numeric ? V.words(v.value) : `"${v.value}"`;
@@ -383,17 +427,20 @@ export function check(resolved, diagnostics) {
             continue;
           }
           const key = numeric ? `#${shown}` : v.value;
-          if (seen.has(key)) err("S331", v, `${shown} is in this match twice`, [{ file: v.file, span: seen.get(key).span, message: "first here" }]);
+          const first = seen.get(key) ?? known.find((x) => V.equal(x.k, v.value))?.v;
+          if (first) err("S331", v, `${shown} is in this match twice`, [{ file: v.file, span: first.span, message: "first here" }]);
           seen.set(key, v);
+          known.push({ k: v.value, v });
           if (type.t === "option" && !type.set.options.some((o) => o.value === v.value)) err("S332", v, `${describeExpr(s.subject)} is never "${v.value}": it is ${either(type.set.options.map((o) => `"${o.value}"`))}`);
         }
       }
-      block(arm.body, ctx);
+      each(arm);
     });
     if (type.t === "option" && !s.arms.some((a) => !a.values)) {
       const missing = type.set.options.filter((o) => !seen.has(o.value)).map((o) => `"${o.value}"`);
       s.missing = missing;
     }
+    return type;
   }
 
   function collect(s, ctx) {
@@ -483,6 +530,7 @@ export function check(resolved, diagnostics) {
       // items never change, and an answer stays as the person gave it.
       if (sym && collectedItem(sym)) err("S346", target, `${sym.name} is a collected item; its fields are answers`);
       else if (sym && !["var", "let", "param", "item"].includes(sym.kind)) err("S347", target, sym.kind === "const" ? `${sym.name} is a constant, and its items do not change; copy(${sym.name}) gives a list that can` : `${sym.name} is ${what(sym)}, which holds nothing that can be given a value`);
+      if (target.kind === "index" && target.target.type?.t === "tuple") err("S742", target, `a tuple keeps the values it was made with; give ${describeExpr(target.target)} a new tuple`);
       if (target.kind === "index" && T.isStringLike(target.target.type ?? T.ERROR)) err("S349", target, `${describeExpr(target.target)} is words, whose characters cannot be given a value; a list's item or a map's key can`);
       if (sym && target.kind === "field") {
         const path = fieldPath(target);
@@ -534,6 +582,7 @@ export function check(resolved, diagnostics) {
 
   // A literal compared with or given to an option must be one of its values.
   function optionLiteral(e, type) {
+    if (type.t === "tuple" && e.kind === "tuple") return e.items.forEach((x, i) => type.elements[i] && optionLiteral(x, type.elements[i]));
     if (type.t !== "option" && type.t !== "options") return;
     const values = literalValues(e);
     for (const [node, v] of values) {
@@ -548,6 +597,8 @@ export function check(resolved, diagnostics) {
     if (T.fits(type, wanted)) return true;
     if (wanted.t === "option" && T.isStringLike(type) && literalValues(e).length === 1 && e.kind === "string") return true;
     if (wanted.t === "options" && e.kind === "list" && e.items.every((x) => x.kind === "string" && literalValues(x).length === 1)) return true;
+    // A tuple written out: each value where its place's type is wanted.
+    if (wanted.t === "tuple" && e.kind === "tuple" && type.t === "tuple" && e.items.length === wanted.elements.length) return e.items.every((x, i) => (wanted.elements[i].t === "options" ? T.fits(type.elements[i], wanted.elements[i]) : fitsAt(x, type.elements[i], wanted.elements[i])));
     return false;
   }
 
@@ -669,9 +720,35 @@ export function check(resolved, diagnostics) {
         e.fieldIndex = t.decl.fields.indexOf(field);
         return field.type;
       }
+      case "tuple":
+        // (a, b, …) (§6.17): each value's own type.
+        return T.tuple(e.items.map((x) => expr(x, ctx)));
+      case "match-expr": {
+        // The join of the arms' values (§6.18, §3.9).
+        let result = T.NULL;
+        let failed = false;
+        matchArms(e, ctx, (arm) => {
+          const t = expr(arm.value, ctx);
+          const j = T.join(result, t);
+          if (!j) {
+            err("S745", arm.value, `this match gives ${T.describe(result)} in the arms before, and ${T.describe(t)} here, which do not join`);
+            failed = true;
+          } else result = j;
+        });
+        return failed ? T.ERROR : result;
+      }
       case "index": {
         const t = expr(e.target, ctx);
         const i = expr(e.index, ctx);
+        // t.0 (§6.17): a tuple's value, by a position written out.
+        if (e.position || t.t === "tuple") {
+          if (T.isError(t)) return T.ERROR;
+          const n = Number(e.index.raw);
+          if (t.t !== "tuple") return (err("S740", e, `.${n} reads a tuple's value, and ${describeExpr(e.target)} is ${T.describe(t)}`), T.ERROR);
+          if (!e.position) return (err("S740", e, `a tuple's value is read by its position written after a dot: ${describeExpr(e.target)}.0`), T.ERROR);
+          if (n >= t.elements.length) return (err("S740", e, `this tuple holds ${t.elements.length} values, .0 to .${t.elements.length - 1}; there is no .${n}`), T.ERROR);
+          return t.elements[n];
+        }
         // A map's value is chosen by its key (§6.12).
         if (t.t === "map") {
           if (!T.isError(i) && i.t !== "null" && t.key.t !== "null" && !T.fits(i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
@@ -761,6 +838,9 @@ export function check(resolved, diagnostics) {
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
           else e.itemSymbol.type = l.key;
           e.overMap = true;
+        } else if (l.t === "set") {
+          e.itemSymbol.type = l.element;
+          e.overSet = true;
         } else if (l.t === "null") {
           e.itemSymbol.type = T.NULL; // null fits a list (§3.6); F023 when it runs
         } else {
@@ -770,7 +850,14 @@ export function check(resolved, diagnostics) {
         if (e.condition) condition(e.condition, ctx, "a comprehension's if");
         const v = expr(e.value, ctx);
         if (v.t === "none") err("S366", e.value, `${describeExpr(e.value)} gives no value`);
-        return T.list(v);
+        // With several `for`s (§6.12.1) the value is the comprehension of the next: one list of all its values.
+        const type = e.nested ? v : T.list(v);
+        if (!e.asMap) return type;
+        // {k: v for …} (§6.12.2): the pairs made a map.
+        const pair = type.t === "list" ? type.element : null;
+        if (pair?.t !== "tuple") return T.ERROR;
+        if (!T.isKey(pair.elements[0])) err("S361", e, `a map's keys are words, numbers, dates, bools or options, not ${T.describe(pair.elements[0])}`);
+        return T.map(pair.elements[0], pair.elements[1]);
       }
       case "named-arg":
         return expr(e.value, ctx);
@@ -878,7 +965,8 @@ export function check(resolved, diagnostics) {
           candidates.set(want.sym, [...(candidates.get(want.sym) ?? []), { type: got, from }]);
           ordered.push({ tv: want.sym, type: got, from });
         }
-      } else if (want.t === "list" && got.t === "list") collect(want.element, got.element, from);
+      } else if ((want.t === "list" && got.t === "list") || (want.t === "set" && got.t === "set")) collect(want.element, got.element, from);
+      else if (want.t === "tuple" && got.t === "tuple") want.elements.forEach((p, i) => got.elements[i] && collect(p, got.elements[i], from));
       else if (want.t === "map" && got.t === "map") (collect(want.key, got.key, from), collect(want.value, got.value, from));
       else if (want.t === "function" && got.t === "function") (want.params.forEach((p, i) => got.params[i] && collect(p, got.params[i], from)), collect(want.result, got.result, from));
     };
@@ -921,7 +1009,16 @@ export function check(resolved, diagnostics) {
 
     let result = sym.result ? T.substitute(sym.result, bindings) : T.ERROR;
     // A type parameter the arguments do not tell (§9.5): S368, whatever the result's type.
-    if ((sym.typeParams ?? []).some((tv) => !bindings.has(tv))) {
+    // set(l) (§14.4.2): a set of l's items; `set()` holds none, and takes its type from where it stands.
+    const makesSet = sym.kind === "native" && sym.name === "set";
+    if (makesSet) {
+      const given = bound[0] && bound[0].kind !== "default-of" ? bound[0].type : null;
+      const element = given?.t === "list" ? given.element : T.NULL;
+      if (!["string", "number", "date", "bool", "null", "error", "typevar"].includes(element.t)) {
+        err("S743", bound[0], element.t === "option" ? `the options of ${element.set.name} make a set<${element.set.name}>: give the list where one is wanted` : `a set holds words, numbers, dates or bools, not ${T.describe(element)}`);
+        result = T.ERROR;
+      } else result = T.set(element);
+    } else if ((sym.typeParams ?? []).some((tv) => !bindings.has(tv))) {
       err("S368", e, `the arguments do not tell what ${(sym.typeParams ?? []).filter((tv) => !bindings.has(tv)).map((tv) => tv.name).join(" and ")} is here (an empty list says nothing); give a value of the type`);
       result = T.ERROR;
     }
@@ -943,6 +1040,8 @@ export function check(resolved, diagnostics) {
         result = T.ERROR;
       } else result = j;
     } else if (result.t === "any") result = first;
+    // Two sets of one type (§14.4.2): a set of the join of what they hold.
+    if (sym.kind === "native" && ["union", "intersection", "difference"].includes(sym.name) && first.t === "set" && bound[1]?.type?.t === "set") result = T.join(first, bound[1].type) ?? first;
     if (result.t === "element") {
       if (first.t === "list") result = first.element;
       else if (first.t === "options") result = T.option(first.set);
@@ -964,9 +1063,24 @@ export function check(resolved, diagnostics) {
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
-    if (sym.name === "count" && (l.t === "map" || T.isStringLike(l))) return;
+    if (sym.name === "count" && (l.t === "map" || l.t === "set" || T.isStringLike(l))) return;
     if (sym.name === "clear") {
-      if (l.t !== "list" && l.t !== "map" && l.t !== "null") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
+      if (l.t !== "list" && l.t !== "map" && l.t !== "set" && l.t !== "null") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
+      return;
+    }
+    // remove(m, key), remove(s, x) (§14.4.1, §14.4.2): a key of the map, a value of the set.
+    if (sym.name === "remove") {
+      const x = bound[1];
+      if (l.t === "map" || l.t === "set") {
+        const want = l.t === "map" ? l.key : l.element;
+        if (x?.type && !T.isError(x.type) && want.t !== "null" && !fitsAt(x, x.type, want)) err("S367", x, `remove's key is ${T.describe(want)}, and this is ${T.describe(x.type)}`);
+        else if (x) optionLiteral(x, want);
+      } else if (l.t !== "null") err("S369", bound[0], `remove takes a map or a set, and this is ${T.describe(l)}`);
+      return;
+    }
+    if (["union", "intersection", "difference"].includes(sym.name) && (l.t === "set" || bound[1]?.type?.t === "set")) {
+      const b = bound[1]?.type;
+      if (b && !T.isError(b) && !((l.t === "set" || l.t === "null") && (b.t === "set" || b.t === "null") && T.join(l, b))) err("S387", e, `${sym.name} takes two sets of one type`);
       return;
     }
     if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "null") {
@@ -1100,6 +1214,10 @@ export function check(resolved, diagnostics) {
           optionLiteral(e.a, b);
           return T.BOOL;
         }
+        if (b.t === "set") {
+          if (!T.fits(a, b.element) && !T.fits(b.element, a)) return err2("S383", `${describeExpr(e.b)} holds ${T.describe(b.element)}, and this is ${T.describe(a)}`);
+          return T.BOOL;
+        }
         if (b.t === "list") {
           if (!T.fits(a, b.element) && !T.fits(b.element, a)) return err2("S383", `${describeExpr(e.b)} holds ${T.describe(b.element)}, and this is ${T.describe(a)}`);
           // Words looked for among options are one of the set's values (§3.6, S386).
@@ -1131,7 +1249,7 @@ export function describeExpr(e) {
     case "field":
       return `${describeExpr(e.target)}.${e.name}`;
     case "index":
-      return `${describeExpr(e.target)}[${describeExpr(e.index)}]`;
+      return e.position ? `${describeExpr(e.target)}.${e.index.raw}` : `${describeExpr(e.target)}[${describeExpr(e.index)}]`;
     case "call":
       return `${describeExpr(e.target)}(…)`;
     case "number":
