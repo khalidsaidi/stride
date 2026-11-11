@@ -4,12 +4,19 @@ ask s: any-of "S" {
   option "a" "A"
   option "b" "B"
 }
+print(s is empty)
+print("a" in (s ?? []))
+print("a" not in (s ?? []))
+print(count(s ?? []))
 print("a" in s)
-print("a" not in s)
-# rule 6.8
-# run empty
+# rule 6.8 6.16 8.7 F023
+# run none chosen
 # answers {"s": []}
-# prints ["no", "yes"]
+# prints ["yes", "no", "yes", "0"]
+# fault F023 at 11:11 empty where a list is needed: the right side of in
+# run not answered
+# prints ["yes", "no", "yes", "0"]
+# fault F023 at 11:11
 # run a
 # answers {"s": ["a"]}
-# prints ["yes", "no"]
+# prints ["no", "yes", "no", "1", "yes"]

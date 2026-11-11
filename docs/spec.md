@@ -71,7 +71,7 @@ Any other `\` is mistake S003; a `\u{…}` out of range or a surrogate is S021. 
 words in (§6.10); an unclosed `{` is S005, an empty `{}` S006, a lone `}` S004. A `{` inside the braces opens words
 in quotes of their own only inside a nested `"…"`.
 
-2.7. **Signs**: `..< .. == != <= >= => -> += -= *= /= // { } ( ) [ ] , : . = < > + - * / %`. The longest sign that
+2.7. **Signs**: `..< .. ?? == != <= >= => -> += -= *= /= // { } ( ) [ ] , : . = < > + - * / %`. The longest sign that
 fits is taken (`//` before `/`, `..<` before `..`, `..` before `.`). Any other character outside words in quotes is mistake S001.
 
 2.8. **Raw tokens**: after `form` and after `pdf` at the start of a program, everything up to whitespace, `#` or
@@ -93,9 +93,11 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 | a record `R` | a value for each field of `R` | `new R { field: e, … }` |
 | `list of T` | any number of values of type T, in order | `[a, b]` |
 
-3.2. **Empty.** Every type also has the empty value, `empty`: an answer not given yet, a field not set. Words of no
-characters are empty; a list or set with no items is empty. There is one empty: `empty == ""` and `empty == []`
-are yes (§6.6). `x is empty` and `x is not empty` test it.
+3.2. **Empty.** Every type also has the empty value, `empty`: no value — an answer not given yet, a field not set.
+Words of no characters `""`, a list with no items `[]`, a set with no options and a map with no keys `{}` are
+values, not empty: `"" == empty` and `[] == empty` are no (§6.6), `length("")` and `count([])` are 0. `x is empty`
+and `x is not empty` test it; `x ?? y` gives y in its place (§6.16). Empty counts as no in a condition (§6.15) and
+has no words (§3.5); any other operation that needs a value and is given empty is fault F023 (§6.3).
 
 3.3. **Numbers.** A number is an exact decimal: a whole number of at most 34 significant digits times a power of
 ten, of absolute value below 10^34, and a multiple of 10^-6176 (its power of ten is from -6176 up).
@@ -136,7 +138,9 @@ joined by `, `; empty as no words. A list or a record has no words (mistake S309
 3.7. **How many a list holds.** A list holds any number of items, and grows as items are added:
 `var l: list of number`, then `l += [x]` or `l = append(l, x)`. A list written out, joined with `+`, or given by a
 comprehension grows like any other.
-- 3.7.1. The bare word `empty` where a list is expected is a list with no items.
+- 3.7.1. `empty` where a list is expected stays empty: it is not a list with no items. `var l: list of number =
+  empty` makes l empty, and `count(l)` is F023; `var l: list of number`, without a value, starts with no items
+  (§7.4).
 
 3.8. **The order of a set.** A set's options are always in the order their option set declares them, whatever
 order they were chosen or written in. With `options s { "b" "B"  "a" "A" }` and the answer `["a", "b"]`, the set is
@@ -147,7 +151,7 @@ options are declared by its option block, in the block's order.
 
 3.9. **The join of two types.** Where one type must be chosen for two values — the items of a list literal, the
 two values of `if … then … else`, the element type of `l + m`, the returns of a function whose result is worked
-out (§9.6), the arms of `either` — it is their join, chosen by these rules in order:
+out (§9.6), the arms of `either`, the two sides of `??` — it is their join, chosen by these rules in order:
 1. the same type: that type;
 2. one of them the type of the bare word `empty`: the other. This rule is for `empty` itself only; a list is never
    dropped by it, whatever its items hold;
@@ -156,13 +160,14 @@ out (§9.6), the arms of `either` — it is their join, chosen by these rules in
    elements (so a list of empty items and a `list of number` give `list of number`), and a list keeps its items:
    `if c then [empty, empty, empty] else [1]` is a `list of number`;
 5. anything else has no join: S361, S394, S373, S343 at the second value.
-The value of an expression whose type is a join is placed into that type: in `[empty, [1]]`, a list of lists, the
-first item is a list with no items (§3.7.1). The join never depends on which value comes first.
+The value of an expression whose type is a join is placed into that type; empty stays empty there: in
+`[empty, [1]]`, a list of lists, the first item is empty (§3.7.1). The join never depends on which value comes
+first.
 
 3.10. **Maps.** `map of K to V` holds values of type V, each under its own key of type K: words, a number, a date,
 a yes-no or an option (another type of key is S209). It holds any number of keys, in the order they were first
 given. A map is a value, as a list is: placing it copies it, `==` compares keys and values, and one with no keys
-is empty. A `var` of a map type declared without a value starts with no keys.
+is a map, not empty (§3.2). A `var` of a map type declared without a value starts with no keys.
 
 ## 4. Files
 
@@ -215,7 +220,7 @@ is there).
 
 5.1. **record**: `"record" name "{" (name ":" type [","])* "}"`. Field names are unique (S218). A record may
 hold its own type, directly or through a list, a map or other records (a tree, a chain): such a field starts
-empty, such a list with no items.
+empty, such a list with no items (§6.14).
 
 5.2. **options**: `"options" name "{" (["option"] plain string)* "}"`. Values unique (S215), not empty (S216); at
 least 1 option (S235). A question's own options obey the same. The
@@ -245,8 +250,9 @@ type, or its option type for a set. `either` returns the join of both argument t
 6.1. Grammar, loosest first:
 
 ```
-expr        = cond | or;
+expr        = cond | coalesce;
 cond        = "if" expr "then" expr "else" expr;
+coalesce    = or ("??" or)*;
 or          = and ("or" and)*;
 and         = not ("and" not)*;
 not         = "not" not | compare;
@@ -265,12 +271,23 @@ primary     = number | string | "yes" | "no" | "empty" | name | "(" expr ")"
 Comparisons do not chain (`a < b < c` is S014).
 
 6.2. **Evaluation order.** Operands left to right; a call's arguments left to right, after the function is known;
-`and` and `or` decide on the left when they can and then do not work out the right; `if c then a else b` works out
-`c`, then only the chosen branch.
+`and` and `or` decide on the left when they can and then do not work out the right; `a ?? b` works out b only when
+a is empty; `if c then a else b` works out `c`, then only the chosen branch.
 
-6.3. **Empty in operations.** An operation given empty: `+` of numbers or of words gives the other operand (`5 +
-empty` is 5, `"a" + empty` is "a"); `+` of lists is always concatenation (§6.5.1), never the other operand; `- * / // %` give empty; `-empty` is empty; a comparison `< <= > >=` with empty is no; `==` §6.6;
-`not empty` is yes (an empty yes-no counts as no in a condition).
+6.3. **Empty in operations.** Empty is no value, and an operation that needs one faults: F023, whose message says
+what was empty (`empty where a number is needed: the left side of +`). These are F023 when an operand is empty:
+- `+ - * / // %` and `-x`, of numbers; `+` joining words or lists; `< <= > >=`;
+- `x in s` and `x not in s` when s is empty, or when s is words and x is empty (§6.8);
+- `r.f` when r is empty (§6.9.1); `l[i]` and `l[a..b]` when l, i, a or b is empty (§6.9.2, §6.9.3); an item set at
+  an empty position or under an empty key, or in an empty list or map (§7.5);
+- a loop's bound, and what `for each` or a comprehension goes through (§7.11, §6.12);
+- an argument of a library function that needs a value (§14.0.3).
+
+A call through a name that holds no function is F022. These take empty and do not fault: `==` and `!=` (§6.6);
+`x is empty`, `x is not empty`; `x ?? y` (§6.16); a condition, where empty counts as no (§6.15), so `not empty` is
+yes; `"{x}"` and `fill`, where empty has no words (§3.5); placing it — a `let`, an assignment, an argument of a
+function the program defines, a field of `new`, an item of a list written out; a map read with a key the map does
+not have, which gives empty (§6.11.1); and the library functions whose entry says so (§14.0.3).
 
 6.4. **Arithmetic.** Binary `- * / // %` require numbers (S374 otherwise), except date minus date is S375.
 For `+`, the valid operations are described in §6.5 and §6.5.1; number with words is S372, and other unsupported
@@ -311,6 +328,7 @@ l's items, then m's. `l += m` is `l = l + m`.
 
 6.6. **Equality** `==`, `!=`: of two values of one type, or words with words, or an option with words (the words
 checked against the set's values: S386), or two options of different sets (their words compared); else S378 (yes-no with words S376; a set with `==` against words S377).
+`"" == empty`, `[] == empty` and `{} == empty` are no (§3.2).
 Two values are equal when both are empty, or neither is and: words have the same code points; numbers the same
 value; dates the same day; yes-no the same; options the same value; sets the same options; records of one type
 every field equal; lists the same length and every item equal. Two lists compare when their element types join
@@ -324,15 +342,16 @@ order (`sorted`, `smallest`, `largest`); a set keeps its declaration order (§3.
 
 6.8. **Membership** `x in s`, `x not in s`: `s` a set of options and `x` an option of the same set or words (S381,
 S382, S386); or `s` a list and `x` of its element type (S383): yes when an item is equal (§6.6). With `s` words and `x` words: yes when
-x is within s. With `s` a map: yes when x is one of its keys.
+x is within s. With `s` a map: yes when x is one of its keys. An empty x is in a list that holds an empty item and
+is no key of a map; an empty s, or an empty x within words, is F023 (§6.3).
 
 6.9. **Postfix.** A line break before `[` or `(` ends the expression before it: the bracket starts a new one.
 - 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357; no such field S318 (with a hint).
-  `r.f` of an empty record (an empty list item) is empty.
+  `r.f` of an empty record (an empty list item) is F023 (§6.3): `if r is not empty` or `r ?? new R { }` first.
 - 6.9.2. `l[i]`: i a number (S358), l a list, or words (their characters; S359 otherwise). Positions count from 0: `l[0]` is the first
-  item and `l[count(l) - 1]` the last. i not whole, below 0, or `count(l)` or more is F004 (i written out not whole or below 0 is S360).
-- 6.9.3. `l[a..b]`: the items a to b, both included, and `l[a..<b]` the items a to before b (of words: the characters; `l[a..]` to the last, `l[..b]` and `l[..<b]` from the first), a list of l's element type. a, b whole (F004); a < 0 counts from 0;
-  b beyond the items stops at the last; a > b gives an empty list, as `l[a..<a]` does.
+  item and `l[count(l) - 1]` the last. i not whole, below 0, or `count(l)` or more is F004 (i written out not whole or below 0 is S360); l or i empty is F023.
+- 6.9.3. `l[a..b]`: the items a to b, both included, and `l[a..<b]` the items a to before b (of words: the characters; `l[a..]` to the last, `l[..b]` and `l[..<b]` from the first), a list of l's element type. a, b whole (F004); l, a or b empty is F023; a < 0 counts from 0;
+  b beyond the items stops at the last; a > b gives a list with no items (of words: no characters), as `l[a..<a]` does.
 - 6.9.4. `f(args)`: a call (§9).
 
 6.10. **Words with values**: `"Line {n + 1}"` puts the words (§3.5) of each value in; a list, a record or no value
@@ -344,8 +363,9 @@ is S352.
 
 6.11.1. **Map literal** `{k: v, …}`: its key type is the join of its keys' types and its value type the join of
 its values' (S361 when two have none); a key written twice keeps its last value. `{}` takes its type from where it
-stands. `m[k]` is the value under k, or empty when m has no such key (a key of another type is S358);
-`m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is F004); `m[k].f = v` makes
+stands. `m[k]` is the value under k, or empty when m has no such key, an empty k among them (a key of another type
+is S358; an empty m is F023); `m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is
+F023); `m[k].f = v` makes
 the record under a new key (§7.5.1). `for each k in m` goes through m's keys in their order, and
 `for each k, v in m` gives each key and the value under it; a comprehension does the same
 (`[v for each k, v in m]`).
@@ -357,7 +377,8 @@ A comprehension may call any function, one that asks included: each call's quest
 6.13. **Conditional** `if c then a else b`: c yes-no (S310); its type is the join (§3.9) of a's and b's (S394 when
 they have none): `if c then "x" else an_option` is text; `if c then [empty, empty] else [1]` is `list of number`.
 
-6.14. **new R { f: e, … }**: a record with the given fields, the others empty. Unknown field S363, twice S362,
+6.14. **new R { f: e, … }**: a record with the given fields, the others empty, but a list field a list with no
+items and a map field a map with no keys. Unknown field S363, twice S362,
 type S364.
 
 6.15. **Conditions** (`if`, `tick … when`, `check`, `and`, `or`, `not`, comprehension `if`) are yes-no (S310,
@@ -378,6 +399,13 @@ S311, S380); empty counts as no.
 `(yes and a) is empty` and `(no or a) is empty` are both no. Comparisons,
 `in` and `is empty` likewise always give yes or no.
 
+6.16. **`a ?? b`**: a when a is not empty, else b; b is worked out only when a is empty. Its type is the join
+(§3.9) of a's and b's (S394 when they have none); beside a set, a list of words in quotes names options of the set
+(§3.6, S386): `chosen ?? []` is a set. `??` binds looser than `or` and tighter than `if … then … else`, and chains
+from the left: `a ?? b ?? c` is the first of the three that is not empty, and `a ?? b + 1` is `a ?? (b + 1)`.
+`"" ?? "x"` is `""`, and `[] ?? [1]` is `[]`: neither is empty (§3.2). `either(a, b)` (§14.5) gives the same value
+and works out both.
+
 ## 7. Statements
 
 7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
@@ -393,7 +421,7 @@ cannot receive an answer.
 7.3. **let** `let name [":" type] "=" expr`: a name for a value that does not change.
 
 7.4. **var** `var name ":" type ["=" expr]` or `var name "=" expr`: a name for a value that may change. Without a
-value, a list or record starts empty, anything else must be given one before it is read (S407). `var x = empty`
+value, a list starts with no items, a map with no keys and a record empty; anything else must be given one before it is read (S407). `var x = empty`
 without a type is S327; a `let` or `var` without a type whose value is a list no item of which tells its type, at
 any depth (`[]`, `[empty, empty]`, `[[empty]]`), is S328; with a type, `let xs: list of number = [empty,
 empty]` is valid. In these empty-type inference cases, an inferred function result is S344 (§9.6), and a generic
@@ -403,7 +431,7 @@ call is S368 (§9.5.1).
 (S345–S349). `x += e` is `x = x + e` with x's place worked out once. An answer, a let, a constant, a parameter, a
 loop's counter, an item, a collected list's items cannot be given a value (S345, S346, S348).
 `l[i] = v` with i from 0 to `count(l) - 1` replaces that item, and with i `count(l)` adds v after the last; i not
-whole or outside 0 to `count(l)` is F005.
+whole or outside 0 to `count(l)` is F005; l or i empty is F023.
 
 7.5.1. **The steps of an assignment**, in this order; a fault at any step stops the run there and nothing later
 happens:
@@ -418,7 +446,8 @@ happens:
      changed.
    - **an empty record at a place that is there is made before its field is written.** When a component before
      a field reaches a place that exists — the var itself, a field of a record, or an item within the list's items —
-     and that place holds empty, a record of the field's record type is put there first, every field empty, and the
+     and that place holds empty, a record of the field's record type is put there first, made as `new R { }` makes it
+     (§6.14), and the
      path goes on through it. This applies at every level: in `p.home.city = "Paris"` with p empty, p becomes a
      person, then its `home` an address, then `city` is set. Only a place that is not there faults: a position past
      the items is F020, whether or not records would be made after it. So `var p: person` then `p.name = "Ada"`
@@ -429,17 +458,17 @@ happens:
    field; `xs[i][j].name = v` reads both i and j (F004 or F020). With i = -1, `xs[i] = v` is F005, and
    `xs[i].name = v` is F004.
 2. **The value.** Only then is the right-hand expression evaluated.
-3. **Placing.** The value is converted (a bare `empty` to a list, §3.7.1) and copied (§3.4).
+3. **Placing.** The value is converted (a list of words in quotes to a set, §3.6) and copied (§3.4).
 4. **Storing.** The place takes the value.
 
 So `xs[i] = 1 / z` with i = -1 and z = 0 stops with F005 at `xs[i]`, and `1 / z` is never worked out.
 
 **Augmented assignment** `x op= e`: step 1 as above, once; then the place's current value is read (a position
 with no item, the number of items among them, is F004, §6.9.2); then e is evaluated (step 2); then the operation is applied to the current value and e
-(§6.3–§6.5, which may fault); then steps 3 and 4. The place is never worked out twice: in `xs[next()] += 1` the
+(§6.3–§6.5, which may fault: a current value that is empty is F023); then steps 3 and 4. The place is never worked out twice: in `xs[next()] += 1` the
 call runs once.
 
-7.6. **fill** `fill "box" = e`: writes e's words (§3.5) into a text box or a list box. Words the compiler knows are not one of a
+7.6. **fill** `fill "box" = e`: writes e's words (§3.5) into a text box or a list box; an empty e leaves it blank. Words the compiler knows are not one of a
 list box's entries are S514; words it cannot tell beforehand go in as they are. e yes-no is S307, a set
 S308, a list or record S309.
 
@@ -460,7 +489,7 @@ match on an option with no `else` that misses options gives warning W001.
 7.11. **for** `for i in a..b { }`, `for i in a..<b { }`: a and b are worked out once, a then b, before the first turn, and never again;
 i then takes each whole number from a to b, or with `..<` from a to before b (`for i in 0..<count(l)` gives every position of l); none when a > b, or with `..<` when a ≥ b. Changing what a or b was made of inside the loop does
 not change its turns: with `var stop = 1`, `for i in 1..stop { stop += 1 }` runs once and leaves `stop` 2. a and b
-are numbers (S313); an empty or non-whole bound is F004: empty is never taken as 0 or as a loop of no turns. Each bound is evaluated and checked completely before the next is evaluated: an empty or non-whole first bound faults before the second bound is worked out. `for each` works out its list once, before the first turn (§3.4). **for each** `for each [n,] x in l { }`: l a list or a set (S314), §3.4; n is the item's position, from 0.
+are numbers (S313); a non-whole bound is F004 and an empty one F023: empty is never taken as 0 or as a loop of no turns. Each bound is evaluated and checked completely before the next is evaluated: an empty or non-whole first bound faults before the second bound is worked out. `for each` works out its list once, before the first turn (§3.4). **for each** `for each [n,] x in l { }`: l a list or a set (S314), §3.4; n is the item's position, from 0. An empty l is F023 (`for each x in l ?? []` runs no turns); so is the l of a comprehension (§6.12).
 
 7.11.1. **while** `while c { }`: c, a yes-no (S311), is worked out before each turn; the body runs as long as it
 is yes. A question asked in the body has its own key in each turn (`name[0]`, `name[1]`, …, §8.6). A loop that
@@ -531,11 +560,11 @@ which changes nothing below.
    asked at most once (S321).
 3. **Answer.** When the answers hold the key, the answer given is converted (§8.7) and the value is the converted
    answer, whatever it is: an answer given as no words or no options chosen is a valid empty answer, with no
-   unreadable mark; an answer that does not convert (§8.7) is empty and marked unreadable with its reason; both stay
+   unreadable mark (an answer is never `""` or a set with no options, §8.7); an answer that does not convert (§8.7) is empty and marked unreadable with its reason; both stay
    empty — the default never comes back once the person has answered, so a
    prefilled name can be cleared and every option of an any-of deselected, and an unreadable number never puts the
    default into the PDF. Only when the answers do not hold the key at all is the value the default, or empty
-   without one.
+   without one; a default of no characters or no options is empty too.
 4. **Binding.** The value goes into its place: a new name is defined from here on (§12.2); a field or an item is
    set by §7.5.1 (an empty record on the way is made).
 5. **Checks**, each in the order written, with the value bound: when the value is empty, no check is worked out
@@ -545,9 +574,9 @@ which changes nothing below.
    checks are written. A default standing for an answer not given is checked like an answer.
 
 8.5. **collect** `collect [n,] x in l [any "Any…?"] [another] "Another…?" { … }`: l a var of type `list of T`
-that starts empty (S333, S334, S336), collected once (S337); T a record or a scalar (S335). It asks the block
+that starts with no items (S333, S334, S336), collected once (S337); T a record or a scalar (S335). It asks the block
 for item 0, then the yes-no question "Another…?"; on yes the next item, and so on until a no. With `any`, it first asks the
-`any` question; on no the list stays empty. The items are answers (S346).
+`any` question; on no the list keeps no items. The items are answers (S346).
 
 8.5.1. **When an item enters the list.** The item being asked is x; it enters l only when its block has finished.
 So inside the block for item k, `count(l)` is k, `l[k]` is outside the list (F004, §6.9.2), and the item's own
@@ -596,7 +625,8 @@ is empty (never a fault):
   marked unreadable `not words`. A number question takes words or a JSON number; anything else is `not a number`.
   An answer given as JSON `null` is a valid empty answer, with no unreadable mark; only a key the answers do not
   hold at all brings the default (§8.4.1);
-- words (text, long-text, phone, email): the words as given; nothing is empty;
+- words (text, long-text, phone, email): the words as given; no characters is empty: a words answer is never
+  `""`;
 - number: optional spaces (U+0020; a tab or any other white space is not one), an optional `+` or `-`, optional
   spaces, digits with `,`, space or `'` between groups, an optional `.` and digits (digits on both sides of the point: `0.5` and `5.0` are numbers, `.5` and `5.` are not), optional spaces; `$ € £` ignored; else empty. `0x10`, `1e5`, `12abc` are empty. A number written with more than 34
   significant digits, of absolute value 10^34 or more, or finer than 10^-6176, is not rounded: it is empty, and the
@@ -626,7 +656,8 @@ is empty (never a fault):
   `not one of the options`. any-of: a list of such members, giving those of its values named, in declaration order
   (§3.8); a member that is none of its values, or not words or a number, is `not among the options`, and the
   valid members are kept; an empty member (`null`, `""`) adds no option; an answer that is not a list is `not
-  among the options`, and `null` or `""` as the whole answer is a valid empty one.
+  among the options`, and `null` or `""` as the whole answer is a valid empty one. An any-of answer that names
+  none of its values is empty, never a set with no options.
 
 ## 9. Functions
 
@@ -645,7 +676,7 @@ and 255 parameters (S601). Each argument fits its parameter (S367). A value give
 
 9.4.1. **Binding, step by step.** The arguments are bound in the order they are written, positional then named,
 each completely before the next is worked out: the argument's expression is evaluated, then at once converted to
-its parameter (a bare `empty` to a list, §3.7.1) and copied (§3.4); only then is the next argument evaluated. Parameters not given take their defaults after the
+its parameter (a list of words in quotes to a set, §3.6) and copied (§3.4); only then is the next argument evaluated. Parameters not given take their defaults after the
 last argument is bound (a default is known and cannot fault). The function's body starts after every parameter is
 bound. So in `takes_one(xs[z - 1], 1 / z)` with z zero, the run stops with F004 at `xs[z - 1]`, and `1 / z` is never worked
 out.
@@ -802,9 +833,9 @@ words given to `print`, and a fault or none.
 | F001 | division by zero |
 | F002 | floor division or remainder by zero |
 | F003 | a number of absolute value 10^34 or more |
-| F004 | a list position or a loop bound not a whole number, or a position read that is below 0 or the number of items or more |
+| F004 | a list position, a slice's bound or a loop bound not a whole number, or a position read that is below 0 or the number of items or more |
 | F005 | a list item set outside 0 to the number of items |
-| F006 | a field read or set on a value that is not a record and not empty: a compiler fault, never reached by a type-correct program |
+| F006 | a field read or set on a value that is not a record and not empty, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program |
 | F007 | a native given a position that is not a whole number of 0 or more |
 | F008 | a native given places that are not a whole number from 0 to 10 |
 | F009 | `pad_left` given a width that is not a whole number of 0 or more, or padding that is not one character |
@@ -818,6 +849,7 @@ words given to `print`, and a fault or none.
 | F019 | the machine stopped on something else (a machine fault) |
 | F022 | a function called through a name that holds none |
 | F020 | an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[2].name = v` when xs holds 2): a program fault |
+| F023 | empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value |
 
 ## 14. The standard library
 
@@ -826,17 +858,22 @@ words given to `print`, and a fault or none.
   arguments use (§9.4): `round(n, places: 2)`. A parameter shown `= v` has that default.
 - 14.0.2. **Text parameters** (`text`) take any words: text, or an option (§3.6). A result
   `text` is `text`.
-- 14.0.3. **Empty.** Unless the entry says otherwise: an empty text argument is treated as no characters; a function
-  whose result is a number or a date, given an empty number or date, gives empty; one whose result is text gives
-  the text it would for no characters (`upper(empty)` is empty).
-- 14.0.3.1. **Checking comes before empty.** A function first checks its control arguments — positions, places,
-  widths, paddings, patterns, separators where stated — and faults when one is wrong, whether or not its main
-  argument is empty; only then does an empty main argument give empty. So `format(empty, "invalid")` is F010 and
-  `grouped(empty, 2.5)` is F008. An empty control argument is wrong (F007, F008, F009, F010) unless the entry gives it a
-  meaning.
+- 14.0.3. **Empty.** A function needs a value for every parameter: an empty argument is F023, naming the function
+  and the parameter (`empty where words are needed: upper's t`); `upper(name ?? "")` gives it one. Only these take
+  empty: `either` (both), `filled` (its list: `filled(empty)` is a list with no items), `text_of` (no characters),
+  `print`, `fail`'s message (no words), the `x` of `index_of`, `append` and `without`, the key of `has` and
+  `remove` (no key is empty), and `sorted`'s `descending` (empty counts as no). An empty item in a list is another
+  matter: `join`, `first`, `last`, `filled`, `count`, `reversed`, `index_of`, `without`, `any` and `all` take a
+  list that holds empty items; `sorted`, `sum`, `smallest` and `largest` need every item (F023). Words of no
+  characters and a list with no items are values (§3.2): `upper("")` is `""` and `count([])` is 0.
+- 14.0.3.1. **Empty comes before checking.** A function first refuses an empty argument (F023), the first one in
+  the order of its parameters; then it checks its control arguments — positions, places, widths, paddings,
+  patterns — and faults when one is wrong. So `format(empty, "invalid")` and `grouped(empty, 2.5)` are F023, and
+  `format(today(), "invalid")` is F010.
 - 14.0.4. **Positions** are whole numbers of 0 or more, the first character, line, word or item at 0 (F007
-  otherwise, empty included); characters are Unicode code points. A position past the end gives empty, or fewer
-  characters. A function that gives a position gives -1 when there is none.
+  otherwise; an empty one is F023); characters are Unicode code points. A function that gives the one character,
+  line or word at a position gives empty when the position is past the end; one that gives a range gives fewer
+  characters, or none. A function that gives a position gives -1 when there is none.
 - 14.0.5. Answer conversion never faults (§8.7). Operations and functions using the converted value can fault
   under their own rules, including the control-argument checks of §14.0.3.1: `divide(1, n)` faults when an answer
   supplies zero. A program's own mistake that the compiler cannot see faults too (§13.4).
@@ -859,28 +896,28 @@ words given to `print`, and a fault or none.
 | `trim_start(t: text) -> text`, `trim_end(t: text) -> text` | white space off the start, off the end |
 | `remove_prefix(t: text, prefix: text) -> text` | t without prefix at its start, when it starts so (case as written); else t |
 | `remove_suffix(t: text, suffix: text) -> text` | the same at the end |
-| `length(t: text) -> number` | how many characters; empty: 0 |
-| `chars(t: text, from: number, to: number) -> text` | characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty |
-| `character(t: text, n: number) -> text` | the character at position n of t, the same separators left out |
-| `slice(t: text, from: number, to: number) -> text` | characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty; list slices keep their own rule (§6.9.3) |
+| `length(t: text) -> number` | how many characters; no characters: 0 |
+| `chars(t: text, from: number, to: number) -> text` | characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters |
+| `character(t: text, n: number) -> text` | the character at position n of t, the same separators left out; n past the end: empty |
+| `slice(t: text, from: number, to: number) -> text` | characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters; list slices keep their own rule (§6.9.3) |
 | `digits(t: text) -> text` | only the digits 0–9 |
 | `letters(t: text) -> text` | only the letters (Unicode) |
-| `is_digits(t: text) -> yes-no` | yes when t is not empty and every character is 0–9 |
-| `is_letters(t: text) -> yes-no` | yes when t is not empty and every character is a letter |
-| `replace(t: text, part: text, with: text) -> text` | every part replaced by with, left to right, not overlapping; part empty: t |
-| `contains(t: text, part: text) -> yes-no` | whether part is in t, as written (`contains(lower(t), "llc")` to ignore case); part empty: yes |
+| `is_digits(t: text) -> yes-no` | yes when t has a character and every character is 0–9 |
+| `is_letters(t: text) -> yes-no` | yes when t has a character and every character is a letter |
+| `replace(t: text, part: text, with: text) -> text` | every part replaced by with, left to right, not overlapping; part of no characters: t |
+| `contains(t: text, part: text) -> yes-no` | whether part is in t, as written (`contains(lower(t), "llc")` to ignore case); part of no characters: yes |
 | `starts_with(t: text, part: text) -> yes-no`, `ends_with(t: text, part: text) -> yes-no` | the same at the start, at the end |
-| `find(t: text, part: text) -> number` | the position of the first part in t; -1 when it is not there or part is empty |
-| `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping; 0 when part is empty |
-| `split(t: text, separator: text) -> list of text` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character |
-| `line(t: text, n: number) -> text` | the line at position n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
-| `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |
+| `find(t: text, part: text) -> number` | the position of the first part in t; -1 when it is not there or part has no characters |
+| `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping; 0 when part has no characters |
+| `split(t: text, separator: text) -> list of text` | t cut at every separator (case as written), pieces kept even when they have no characters (`split("a,,b", ",")` is `["a", "", "b"]`); t of no characters: a list with no items; separator of no characters: each character |
+| `line(t: text, n: number) -> text` | the line at position n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays; n past the last line: empty |
+| `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts the last line it starts: `line_count("a\n")` is 2; no characters: 0 |
 | `rest_lines(t: text) -> text` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
-| `word(t: text, n: number) -> text` | the word at position n of t, words split on runs of spaces and tabs |
-| `word_count(t: text) -> number` | how many words; empty: 0 |
+| `word(t: text, n: number) -> text` | the word at position n of t, words split on runs of spaces and tabs; n past the last word: empty |
+| `word_count(t: text) -> number` | how many words; no characters: 0 |
 | `pad_left(t: text, width: number, padding: text = " ") -> text` | padding put before t until it is width characters; t at least width long: t. width a whole number of 0 or more and padding exactly one character, else F009 |
-| `text_of(v: any) -> text` | v's words (§3.5); a list or record is S367 |
-| `number_of(t: text) -> number` | the number t holds by §8.7, or empty |
+| `text_of(v: any) -> text` | v's words (§3.5); empty: no characters; a list or record is S367 |
+| `number_of(t: text) -> number` | the number t holds by §8.7, or empty when it holds none |
 
 ### 14.2 Numbers
 
@@ -892,8 +929,8 @@ words given to `print`, and a fault or none.
 | `whole(n: number) -> number` | n with its fraction cut off, towards zero |
 | `abs(n: number) -> number` | n without its sign |
 | `power(n: number, k: number) -> number` | n multiplied by itself k times, k a whole number from -10000 to 10000 (F008 otherwise); k below 0: 1 over that; k 0: 1 |
-| `min(a: number, b: number) -> number`, `max(a: number, b: number) -> number` | the smaller, the larger; one empty: the other; both: empty |
-| `grouped(n: number, places: number = 0) -> text` | n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008; empty: empty |
+| `min(a: number, b: number) -> number`, `max(a: number, b: number) -> number` | the smaller, the larger |
+| `grouped(n: number, places: number = 0) -> text` | n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008 |
 | `fixed(n: number, places: number = 0) -> text` | the same without separators: `1234.50` |
 | `divide(a: number, b: number) -> number` | `a / b` (§6.4, F001) |
 | `remainder(a: number, b: number) -> number` | `a % b` (§6.4, F002) |
@@ -905,7 +942,7 @@ words given to `print`, and a fault or none.
 | `today() -> date` | §13.3 |
 | `date_of(year: number, month: number, day: number) -> date` | that day; no such day, or a part not whole: empty |
 | `year(d: date) -> number`, `month(d: date) -> number`, `day(d: date) -> number` | its parts |
-| `format(d: date, pattern: text) -> text` | pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010; d empty: empty |
+| `format(d: date, pattern: text) -> text` | pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010 |
 | `days_between(from: date, to: date) -> number` | days from from to to (negative when to is earlier) |
 | `years_between(from: date, to: date) -> number` | whole years from from to to: an age on a day. When to ≥ from, the number of anniversaries of from that fall on or before to, where an anniversary on a day the year lacks (29 February in a common year) falls on the last day of that month (28 February). When to < from, minus `years_between(to, from)`: the count goes towards zero, and swapping the arguments changes only the sign. 2000-02-29 → 2001-02-28 is 1; 2000-02-29 → 2004-02-29 is 4; 2023-07-01 → 2024-06-30 is 0; 2024-06-30 → 2023-07-01 is 0 (not −1); 2024-07-01 → 2023-07-01 is −1 |
 | `add_days(d: date, n: number) -> date` | the day n days after d, n cut towards zero; outside 0001–9999 F011 |
@@ -919,19 +956,19 @@ entry says "or a set" (its items are then options).
 | Signature | Gives |
 |---|---|
 | `count(l: list of T or set) -> number` | how many items, or options chosen |
-| `join(l: list of T or set, separator: text = ", ") -> text` | T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out) |
+| `join(l: list of T or set, separator: text = ", ") -> text` | T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out); no items: no characters |
 | `first(l: list of T or set) -> T`, `last(l: list of T or set) -> T` | the first, the last item; empty when there is none |
-| `filled(l: list of T) -> list of T` | the items that are not empty, in order |
+| `filled(l: list of T) -> list of T` | the items that are not empty, in order; `""` and `[]` are not empty and stay; l empty: a list with no items |
 | `index_of(l: list of T, x: T) -> number` | the position of the first item equal to x (§6.6); -1 when none |
 | `append(l: list of T, x: T) -> list of T` | the list with x after its last item |
 | `without(l: list of T, x: T) -> list of T` | the list without the items equal to x |
 | `reversed(l: list of T) -> list of T` | the items in the other order |
-| `sorted(l: list of T, descending: yes-no = no) -> list of T` | T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order; **empty items come last**, in their order, ascending or descending |
-| `sorted(l: list of R, by: "field", descending: yes-no = no) -> list of R` | R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order, items whose field is empty (and empty items) last |
-| `sum(l: list of number) -> number` | the items added up, an empty item counting as 0; no items: 0 |
-| `smallest(l: list of T) -> T`, `largest(l: list of T) -> T` | T a number, a date or words: the least, the greatest of the items that are not empty; none: empty |
-| `any(l: list of yes-no) -> yes-no` | yes when some item is yes (an empty item counts as no); an empty list: no |
-| `all(l: list of yes-no) -> yes-no` | yes when every item is yes; an empty list: yes |
+| `sorted(l: list of T, descending: yes-no = no) -> list of T` | T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`) |
+| `sorted(l: list of R, by: "field", descending: yes-no = no) -> list of R` | R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; an empty item, or one whose field is empty, is F023 |
+| `sum(l: list of number) -> number` | the items added up; no items: 0; an empty item is F023 (`sum(filled(l))`) |
+| `smallest(l: list of T) -> T`, `largest(l: list of T) -> T` | T a number, a date or words: the least, the greatest of the items; no items: empty; an empty item is F023 |
+| `any(l: list of yes-no) -> yes-no` | yes when some item is yes (an empty item counts as no); no items: no |
+| `all(l: list of yes-no) -> yes-no` | yes when every item is yes; no items: yes |
 | `union(a: S, b: S) -> S`, `intersection(a: S, b: S) -> S`, `difference(a: S, b: S) -> S` | a and b sets of one option set (S387); the options of a or b, of both, of a and not b; in declaration order (§3.8) |
 | `l + m` (an operator, not a function) | §6.5.1: l's items then m's, `list of` the join of the element types (§3.9) |
 
@@ -949,7 +986,7 @@ entry says "or a set" (its items are then options).
 
 | Signature | Gives |
 |---|---|
-| `either(a: T, b: T) -> T` | a when it is not empty, else b |
+| `either(a: T, b: T) -> T` | a when it is not empty, else b (`a ?? b`, §6.16, with both worked out) |
 | `fail(message: text)` | no value: fault F013 with the message |
 | `print(v: any)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only |
 
@@ -1164,7 +1201,7 @@ its call: the function's name in the call.
 | S333 | collect into something not a var | Declare `var l: list of T`. |
 | S334 | collect into something not a list | A collect fills a list. |
 | S335 | a collected list of lists or sets | Collect records or plain values. |
-| S336 | collect into a list that has items | A collected list starts empty. |
+| S336 | collect into a list that has items | A collected list starts with no items. |
 | S337 | a list collected twice | A list is collected once. |
 | S338 | the program returning a value | The program gives no value; `return` ends it. |
 | S339 | a bare return where the others give a value | Every return gives a value. |
@@ -1218,7 +1255,7 @@ its call: the function's name in the call.
 | S389 | a parameter given twice | Once, positionally or by name. |
 | S390 | a positional argument after a named one | Positional first. |
 | S392 | a required parameter after one with a default | Defaults come last. |
-| S394 | a conditional whose two values' types have no join | `if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none. |
+| S394 | a conditional or a `??` whose two values' types have no join | `if c then a else b` and `a ?? b` take the join of a's and b's types (§3.9); a number and words have none. |
 | S396 | a slice bound that is not a number | `l[a..b]`, `l[a..<b]`, numbers. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
@@ -1535,7 +1572,7 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 
 ## 18. Bytecode
 
-18.1. Version 6. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
+18.1. Version 7. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
 it does not know; a section that holds more or fewer bytes than it says is refused. The program and code sections
 must be there, each once; a tag that comes twice is refused. The places section may be left out: then no fault
 has a source place. The compiler always writes it. Sections may come in any order.

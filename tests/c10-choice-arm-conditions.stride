@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 ask t: text "T"
 ask d: date "D"
-fill "L" = if n > 5 then "high" else "low"
+fill "L" = if (n ?? 0) > 5 then "high" else "low"
 fill "M" = if t == "a" then t else empty
 fill "P" = if d == date_of(2026, 1, 2) then "{d}" else empty
 fill "Q" = if t != "a" then t else empty

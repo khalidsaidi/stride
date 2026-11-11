@@ -47,7 +47,7 @@ export function test() {
     expect(["nosuch"], 2, "", /^stride: no command nosuch\n/);
 
     // Answers.
-    writeFileSync(join(dir, "greet.stride"), 'options colour {\n  "red" "Red"\n  "green" "Green"\n  "blue" "Blue"\n}\nask name: text "Your name"\nask likes: any-of colour "Colours you like"\nask fav: one-of colour "Your favourite"\nask tea: yes-no "Tea?"\nprint("{either(name, "nobody")}: {join(likes)}; {either(fav, "none")}; {either(tea, no)}")\n');
+    writeFileSync(join(dir, "greet.stride"), 'options colour {\n  "red" "Red"\n  "green" "Green"\n  "blue" "Blue"\n}\nask name: text "Your name"\nask likes: any-of colour "Colours you like"\nask fav: one-of colour "Your favourite"\nask tea: yes-no "Tea?"\nprint("{name ?? "nobody"}: {join(likes ?? [])}; {fav ?? "none"}; {tea ?? no}")\n');
     expect(["run", "greet.stride", "name=Ada", "likes=red,blue", "fav=green", "tea=yes"], 0, "Ada: red, blue; green; yes\n", "");
     writeFileSync(join(dir, "a.json"), JSON.stringify({ name: "Bo", likes: ["green"] }));
     expect(["run", "greet.stride", "a.json"], 0, "Bo: green; none; no\n", "");

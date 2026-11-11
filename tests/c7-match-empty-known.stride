@@ -15,4 +15,4 @@ for i in 1..f() {
 }
 print(n)
 # rule 7.10 6.6
-# prints ["1"]
+# prints ["5"]

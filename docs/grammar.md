@@ -63,10 +63,11 @@ Numbers are exact: `0.1 + 0.2 == 0.3` is yes; `+ - *` round to 34 digits only pa
 quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;
 an id with leading zeros is words in quotes, §2.5).
 
-Every value may also be empty: an answer not given yet. `empty` is the empty value of any type; `x is empty`
-and `x is not empty` test it (§3.2). In a condition an empty yes-no counts as no; `< <= > >=` with an empty
-value is no; words joined with an empty value are the other words; a number added to an empty value is the
-number; `- * / // %` with an empty value give empty (§6.3).
+Every value may also be empty: no value, an answer not given yet. `empty` is the empty value of any type; `x is
+empty` and `x is not empty` test it, and `x ?? y` gives y in its place (§3.2, §6.16). `""`, `[]` and `{}` are
+values, not empty. In a condition empty counts as no; `"{x}"` and `fill` put in no characters for it; `==`
+compares it. Anything else that needs a value — arithmetic, `< <= > >=`, joining with `+`, a field, an item, a
+slice, `for each`, a library function — stops the run when it is given empty (fault F023, §6.3).
 
 A list or a record is a value, not a place: `var b = a` copies, and a function given a list changes only its
 copy (§3.4).
@@ -127,7 +128,7 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `… default e` | the value the answer has until the person answers; once they answer, even with nothing, it does not come back (§8.4.1) |
 | `… check c "message"` | a condition the answer should meet; when it does not, the page shows the message (the answer stays); an empty answer is not checked |
 | `let name = e`, `let name: type = e` | a name for a value that does not change |
-| `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list or record starts empty, anything else must be given a value before it is read |
+| `var name = e`, `var name: type`, `var name: type = e` | a name for a value that may change; without a value, a list starts with no items, a map with no keys and a record empty; anything else must be given a value before it is read |
 | `name = e`, `name.field = e`, `name[i] = e` | gives a var, its field or its item a new value |
 | `x += e`, `-=`, `*=`, `/=` | `x = x + e`, with x's place worked out once (§7.5) |
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
@@ -177,7 +178,7 @@ for each n, r in representatives {
 ```
 
 `collect` asks the first item (n is 0), then the quoted yes-no question; a yes asks the next item, and a no ends it. An item
-enters the list when its block ends (§8.5.1). A list that may stay empty (trips abroad, arrests) asks first
+enters the list when its block ends (§8.5.1). A list that may hold no items (trips abroad, arrests) asks first
 whether there are any:
 
 ```
@@ -186,13 +187,13 @@ collect t in trips any "Did you take any trips outside the United States?" anoth
 }
 ```
 
-A no leaves the list empty. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
+A no leaves the list with no items. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
 the turns of any loops around the collect after them: `trips#any[2]` (§8.6.2). The items are answers: a program
-cannot change them. A list is collected once, into a var declared as an empty list of records or plain values.
+cannot change them. A list is collected once, into a var declared as a list of records or plain values, with no items.
 
 ## Expressions
 
-Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `== != < <= > >=`, `in`, `not in`,
+Loosest first (§6.1): `if c then a else b`; `??`; `or`; `and`; `not`; comparisons `== != < <= > >=`, `in`, `not in`,
 `is empty`, `is not empty` (they do not chain); `+ -`; `* / // %`; unary `-`; then `.field`, `[n]` (from 0),
 `[a..b]`, `[a..<b]` and calls; then values: numbers, `"words"`, `yes`, `no`, `empty`, names, `[a, b]`,
 `[e for each x in l if c]`, `new record { field: e, … }`, `( … )`.
@@ -203,6 +204,8 @@ Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `==
 - `==` and `!=` compare values of one type; an option is compared with one of its own values, checked.
 - `"x" in s` asks whether an option is among those of a set of options, or a value among a list's items.
 - `and` and `or` decide on the left when they can; the right is then not worked out. They always give yes or no.
+- `a ?? b` is a when a is not empty, else b; b is worked out only then. It chains from the left, and its type is
+  the join of a's and b's (§6.16): `fill "Total" = amount ?? 0`, `upper(name ?? "")`.
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
 - `l[n]` is the item at position n, the first at 0; a position outside the list is a fault (§6.9.2). `l[a..b]`
   is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for each r in reps if r.copies]` makes a list (§6.12).
@@ -221,7 +224,7 @@ item of a list it answers (`representatives[0].name` for the first), or after th
 
 ## The standard library
 
-`lib/std.stride`, used by every file; §14 gives every signature and what each does with empty. Words: `upper
+`lib/std.stride`, used by every file; §14 gives every signature; a function given empty where it needs a value is fault F023 (§14.0.3). Words: `upper
 lower title capitalize trim trim_start trim_end remove_prefix remove_suffix length chars character slice digits
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
 rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs power min max grouped
@@ -272,7 +275,7 @@ assembler).
 
 ## Bytecode
 
-Version 6 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 7 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),

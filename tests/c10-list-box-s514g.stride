@@ -2,6 +2,6 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 options st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
 ask o: one-of st "State"
-fill "L" = upper(lower(o))
+fill "L" = upper(lower(o ?? ""))
 # rule 10.3
 # box L choice:NY,CA,TX near State New York California Texas

@@ -1,0 +1,49 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask y: yes-no "Y"
+ask t: text "T"
+ask n: number "N"
+ask d: date "D"
+ask q: number "Q" check q > 0 "More than none"
+if y {
+  print("if")
+} else {
+  print("else")
+}
+var turns = 0
+while y and turns < 2 {
+  turns += 1
+}
+print(turns)
+print(y and yes)
+print(y or no)
+print(not y)
+print(if y then "a" else "b")
+print([x for each x in [1, 2] if y])
+tick "Tick" when y
+pick "Pick" "A" when y
+pick "Pick" "B" when not y
+fill "Words" = "[{t}|{n}|{d}|{y}]"
+fill "Blank" = t
+fill "Number" = n
+print(t)
+print("{t}" == "")
+print("{t}" is empty)
+print(text_of(n) == "")
+print(join([t, "x", text_of(n)], "-"))
+# rule 3.5 6.10 6.15 6.15.1 7.6 7.7 7.8 8.4.1 14.5
+# box Tick check near Y
+# box Pick radio:A near Y
+# box Pick radio:B near Y
+# box Words text near T
+# box Blank text near T
+# box Number text near N
+# run empty
+# prints ["else", "0", "no", "no", "yes", "b", "[]", "", "yes", "no", "yes", "-x-"]
+# boxes {"Words": "[|||]", "Pick": "B"}
+# steps [{"key": "y", "value": null}, {"key": "t", "value": null}, {"key": "n", "value": null}, {"key": "d", "value": null}, {"key": "q", "value": null, "failed": []}]
+# run given
+# answers {"y": true, "t": "w", "n": 3, "d": "2026-01-02", "q": 0}
+# prints ["if", "2", "yes", "yes", "no", "a", "[1, 2]", "w", "no", "no", "no", "w-x-3"]
+# boxes {"Tick": "Yes", "Pick": "A", "Words": "[w|3|2026-01-02|yes]", "Blank": "w", "Number": "3"}
+# steps [{"key": "y", "value": "yes"}, {"key": "t", "value": "w"}, {"key": "n", "value": 3}, {"key": "d", "value": "2026-01-02"}, {"key": "q", "value": 0, "failed": ["More than none"]}]

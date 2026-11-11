@@ -9,11 +9,11 @@ define a(x: number) -> number {
 for i in a(n)..a(m) {
   print("t{i}")
 }
-# rule 7.11
+# rule 7.11 F004 F023
 # run the first bound empty faults before the second is worked out
 # answers {"m": 2}
 # prints ["a"]
-# fault F004
+# fault F023 at 9:10 empty where a number is needed: a loop's bound
 # run the second bound not whole faults after both are worked out
 # answers {"n": 1, "m": 2.5}
 # prints ["a", "a"]

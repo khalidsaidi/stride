@@ -7,9 +7,9 @@ for i in 1..2 {
     continue
   }
 }
-# rule 19.1 13.4 F009
+# rule 19.1 13.4 F023
 # run unanswered
-# fault F009 at 6:13
+# fault F023 at 6:13
 # run answered
 # answers {"q": "3"}
 # boxes {"L1": "1", "L2": "2"}

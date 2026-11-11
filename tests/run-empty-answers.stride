@@ -3,6 +3,12 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask a: text "A"
 ask n: number "N"
 fill "A" = "[{a}][{n}]"
-fill "B" = a + "x"
-# boxes {"A": "[][]", "B": "x"}
-# rule 3.2 6.3 6.10
+fill "B" = a
+fill "C" = (a ?? "") + "x"
+fill "D" = a + "x"
+# rule 3.2 3.5 6.3 6.10 7.6 F023
+# run empty
+# fault F023 at 8:14 empty where words are needed: the left side of +
+# run given
+# answers {"a": "w", "n": 1}
+# boxes {"A": "[w][1]", "B": "w", "C": "wx", "D": "wx"}

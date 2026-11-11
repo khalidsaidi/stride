@@ -107,7 +107,7 @@ function starter(name, header, withQuestion = true) {
 const SCRIPT = (name) => `# ${name}: a script. It has no form line, so it writes no boxes; \`stride new ${name} --pdf <file.pdf>\` starts a
 # program that fills a form.
 ask name: text "Your name"
-print("Hello, {either(name, "there")}")
+print("Hello, {name ?? "there"}")
 `;
 
 // Makes <name>.stride, <name>.tests/first.json and, with a PDF, <name>.boxes.json and <name>.pdf beside it. Gives

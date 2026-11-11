@@ -885,7 +885,7 @@ function writing(path, write) {
 // changes, by name (§17). The trace is called before each instruction runs, so a line is printed when the next
 // one starts, once what it changed is known.
 function traceTo(p) {
-  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : textOf(v) || "empty");
+  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 20 ? `${v.slice(0, 20)}…` : v) : Array.isArray(v) ? `[${v.length}]` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
   const snap = (v) => JSON.stringify(v ?? null);
   let pending = null;
   const flush = () => {
@@ -908,7 +908,7 @@ function traceTo(p) {
 // a function with its arguments and what it gives back; each call of the library with what it gives. A loop's own
 // bookkeeping (its counter going up, its item taken) is not a statement of the program and is not shown as one.
 function sourceTrace() {
-  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : textOf(v) || "empty");
+  const shown = (v) => (typeof v === "string" ? JSON.stringify(v.length > 40 ? `${v.slice(0, 40)}…` : v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : v === null || v === undefined ? "empty" : textOf(v));
   const snap = (locals) => new Map([...locals].map(([l, v]) => [l, JSON.stringify(v ?? null)]));
   const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");
   const frames = [];

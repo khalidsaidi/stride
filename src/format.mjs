@@ -57,7 +57,7 @@ export function comments(text) {
 }
 
 // How tightly each operator binds (§6.1): `if … then … else` loosest (0), a field, a position or a call tightest (8).
-const PRECEDENCE = { or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "is-empty": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7 };
+const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "is-empty": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7 };
 
 export function format(text, name = "program.stride") {
   const diagnostics = new Diagnostics();

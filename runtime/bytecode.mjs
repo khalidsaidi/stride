@@ -1,4 +1,4 @@
-// Stride's bytecode, version 5 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 7 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -6,7 +6,7 @@
 //    2 numbers    every number constant, as its words (§3.3.5): exact, never a binary float
 //    3 program    the form's id, the PDF's sha256, the prefix of its field names
 //    4 boxes      each box the program writes: its name, how (fill, tick, pick), its export value
-//    5 records    each record type: its name, its fields' names and which of them are lists
+//    5 records    each record type: its name, its fields' names and what each starts as (empty, a list, a map)
 //    6 questions  each question as written: its name, type, option set, options, flags, line, file
 //    7 natives    the natives the code calls: name and how many values each takes
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, whether it takes its call's key
@@ -19,8 +19,10 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 6;
+export const VERSION = 7;
 
+// What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
+export const FIELD_STARTS = [null, "list", "map"];
 export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, LINKS: 11 };
 
 export const QUESTION_TYPES = ["text", "long-text", "number", "date", "phone", "email", "yes-no", "one-of", "any-of"];
@@ -39,7 +41,7 @@ export const OP = {
   POP: 8,
   DUP: 9,
   NEW_RECORD: 10, // v record type: push a record with every field empty
-  GET_FIELD: 11, // v field: pop a record, push its field (empty of an empty record; F006 of anything else)
+  GET_FIELD: 11, // v field: pop a record, push its field (F023 of empty; F006 of anything else that is no record)
   SET_FIELD: 12, // v field: pop a value, pop a record, set the field to a copy of the value
   NEW_LIST: 13, // v count: pop that many values, push a list of them
   GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004)
@@ -80,8 +82,8 @@ export const OP = {
   FLOOR_DIV: 50,
   MOD: 51,
   GET_ITEM_THERE: 53, // pop a position, pop a list, push the item, which must be there (§7.5.1: F004, F020)
-  ENSURE_RECORD: 54, // v local, v record type: an empty local becomes an empty record of the type (§7.5.1)
-  ENSURE_FIELD: 55, // v field, v record type: an empty field of the record on top becomes an empty record
+  ENSURE_RECORD: 54, // v local, v record type: an empty local becomes a record of the type (§7.5.1)
+  ENSURE_FIELD: 55, // v field, v record type: an empty field of the record on top becomes a record
   ENSURE_ITEM: 56, // v record type: an empty item at the position on top (of the list below it) becomes a record
   SLICE: 57, // pop b, pop a, pop a list: push its items a to b (§6.9.3)
   TO_BOOL: 59, // pop a value, push yes when it is yes, else no (§6.15.1)
@@ -278,13 +280,13 @@ export function load(input) {
         p.boxes = list(() => ({ name: t(s), kind: one(s, WRITES, "the way of writing a box"), on: opt(s) }));
         break;
       case SECTION.RECORDS:
-        // Each field: its name, then 1 for a list (what a record made on the way to a field starts with, §7.5.1),
-        // 0 for anything else.
+        // Each field: its name, then what it starts as in a record made on the way to a field (§7.5.1): 1 a list
+        // with no items, 2 a map with no keys, 0 empty.
         p.records = list(() => {
-          const r = { name: t(s), fields: [], lists: [] };
+          const r = { name: t(s), fields: [], starts: [] };
           for (let k = s.varint(); k > 0; k--) {
             r.fields.push(t(s));
-            r.lists.push(one(s, [false, true], "whether a field is a list"));
+            r.starts.push(one(s, FIELD_STARTS, "what a field starts as"));
           }
           return r;
         });
@@ -582,7 +584,7 @@ export function assemble({ texts = [], numbers = [], natives = [], boxes = [], r
   section(SECTION.NUMBERS, (w) => (w.varint(numbers.length), numbers.forEach((n) => w.varint(T(n)))));
   section(SECTION.PROGRAM, (w) => (w.varint(T(form)), w.varint(T(pdf)), w.varint(T(prefix))));
   section(SECTION.BOXES, (w) => (w.varint(boxes.length), boxes.forEach((b) => (w.varint(T(b.name)), w.u8(WRITES.indexOf(b.kind)), w.varint(b.on ? T(b.on) + 1 : 0)))));
-  section(SECTION.RECORDS, (w) => (w.varint(records.length), records.forEach((r) => (w.varint(T(r.name)), w.varint(r.fields.length), r.fields.forEach((f, i) => (w.varint(T(f)), w.u8(r.lists?.[i] ? 1 : 0)))))));
+  section(SECTION.RECORDS, (w) => (w.varint(records.length), records.forEach((r) => (w.varint(T(r.name)), w.varint(r.fields.length), r.fields.forEach((f, i) => (w.varint(T(f)), w.u8(Math.max(0, FIELD_STARTS.indexOf(r.starts?.[i] ?? null)))))))));
   section(SECTION.NATIVES, (w) => (w.varint(natives.length), natives.forEach((n) => (w.varint(T(n.name)), w.varint(n.params)))));
   section(SECTION.FUNCTIONS, (w) => {
     w.varint(fns.length);

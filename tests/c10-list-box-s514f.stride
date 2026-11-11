@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 options st { "NY" "New York"  "CA" "California"  "TX" "Texas" }
 ask o: one-of st "State"
 ask p: one-of st "P"
-let u = lower(o)
+let u = lower(o ?? "")
 fill "L" = upper(u)
 var w: text = p
 w = "{w}"

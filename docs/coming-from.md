@@ -10,7 +10,9 @@ idioms, the differences, and what to write instead. Every example here is run by
 | You know | In Stride |
 |---|---|
 | `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is worked out by the compiler |
-| `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`, `either(x, 0)` |
+| `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
+| `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is empty; `""`, `0` and `[]` are not empty |
+| `if x:`, `if (x)` on a value that may be null | `if x { }` for a yes-no: empty counts as no; `if x is not empty { }` for anything else |
 | `true`, `false` | `yes`, `no` |
 | `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
 | `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
@@ -60,27 +62,41 @@ print(a)
 
 `==` compares values, items and fields included, the way Python's `==` does on lists: `[1, 2] == [1, 2]` is `yes`.
 
-## Empty instead of null
+## Empty is null
 
-There is no null that fails when you touch it. Every type has `empty`: an unanswered question, a field never set, a
-key a map does not have. Arithmetic with empty does what a form's empty box needs: `+` gives the other side,
-other operations give empty, and empty is `no` in a condition. There is no `NullPointerException`; there is `is empty`.
+`empty` is what `None`, `null`, `nil` and `undefined` are: no value. Every type has it: an unanswered question, a
+field never set, a key a map does not have. It is apart from the values that hold nothing: `""` is words, `[]` a
+list, and neither is empty. As in Python, Java and Swift, computing with it stops the run (fault F023, the
+`TypeError` or `NullPointerException` of Stride): arithmetic, `<`, a field, an item, `for each`, a library function
+all need a value. What takes it: `==`, `is empty`, a condition (empty counts as `no`, as `None` is falsy), words
+with values (`"{x}"` puts in nothing, as C# does) and `fill`. `x ?? y` gives a value in its place, as in JavaScript,
+C# and Swift; there is no `?.`: write `if r is not empty`.
 
 ```stride
 let price: number = empty
-print(price + 5)
 print(price is empty)
-print(either(price, 0))
+print(price ?? 0)
+print((price ?? 0) + 5)
+print("" == empty)
+print(count([]))
 let ages: map of text to number = {"Ada": 36}
 print(ages["Bo"] is empty)
-print(either(ages["Bo"], 0))
+print(ages["Bo"] ?? 0)
+try {
+  print(price + 5)
+} catch why {
+  print(why)
+}
 ```
 ```output
+yes
+0
 5
-yes
+no
 0
 yes
 0
+empty where a number is needed: the left side of +
 ```
 
 ## Positions count from 0

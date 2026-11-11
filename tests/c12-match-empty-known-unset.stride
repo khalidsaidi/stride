@@ -1,8 +1,8 @@
-let s: text = empty
+let s = ""
 var x: number
 match s {
   "" => {
-    print("empty")
+    print("no characters")
   }
   else => {
     x = 1

@@ -1,7 +1,7 @@
 // Stride's values as the machine and the intermediate form's interpreter hold
 // them (docs/spec.md §3). One definition, so a program means the same in every engine:
 //
-//   empty            null (every type's empty, §3.2; "" and a list or set with no items are empty too)
+//   empty            null: no value (§3.2); "" and a list, set or map that holds nothing are values, not empty
 //   words            a string (text, long-text, phone, email, an option's value)
 //   number           a Decimal (runtime/decimal.mjs): exact, 34 significant digits
 //   date             a StrideDate: its day, written YYYY-MM-DD
@@ -72,11 +72,19 @@ export class StrideRecord {
   }
 }
 
-// A record made where a place on the way to a field holds empty (§7.5.1): every field empty, a list field a list
-// with no items, so an item can be set in it. `lists` tells, for each field, whether it is a list.
-export const emptyRecord = (name, lists, names) => new StrideRecord(name, lists.map((l) => (l ? [] : null)), names);
+// A record made where a place on the way to a field holds empty (§7.5.1), as `new R { }` makes it (§6.14): every
+// field empty, but a list field a list with no items and a map field a map with no keys. `starts` tells, for each
+// field, which: "list", "map" or null.
+export const emptyRecord = (name, starts, names) => new StrideRecord(name, starts.map((k) => (k === "list" ? [] : k === "map" ? new StrideMap() : null)), names);
 
-export const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0) || (v instanceof StrideMap && v.entries.size === 0);
+export const isEmpty = (v) => v === null || v === undefined;
+
+// The fault of empty standing where a value is needed (§6.3): the kind of value needed, and what was empty.
+export function needed(kind, what) {
+  throw new StrideFault("F023", `empty where ${kind} needed: ${what}`);
+}
+// The kind of value an operation needs, told by the value beside the empty one.
+export const kindOf = (v) => (isNumber(v) ? "a number is" : typeof v === "string" ? "words are" : isDate(v) ? "a date is" : isSet(v) ? "a set is" : Array.isArray(v) ? "a list is" : v instanceof StrideMap ? "a map is" : v instanceof StrideRecord ? "a record is" : "a value is");
 export const isNumber = (v) => v instanceof D.Decimal;
 
 // A map (§3.10): values under keys, in the order the keys were first given. A key is told from another by its
@@ -87,13 +95,13 @@ export class StrideMap {
     for (const [k, v] of pairs) this.set(k, v);
   }
   get(k) {
-    return this.entries.get(words(k))?.[1] ?? null;
+    return isEmpty(k) ? null : this.entries.get(words(k))?.[1] ?? null;
   }
   has(k) {
-    return this.entries.has(words(k));
+    return !isEmpty(k) && this.entries.has(words(k));
   }
   set(k, v) {
-    if (isEmpty(k)) throw new StrideFault("F004", "a map's key is empty");
+    if (isEmpty(k)) needed("a key is", "the key a value is put under");
     const w = words(k);
     const was = this.entries.get(w);
     if (was) was[1] = v;
@@ -102,7 +110,7 @@ export class StrideMap {
     }
   }
   remove(k) {
-    this.entries.delete(words(k));
+    if (!isEmpty(k)) this.entries.delete(words(k));
   }
   get pairs() {
     return [...this.entries.values()];
@@ -210,6 +218,24 @@ export const whole = (v) => (isNumber(v) ? D.toInt(v) : null);
 // the last, from above to gives none.
 export const sliced = (items, from, to) => items.slice(Math.max(0, from), Math.max(0, from, to + 1));
 
+// A slice's bounds (§6.9.3), both whole (F004), of a list or words that are there (F023).
+export function sliceBounds(l, a, b) {
+  if (isEmpty(l)) needed("a list is", "what [ .. ] takes items of");
+  if (isEmpty(a) || isEmpty(b)) needed("a number is", "a bound of [ .. ]");
+  const x = whole(a), y = whole(b);
+  if (x === null || y === null) throw new StrideFault("F004", "a slice's bounds are whole numbers");
+  return [x, y];
+}
+
+// A position read (§6.9.2): of a list or words that are there (F023), a whole number of 0 or more (F004).
+export function readPosition(l, i) {
+  if (isEmpty(l)) needed("a list is", "what [ ] takes an item of");
+  if (isEmpty(i)) needed("a number is", "the position in [ ]");
+  const n = whole(i);
+  if (n === null || n < 0) throw new StrideFault("F004", `position ${words(i)} is not a whole number of 0 or more`);
+  return n;
+}
+
 // The words of the fault for a whole position of 0 or more that names no item (§6.9.2).
 export const outside = (i, held, ofWords = false) => `position ${words(i)} is outside the ${ofWords ? `words: they hold ${held} character${held === 1 ? "" : "s"}` : `list: it holds ${held}`}`;
 export const num = (n) => D.fromInt(n);
@@ -230,7 +256,7 @@ export function expectation(faults, value, message, fault) {
 export function encode(v, recordNames = () => null) {
   if (isSet(v)) return `{${v.map((x) => encode(x)).join(",")}}`;
   if (Array.isArray(v)) return `[${v.map((x) => encode(x, recordNames)).join(",")}]`;
-  if (v === null || v === undefined || v === "") return "empty";
+  if (v === null || v === undefined) return "empty";
   if (isNumber(v)) return D.words(v);
   if (isDate(v)) return v.iso;
   if (typeof v === "boolean") return v ? "yes" : "no";

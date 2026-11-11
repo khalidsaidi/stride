@@ -4,8 +4,8 @@ record kid { age: number }
 var kids: list of kid
 collect n, k in kids "Another?" {
   ask k.age: number "Age"
-  pick "K{n}" "A" when k.age > 5
-  pick "K{n}" "B" when k.age <= 5
+  pick "K{n}" "A" when (k.age ?? 0) > 5
+  pick "K{n}" "B" when (k.age ?? 0) <= 5
 }
 # rule 10.3
 # box K0 radio:A near Age Another?

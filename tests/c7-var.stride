@@ -10,12 +10,16 @@ record person {
 }
 var p: person
 var l: list of text
+var m: map of text to number
 var n: number
 n = 3
-print(p.name is empty)
+print(p is empty)
+print(l is empty)
 print("{count(l)}")
+print(m is empty)
+print(count(m))
 print("{n}")
 
 # rule 7.4
 # run
-# prints ["yes", "0", "3"]
+# prints ["yes", "no", "0", "no", "0", "3"]

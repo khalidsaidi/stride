@@ -63,7 +63,7 @@ export const parseExact = (text) => JSON.parse(text, (k, v, context) => (typeof 
 export function canon(v) {
   if (Array.isArray(v)) return v.map(canon);
   if (v && typeof v === "object" && Array.isArray(v.fields)) return { [v.type]: v.fields.map(canon) };
-  if (v === null || v === undefined || v === "") return null;
+  if (v === null || v === undefined) return null;
   if (typeof v === "boolean") return v ? "yes" : "no";
   return textOf(v);
 }

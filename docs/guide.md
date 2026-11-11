@@ -38,7 +38,7 @@ in whichever of these ways suits (§17.12):
 ```stride answers={"name":"Ada","born":"1815-12-10"}
 ask name: text "Your name"
 ask born: date "Date of birth"
-print("Hello, {either(name, "there")}")
+print("Hello, {name ?? "there"}")
 print("You were born in {year(born)}.")
 ```
 ```output
@@ -100,6 +100,11 @@ ask agrees: yes-no "I agree to the terms"
 tick "agree" when agrees
 ```
 
+A question not answered yet holds empty (§3). `fill` leaves its box blank for it and `tick … when` leaves its box
+unticked, so this program runs before anything is answered. What is worked out from an answer needs the answer:
+`fill "initials" = upper(full_name)` is a fault until the name is given (F023, §11). Give it a value for the time
+being, `upper(full_name ?? "")`, or work it out only when the answer is there, `if full_name is not empty { … }`.
+
 A PDF's own names for its boxes are often a machine's (`topmostSubform[0].Page1[0].f1_05[0]`). Give such a box
 a name of your own once, as a constant, and use that name wherever the box goes (§7.9):
 
@@ -143,22 +148,32 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
 | `list of T` | any number of items | `[1, 2, 3]` |
 
-Every type also has **empty**: the value of a question not answered, a field not set. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
-the other side, other arithmetic gives empty, an order comparison with empty is `no`, and empty counts as `no` in a
-condition. Test for it with `is empty`, and replace it with `either`:
+Every type also has **empty**: no value, what a question not answered or a field not set holds, as `None` or
+`null` elsewhere. Words of no characters `""` and a list with no items `[]` are values, not empty. Empty is never a
+mistake to hold: it counts as `no` in a condition, `"{x}"` and `fill` put in no characters for it, and `==`
+compares it. Computing with it is a fault (F023, §6.3): arithmetic, an order, a field, an item, a library function
+all need a value. Test for it with `is empty`, and give a value in its place with `??`:
 
 ```stride
 let price: number = empty
-print(price + 5)
-print(price * 2 is empty)
-print(either(price, 0))
-print(either("", "none given"))
+print(price is empty)
+print(price ?? 0)
+print((price ?? 0) + 5)
+print("" is empty)
+print("price: {price}")
+try {
+  print(price + 5)
+} catch why {
+  print(why)
+}
 ```
 ```output
-5
 yes
 0
-none given
+5
+no
+price: 
+empty where a number is needed: the left side of +
 ```
 
 Numbers are exact decimals of up to 34 significant digits (§3.3), not binary floating point: `0.1 + 0.2` is `0.3`,
@@ -185,8 +200,8 @@ print(grouped(1234567.891, 2))
 
 ## 4. Expressions
 
-Arithmetic `+ - * / // %`, comparisons `== != < <= > >=`, `in` and `not in` for lists and sets, `is empty`, and
-`and`, `or`, `not`. Operands are worked out left to right, and `and` and `or` stop as soon as the left side decides
+Arithmetic `+ - * / // %`, comparisons `== != < <= > >=`, `in` and `not in` for lists and sets, `is empty`,
+`and`, `or`, `not`, and `a ?? b`: a, or b when a is empty (§6.16). Operands are worked out left to right, and `and` and `or` stop as soon as the left side decides
 (§6.2), so the right side of this `and` never divides by zero:
 
 ```stride
@@ -478,8 +493,9 @@ still running
 | a fault | as it runs, on some answers | the run stops; nothing it wrote counts; the page says so and keeps the answers |
 | a question's `check` that fails | as it runs | the page shows its message; the run goes on |
 | an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |
+| computing with empty (`total + 1`, `upper(name)` before the question is answered) | as it runs | fault F023; `total ?? 0`, `name ?? ""` or `if name is not empty` gives it a value |
 
-A program can also guard against faults before they happen (`if n != 0`, `either`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
+A program can also guard against faults before they happen (`if n != 0`, `??`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
 faults`, below).
 
 ## 13. Tests

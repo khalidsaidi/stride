@@ -1,0 +1,35 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+options s { "a" "A"  "b" "B" }
+record r { name: text, tags: list of text }
+ask t: text "T"
+ask u: text "U" default ""
+ask m: any-of s "M"
+ask k: any-of s "K" default []
+ask w: text "W" default "x"
+var l: list of number
+var who: r
+let made = new r { }
+print(t is empty)
+print(u is empty)
+print(m is empty)
+print(k is empty)
+print(w)
+print(l is empty)
+print(who is empty)
+print(made.name is empty)
+print(made.tags is empty)
+print(count(made.tags))
+# rule 8.7 8.4.1 7.4 6.14 3.2
+# run not answered
+# prints ["yes", "yes", "yes", "yes", "x", "no", "yes", "yes", "no", "0"]
+# run answered with nothing
+# answers {"t": "", "u": "", "m": [], "k": [], "w": ""}
+# prints ["yes", "yes", "yes", "yes", "", "no", "yes", "yes", "no", "0"]
+# run answered with what is no option
+# answers {"m": ["z"], "k": "z"}
+# prints ["yes", "yes", "yes", "yes", "x", "no", "yes", "yes", "no", "0"]
+# steps [{"key": "t"}, {"key": "u"}, {"key": "m", "value": null, "unreadable": "not among the options"}, {"key": "k", "value": null, "unreadable": "not among the options"}, {"key": "w"}]
+# run answered
+# answers {"t": "a", "m": ["b", "a"]}
+# prints ["no", "yes", "no", "yes", "x", "no", "yes", "yes", "no", "0"]

@@ -3,8 +3,10 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record op {
   f: function(number) -> number
 }
-var o: op
+var o = new op { }
 let h = o.f
+print(h is empty)
 print(h(1))
 # rule 9.10 F022
+# prints ["yes"]
 # fault F022

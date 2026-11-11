@@ -7,16 +7,12 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as textOf, isEmpty, num, whole, sliced, outside, copy, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as textOf, isEmpty, sliced, sliceBounds, readPosition, outside, copy, set, isSet } from "../runtime/values.mjs";
 
-// A value placed where `type` is expected, as the machine places it (§3.7.1, §3.8): empty where a list goes made
-// a list with no items, a list of options made the set.
+// A value placed where `type` is expected, as the machine places it (§3.6, §3.8): a list of options made the set.
 function placed(v, type) {
-  if (!type) return v;
-  if (type.t === "options" && (v === null || (Array.isArray(v) && !isSet(v)))) return set(v ?? [], type.set.options.map((o) => o.value));
-  let depth = 0;
-  for (let t = type; t?.t === "list"; t = t.element) depth++;
-  return depth ? NATIVES.as_lists.fn(v, num(depth)) : v;
+  if (type?.t === "options" && Array.isArray(v) && !isSet(v)) return set(v, type.set.options.map((o) => o.value));
+  return v;
 }
 
 // A known value placed where `type` is: what a let made of it holds (undefined when not known).
@@ -97,13 +93,15 @@ function value(e, env, visiting) {
       // and / or decide on the left when they can, and give yes or no (§6.15.1).
       if (e.op === "and" && a !== undefined && a !== true) return false;
       if (e.op === "or" && a === true) return true;
+      // a ?? b works out b only when a is empty (§6.16); the one it gives is placed as their join.
+      if (e.op === "??" && a !== undefined && a !== null) return placed(a, e.type);
       const b = value(e.b, env, visiting);
       if (a === undefined || b === undefined) return undefined;
       // A set and a list of its option values: the list as a set, as the engines take it (§3.6, §6.6).
       if (e.a.type?.t === "options" && e.b.type?.t === "list") return faultOf(e, () => binary(e.op, a, placed(b, e.a.type)));
       if (e.b.type?.t === "options" && e.a.type?.t === "list") return faultOf(e, () => binary(e.op, placed(a, e.b.type), b));
-      // l + m is placed into its joined type, as the engines place it (§3.9 rule 4, §6.5.1).
-      return faultOf(e, () => (e.op === "+" && e.type?.t === "list" ? placed(binary(e.op, a, b), e.type) : binary(e.op, a, b)));
+      if (e.op === "??") return placed(b, e.type);
+      return faultOf(e, () => binary(e.op, a, b));
     }
     case "is-empty": {
       const a = value(e.operand, env, visiting);
@@ -120,18 +118,16 @@ function value(e, env, visiting) {
       if (e.args.some((a) => a.kind === "named-arg" && !callee.params.some((p) => p.name === a.name))) return undefined;
       const args = e.bound.map((a) => (a.kind === "default-of" ? a.param.defaultValue ?? null : value(a, env, visiting)));
       if (args.some((v) => v === undefined)) return undefined;
-      // either's values are placed as their join first, as the machine places them (§3.9).
-      return faultOf(e, () => native.fn(...(e.joined ? args.map((v) => placed(v, e.joined)) : args)));
+      return faultOf(e, () => native.fn(...args));
     }
     case "slice": {
-      // l[a..b], l[a..<b] (§6.9.3): bounds whole numbers, else F004; then the items a to b, or to before b.
+      // l[a..b], l[a..<b] (§6.9.3): the items a to b, or to before b.
       const l = value(e.target, env, visiting);
       const a = value(e.from, env, visiting), b = value(e.to, env, visiting);
       if (l === undefined || a === undefined || b === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
-        const x = whole(a), y = whole(b);
-        if (x === null || y === null) throw new StrideFault("F004", "a slice's bounds are whole numbers");
-        return sliced(l ?? [], x, e.exclusive ? y - 1 : y).map(copy);
+        const [x, y] = sliceBounds(l, a, b);
+        return sliced(l, x, e.exclusive ? y - 1 : y).map(copy);
       });
     }
     case "index": {
@@ -140,28 +136,23 @@ function value(e, env, visiting) {
       const i = value(e.index, env, visiting);
       if (l === undefined || i === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
-        const n = whole(i);
-        if (n === null || n < 0) throw new StrideFault("F004", `${i === null ? "an empty position" : `position ${textOf(i)}`} is not a whole number of 0 or more`);
-        if (n >= (l?.length ?? 0)) throw new StrideFault("F004", outside(i, l?.length ?? 0));
+        const n = readPosition(l, i);
+        if (n >= l.length) throw new StrideFault("F004", outside(i, l.length));
         return l[n] ?? null;
       });
     }
     case "list": {
-      // Each item placed as the literal's element type (§3.9).
       const items = [];
       for (const x of e.items) {
         const v = value(x, env, visiting);
         if (v === undefined) return undefined;
         items.push(v);
       }
-      return items.map((v) => placed(v, e.type?.element));
+      return items;
     }
     case "cond": {
-      // Whichever branch runs, its value has the conditional's type: the join of the two (§3.9, §6.13).
       const c = value(e.condition, env, visiting);
-      if (c === undefined) return undefined;
-      const v = value(c === true ? e.yes : e.no, env, visiting);
-      return v === undefined ? undefined : faultOf(e, () => placed(v, e.type));
+      return c === undefined ? undefined : value(c === true ? e.yes : e.no, env, visiting);
     }
     default:
       return undefined;

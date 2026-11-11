@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record box { n: number, tags: list of text, seen: map of text to number, inner: box }
+var b: box
+print(b is empty)
+b.n = 1
+print(b == new box { n: 1 })
+print(count(b.tags))
+print(count(b.seen))
+print(b.inner is empty)
+b.inner.tags[0] = "t"
+b.inner.seen["k"] = 2
+print(b)
+var bs: list of box = [empty]
+bs[0].seen["a"] = 1
+print(bs)
+# rule 7.5.1 6.14 7.4
+# prints ["yes", "yes", "0", "0", "yes", "box { n: 1, tags: [], seen: {}, inner: box { n: , tags: [t], seen: {k: 2}, inner:  } }", "[box { n: , tags: [], seen: {a: 1}, inner:  }]"]

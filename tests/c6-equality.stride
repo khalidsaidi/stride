@@ -17,10 +17,15 @@ print([1, 2] == [2, 1])
 print(c == d)
 print(empty == "")
 print([] == empty)
+print(empty == empty)
+print("" == "")
+print([] == [])
+print([empty] == [empty])
+print([""] == [empty])
 print(1 != 1.00)
 print("a" == "A")
 
 # rule 6.6
 # run
 # answers {"c": ["x", "y"], "d": ["y", "x"]}
-# prints ["yes", "no", "yes", "no", "yes", "yes", "yes", "no", "no"]
+# prints ["yes", "no", "yes", "no", "yes", "no", "no", "yes", "yes", "yes", "yes", "no", "no", "no"]

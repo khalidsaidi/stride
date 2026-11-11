@@ -1,15 +1,31 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r { f: text }
+options s { "a" "A" }
+let none: set of s = []
+let keys: map of text to number = {}
 print(empty == "")
 print(empty == [])
 print("" is empty)
 print([] is empty)
+print(none is empty)
+print(keys is empty)
+print(empty == empty)
+print(length(""))
+print(count([]))
+print(count(none))
+print(count(keys))
+print("" == "")
 ask a: text "A"
 print(a is empty)
 print(a is not empty)
-# rule 3.2
+print(a == "")
+# rule 3.2 6.6 8.7
 # run unanswered
-# prints ["yes", "yes", "yes", "yes", "yes", "no"]
+# prints ["no", "no", "no", "no", "no", "no", "yes", "0", "0", "0", "0", "yes", "yes", "no", "no"]
 # run answered
 # answers {"a": "x"}
-# prints ["yes", "yes", "yes", "yes", "no", "yes"]
+# prints ["no", "no", "no", "no", "no", "no", "yes", "0", "0", "0", "0", "yes", "no", "yes", "no"]
+# run answered with no characters
+# answers {"a": ""}
+# prints ["no", "no", "no", "no", "no", "no", "yes", "0", "0", "0", "0", "yes", "yes", "no", "no"]

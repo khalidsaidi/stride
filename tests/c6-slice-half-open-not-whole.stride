@@ -5,7 +5,7 @@ let l = [1, 2, 3]
 print(join(l[0..<b], ","))
 print(join(l[..<b], ","))
 print("abc"[1..<b])
-# rule 6.9.3 F004
+# rule 6.9.3 F004 F023
 # run whole
 # answers {"b": 2}
 # prints ["1,2", "1,2", "b"]
@@ -20,4 +20,4 @@ print("abc"[1..<b])
 # fault F004 at 5:13
 # run empty
 # answers {}
-# fault F004 at 5:13
+# fault F023 at 5:13 empty where a number is needed: a bound of [ .. ]

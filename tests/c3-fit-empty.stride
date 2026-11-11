@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r { f: text }
 define f(x: number, l: list of text, v: r) -> number {
-  return count(l)
+  return count(l ?? [])
 }
 print(f(empty, empty, empty))
 # rule 3.6

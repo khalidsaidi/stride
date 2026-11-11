@@ -3,5 +3,5 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person { name: text }
 var p: person
 fill "A" = p.name
-# rule F006 6.9.1
-# boxes {"A": ""}
+# rule F006 F023 6.9.1
+# fault F023 at 5:12 empty where a record is needed: what a field is read of

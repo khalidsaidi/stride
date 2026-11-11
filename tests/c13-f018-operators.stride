@@ -4,10 +4,10 @@ ask a: number "A"
 fill "B" = a + 1
 fill "C" = a - 1
 fill "D" = a * 2
-# rule F018 F019 6.3
+# rule F018 F019 F023 6.3
 # run empty
 # answers {}
-# boxes {"B": "1", "C": "", "D": ""}
+# fault F023 at 4:14 empty where a number is needed: the left side of +
 # run given
 # answers {"a": 2}
 # boxes {"B": "3", "C": "1", "D": "4"}

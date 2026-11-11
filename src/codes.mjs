@@ -14,7 +14,7 @@ export const CODES = {
     "explanation": ""
   },
   "F004": {
-    "when": "a list position or a loop bound not a whole number, or a position read that is below 0 or the number of items or more",
+    "when": "a list position, a slice's bound or a loop bound not a whole number, or a position read that is below 0 or the number of items or more",
     "explanation": ""
   },
   "F005": {
@@ -22,7 +22,7 @@ export const CODES = {
     "explanation": ""
   },
   "F006": {
-    "when": "a field read or set on a value that is not a record and not empty: a compiler fault, never reached by a type-correct program",
+    "when": "a field read or set on a value that is not a record and not empty, or an item set on one that is not a list: a compiler fault, never reached by a type-correct program",
     "explanation": ""
   },
   "F007": {
@@ -75,6 +75,10 @@ export const CODES = {
   },
   "F020": {
     "when": "an assignment through an item that is not there: a position past a list's items read on the way to a field or a deeper position (`xs[2].name = v` when xs holds 2): a program fault",
+    "explanation": ""
+  },
+  "F023": {
+    "when": "empty where a value is needed (§6.3): an operand of arithmetic, of an order or of `+`, what `in` looks in, a record whose field is read, a list or words indexed or sliced, a position, a bound, a key set, what `for each` goes through, an argument of a library function that needs a value",
     "explanation": ""
   },
   "S001": {
@@ -471,7 +475,7 @@ export const CODES = {
   },
   "S336": {
     "when": "collect into a list that has items",
-    "explanation": "A collected list starts empty."
+    "explanation": "A collected list starts with no items."
   },
   "S337": {
     "when": "a list collected twice",
@@ -686,8 +690,8 @@ export const CODES = {
     "explanation": "Defaults come last."
   },
   "S394": {
-    "when": "a conditional whose two values' types have no join",
-    "explanation": "`if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none."
+    "when": "a conditional or a `??` whose two values' types have no join",
+    "explanation": "`if c then a else b` and `a ?? b` take the join of a's and b's types (§3.9); a number and words have none."
   },
   "S396": {
     "when": "a slice bound that is not a number",
@@ -866,7 +870,7 @@ export const LIBRARY = [
     "names": [
       "length"
     ],
-    "gives": "how many characters; empty: 0"
+    "gives": "how many characters; no characters: 0"
   },
   {
     "section": "14.1 Words",
@@ -876,7 +880,7 @@ export const LIBRARY = [
     "names": [
       "chars"
     ],
-    "gives": "characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty"
+    "gives": "characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters"
   },
   {
     "section": "14.1 Words",
@@ -886,7 +890,7 @@ export const LIBRARY = [
     "names": [
       "character"
     ],
-    "gives": "the character at position n of t, the same separators left out"
+    "gives": "the character at position n of t, the same separators left out; n past the end: empty"
   },
   {
     "section": "14.1 Words",
@@ -896,7 +900,7 @@ export const LIBRARY = [
     "names": [
       "slice"
     ],
-    "gives": "characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: empty; list slices keep their own rule (§6.9.3)"
+    "gives": "characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters; list slices keep their own rule (§6.9.3)"
   },
   {
     "section": "14.1 Words",
@@ -926,7 +930,7 @@ export const LIBRARY = [
     "names": [
       "is_digits"
     ],
-    "gives": "yes when t is not empty and every character is 0–9"
+    "gives": "yes when t has a character and every character is 0–9"
   },
   {
     "section": "14.1 Words",
@@ -936,7 +940,7 @@ export const LIBRARY = [
     "names": [
       "is_letters"
     ],
-    "gives": "yes when t is not empty and every character is a letter"
+    "gives": "yes when t has a character and every character is a letter"
   },
   {
     "section": "14.1 Words",
@@ -946,7 +950,7 @@ export const LIBRARY = [
     "names": [
       "replace"
     ],
-    "gives": "every part replaced by with, left to right, not overlapping; part empty: t"
+    "gives": "every part replaced by with, left to right, not overlapping; part of no characters: t"
   },
   {
     "section": "14.1 Words",
@@ -956,7 +960,7 @@ export const LIBRARY = [
     "names": [
       "contains"
     ],
-    "gives": "whether part is in t, as written (`contains(lower(t), \"llc\")` to ignore case); part empty: yes"
+    "gives": "whether part is in t, as written (`contains(lower(t), \"llc\")` to ignore case); part of no characters: yes"
   },
   {
     "section": "14.1 Words",
@@ -978,7 +982,7 @@ export const LIBRARY = [
     "names": [
       "find"
     ],
-    "gives": "the position of the first part in t; -1 when it is not there or part is empty"
+    "gives": "the position of the first part in t; -1 when it is not there or part has no characters"
   },
   {
     "section": "14.1 Words",
@@ -988,7 +992,7 @@ export const LIBRARY = [
     "names": [
       "occurrences"
     ],
-    "gives": "how many times part is in t, not overlapping; 0 when part is empty"
+    "gives": "how many times part is in t, not overlapping; 0 when part has no characters"
   },
   {
     "section": "14.1 Words",
@@ -998,7 +1002,7 @@ export const LIBRARY = [
     "names": [
       "split"
     ],
-    "gives": "t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character"
+    "gives": "t cut at every separator (case as written), pieces kept even when they have no characters (`split(\"a,,b\", \",\")` is `[\"a\", \"\", \"b\"]`); t of no characters: a list with no items; separator of no characters: each character"
   },
   {
     "section": "14.1 Words",
@@ -1008,7 +1012,7 @@ export const LIBRARY = [
     "names": [
       "line"
     ],
-    "gives": "the line at position n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays"
+    "gives": "the line at position n of t (lines end at `\\n`, `\\r\\n`, `\\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays; n past the last line: empty"
   },
   {
     "section": "14.1 Words",
@@ -1018,7 +1022,7 @@ export const LIBRARY = [
     "names": [
       "line_count"
     ],
-    "gives": "how many lines, every line end (`\\n`, `\\r\\n`, `\\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count(\"a\\n\")` is 2; empty: 0"
+    "gives": "how many lines, every line end (`\\n`, `\\r\\n`, `\\r`, each one) starting a new one, so a trailing end counts the last line it starts: `line_count(\"a\\n\")` is 2; no characters: 0"
   },
   {
     "section": "14.1 Words",
@@ -1038,7 +1042,7 @@ export const LIBRARY = [
     "names": [
       "word"
     ],
-    "gives": "the word at position n of t, words split on runs of spaces and tabs"
+    "gives": "the word at position n of t, words split on runs of spaces and tabs; n past the last word: empty"
   },
   {
     "section": "14.1 Words",
@@ -1048,7 +1052,7 @@ export const LIBRARY = [
     "names": [
       "word_count"
     ],
-    "gives": "how many words; empty: 0"
+    "gives": "how many words; no characters: 0"
   },
   {
     "section": "14.1 Words",
@@ -1068,7 +1072,7 @@ export const LIBRARY = [
     "names": [
       "text_of"
     ],
-    "gives": "v's words (§3.5); a list or record is S367"
+    "gives": "v's words (§3.5); empty: no characters; a list or record is S367"
   },
   {
     "section": "14.1 Words",
@@ -1078,7 +1082,7 @@ export const LIBRARY = [
     "names": [
       "number_of"
     ],
-    "gives": "the number t holds by §8.7, or empty"
+    "gives": "the number t holds by §8.7, or empty when it holds none"
   },
   {
     "section": "14.2 Numbers",
@@ -1150,7 +1154,7 @@ export const LIBRARY = [
       "min",
       "max"
     ],
-    "gives": "the smaller, the larger; one empty: the other; both: empty"
+    "gives": "the smaller, the larger"
   },
   {
     "section": "14.2 Numbers",
@@ -1160,7 +1164,7 @@ export const LIBRARY = [
     "names": [
       "grouped"
     ],
-    "gives": "n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008; empty: empty"
+    "gives": "n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008"
   },
   {
     "section": "14.2 Numbers",
@@ -1234,7 +1238,7 @@ export const LIBRARY = [
     "names": [
       "format"
     ],
-    "gives": "pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010; d empty: empty"
+    "gives": "pattern with `YYYY`, `YY`, `MM`, `DD`, `M`, `D` put in (longest first); a pattern with none of them F010"
   },
   {
     "section": "14.3 Dates",
@@ -1294,7 +1298,7 @@ export const LIBRARY = [
     "names": [
       "join"
     ],
-    "gives": "T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out)"
+    "gives": "T a type with words (§3.5): words, a number, a date, yes-no, an option; a list of records or of lists is S367. The items' words joined, an empty item as no words (`join(filled(l))` leaves empty items out); no items: no characters"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1316,7 +1320,7 @@ export const LIBRARY = [
     "names": [
       "filled"
     ],
-    "gives": "the items that are not empty, in order"
+    "gives": "the items that are not empty, in order; `\"\"` and `[]` are not empty and stay; l empty: a list with no items"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1366,7 +1370,7 @@ export const LIBRARY = [
     "names": [
       "sorted"
     ],
-    "gives": "T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order; **empty items come last**, in their order, ascending or descending"
+    "gives": "T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order, ascending or descending; an empty item is F023 (`sorted(filled(l))`)"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1376,7 +1380,7 @@ export const LIBRARY = [
     "names": [
       "sorted"
     ],
-    "gives": "R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order, items whose field is empty (and empty items) last"
+    "gives": "R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; an empty item, or one whose field is empty, is F023"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1386,7 +1390,7 @@ export const LIBRARY = [
     "names": [
       "sum"
     ],
-    "gives": "the items added up, an empty item counting as 0; no items: 0"
+    "gives": "the items added up; no items: 0; an empty item is F023 (`sum(filled(l))`)"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1398,7 +1402,7 @@ export const LIBRARY = [
       "smallest",
       "largest"
     ],
-    "gives": "T a number, a date or words: the least, the greatest of the items that are not empty; none: empty"
+    "gives": "T a number, a date or words: the least, the greatest of the items; no items: empty; an empty item is F023"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1408,7 +1412,7 @@ export const LIBRARY = [
     "names": [
       "any"
     ],
-    "gives": "yes when some item is yes (an empty item counts as no); an empty list: no"
+    "gives": "yes when some item is yes (an empty item counts as no); no items: no"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1418,7 +1422,7 @@ export const LIBRARY = [
     "names": [
       "all"
     ],
-    "gives": "yes when every item is yes; an empty list: yes"
+    "gives": "yes when every item is yes; no items: yes"
   },
   {
     "section": "14.4 Lists and sets",
@@ -1492,7 +1496,7 @@ export const LIBRARY = [
     "names": [
       "either"
     ],
-    "gives": "a when it is not empty, else b"
+    "gives": "a when it is not empty, else b (`a ?? b`, §6.16, with both worked out)"
   },
   {
     "section": "14.5 Empty, faults and output",

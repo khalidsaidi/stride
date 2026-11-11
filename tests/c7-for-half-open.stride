@@ -20,7 +20,7 @@ for i in 1..<n {
   ask q: text "Q"
   print(either(q, "{i}"))
 }
-# rule 7.11 2.7
+# rule 7.11 2.7 F023
 # run whole
 # answers {"n": 3}
 # asked ["n", "q[1]", "q[2]"]
@@ -32,4 +32,4 @@ for i in 1..<n {
 # run empty-is-not-zero
 # answers {}
 # prints ["0a", "1b", "2c", "2"]
-# fault F004 at 19:14
+# fault F023 at 19:14

@@ -58,6 +58,12 @@ export function generate(seed) {
   };
   const ofType = (sc, type) => all(sc).filter((n) => same(n.type, type));
   const use = (n) => ((n.read = true), n.name);
+  // A name read where a value is needed (§6.3): an answer or a list's item may be empty, so it is read with a
+  // value for that; now and then as it is, which may fault (F023).
+  const OTHERWISE = { number: ["0", "1", "2.5"], text: ['""', '"-"'], date: ["date_of(2000, 1, 1)"] };
+  const val = (n) => (["answer", "item"].includes(n.kind) && OTHERWISE[n.type.t] && !r.chance(0.1) ? `(${use(n)} ?? ${r.pick(OTHERWISE[n.type.t])})` : use(n));
+  // A list whose items are all there, for what puts them in order or computes with them.
+  const whole = (n) => (n.type.of === "text" ? `filled(${use(n)})` : use(n));
 
   const functions = []; // { name, params: [types], result, asks }
 
@@ -69,7 +75,7 @@ export function generate(seed) {
       () => r.pick(["0", "1", "2", "3", "7", "10", "100", "2.5", "0.1", "0.25", "1000000", "99999999999999999999", "0.0000000000000000000000000000000001", "9999999999999999999999999999999999", "1234567890.123456789"]),
       () => `-${r.pick([1, 3, 0.5])}`,
     ];
-    if (vars.length) choices.push(() => use(r.pick(vars)), () => use(r.pick(vars)));
+    if (vars.length) choices.push(() => val(r.pick(vars)), () => val(r.pick(vars)));
     if (d > 0) {
       const sub = () => num(sc, d - 1);
       choices.push(
@@ -79,14 +85,15 @@ export function generate(seed) {
         () => `either(pick_one(${sub()}, ${sub()}), 0)`,
         () => `either(second(${r.chance(0.5) ? `[${sub()}]` : `[${sub()}, ${sub()}]`}), 0)`,
         () => `n_of([${sub()}, ${sub()}])`,
-        () => `either(-${r.chance(0.5) ? "empty" : sub()}, 1)`,
+        () => `(${r.chance(0.5) ? "empty" : `-${sub()}`} ?? 1)`,
+        () => `(pick_one(${sub()}, empty) ?? ${sub()})`,
         () => `round(${sub()}, ${r.int(0, 3)})`,
         () => `round(${sub()}, places: ${r.int(0, 3)})`,
         () => `round(${sub()})`,
         () => `${r.pick(["abs", "floor", "ceil", "whole"])}(${sub()})`,
         () => `${r.pick(["min", "max"])}(${sub()}, ${sub()})`,
         () => `length(${text(sc, d - 1)})`,
-        () => `number_of(${text(sc, d - 1)})`,
+        () => `(number_of(${text(sc, d - 1)}) ?? ${r.int(0, 2)})`,
         () => `(if ${bool(sc, d - 1)} then ${sub()} else ${sub()})`,
         () => `days_between(${date(sc, d - 1)}, ${date(sc, d - 1)})`,
         () => `year(${date(sc, d - 1)})`,
@@ -114,12 +121,12 @@ export function generate(seed) {
       // What an answer can make fault as the program runs: a division by it, places, a width, a position.
       const answers = all(sc).filter((n) => n.type.t === "number" && (n.kind === "answer" || n.kind === "param"));
       if (answers.length) {
-        const a = () => use(r.pick(answers));
+        const a = () => val(r.pick(answers));
         choices.push(
           () => `(${sub()} ${r.pick(["/", "//", "%"])} ${a()})`,
           () => `round(${sub()}, ${a()})`,
           () => `length(pad_left("x", ${a()}))`,
-          () => `length(character("abc", ${a()}))`,
+          () => `length(character("abc", ${a()}) ?? "")`,
           () => `year(add_days(date_of(2000, 1, 1), ${a()} * 1000000))`,
           () => `fact(${a()})`,
           () => `count([${a()}, 2][0${r.pick(["..", "..<"])}${a()}])`,
@@ -137,7 +144,7 @@ export function generate(seed) {
   function text(sc, d) {
     const vars = ofType(sc, T);
     const choices = [() => `"${r.pick(WORDS)}"`];
-    if (vars.length) choices.push(() => use(r.pick(vars)), () => use(r.pick(vars)));
+    if (vars.length) choices.push(() => val(r.pick(vars)), () => val(r.pick(vars)));
     if (d > 0) {
       const sub = () => text(sc, d - 1);
       choices.push(
@@ -149,28 +156,30 @@ export function generate(seed) {
         () => `pad_left(${sub()}, ${r.int(0, 8)}, "*")`,
         () => `pad_left(${sub()}, ${r.int(0, 8)})`,
         () => `remove_prefix(${sub()}, "a")`,
-        () => `character(${sub()}, ${r.int(0, 3)})`,
-        () => `line(${sub()}, ${r.int(0, 1)})`,
+        () => `(character(${sub()}, ${r.int(0, 3)}) ?? "")`,
+        () => `(line(${sub()}, ${r.int(0, 1)}) ?? "no line")`,
         () => `text_of(${num(sc, d - 1)})`,
         () => `fixed(${num(sc, d - 1)}, ${r.int(0, 2)})`,
         () => `grouped(${num(sc, d - 1)})`,
         () => `format(${date(sc, d - 1)}, "${r.pick(["YYYY-MM-DD", "DD/MM/YY", "M-D"])}")`,
         () => `either(${sub()}, "none given")`,
         () => `(if ${bool(sc, d - 1)} then ${sub()} else ${sub()})`,
-        () => `word(${sub()}, ${r.int(0, 1)})`,
+        () => `(word(${sub()}, ${r.int(0, 1)}) ?? "")`,
         () => `either(pick_one(${sub()}, ${sub()}), "")`,
       );
       const lists = all(sc).filter((n) => n.type.t === "list");
-      if (lists.length) choices.push(() => `join(${use(r.pick(lists))}, "${r.pick([",", " ", ""])}")`, () => `join(${use(r.pick(lists))}, separator: "/")`, () => `join(sorted(${use(r.pick(lists))}, descending: yes))`);
+      if (lists.length) choices.push(() => `join(${use(r.pick(lists))}, "${r.pick([",", " ", ""])}")`, () => `join(${use(r.pick(lists))}, separator: "/")`, () => `join(sorted(${whole(r.pick(lists))}, descending: yes))`);
       const tl = all(sc).filter((n) => n.type.t === "list" && n.type.of === "text");
       if (tl.length) choices.push(() => `either(first(${use(r.pick(tl))}), "-")`);
       const opts = ofType(sc, O);
       if (opts.length) choices.push(() => `text_of(${use(r.pick(opts))})`);
       const sets = ofType(sc, S);
       if (sets.length) {
-        choices.push(() => `join(${use(r.pick(sets))})`);
-        if (sets.length > 1 || r.chance(0.5)) choices.push(() => `join(${r.pick(["union", "intersection", "difference"])}(${use(r.pick(sets))}, ${use(r.pick(sets))}), ",")`);
-        choices.push(() => `join(${r.pick(["union", "intersection", "difference"])}(${use(r.pick(sets))}, ["${r.pick(COLOURS)}"]), ",")`);
+        // A set not answered is empty (§8.7): `?? []` makes it a set with no options.
+        const chosen = () => `(${use(r.pick(sets))} ?? [])`;
+        choices.push(() => `join(${chosen()})`);
+        if (sets.length > 1 || r.chance(0.5)) choices.push(() => `join(${r.pick(["union", "intersection", "difference"])}(${chosen()}, ${chosen()}), ",")`);
+        choices.push(() => `join(${r.pick(["union", "intersection", "difference"])}(${chosen()}, ["${r.pick(COLOURS)}"]), ",")`);
       }
       const recs = all(sc).filter((n) => n.type.t === "record");
       if (recs.length) choices.push(() => `${use(r.pick(recs))}.label`);
@@ -194,12 +203,13 @@ export function generate(seed) {
         () => `(${bool(sc, d - 1)} ${r.pick(["and", "or"])} ${bool(sc, d - 1)})`,
         () => `(not ${bool(sc, d - 1)})`,
         () => `(${expr(sc, r.pick([N, T, B, D]), d - 1)} is ${r.chance(0.5) ? "not " : ""}empty)`,
+        () => `(${r.pick(["empty", '""'])} ${r.pick(["==", "!="])} ${r.pick(["empty", '""'])})`,
         () => `${r.pick(["contains", "starts_with", "ends_with"])}(${text(sc, d - 1)}, ${text(sc, d - 1)})`,
         () => `(${date(sc, d - 1)} < ${date(sc, d - 1)})`,
       );
       const sets = ofType(sc, S);
       if (sets.length) {
-        choices.push(() => `("${r.pick(COLOURS)}" ${r.pick(["in", "not in"])} ${use(r.pick(sets))})`);
+        choices.push(() => `("${r.pick(COLOURS)}" ${r.pick(["in", "not in"])} (${use(r.pick(sets))} ?? []))`);
         // A set compared with a list of its options, or with empty (§6.6).
         const some = () => `[${COLOURS.filter(() => r.chance(0.5)).map((c) => `"${c}"`).join(", ")}]`;
         choices.push(() => `(${use(r.pick(sets))} ${r.pick(["==", "!="])} ${r.chance(0.2) ? "empty" : some()})`);
@@ -210,6 +220,9 @@ export function generate(seed) {
       if (lists.length) choices.push(() => `(${num(sc, d - 1)} in ${use(r.pick(lists))})`);
       const recs = all(sc).filter((n) => n.type.t === "record");
       if (recs.length) choices.push(() => `${use(r.pick(recs))}.done`);
+      // What an answer holds or not, whatever its type.
+      const answers = all(sc).filter((n) => n.kind === "answer");
+      if (answers.length) choices.push(() => `(${use(r.pick(answers))} is ${r.chance(0.5) ? "not " : ""}empty)`);
     }
     return r.pick(choices)();
   }
@@ -217,7 +230,7 @@ export function generate(seed) {
   function date(sc, d) {
     const vars = ofType(sc, D);
     const choices = [() => `date_of(${r.int(1990, 2030)}, ${r.int(1, 12)}, ${r.int(1, 28)})`];
-    if (vars.length) choices.push(() => use(r.pick(vars)), () => use(r.pick(vars)));
+    if (vars.length) choices.push(() => val(r.pick(vars)), () => val(r.pick(vars)));
     if (d > 0) choices.push(() => `add_days(${date(sc, d - 1)}, ${r.int(-400, 400)})`, () => `(if ${bool(sc, d - 1)} then ${date(sc, d - 1)} else ${date(sc, d - 1)})`);
     return r.pick(choices)();
   }
@@ -228,10 +241,10 @@ export function generate(seed) {
     const choices = [() => `[${Array.from({ length: r.int(0, 3) }, item).join(", ")}]`];
     if (vars.length) {
       const v = r.pick(vars);
-      choices.push(() => use(v), () => `${r.pick(["sorted", "reversed", "filled"])}(${use(v)})`);
+      choices.push(() => use(v), () => `sorted(${whole(v)})`, () => `${r.pick(["reversed", "filled"])}(${use(v)})`);
       if (d > 0) {
-        choices.push(() => `[${type.of === "number" ? "x * 2" : "upper(x)"} for each x in ${use(v)}]`);
-        choices.push(() => `[${type.of === "number" ? "x + k" : "x + text_of(k)"} for each k, x in ${use(v)} if k ${r.pick([">", "<", "!="])} ${r.int(0, 1)}]`);
+        choices.push(() => `[${type.of === "number" ? "x * 2" : 'upper(x ?? "")'} for each x in ${use(v)}]`);
+        choices.push(() => `[${type.of === "number" ? "x + k" : "x + text_of(k)"} for each k, x in ${whole(v)} if k ${r.pick([">", "<", "!="])} ${r.int(0, 1)}]`);
         if (type.of === "number") choices.push(() => `doubled(${use(v)})`);
       }
     }
@@ -302,7 +315,7 @@ export function generate(seed) {
         const name = fresh("rows");
         const x = fresh("row");
         const out = [`${i}var ${name}: list of item`, `${i}collect ${x} in ${name} "Another row?" {`, `${i}  ask ${x}.label: text "Label"`, `${i}  ask ${x}.amount: number "Amount"`, `${i}  ask ${x}.done: yes-no "Done"`, `${i}}`];
-        out.push(`${i}for each n, row in ${r.chance(0.5) ? `sorted(${name}, by: "${r.pick(["label", "amount"])}"${r.chance(0.5) ? ", descending: yes" : ""})` : name} {`, `${i}  fill "${box("R")}_{n}" = row.label`, `${i}  print(row.amount)`, `${i}  print(row.done)`, `${i}}`);
+        out.push(`${i}for each n, row in ${r.chance(0.5) ? ((by) => `sorted([x for each x in ${name} if x.${by} is not empty], by: "${by}"${r.chance(0.5) ? ", descending: yes" : ""})`)(r.pick(["label", "amount"])) : name} {`, `${i}  fill "${box("R")}_{n}" = row.label`, `${i}  print(row.amount)`, `${i}  print(row.done)`, `${i}}`);
         boxes.pop();
         return out;
       }
@@ -325,7 +338,7 @@ export function generate(seed) {
         const out = [line];
         if (r.chance(0.3) && (type === "number" || type === "text")) out.push(`${i}  check ${name} is empty or ${type === "number" ? `${name} > 0` : `length(${name}) < 20`} "Too ${type === "number" ? "small" : "long"}."`);
         // Into a box the way its type goes: a yes-no ticks one, a set's options are joined (§10).
-        if (r.chance(0.5)) out.push(type === "yes-no" ? `${i}tick "${box("A")}" when ${use(n)}` : `${i}fill "${box("A")}" = ${type === "any-of" ? `join(${use(n)})` : use(n)}`);
+        if (r.chance(0.5)) out.push(type === "yes-no" ? `${i}tick "${box("A")}" when ${use(n)}` : `${i}fill "${box("A")}" = ${type === "any-of" ? `join(${use(n)} ?? [])` : use(n)}`);
         return out;
       }
       case "let": {

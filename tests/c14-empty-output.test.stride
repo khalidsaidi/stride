@@ -1,6 +1,7 @@
 expect either(empty, 2) == 2
 expect either(1, 2) == 1
-expect either("", "x") == "x"
+expect either("", "x") == ""
+expect either([], [1]) == []
 expect either("a", "x") == "a"
 expect fail("stop") faults "F013"
 expect fail("stop") faults "stop"

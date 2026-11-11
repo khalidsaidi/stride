@@ -5,8 +5,11 @@ record person {
 }
 var xs: list of person = [new person { name: "Ada" }, empty]
 print(xs[0].name)
+print(xs[1] is empty)
+print((xs[1] ?? new person { name: "none" }).name)
 print(xs[1].name is empty)
 
-# rule 6.9.1
+# rule 6.9.1 F023
 # run
-# prints ["Ada", "yes"]
+# prints ["Ada", "yes", "none"]
+# fault F023 at 10:7 empty where a record is needed: what a field is read of

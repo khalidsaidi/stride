@@ -1,0 +1,153 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person { name: text, kids: list of text }
+ask which: text "Which"
+ask i: number "I"
+ask t: text "T"
+let l = [1, 2, 3]
+var none: list of number = empty
+var who: person
+var ages: map of text to number = empty
+var call: function(number) -> number = empty
+if which == "item of empty" {
+  print(none[0])
+}
+if which == "empty position" {
+  print(l[i])
+}
+if which == "character of empty" {
+  print(t[0])
+}
+if which == "slice of empty" {
+  print(none[0..1])
+}
+if which == "slice of empty words" {
+  print(t[0..])
+}
+if which == "empty bound" {
+  print(l[i..2])
+}
+if which == "field" {
+  print(who.name)
+}
+if which == "list field" {
+  print(count(who.kids))
+}
+if which == "call" {
+  print(call(1))
+}
+if which == "for each" {
+  for each x in none {
+    print(x)
+  }
+}
+if which == "for each character" {
+  for each c in t {
+    print(c)
+  }
+}
+if which == "for each key" {
+  for each k, v in ages {
+    print(k)
+  }
+}
+if which == "comprehension" {
+  print([x for each x in none])
+}
+if which == "map read" {
+  print(ages["a"])
+}
+if which == "set item" {
+  none[0] = 1
+}
+if which == "set at empty" {
+  var some = [1]
+  some[i] = 2
+  print(some)
+}
+if which == "set under key" {
+  ages["a"] = 1
+}
+if which == "bound" {
+  for k in 0..i {
+    print(k)
+  }
+}
+if which == "library" {
+  print(count(none))
+}
+if which == "library words" {
+  print(upper(t))
+}
+if which == "library second" {
+  print(contains("abc", t))
+}
+who.name = "Ada"
+print(who.name)
+print(count(who.kids))
+# rule 6.3 6.9.1 6.9.2 6.9.3 6.11.1 6.12 7.5 7.5.1 7.11 14.0.3 F023 F022
+# run nothing computed
+# prints ["Ada", "0"]
+# run item of empty
+# answers {"which": "item of empty"}
+# fault F023 at 13:13 empty where a list is needed: what [ ] takes an item of
+# run empty position
+# answers {"which": "empty position"}
+# fault F023 at 16:10 empty where a number is needed: the position in [ ]
+# run character of empty
+# answers {"which": "character of empty"}
+# fault F023 at 19:10 empty where a list is needed: what [ ] takes an item of
+# run slice of empty
+# answers {"which": "slice of empty"}
+# fault F023 at 22:13 empty where a list is needed: what [ .. ] takes items of
+# run slice of empty words
+# answers {"which": "slice of empty words"}
+# fault F023 at 25:10 empty where a list is needed: what [ .. ] takes items of
+# run empty bound
+# answers {"which": "empty bound"}
+# fault F023 at 28:10 empty where a number is needed: a bound of [ .. ]
+# run field
+# answers {"which": "field"}
+# fault F023 at 31:9 empty where a record is needed: what a field is read of
+# run list field
+# answers {"which": "list field"}
+# fault F023 at 34:15 empty where a record is needed: what a field is read of
+# run call
+# answers {"which": "call"}
+# fault F022 at 37:9
+# run for each
+# answers {"which": "for each"}
+# fault F023 at 40:17 empty where a list is needed: what for each goes through
+# run for each character
+# answers {"which": "for each character"}
+# fault F023 at 45:17 empty where a list is needed: what for each goes through
+# run for each key
+# answers {"which": "for each key"}
+# fault F023 at 50:20 empty where a list is needed: what for each goes through
+# run comprehension
+# answers {"which": "comprehension"}
+# fault F023 at 55:26 empty where a list is needed: what for each goes through
+# run map read
+# answers {"which": "map read"}
+# fault F023 at 58:13 empty where a list is needed: what [ ] takes an item of
+# run set item
+# answers {"which": "set item"}
+# fault F023 at 61:7 empty where a list is needed: what an item is set in
+# run set at empty
+# answers {"which": "set at empty"}
+# fault F023 at 65:7 empty where a number is needed: the position an item is set at
+# run set under key
+# answers {"which": "set under key"}
+# fault F023 at 69:7 empty where a list is needed: what an item is set in
+# run bound
+# answers {"which": "bound"}
+# fault F023 at 72:15 empty where a number is needed: a loop's bound
+# run library
+# answers {"which": "library"}
+# fault F023 at 77:9 empty where a list is needed: count's l
+# run library words
+# answers {"which": "library words"}
+# fault F023 at 80:9 empty where words are needed: upper's t
+# run library second
+# answers {"which": "library second"}
+# fault F023 at 83:9 empty where words are needed: contains's part

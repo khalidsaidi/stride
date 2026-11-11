@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 fill "A" = character("abc", n)
-# rule F007 14.0.4
+# rule F007 F023 14.0.4
 # run inside
 # answers {"n": 1}
 # boxes {"A": "b"}
@@ -20,4 +20,4 @@ fill "A" = character("abc", n)
 # fault F007 at 4:12
 # run empty
 # answers {}
-# fault F007 at 4:12
+# fault F023 at 4:12 empty where a number is needed: character's n

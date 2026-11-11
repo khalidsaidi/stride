@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 5) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 7) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, whole, sliced, outside, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -95,7 +95,7 @@ export function convert(question, raw) {
     }
     case "any-of": {
       // A list of values (nothing chosen: no words, or an empty list); anything else is not among them.
-      if (!Array.isArray(raw) && raw !== "") return { value: set([], question.options.map((o) => o.value)), unreadable: "not among the options" };
+      if (!Array.isArray(raw) && raw !== "") return { value: null, unreadable: "not among the options" };
       // Each member words or a JSON number as written; an empty one (null, "") adds no option; any other is stray.
       const members = Array.isArray(raw) ? raw.filter((v) => v !== null && v !== "") : [];
       const given = members.filter((v) => typeof v === "string" || (typeof v === "number" && jsNumberWords(v) !== null) || isNumber(v)).map((v) => (typeof v === "number" ? jsNumberWords(v) : typeof v === "string" ? v : words(v)));
@@ -103,7 +103,7 @@ export function convert(question, raw) {
       const order = question.options.map((o) => o.value);
       const out = set(given, order);
       const stray = wrong || given.some((v) => !order.includes(v));
-      return { value: out.length ? out : set([], order), unreadable: stray ? "not among the options" : null };
+      return { value: out.length ? out : null, unreadable: stray ? "not among the options" : null };
     }
     default:
       return { value: null, unreadable: null };
@@ -216,10 +216,13 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
     if (i === undefined) fault("F016", `the program writes the box "${words(name)}", which it does not know`);
     return i;
   };
-  // A list position read (§6.9.2): F004 unless a whole number of 0 or more.
-  const readPosition = (l, i) => {
+  // A position an item is set at (§7.5): in a list that is there (F023), from 0 to the number of items (F005).
+  const setPosition = (l, i) => {
+    if (isEmpty(l)) needed("a list is", "what an item is set in");
+    if (isEmpty(i)) needed("a number is", "the position an item is set at");
     const n = whole(i);
-    if (n === null || n < 0) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number of 0 or more`);
+    if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
+    if (n === null || n < 0 || n > l.length) fault("F005", `position ${words(i)} cannot be set: the list holds ${l.length}`);
     return n;
   };
   const record = (r) => {
@@ -301,8 +304,9 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.GET_FIELD: {
           const r = record(pop());
-          if (r && ins.a >= r.fields.length) fault("F019", `field ${ins.a} of a record of ${r.fields.length} fields`);
-          stack.push(r ? r.fields[ins.a] ?? null : null);
+          if (!r) needed("a record is", "what a field is read of");
+          if (ins.a >= r.fields.length) fault("F019", `field ${ins.a} of a record of ${r.fields.length} fields`);
+          stack.push(r.fields[ins.a] ?? null);
           break;
         }
         case OP.SET_FIELD: {
@@ -324,7 +328,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const n = readPosition(l, i);
-          const items = typeof l === "string" ? [...l] : l ?? [];
+          const items = typeof l === "string" ? [...l] : l;
           if (n >= items.length) fault("F004", outside(i, items.length, typeof l === "string"));
           stack.push(items[n] ?? null);
           break;
@@ -350,30 +354,25 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             l.set(i, copy(v));
             break;
           }
-          const n = whole(i);
-          if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 0 || n > l.length) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
-          l[n] = copy(v);
+          l[setPosition(l, i)] = copy(v);
           break;
         }
         case OP.CHECK_SLOT: {
           const i = stack[stack.length - 1];
           const l = stack[stack.length - 2];
           if (l instanceof StrideMap) {
-            if (isEmpty(i)) fault("F004", "a map's key is empty");
+            if (isEmpty(i)) needed("a key is", "the key a value is put under");
             break;
           }
-          const n = whole(i);
-          if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 0 || n > l.length) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
+          setPosition(l, i);
           break;
         }
         case OP.ENSURE_RECORD: {
           if (f.locals[ins.a] instanceof Cell) {
-            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].lists, p.records[ins.b].fields);
+            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].starts, p.records[ins.b].fields);
           } else if (isEmpty(f.locals[ins.a])) {
             const r = p.records[ins.b];
-            f.locals[ins.a] = emptyRecord(r.name, r.lists, r.fields);
+            f.locals[ins.a] = emptyRecord(r.name, r.starts, r.fields);
           }
           break;
         }
@@ -381,7 +380,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const r = record(stack[stack.length - 1]);
           if (r && isEmpty(r.fields[ins.a])) {
             const t = p.records[ins.b];
-            r.fields[ins.a] = emptyRecord(t.name, t.lists, t.fields);
+            r.fields[ins.a] = emptyRecord(t.name, t.starts, t.fields);
           }
           break;
         }
@@ -392,7 +391,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             // A record under a key not there yet is made, as a record var's is (§7.5.1).
             if (isEmpty(l.get(i))) {
               const t = p.records[ins.a];
-              l.set(i, emptyRecord(t.name, t.lists, t.fields));
+              l.set(i, emptyRecord(t.name, t.starts, t.fields));
             }
             break;
           }
@@ -400,13 +399,14 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           if (n >= l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
           if (isEmpty(l[n])) {
             const t = p.records[ins.a];
-            l[n] = emptyRecord(t.name, t.lists, t.fields);
+            l[n] = emptyRecord(t.name, t.starts, t.fields);
           }
           break;
         }
         case OP.APPEND: {
           const v = pop();
           const l = f.locals[ins.a];
+          if (isEmpty(l)) needed("a list is", "what an item is added to");
           if (!Array.isArray(l)) fault("F006", "an item was added to something that is not a list");
           l.push(copy(v));
           break;
@@ -415,13 +415,8 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const b = pop();
           const a = pop();
           const l = pop();
-          const x = whole(a), y = whole(b);
-          if (x === null || y === null) fault("F004", "a slice's bounds are whole numbers");
-          if (typeof l === "string") {
-            stack.push(sliced([...l], x, y).join("") || null);
-            break;
-          }
-          stack.push(sliced(Array.isArray(l) ? l : [], x, y).map(copy));
+          const [x, y] = sliceBounds(l, a, b);
+          stack.push(typeof l === "string" ? sliced([...l], x, y).join("") : sliced(l, x, y).map(copy));
           break;
         }
         case OP.TO_BOOL:
@@ -460,7 +455,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.ENSURE_MAIN: {
           if (isEmpty(frames[0].locals[ins.a])) {
             const r = p.records[ins.b];
-            frames[0].locals[ins.a] = emptyRecord(r.name, r.lists, r.fields);
+            frames[0].locals[ins.a] = emptyRecord(r.name, r.starts, r.fields);
           }
           break;
         }
@@ -520,7 +515,9 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const has = Object.prototype.hasOwnProperty.call(answers, key);
           const given = has ? convert(q, answers[key]) : { value: undefined, unreadable: null };
           // The default only when the answers do not hold the key at all.
-          const value = has ? given.value : def !== undefined ? def : q.type === "any-of" ? set([], q.options.map((o) => o.value)) : null;
+          // An answer is never words of no characters or a set of no options: it is empty (§8.7).
+          const held = has ? given.value : def ?? null;
+          const value = held === "" || (isSet(held) && !held.length) ? null : held;
           steps.push({ question: q, index: ins.a, key, printed: shown, value, default: def, answered: has, failed: [], unreadable: given.unreadable });
           lastKey[ins.a] = key;
           stack.push(value);

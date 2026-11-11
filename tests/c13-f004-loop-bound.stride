@@ -6,7 +6,7 @@ for i in 1..n {
   t = t + i
 }
 fill "A" = t
-# rule F004 7.11
+# rule F004 F023 7.11
 # run whole
 # answers {"n": 3}
 # boxes {"A": "6"}
@@ -15,4 +15,4 @@ fill "A" = t
 # fault F004
 # run empty-is-not-zero
 # answers {}
-# fault F004
+# fault F023 a loop's bound

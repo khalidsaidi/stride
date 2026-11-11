@@ -1,7 +1,16 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 var m: map of text to number
-let k = ""
-m[k] = 1
-# rule 6.11.1 F004
-# fault F004
+let none = ""
+m[none] = 1
+print(m[none])
+print(has(m, none))
+let k: text = empty
+print(m[k] is empty)
+print(has(m, k))
+print(k in m)
+print(count(remove(m, k)))
+m[k] = 2
+# rule 6.11.1 F023
+# prints ["1", "yes", "yes", "no", "no", "1"]
+# fault F023 at 13:2 empty where a key is needed: the key a value is put under

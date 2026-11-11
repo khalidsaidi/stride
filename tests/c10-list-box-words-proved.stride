@@ -15,7 +15,7 @@ if u == "CA" or u == "NY" {
 if v == "CA" or b {
   fill "N" = v
 }
-fill "P" = upper(o)
+fill "P" = upper(o ?? "")
 fill "Q" = t
 # rule 10.3 S514
 # box L choice:NY,CA near Text

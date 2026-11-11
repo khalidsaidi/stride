@@ -14,7 +14,7 @@ fill "D" = d
 tick "Y" when y
 fill "Yw" = "{y}"
 fill "O" = o
-fill "S" = join(s, ",")
+fill "S" = join(s ?? [], ",")
 # rule 8.7 3.8
 # run valid
 # answers {"d": "2024-02-29", "y": "on", "o": "b", "s": ["a", "b", "z"]}

@@ -1,12 +1,14 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
-var a: list of number
+var a: list of number = empty
 let e = either(a, [n, n])
 var v: list of number = e
 print(count(v))
 print(count(either([1], [1, 2])))
 print(either(empty, "x"))
+var b: list of number
+print(count(either(b, [n])))
 # rule 14.5 3.9 9.5.1
 # answers {"n": "3"}
-# prints ["2", "1", "x"]
+# prints ["2", "1", "x", "0"]

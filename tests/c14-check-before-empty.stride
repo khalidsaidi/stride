@@ -1,16 +1,27 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
 ask p: number "P"
 ask q: text "Q"
-fill "A" = grouped(empty, p)
-fill "B" = format(empty, q)
-# rule 14.0.3.1 F008 F010
+fill "A" = grouped(n, p)
+fill "B" = format(today(), q)
+# rule 14.0.3.1 F008 F010 F023
 # run fine
-# answers {"p": 2, "q": "YYYY"}
-# boxes {"A": "", "B": ""}
-# run places
+# today 2026-11-07
+# answers {"n": 1234.5, "p": 2, "q": "YYYY"}
+# boxes {"A": "1,234.50", "B": "2026"}
+# run empty before places
 # answers {"p": 2.5, "q": "YYYY"}
-# fault F008 at 5:12
+# fault F023 at 6:12 empty where a number is needed: grouped's n
+# run places
+# answers {"n": 1, "p": 2.5, "q": "YYYY"}
+# fault F008 at 6:12
+# run empty places
+# answers {"n": 1, "q": "YYYY"}
+# fault F023 at 6:12 empty where a number is needed: grouped's places
 # run pattern
-# answers {"p": 2, "q": "invalid"}
-# fault F010 at 6:12
+# answers {"n": 1, "p": 2, "q": "invalid"}
+# fault F010 at 7:12
+# run empty pattern
+# answers {"n": 1, "p": 2}
+# fault F023 at 7:12 empty where words are needed: format's pattern

@@ -179,8 +179,7 @@ export function check(resolved, diagnostics) {
       if (v === undefined && faultIn(d)) p.fault = faultIn(d);
       else if (v === undefined) p.defaultExpr = d; // worked out at each call that leaves it out (§9.2)
       else {
-        // Placed as the parameter's type, as an argument is (§9.2): words for a set become the set, a bare empty
-        // where a list goes a list with no items (§3.7.1).
+        // Placed as the parameter's type, as an argument is (§9.2): words for a set become the set.
         p.defaultValue = T.hasTypevar(p.type) ? v : knownPlaced(d, p.type);
       }
     }
@@ -231,7 +230,7 @@ export function check(resolved, diagnostics) {
         return block(s.body, ctx);
       case "for": {
         const a = expr(s.from, ctx), b = expr(s.to, ctx);
-        // Empty fits a number (§3.6): an empty bound is F004 when it runs (§7.11), S413 when known.
+        // Empty fits a number (§3.6): an empty bound is F023 when it runs (§7.11), S413 when known.
         for (const [e, t] of [[s.from, a], [s.to, b]]) if (t.t !== "number" && t.t !== "empty" && !T.isError(t)) err("S313", e, `a for loop counts numbers; this is ${T.describe(t)}`);
         return block(s.body, ctx);
       }
@@ -244,7 +243,7 @@ export function check(resolved, diagnostics) {
           if (s.indexSymbol) (s.indexSymbol.type = type.key), (s.itemSymbol.type = type.value);
           else s.itemSymbol.type = type.key;
         } else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
-        else if (type.t === "empty") s.itemSymbol.type = T.EMPTY; // no turns (§3.6)
+        else if (type.t === "empty") s.itemSymbol.type = T.EMPTY; // empty fits a list (§3.6); F023 when it runs
         else {
           if (!T.isError(type)) err("S314", s.list, `for each goes through a list, a map or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}`);
           s.itemSymbol.type = T.ERROR;
@@ -630,7 +629,7 @@ export function check(resolved, diagnostics) {
           return e.op === "-" ? T.NUMBER : T.YES_NO;
         }
         if (e.op === "-") {
-          // `-empty` is empty (§6.3).
+          // Empty fits a number (§3.6): `-empty` is F023 when it runs.
           if (t.t !== "number" && t.t !== "empty" && !T.isError(t)) err("S354", e, `- before a value is for numbers, and this is ${T.describe(t)}`);
           return T.NUMBER;
         }
@@ -752,7 +751,7 @@ export function check(resolved, diagnostics) {
           else e.itemSymbol.type = l.key;
           e.overMap = true;
         } else if (l.t === "empty") {
-          e.itemSymbol.type = T.EMPTY; // no items (§3.6)
+          e.itemSymbol.type = T.EMPTY; // empty fits a list (§3.6); F023 when it runs
         } else {
           if (!T.isError(l)) err("S314", e.list, `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
@@ -910,9 +909,6 @@ export function check(resolved, diagnostics) {
     });
 
     let result = sym.result ? T.substitute(sym.result, bindings) : T.ERROR;
-    // Each argument is placed as its parameter's type with the type parameters bound (§9.5.1): with t bound to a
-    // list of lists, [empty] given as a t is a list of one list with no items.
-    if (bindings.size) e.placedAs = params.map((p) => T.substitute(p.type, bindings));
     // A type parameter the arguments do not tell (§9.5): S368, whatever the result's type.
     if ((sym.typeParams ?? []).some((tv) => !bindings.has(tv))) {
       err("S368", e, `the arguments do not tell what ${(sym.typeParams ?? []).filter((tv) => !bindings.has(tv)).map((tv) => tv.name).join(" and ")} is here (an empty list says nothing); give a value of the type`);
@@ -935,7 +931,6 @@ export function check(resolved, diagnostics) {
         err("S367", bound[1], `either's a is ${T.describe(first)}, and this is ${T.describe(bound[1].type)}: they have no type in common`);
         result = T.ERROR;
       } else result = j;
-      e.joined = result;
     } else if (result.t === "any") result = first;
     if (result.t === "element") {
       if (first.t === "list") result = first.element;
@@ -1025,7 +1020,7 @@ export function check(resolved, diagnostics) {
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";
         if (wordy(a) && wordy(b) && (a.t !== "empty" || b.t !== "empty")) return T.TEXT;
-        // Empty beside a number adds as a number; two empties stay empty (§6.5).
+        // Empty fits a number (§3.6): F023 when it runs.
         if (a.t === "empty" && (b.t === "number" || b.t === "empty")) return b;
         if (b.t === "empty" && a.t === "number") return a;
         if ((wordy(a) && b.t === "number") || (a.t === "number" && wordy(b))) return err2("S372", `+ adds two numbers or joins two words; to put a number into words, write "…{${describeExpr(a.t === "number" ? e.a : e.b)}}…"`);
@@ -1070,6 +1065,15 @@ export function check(resolved, diagnostics) {
           if (t.t !== "yes-no" && t.t !== "empty" && !T.isError(t)) err("S380", x, `${e.op} joins two conditions (yes or no); ${describeExpr(x)} is ${T.describe(t)}`);
         }
         return T.YES_NO;
+      case "??": {
+        // a ?? b (§6.16): the join of the two (§3.9); a set takes words in quotes that name its options (§3.6).
+        if (anyError) return T.isError(a) ? b : a;
+        if (a.t === "options" && b.t === "list" && fitsAt(e.b, b, a)) return (optionLiteral(e.b, a), a);
+        if (b.t === "options" && a.t === "list" && fitsAt(e.a, a, b)) return (optionLiteral(e.a, b), b);
+        const j = T.join(a, b);
+        if (!j) return (err("S394", e.b, `?? gives ${T.describe(a)} on one side and ${T.describe(b)} on the other, which do not join`), T.ERROR);
+        return j;
+      }
       case "in":
       case "not in":
         if (anyError) return T.YES_NO;
@@ -1085,7 +1089,7 @@ export function check(resolved, diagnostics) {
           if (b.element.t === "option") optionLiteral(e.a, b.element);
           return T.YES_NO;
         }
-        if (b.t === "empty") return T.YES_NO; // nothing is in empty (§3.6)
+        if (b.t === "empty") return T.YES_NO; // empty fits a list (§3.6); F023 when it runs
         // Words within words, and a key among a map's.
         if (T.isTextLike(b) && (T.isTextLike(a) || a.t === "option" || a.t === "empty")) return T.YES_NO;
         if (b.t === "map") {

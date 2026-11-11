@@ -2,6 +2,7 @@ record kid { name: text, born: number }
 options letters { "b" "B"  "a" "A"  "c" "C" }
 let no_items: list of number = []
 let no_answers: list of yes-no = []
+let nothing: list of number = empty
 let ks = [new kid { name: "A", born: 2 }, new kid { name: "B", born: 1 }, new kid { name: "C", born: 2 }, new kid { name: "D" }]
 let x: set of letters = ["a", "b"]
 let y: set of letters = ["c", "a"]
@@ -16,19 +17,31 @@ expect last([3, 4]) == 4
 expect first(no_items) is empty
 expect first(x) == "b"
 expect filled([empty, 1, empty, 2]) == [1, 2]
+expect filled(["", empty, "a"]) == ["", "a"]
+expect count(filled(nothing)) == 0
+expect count(nothing) faults "empty where a list is needed: count's l"
+expect first(nothing) faults "F023"
+expect join(nothing) faults "F023"
+expect reversed(nothing) faults "F023"
+expect index_of([1, empty], empty) == 1
+expect count(append([1], empty)) == 2
 expect index_of(["a", "b", "a"], "a") == 0
 expect index_of(["a", "b", "b"], "b") == 1
 expect index_of([1, 2], 3) == -1
 expect without([1, 2, 1], 1) == [2]
 expect reversed([1, 2, 3]) == [3, 2, 1]
-expect sorted([3, empty, 1, 2]) == [1, 2, 3, empty]
-expect sorted([3, empty, 1], descending: yes) == [3, 1, empty]
+expect sorted([3, empty, 1, 2]) faults "empty where a value is needed: an item sorted puts in order"
+expect sorted(filled([3, empty, 1, 2])) == [1, 2, 3]
+expect sorted([3, 2, 1], descending: empty) == [1, 2, 3]
 expect sorted(["b", "B", "a"]) == ["B", "a", "b"]
 expect sorted([date_of(2024, 1, 2), date_of(2023, 5, 1)]) == [date_of(2023, 5, 1), date_of(2024, 1, 2)]
-expect [k.name for each k in sorted(ks, by: "born")] == ["B", "A", "C", "D"]
-expect [k.name for each k in sorted(ks, by: "born", descending: yes)] == ["A", "C", "B", "D"]
+expect [k.name for each k in sorted(ks[..2], by: "born")] == ["B", "A", "C"]
+expect [k.name for each k in sorted(ks[..2], by: "born", descending: yes)] == ["A", "C", "B"]
+expect sorted(ks, by: "born") faults "empty where a value is needed: the field sorted puts in order by"
 expect [k.name for each k in sorted(ks, by: "name", descending: yes)] == ["D", "C", "B", "A"]
-expect smallest([3, empty, 1]) == 1
+expect smallest([3, empty, 1]) faults "F023"
+expect smallest([3, 1]) == 1
+expect sum([1, empty]) faults "empty where a number is needed: an item sum adds up"
 expect largest(["a", "b"]) == "b"
 expect smallest(no_items) is empty
 expect any([no, empty]) == no
@@ -41,4 +54,4 @@ expect join(intersection(x, y)) == "a"
 expect join(difference(x, y)) == "b"
 expect count([1] + [2, 3]) == 3
 expect [1] + [2] == [1, 2]
-# rule 14.4 3.8
+# rule 14.4 14.0.3 3.8 F023

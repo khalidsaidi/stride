@@ -1,4 +1,5 @@
-expect (-empty) is empty
-expect (-(empty * 2)) is empty
+expect (-empty) faults "empty where a number is needed: what - stands before"
+expect (-(empty * 2)) faults "empty where a number is needed: the left side of *"
 expect -3 + 1 == -2
-# rule 6.3
+expect -(empty ?? 3) == -3
+# rule 6.3 F023

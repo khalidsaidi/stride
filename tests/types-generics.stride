@@ -14,6 +14,6 @@ define pick_either<t>(a: t, b: t) -> t {
 }
 var l: list of text = ["x", "y"]
 var nums: list of number = [4, 5]
-fill "A" = upper(first_of(l)) + "{first_of(nums) + twice(3)}" + pick_either("", "z")
+fill "A" = upper(first_of(l)) + "{first_of(nums) + twice(3)}" + pick_either(empty, "z")
 # boxes {"A": "X10z"}
 # rule 9.5 9.5.1 9.6

@@ -198,7 +198,7 @@ export function lower(resolved, diagnostics, options = {}) {
     }
   }
 
-  // A var's first value when it is declared without one: an empty list or record to fill, or empty.
+  // A var's first value when it is declared without one: a list with no items, a map with no keys, or empty.
   function initial(type) {
     if (type?.t === "list") return IR.list([]);
     if (type?.t === "map") return IR.native("map_of", []);
@@ -445,8 +445,8 @@ export function lower(resolved, diagnostics, options = {}) {
     const mapLocal = overMap ? ctx.fn.local("map", s.list.type) : null;
     const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
-    if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
-    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [expr(s.list, ctx)]) : expr(s.list, ctx), node: s });
+    if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: eachOf(s.list, ctx), node: s });
+    emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [eachOf(s.list, ctx)]) : eachOf(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: k, value: IR.constant(V.num(0)), node: s });
     const head = ctx.fn.block();
     head.loopHead = true;
@@ -538,23 +538,11 @@ export function lower(resolved, diagnostics, options = {}) {
     return at ? { ...x, at } : x;
   }
 
-  // How many lists deep a type is: 2 for a list of lists of numbers.
-  function depth(t) {
-    return t?.t === "list" ? 1 + depth(t.element) : 0;
-  }
-
   // A value of type `from` placed where `type` is expected (§3.6).
   function placeAs(x, type, from) {
     // A list of options placed where a set is expected becomes the set, in declaration order (§3.8).
-    // The bare `empty` where a set is expected is the set with no options (§3.8): its key is {} (§8.6.3).
-    if (type?.t === "options" && (from?.t === "list" || from?.t === "empty")) return IR.native("to_set", [x, IR.constant(type.set.options.map((o) => o.value))]);
-    // The bare `empty` where a map goes is a map with no keys.
-    if (type?.t === "map" && from?.t === "empty") return IR.native("map_of", []);
-    if (type?.t !== "list") return x;
-    // The bare `empty` where a list goes is a list with no items (§3.7.1).
-    if (from?.t === "empty") return IR.constant([]);
-    // An empty item where a list goes, at any level, is a list with no items too: [empty] as a list of lists.
-    return depth(from) >= depth(type) ? x : IR.native("as_lists", [x, IR.constant(V.num(depth(type)))]);
+    if (type?.t === "options" && from?.t === "list") return IR.native("to_set", [x, IR.constant(type.set.options.map((o) => o.value))]);
+    return x;
   }
 
   // A function's name as a key writes it: after its library's use path when a library declares it (§8.6.2).
@@ -562,6 +550,11 @@ export function lower(resolved, diagnostics, options = {}) {
     const f = sym.unit?.file?.name ?? "";
     if (!sym.unit?.library || sym.unit?.std) return sym.name;
     return `${f.replace(/^lib\//, "").replace(/\.stride$/, "")}:${sym.name}`;
+  }
+
+  // What a for each or a comprehension goes through (§7.11, §6.12): empty there is F023, at the list.
+  function eachOf(list, ctx) {
+    return withAt(IR.native("each_of", [expr(list, ctx)]), placeOf(list, list.span));
   }
 
   function expr(e, ctx) {
@@ -611,23 +604,20 @@ export function lower(resolved, diagnostics, options = {}) {
         const asSet = (x, t) => IR.native("to_set", [x, IR.constant(t.set.options.map((o) => o.value))]);
         if (e.a.type?.t === "options" && e.b.type?.t === "list") b = asSet(b, e.a.type);
         if (e.b.type?.t === "options" && e.a.type?.t === "list") a = asSet(a, e.b.type);
-        // Lists joined take the joined type (§3.9, §6.5.1).
-        if (e.op === "+" && e.type?.t === "list") return placeAs(withAt(IR.binary("+", a, b), placeOf(e)), e.type, depth(e.a.type) < depth(e.b.type) ? e.a.type : e.b.type);
+        // a ?? b (§6.16): each side placed as their join.
+        if (e.op === "??") return IR.binary("??", placeAs(a, e.type, e.a.type), placeAs(b, e.type, e.b.type));
         return withAt(IR.binary(e.op, a, b), placeOf(e));
       }
       case "cond":
-        return IR.cond(expr(e.condition, ctx), placeAs(expr(e.yes, ctx), e.type, e.yes.type), placeAs(expr(e.no, ctx), e.type, e.no.type));
+        return IR.cond(expr(e.condition, ctx), expr(e.yes, ctx), expr(e.no, ctx));
       case "field": {
-        const read = withAt(IR.field(expr(e.target, ctx), e.fieldIndex, e.name), placeOf(e, e.target.span ? { line: e.span.line, col: e.span.col } : e.span));
-        // A list field of an empty record is a list with no items, so its positions read as any list's do
-        // (§6.9.1, §6.9.2).
-        return e.type?.t === "list" ? IR.native("field_list", [read]) : read;
+        return withAt(IR.field(expr(e.target, ctx), e.fieldIndex, e.name), placeOf(e, e.target.span ? { line: e.span.line, col: e.span.col } : e.span));
       }
       case "index":
         return withAt(IR.item(expr(e.target, ctx), expr(e.index, ctx)), placeOf(e));
       case "slice":
         // l[a..<b] ends before b: at b - 1.
-        return withAt(IR.slice(expr(e.target, ctx), expr(e.from, ctx), e.exclusive ? IR.binary("-", expr(e.to, ctx), IR.constant(V.num(1))) : expr(e.to, ctx)), placeOf(e));
+        return withAt(IR.slice(expr(e.target, ctx), expr(e.from, ctx), e.exclusive ? withAt(IR.native("slice_end", [expr(e.to, ctx)]), placeOf(e)) : expr(e.to, ctx)), placeOf(e));
       case "comprehension": {
         // [e for each n, x in l if c]: its own loop, inside the expression (§6.12).
         const inner = child(ctx);
@@ -640,7 +630,7 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.indexSymbol) inner.locals.set(e.indexSymbol, pairs ? key : index);
         return {
           e: "comp",
-          list: e.overMap && !pairs ? IR.native("keys", [expr(e.list, ctx)]) : e.overText ? IR.native("each_character", [expr(e.list, ctx)]) : expr(e.list, ctx),
+          list: e.overMap && !pairs ? IR.native("keys", [eachOf(e.list, ctx)]) : e.overText ? IR.native("each_character", [eachOf(e.list, ctx)]) : eachOf(e.list, ctx),
           key,
           item,
           index,
@@ -658,7 +648,7 @@ export function lower(resolved, diagnostics, options = {}) {
         const params = sym.params ?? [];
         const bound = e.bound ?? e.args;
         // Every argument bound to its parameter (defaults filled in, §9.4.1), each placed as its parameter's type.
-        const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), e.placedAs?.[i] ?? params[i]?.type, a.param.defaultExpr.type) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), e.placedAs?.[i] ?? params[i]?.type, a.type)));
+        const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), params[i]?.type, a.param.defaultExpr.type) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), params[i]?.type, a.type)));
         // Arguments are worked out as written, left to right, whatever parameters they bind (§9.4.1).
         const written = (x) => e.args.findIndex((a) => a === x || a.value === x);
         const order = bound.map((_, i) => i).sort((i, j) => (written(bound[i]) < 0 ? Infinity : written(bound[i])) - (written(bound[j]) < 0 ? Infinity : written(bound[j])));
@@ -667,8 +657,6 @@ export function lower(resolved, diagnostics, options = {}) {
         if (sym.kind === "native") {
           if (sym.name === "sorted" && e.sortField !== undefined) return withAt(IR.native("sorted_by", [args[0], IR.constant(V.num(e.sortField)), args[1]]), at);
           // Words in quotes given to a set operation are made the set they name (§3.6).
-          // Both of either's values placed as their join (§3.9): either(empty, [n]) is a list.
-          if (e.joined) args.forEach((a, i) => (args[i] = placeAs(a, e.joined, bound[i]?.type)));
           if (e.setOperand) args.forEach((a, i) => bound[i]?.type?.t === "list" && (args[i] = placeAs(a, e.setOperand, bound[i].type)));
           return withAt(ordered(IR.native(sym.name, args)), at);
         }
@@ -684,8 +672,7 @@ export function lower(resolved, diagnostics, options = {}) {
       case "map":
         return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));
       case "list":
-        // Each item placed as the literal's element type (§3.9).
-        return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type)));
+        return IR.list(e.items.map((x) => expr(x, ctx)));
       case "new": {
         const decl = e.recordSymbol.decl;
         const record = IR.record(decl, decl.fields.map((f) => {

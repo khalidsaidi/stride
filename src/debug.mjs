@@ -10,7 +10,7 @@ import { textOf, load, run, boxValues } from "../runtime/vm.mjs";
 
 // ----- the core
 
-const shown = (v) => (v === null || v === undefined ? "empty" : typeof v === "string" ? JSON.stringify(v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.fields ? `${v.type} { ${v.fields.map((f, i) => `${v.names?.[i] ?? i}: ${shown(f)}`).join(", ")} }` : textOf(v) || "empty");
+const shown = (v) => (v === null || v === undefined ? "empty" : typeof v === "string" ? JSON.stringify(v) : Array.isArray(v) ? `[${v.map(shown).join(", ")}]` : v === true ? "yes" : v === false ? "no" : v?.fields ? `${v.type} { ${v.fields.map((f, i) => `${v.names?.[i] ?? i}: ${shown(f)}`).join(", ")} }` : v?.pairs ? `{${v.pairs.map(([k, x]) => `${shown(k)}: ${shown(x)}`).join(", ")}}` : textOf(v));
 const named = (l) => l.name && !l.name.includes(".") && !l.name.startsWith("$");
 
 // The program, compiled to be followed: its intermediate form, and where each of its files is on disk.

@@ -1,8 +1,8 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 6) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 7) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
-import { BINARY_OPS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
+import { BINARY_OPS, FIELD_STARTS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
 import { D, isNumber, isDate, isSet } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
@@ -33,7 +33,7 @@ export function generate(program, pdf, debug = null) {
   const records = [];
   const recordIndex = (decl) => {
     let i = records.findIndex((r) => r.decl === decl);
-    if (i < 0) i = records.push({ decl, name: decl.name, fields: decl.fields.map((f) => f.name), lists: decl.fields.map((f) => f.type?.t === "list") }) - 1;
+    if (i < 0) i = records.push({ decl, name: decl.name, fields: decl.fields.map((f) => f.name), starts: decl.fields.map((f) => FIELD_STARTS.indexOf(["list", "map"].includes(f.type?.t) ? f.type.t : null)) }) - 1;
     return i;
   };
   // Every record type the program declares is in the records section, so the loader can tell that each field an
@@ -124,6 +124,17 @@ export function generate(program, pdf, debug = null) {
             jumpTo(OP.JUMP, end);
             placeLabel(decided);
             emit(x.op === "and" ? OP.FALSE : OP.TRUE);
+            return placeLabel(end);
+          }
+          if (x.op === "??") {
+            // a ?? b (§6.16): a when it is not empty; b is worked out only when it is.
+            const end = label();
+            expr(x.a);
+            emit(OP.DUP);
+            emit(OP.NATIVE, nativeIndex("is_empty"), 1);
+            jumpTo(OP.JUMP_IF_FALSE, end);
+            emit(OP.POP);
+            expr(x.b);
             return placeLabel(end);
           }
           expr(x.a);
@@ -555,7 +566,7 @@ export function generate(program, pdf, debug = null) {
   });
   section(SECTION.RECORDS, (s) => {
     s.varint(records.length);
-    for (const r of records) (s.varint(T(r.name)), s.varint(r.fields.length), r.fields.forEach((f, i) => (s.varint(T(f)), s.u8(r.lists[i] ? 1 : 0))));
+    for (const r of records) (s.varint(T(r.name)), s.varint(r.fields.length), r.fields.forEach((f, i) => (s.varint(T(f)), s.u8(r.starts[i]))));
   });
   section(SECTION.QUESTIONS, (s) => {
     s.varint(questions.length);

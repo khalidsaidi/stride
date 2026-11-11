@@ -6,22 +6,25 @@ expect round(2.345, places: 1) == 2.3
 expect round(2.5, 2.5) faults "F008"
 expect round(2.5, 11) faults "F008"
 expect round(2.5, -1) faults "F008"
-expect round(2.5, empty) faults "F008"
-expect round(empty, 2) is empty
+expect round(2.5, empty) faults "empty where a number is needed: round's places"
+expect round(empty, 2) faults "empty where a number is needed: round's n"
 expect ceil(1.2) == 2
 expect ceil(-1.2) == -1
 expect floor(-1.2) == -2
 expect whole(-1.7) == -1
 expect abs(-3) == 3
 expect min(1, 2) == 1
-expect min(2, empty) == 2
-expect max(empty, 5) == 5
-expect max(empty, empty) is empty
+expect min(2, empty) faults "F023"
+expect max(empty, 5) faults "empty where a number is needed: max's a"
+expect max(empty, empty) faults "F023"
 expect grouped(1234.5, 2) == "1,234.50"
 expect grouped(-1234567) == "-1,234,567"
 expect grouped(0.125, 2) == "0.13"
-expect grouped(empty, 2) is empty
-expect grouped(empty, 2.5) faults "F008"
+expect grouped(empty, 2) faults "F023"
+expect grouped(empty, 2.5) faults "F023"
+expect abs(empty) faults "F023"
+expect power(2, empty) faults "F023"
+expect divide(empty, 2) faults "F023"
 expect fixed(1234.5, 2) == "1234.50"
 expect fixed(2.5) == "3"
 expect divide(1, 4) == 0.25
@@ -32,4 +35,4 @@ expect 7 // 0 faults "F002"
 expect 7 % 0 faults "F002"
 expect 9999999999999999999999999999999999 * 10 faults "F003"
 expect text_of(0.1 + 0.2) == "0.3"
-# rule 14.0.1 14.0.3 14.0.3.1 14.2 F001 F002 F003 F008
+# rule 14.0.1 14.0.3 14.0.3.1 14.2 F001 F002 F003 F008 F023

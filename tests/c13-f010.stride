@@ -9,10 +9,10 @@ fill "A" = format(d, p)
 # boxes {"A": "2026"}
 # run empty-date
 # answers {"p": "YYYY"}
-# boxes {"A": ""}
+# fault F023 at 5:12 empty where a date is needed: format's d
 # run bad-pattern
 # answers {"p": "invalid", "d": "2026-11-07"}
 # fault F010 at 5:12
 # run bad-pattern-empty-date
 # answers {"p": "invalid"}
-# fault F010 at 5:12
+# fault F023 at 5:12

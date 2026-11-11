@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 define size(xs: list of number) -> number {
-  return count(xs)
+  return count(xs ?? [])
 }
 define turns(xs: list of number) -> number {
   var k = 0
@@ -10,7 +10,12 @@ define turns(xs: list of number) -> number {
   }
   return k
 }
+var none: list of number
 print(size(empty))
+print(size(none))
+print(turns(none))
 print(turns(empty))
-# rule 3.7.1
-# prints ["0", "0"]
+# rule 3.7.1 7.4 7.11 F023
+# prints ["0", "0", "0"]
+# fault F023 at 8:17 empty where a list is needed: what for each goes through
+# stack ["turns c3-empty-list-param.stride:8:17", "main c3-empty-list-param.stride:17:7"]

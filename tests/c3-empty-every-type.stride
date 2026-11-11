@@ -12,6 +12,9 @@ ask o: one-of s "O"
 ask m: any-of s "M"
 var v: r
 var l: list of number
+var e: list of number = empty
+var k: map of text to number
+let w = ""
 print(t is empty)
 print(n is empty)
 print(d is empty)
@@ -20,5 +23,8 @@ print(o is empty)
 print(m is empty)
 print(v is empty)
 print(l is empty)
+print(e is empty)
+print(k is empty)
+print(w is empty)
 # rule 3.2
-# prints ["yes", "yes", "yes", "yes", "yes", "yes", "yes", "yes"]
+# prints ["yes", "yes", "yes", "yes", "yes", "yes", "yes", "no", "yes", "no", "no"]

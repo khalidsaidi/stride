@@ -7,6 +7,10 @@ collect k in kids "Another child?" {
   ask k.born: number "Born"
 }
 fill "A" = join([k.name for each k in sorted(kids, by: "born")], ",")
-# rule 14.4
-# answers {"kids[0].name": "A", "kids[0].born": 2, "kids[0]#another": true, "kids[1].name": "B", "kids[1]#another": true, "kids[2].name": "C", "kids[2].born": 1, "kids[2]#another": false}
+# rule 14.4 F023
+# run stable
+# answers {"kids[0].name": "A", "kids[0].born": 2, "kids[0]#another": true, "kids[1].name": "B", "kids[1].born": 2, "kids[1]#another": true, "kids[2].name": "C", "kids[2].born": 1, "kids[2]#another": false}
 # boxes {"A": "C,A,B"}
+# run a field empty
+# answers {"kids[0].name": "A", "kids[0].born": 2, "kids[0]#another": true, "kids[1].name": "B", "kids[1]#another": false}
+# fault F023 at 9:39 empty where a value is needed: the field sorted puts in order by

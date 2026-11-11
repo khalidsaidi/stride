@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+let x = n ??
+  0
+print(x)
+let y = n ??
+let z = 1
+# rule 6.16 S015
+# mistake 7:11 S015 "??" at the end of the line needs a value after it

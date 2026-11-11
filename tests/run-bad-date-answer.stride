@@ -1,7 +1,12 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask d: date "D"
-fill "A" = format(d, "MM/DD/YYYY")
+fill "A" = if d is empty then empty else format(d, "MM/DD/YYYY")
+fill "B" = format(d, "MM/DD/YYYY")
+# rule 8.7 F023
+# run no such day
 # answers {"d": "2024-02-31"}
-# boxes {}
-# rule 8.7
+# fault F023 at 5:12 empty where a date is needed: format's d
+# run a day
+# answers {"d": "2024-02-29"}
+# boxes {"A": "02/29/2024", "B": "02/29/2024"}

@@ -22,7 +22,7 @@ export function test() {
     });
     writeFileSync(join(dir, "fault.test.stride"), 'expect fail("expected") faults "F013"\n');
     for (const [args, expected] of [
-      [["version"], "bytecode version 6"],
+      [["version"], "bytecode version 7"],
       [["eval", 'upper("hello")'], "HELLO"],
       [["test", "fault.test.stride"], "1 expectation passed"],
       [["explain", "S318"], "S318"],

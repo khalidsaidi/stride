@@ -6,10 +6,15 @@ expect date_of(2024, 1, 1.5) is empty
 expect format(date_of(2026, 3, 5), "MM/DD/YYYY") == "03/05/2026"
 expect format(date_of(2026, 3, 5), "M/D/YY") == "3/5/26"
 expect format(date_of(2026, 3, 5), "YYYY") == "2026"
-expect format(empty, "MM") is empty
+expect format(empty, "MM") faults "empty where a date is needed: format's d"
 expect format(date_of(2026, 1, 1), "invalid") faults "F010"
-expect format(empty, "invalid") faults "F010"
-expect format(date_of(2026, 1, 1), empty) faults "F010"
+expect format(empty, "invalid") faults "F023"
+expect format(date_of(2026, 1, 1), empty) faults "F023"
+expect format(date_of(2026, 1, 1), "") faults "F010"
+expect year(empty) faults "F023"
+expect days_between(empty, date_of(2024, 1, 1)) faults "empty where a date is needed: days_between's from"
+expect add_days(date_of(2024, 1, 1), empty) faults "F023"
+expect date_of(2024, empty, 1) faults "F023"
 expect days_between(date_of(2024, 1, 1), date_of(2023, 12, 31)) == -1
 expect days_between(date_of(2024, 1, 1), date_of(2024, 3, 1)) == 60
 expect years_between(date_of(2000, 2, 29), date_of(2001, 2, 28)) == 1
@@ -22,4 +27,4 @@ expect add_days(date_of(2024, 2, 28), 1.9) == date_of(2024, 2, 29)
 expect add_days(date_of(2024, 2, 28), -1.9) == date_of(2024, 2, 27)
 expect add_days(date_of(9999, 12, 31), 1) faults "F011"
 expect add_days(date_of(1, 1, 1), -1) faults "F011"
-# rule 14.3 14.0.3.1 F010 F011
+# rule 14.3 14.0.3 14.0.3.1 F010 F011 F023

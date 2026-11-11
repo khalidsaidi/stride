@@ -31,7 +31,7 @@
 //   try         = "try" block "catch" [name] block
 //   foreach     = "for" "each" [name ","] name "in" expr block
 //   collect     = "collect" [name ","] name "in" name ["any" string "another"] string block
-//   expr        = or;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
+//   expr        = cond | coalesce;  coalesce = or ("??" or)*;  or = and ("or" and)*;  and = not ("and" not)*;  not = "not" not | compare
 //   compare     = sum [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") sum | "is" ["not"] "empty"]
 //   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/") unary)*;  unary = "-" unary | postfix
 //   postfix     = primary ("." name | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
@@ -52,7 +52,7 @@ export const KEYWORDS = new Set([
 // `for each`, `when` and `then`. Anywhere else each is a name like any other.
 const CONTEXTUAL = new Set(["each", "fields", "list", "of", "set", "then", "when"]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
-const PUNCT = ["..<", "..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
+const PUNCT = ["..<", "..", "??", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
@@ -959,7 +959,7 @@ class Parser {
         const no = this.expr();
         return { kind: "cond", condition, yes, no, span: join(start.span, no.span) };
       }
-      return this.or();
+      return this.coalesce();
     } finally {
       this.leave();
     }
@@ -981,6 +981,11 @@ class Parser {
     } finally {
       this.depth -= levels;
     }
+  }
+
+  // a ?? b (§6.16): looser than or, tighter than if … then … else.
+  coalesce() {
+    return this.binaryChain(() => this.or(), ["??"]);
   }
 
   or() {
@@ -1018,18 +1023,18 @@ class Parser {
     if (t.type === "punct" && ["==", "!=", "<=", ">=", "<", ">"].includes(t.value)) {
       this.take();
       const b = this.sum();
-      return once({ kind: "binary", op: t.value, a, b, span: join(a.span, b.span) });
+      return once({ kind: "binary", op: t.value, a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     if (this.word("in")) {
       this.take();
       const b = this.sum();
-      return once({ kind: "binary", op: "in", a, b, span: join(a.span, b.span) });
+      return once({ kind: "binary", op: "in", a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     if (this.word("not") && this.peek().type === "keyword" && this.peek().value === "in") {
       this.take();
       this.take();
       const b = this.sum();
-      return once({ kind: "binary", op: "not in", a, b, span: join(a.span, b.span) });
+      return once({ kind: "binary", op: "not in", a, b, opSpan: t.span, span: join(a.span, b.span) });
     }
     if (this.word("is")) {
       this.take();
@@ -1208,7 +1213,7 @@ class Parser {
     if (t.type === "punct" && ["+", "-", "*", "/", "<", ">", "==", "!="].includes(t.value)) throw this.mistake("a value");
     // A line that ends on an operator (S015), whatever the next line starts with.
     const before = this.tokens[this.at - 1];
-    const onOperator = t.broken && before?.type === "punct" && ["+", "-", "*", "/", "//", "%", "<", "<=", ">", ">=", "==", "!="].includes(before.value);
+    const onOperator = t.broken && before?.type === "punct" && ["+", "-", "*", "/", "//", "%", "<", "<=", ">", ">=", "==", "!=", "??"].includes(before.value);
     if (this.is("end") || (t.broken && t.type === "keyword") || onOperator) {
       const prev = this.tokens[this.at - 1];
       throw new SyntaxMistake(prev?.type === "punct" ? `"${prev.value}" at the end of the line needs a value after it` : "the line ended where a value was expected", prev?.span ?? t.span, prev?.type === "punct" ? "S015" : "S010");
