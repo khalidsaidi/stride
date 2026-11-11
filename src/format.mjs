@@ -459,11 +459,13 @@ export function format(text, name = "program.stride") {
         const fors = [];
         let last = e;
         for (;;) {
-          fors.push(`for ${last.index ? `${last.index}, ` : ""}${last.item} in ${expr(last.list, 1)}${last.condition ? ` if ${expr(last.condition, 1)}` : ""}`);
+          const w = last.written ?? last;
+          const names = w.names ? `(${w.names.map((n) => n.name).join(", ")})` : `${last.index ? `${last.index}, ` : ""}${last.item}`;
+          fors.push(`for ${names} in ${expr(w.list, 1)}${w.condition ? ` if ${expr(w.condition, 1)}` : ""}`);
           if (!last.nested) break;
           last = last.value;
         }
-        const v = last.value;
+        const v = e.writtenValue ?? last.value;
         return e.asMap ? `{${expr(v.items[0])}: ${expr(v.items[1])} ${fors.join(" ")}}` : `[${expr(v)} ${fors.join(" ")}]`;
       }
       case "cond":

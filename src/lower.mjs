@@ -774,7 +774,7 @@ export function lower(resolved, diagnostics, options = {}) {
         const record = IR.record(decl, decl.fields.map((f) => {
           const given = e.fields.find((x) => x.name === f.name);
           // A field left out takes its default (§5.1.1), made anew for each record.
-          return given ? placeAs(expr(given.value, ctx), f.type, given.value.type) : f.hasDefault ? IR.constant(f.defaultValue) : initial(f.type);
+          return given ? placeAs(expr(given.value, ctx), f.type, given.value.type) : f.defaultExpr ? placeAs(expr(f.defaultExpr, ctx), f.type, f.defaultExpr.type) : f.hasDefault ? IR.constant(f.defaultValue) : initial(f.type);
         }));
         // The fields given are worked out as written (§6.2), the others after.
         const at = (i) => e.fields.findIndex((x) => x.name === decl.fields[i].name);

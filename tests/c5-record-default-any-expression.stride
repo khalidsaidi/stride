@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function today_n() -> number {
+  return 7
+}
+record item {
+  name: string
+  made: number = today_n() * 2
+}
+let pairs = [(1, "a"), (2, "b"), (3, "c")]
+print([s for (n, s) in pairs if n > 1])
+print(new item { name: "x" }.made)
+# rule 5.1.1 7.11.3
+# prints ["[b, c]", "14"]

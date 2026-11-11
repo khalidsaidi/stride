@@ -801,10 +801,6 @@ export const CODES = {
     "when": "a record field's default of another type than the field",
     "explanation": "The default is a value of the field's type (§5.1.1)."
   },
-  "S763": {
-    "when": "a record field's default the compiler cannot work out",
-    "explanation": "A default is words, a number, a date, true or false, null or a list of them, made of constants; give any other value in `new`."
-  },
   "S764": {
     "when": "a record's method named as another of its methods or as one of its fields",
     "explanation": "A record's fields and methods have each their own name (§5.1.2)."

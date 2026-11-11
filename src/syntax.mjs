@@ -1527,8 +1527,10 @@ class Parser {
   comprehension(start, value, close) {
     const fors = [];
     while (this.word("for")) {
-      this.take();
-      const [index, item] = this.loopNames();
+      const at = this.take();
+      // [… for (a, b) in l]: each item under a hidden name, a and b its positions (§7.11.3).
+      const names = this.sym("(") ? this.tupleNames() : null;
+      const [index, item] = names ? [null, hiddenName(at)] : this.loopNames();
       this.expect("keyword", "in");
       const list = this.or();
       let condition = null;
@@ -1536,11 +1538,33 @@ class Parser {
         this.take();
         condition = this.or();
       }
-      fors.push({ index, item, list, condition });
+      fors.push({ index, item, list, condition, names });
     }
     this.expect("punct", close, `"${close}"`);
+    // A tuple's names stand for its positions, in the value and in the conditions after their `for`.
+    const swap = (e, f) => {
+      if (!e || typeof e !== "object") return e;
+      if (Array.isArray(e)) return e.map((x) => swap(x, f));
+      if (!e.kind) return e;
+      if (e.kind === "name" && f.names.some((n) => n.name === e.name)) return positionOf(f.item, f.names.findIndex((n) => n.name === e.name), e.span);
+      if (e.kind === "lambda" || e.kind === "comprehension") return e;
+      const out = { ...e };
+      for (const k of Object.keys(out)) if (k !== "span" && out[k] && typeof out[k] === "object" && (Array.isArray(out[k]) || out[k].kind)) out[k] = swap(out[k], f);
+      return out;
+    };
+    // As written, for the formatter.
+    const written = { value, fors: fors.map((f) => ({ list: f.list, condition: f.condition })) };
+    fors.forEach((f, i) => {
+      if (!f.names) return;
+      value = swap(value, f);
+      for (const g of fors.slice(i)) (g.condition = swap(g.condition, f)), g !== f && (g.list = swap(g.list, f));
+    });
     let node = value;
-    for (let i = fors.length - 1; i >= 0; i--) node = this.node("comprehension", start, { value: node, ...fors[i], nested: i < fors.length - 1 });
+    for (let i = fors.length - 1; i >= 0; i--) {
+      const { names, ...f } = fors[i];
+      node = this.node("comprehension", start, { value: node, ...f, nested: i < fors.length - 1, written: { ...written.fors[i], names } });
+    }
+    node.writtenValue = written.value;
     return node;
   }
 

@@ -72,7 +72,8 @@ export function check(resolved, diagnostics) {
           optionLiteral(d, f.type);
           if (T.isError(t)) continue;
           const v = evaluate(d);
-          if (v === undefined) err("S763", d, `a field's default is worked out by the compiler, from words, numbers and constants${faultIn(d) ? `; this one faults: ${faultIn(d).knownFault.message}` : `; ${rec.name}'s ${f.name} depends on something that is not`}`);
+          if (v === undefined) (f.hasDefault = true), (f.defaultExpr = d); // worked out at each `new` that leaves it out
+          else if (false) err("S763", d, `a field's default is worked out by the compiler, from words, numbers and constants${faultIn(d) ? `; this one faults: ${faultIn(d).knownFault.message}` : `; ${rec.name}'s ${f.name} depends on something that is not`}`);
           else {
             f.hasDefault = true;
             f.defaultValue = knownPlaced(d, f.type);

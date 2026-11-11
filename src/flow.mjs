@@ -27,7 +27,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   const know = (e, env) => (e?.kind === "call" && e.callee?.kind === "function" ? undefined : evaluate(e, env));
   // A parameter's default worked out at the call (§9.2) is read as a statement at the head of its function.
   const defaultsOf = (f) => (f.params ?? []).filter((p) => p.defaultExpr).map((p) => ({ kind: "call-statement", call: p.defaultExpr, span: p.defaultExpr.span, file: p.defaultExpr.file }));
-  const bodies = [...functions.map((f) => ({ fn: f, body: [...defaultsOf(f), ...f.node.body] })), ...resolved.units.filter((r) => !r.unit.library).map((r) => ({ fn: null, body: r.main }))];
+  const bodies = [...functions.map((f) => ({ fn: f, body: [...defaultsOf(f), ...f.node.body] })), ...resolved.units.filter((r) => !r.unit.library).map((r) => ({ fn: null, body: r.main })),
+    // A record field's default worked out at each `new` (§5.1.1) reads what it names.
+    ...resolved.units.map((r) => ({ fn: null, body: r.records.flatMap((rec) => rec.decl.fields.filter((f) => f.defaultExpr).map((f) => ({ kind: "call-statement", call: f.defaultExpr, span: f.defaultExpr.span, file: f.defaultExpr.file }))) }))];
 
   // ----- walking a body's statements and expressions
 

@@ -282,9 +282,8 @@ hold its own type, directly or through a list, a map or other records (a tree, a
 null, such a list with no items (§6.14).
 
 5.1.1. **A field's default**: `name: type = e`, as `age: number = 0`. `new R { … }` that leaves the field out gives it
-the default, made anew for each record (a list is its own). The default is a value the compiler works out (§11.1:
-words, a number, a date, true or false, null, a list of them, made of constants; S763 otherwise) of the field's
-type (S762). A record made without `new` (§7.5.1) starts as §6.14 says.
+the default, worked out anew for each record (a list is its own). The default is any expression of the field's
+type (S762), made of what the file declares and the program's top-level names. A record made without `new` (§7.5.1) starts as §6.14 says.
 
 5.1.2. **Methods**: a record's declaration may hold functions, `"function" name ["<" …">"] "(" ["self" [","]] [param
 ("," param)*] ")" ["->" type] block`, among its fields. A method is a function whose first parameter, `self`, is
@@ -662,7 +661,7 @@ turn; a null one is F023, and one of more than 10,000,000 numbers F030 (§6.17.3
 is the loop of §7.11: it counts, and makes no range.
 
 7.11.3. **for over tuples.** `for (a, b) in l { }`: each item of l, a tuple of as many values as there are
-names (S741), has its values under the names inside the block, each a let of that turn.
+names (S741), has its values under the names inside the block, each a let of that turn. A comprehension does the same: `[s for (n, s) in pairs if n > 1]`.
 
 7.12. **break** ends the innermost `for` or `while`; **continue** goes to its next turn. Outside one, or inside
 a collect, they are S233, S234.
@@ -1567,7 +1566,6 @@ its call: the function's name in the call.
 | S760 | a short function `(x) => …` where nothing tells a parameter's type | A short function takes its parameters' types from the function type wanted where it stands (§9.12): an argument, a typed let, a field, a return. Elsewhere write them, `(x: number) => …`, or the long form `function(x: number) -> number { … }`. |
 | S761 | a short function with another number of parameters than the function type wanted | Give it as many parameters as the function wanted takes values. |
 | S762 | a record field's default of another type than the field | The default is a value of the field's type (§5.1.1). |
-| S763 | a record field's default the compiler cannot work out | A default is words, a number, a date, true or false, null or a list of them, made of constants; give any other value in `new`. |
 | S764 | a record's method named as another of its methods or as one of its fields | A record's fields and methods have each their own name (§5.1.2). |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
