@@ -34,7 +34,7 @@
     },
     "keyword": {
       "name": "keyword.control.stride",
-      "match": "\\b(and|as|ask|break|check|collect|const|continue|default|define|each|else|expect|export|fill|for|if|in|is|let|list|match|most|native|new|not|of|options|or|pick|record|return|set|then|tick|try|catch|function|use|var|when|while)\\b"
+      "match": "\\b(and|as|ask|break|check|collect|const|continue|default|define|each|else|expect|export|fill|for|if|in|is|let|list|map|match|most|native|new|not|of|options|or|pick|record|return|set|then|tick|try|catch|function|use|var|when|while)\\b"
     },
     "type": { "name": "support.type.stride", "match": "\\b(text|long-text|number|date|yes-no|phone|email|one-of|any-of)\\b" },
     "constant": { "name": "constant.language.stride", "match": "\\b(yes|no|empty)\\b" },

@@ -83,8 +83,42 @@ export function list(items, most) {
 }
 export const mostOf = (l) => (Array.isArray(l) ? l.most ?? l.length : 0);
 
-export const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
+export const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0) || (v instanceof StrideMap && v.entries.size === 0);
 export const isNumber = (v) => v instanceof D.Decimal;
+
+// A map (§3.10): values under keys, in the order the keys were first given. A key is told from another by its
+// words (the keys of one map are of one type).
+export class StrideMap {
+  constructor(pairs = []) {
+    this.entries = new Map(); // a key's words -> [key, value]
+    for (const [k, v] of pairs) this.set(k, v);
+  }
+  get(k) {
+    return this.entries.get(words(k))?.[1] ?? null;
+  }
+  has(k) {
+    return this.entries.has(words(k));
+  }
+  set(k, v) {
+    if (isEmpty(k)) throw new StrideFault("F004", "a map's key is empty");
+    const w = words(k);
+    const was = this.entries.get(w);
+    if (was) was[1] = v;
+    else {
+      if (this.entries.size >= 1000) throw new StrideFault("F017", "the map holds its most, 1000, and cannot take one more key");
+      this.entries.set(w, [k, v]);
+    }
+  }
+  remove(k) {
+    this.entries.delete(words(k));
+  }
+  get pairs() {
+    return [...this.entries.values()];
+  }
+  toJSON() {
+    return Object.fromEntries(this.pairs.map(([k, v]) => [words(k), v]));
+  }
+}
 
 // A function as a value (§9.10): its name, and what an engine calls it by.
 export class StrideFunction {
@@ -103,6 +137,7 @@ export function copy(v) {
   if (isSet(v)) return set([...v], v.order);
   if (Array.isArray(v)) return list(v.map(copy), v.most);
   if (v instanceof StrideRecord) return new StrideRecord(v.type, v.fields.map(copy), v.names);
+  if (v instanceof StrideMap) return new StrideMap(v.pairs.map(([k, x]) => [k, copy(x)]));
   return v;
 }
 
@@ -117,6 +152,7 @@ export function words(v) {
   if (Array.isArray(v)) return v.map(words).join(", ");
   if (v instanceof StrideRecord) return v.fields.map(words).filter(Boolean).join(", ");
   if (v instanceof StrideFunction) return `function ${v.name}`;
+  if (v instanceof StrideMap) return v.pairs.map(([k, x]) => `${words(k)}: ${words(x)}`).join(", ");
   return String(v);
 }
 
@@ -128,6 +164,7 @@ export function printed(v, recordNames = () => null) {
     const names = v.names ?? recordNames(v.type) ?? v.fields.map((_, i) => `field${i + 1}`);
     return `${v.type} { ${v.fields.map((f, i) => `${names[i]}: ${printed(f, recordNames)}`).join(", ")} }`;
   }
+  if (v instanceof StrideMap) return `{${v.pairs.map(([k, x]) => `${words(k)}: ${printed(x, recordNames)}`).join(", ")}}`;
   return words(v);
 }
 
@@ -139,6 +176,7 @@ export function equal(a, b) {
   if (isDate(a) && isDate(b)) return a.iso === b.iso;
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => equal(x, b[i]));
   if (a instanceof StrideRecord && b instanceof StrideRecord) return a.type === b.type && a.fields.every((x, i) => equal(x, b.fields[i]));
+  if (a instanceof StrideMap && b instanceof StrideMap) return a.entries.size === b.entries.size && a.pairs.every(([k, x]) => b.has(k) && equal(x, b.get(k)));
   if (a instanceof StrideFunction && b instanceof StrideFunction) return a.target === b.target && a.kept.length === b.kept.length && a.kept.every((k, i) => equal(k, b.kept[i]));
   return a === b;
 }

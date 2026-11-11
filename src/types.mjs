@@ -31,6 +31,8 @@ export const option = (set) => ({ t: "option", set });
 export const options = (set) => ({ t: "options", set });
 export const record = (decl) => ({ t: "record", decl });
 export const list = (element, most) => ({ t: "list", element, most });
+// map of K to V: values of one type, each under its own key (§3.10).
+export const map = (key, value) => ({ t: "map", key, value });
 // A function as a value (§9.10): what it takes and what it gives.
 export const fn = (params, result) => ({ t: "function", params, result });
 // A type parameter of a generic function: whatever type each call gives it.
@@ -53,6 +55,8 @@ export function same(a, b) {
       return a.decl === b.decl;
     case "list":
       return same(a.element, b.element);
+    case "map":
+      return same(a.key, b.key) && same(a.value, b.value);
     case "function":
       return a.params.length === b.params.length && a.params.every((p, i) => same(p, b.params[i])) && same(a.result, b.result);
     case "typevar":
@@ -80,6 +84,7 @@ export function unify(param, value, bindings) {
     return false;
   }
   if (param.t === "list" && value.t === "list") return value.element.t === "empty" || unify(param.element, value.element, bindings);
+  if (param.t === "map" && value.t === "map") return (value.key.t === "empty" || unify(param.key, value.key, bindings)) && (value.value.t === "empty" || unify(param.value, value.value, bindings));
   return fits(value, substitute(param, bindings));
 }
 
@@ -87,11 +92,12 @@ export function unify(param, value, bindings) {
 export function substitute(type, bindings) {
   if (type.t === "typevar") return bindings.get(type.sym) ?? type;
   if (type.t === "list") return list(substitute(type.element, bindings), type.most);
+  if (type.t === "map") return map(substitute(type.key, bindings), substitute(type.value, bindings));
   return type;
 }
 
-export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element));
-export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "list" && typevarIn(type.element, sym));
+export const hasTypevar = (type) => type.t === "typevar" || (type.t === "list" && hasTypevar(type.element)) || (type.t === "map" && (hasTypevar(type.key) || hasTypevar(type.value)));
+export const typevarIn = (type, sym) => (type.t === "typevar" ? type.sym === sym : type.t === "map" ? typevarIn(type.key, sym) || typevarIn(type.value, sym) : type.t === "list" && typevarIn(type.element, sym));
 
 // Whether a value of type `value` can stand where `wanted` is wanted.
 export function fits(value, wanted) {
@@ -104,6 +110,7 @@ export function fits(value, wanted) {
     // program runs (§3.7.7, F017).
     return value.element.t === "empty" || fits(value.element, wanted.element);
   }
+  if (wanted.t === "map" && value.t === "map") return (value.key.t === "empty" || fits(value.key, wanted.key)) && (value.value.t === "empty" || fits(value.value, wanted.value));
   return same(value, wanted);
 }
 
@@ -118,6 +125,7 @@ export function comparable(a, b) {
   // Records of one type, sets of one option set: by value; lists whose element types join (§3.9), whatever their
   // mosts (§6.6).
   if (a.t === "list" && b.t === "list") return a.element.t === "empty" || b.element.t === "empty" || join(a.element, b.element) !== null;
+  if (a.t === "map" && b.t === "map") return join(a, b) !== null;
   return same(a, b);
 }
 
@@ -146,6 +154,8 @@ export function describe(type) {
       return type.decl.name;
     case "list":
       return type.most >= 1000 ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
+    case "map":
+      return `a map of ${describe(type.key)} to ${describe(type.value)}`;
     case "function":
       return `a function (${type.params.map(describe).join(", ")})${type.result.t === "none" ? "" : ` -> ${describe(type.result)}`}`;
     case "typevar":
@@ -176,7 +186,11 @@ export function join(a, b) {
   if (isError(a) || isError(b)) return ERROR;
   if (a.t === "empty") return b;
   if (b.t === "empty") return a;
-  if (same(a, b) && a.t !== "list") return a;
+  if (same(a, b) && a.t !== "list" && a.t !== "map") return a;
+  if (a.t === "map" && b.t === "map") {
+    const k = join(a.key, b.key), v = join(a.value, b.value);
+    return k && v ? map(k, v) : null;
+  }
   const wordy = (t) => isTextLike(t) || t.t === "option";
   if (wordy(a) && wordy(b)) return TEXT;
   if (a.t === "list" && b.t === "list") {

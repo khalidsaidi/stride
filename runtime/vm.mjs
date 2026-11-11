@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -309,6 +309,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.GET_ITEM: {
           const i = pop();
           const l = pop();
+          if (l instanceof StrideMap) {
+            stack.push(l.get(i));
+            break;
+          }
           const n = readPosition(l, i);
           stack.push(l[n - 1] ?? null);
           break;
@@ -316,6 +320,11 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.GET_ITEM_THERE: {
           const i = pop();
           const l = pop();
+          if (l instanceof StrideMap) {
+            if (!l.has(i)) fault("F020", `there is nothing under the key ${words(i)} to change`);
+            stack.push(l.get(i));
+            break;
+          }
           const n = readPosition(l, i);
           if (n > l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
           stack.push(l[n - 1]);
@@ -325,6 +334,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const v = pop();
           const i = pop();
           const l = pop();
+          if (l instanceof StrideMap) {
+            l.set(i, copy(v));
+            break;
+          }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
           if (n === null || n < 1 || n > l.length + 1 || n > mostOf(l)) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length} of at most ${mostOf(l)}`);
@@ -334,6 +347,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.CHECK_SLOT: {
           const i = stack[stack.length - 1];
           const l = stack[stack.length - 2];
+          if (l instanceof StrideMap) {
+            if (isEmpty(i)) fault("F004", "a map's key is empty");
+            break;
+          }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
           if (n === null || n < 1 || n > l.length + 1 || n > mostOf(l)) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length} of at most ${mostOf(l)}`);
@@ -357,6 +374,14 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.ENSURE_ITEM: {
           const i = stack[stack.length - 1];
           const l = stack[stack.length - 2];
+          if (l instanceof StrideMap) {
+            // A record under a key not there yet is made, as a record var's is (§7.5.1).
+            if (isEmpty(l.get(i))) {
+              const t = p.records[ins.a];
+              l.set(i, emptyRecord(t.name, t.mosts, t.fields));
+            }
+            break;
+          }
           const n = readPosition(l, i);
           if (n > l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
           if (isEmpty(l[n - 1])) {

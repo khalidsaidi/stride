@@ -320,6 +320,28 @@ yes
 [ADA, CY]
 ```
 
+A map holds values under keys (§3.10). Reading a key it does not have gives empty:
+
+```stride
+var ages: map of text to number = {"Ann": 30, "Bo": 41}
+ages["Cy"] = 25
+ages["Ann"] = ages["Ann"] + 1
+print(ages["Ann"])
+print(ages["Zed"] is empty)
+for each name in keys(ages) {
+  print("{name}: {ages[name]}")
+}
+print(has(ages, "Bo"))
+```
+```output
+31
+yes
+Ann: 31
+Bo: 41
+Cy: 25
+yes
+```
+
 ## 8. Functions as values
 
 A function's name, where a value goes, is the function itself (§9.10): it can be given to another function, kept

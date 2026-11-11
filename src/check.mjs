@@ -254,7 +254,7 @@ export function check(resolved, diagnostics) {
         else if (type.t === "options") s.itemSymbol.type = T.option(type.set);
         else if (type.t === "empty") s.itemSymbol.type = T.EMPTY; // no turns (§3.6)
         else {
-          if (!T.isError(type)) err("S314", s.list, `for each goes through a list or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}`);
+          if (!T.isError(type)) err("S314", s.list, `for each goes through a list or a set of options; ${describeExpr(s.list)} is ${T.describe(type)}${type.t === "map" ? `: go through keys(${describeExpr(s.list)})` : ""}`);
           s.itemSymbol.type = T.ERROR;
         }
         return block(s.body, ctx);
@@ -683,6 +683,13 @@ export function check(resolved, diagnostics) {
       case "index": {
         const t = expr(e.target, ctx);
         const i = expr(e.index, ctx);
+        // A map's value is chosen by its key (§6.12).
+        if (t.t === "map") {
+          if (!T.isError(i) && i.t !== "empty" && t.key.t !== "empty" && !T.fits(i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
+          else optionLiteral(e.index, t.key);
+          e.mapIndex = true;
+          return t.value;
+        }
         if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 1), not ${T.describe(i)}`);
         if (T.isError(t)) return T.ERROR;
         if (t.t !== "list") {
@@ -699,6 +706,20 @@ export function check(resolved, diagnostics) {
       }
       case "call":
         return call(e, ctx, how);
+      case "map": {
+        // The join of the keys' types, and of the values' (§6.12, §3.9).
+        let key = T.EMPTY, value = T.EMPTY;
+        for (const x of e.entries) {
+          const k = expr(x.key, ctx), v = expr(x.value, ctx);
+          const jk = T.join(key, k), jv = T.join(value, v);
+          if (!jk) err("S361", x.key, `a map's keys join into one type; this is ${T.describe(k)}, and the keys before are ${T.describe(key)}`);
+          else key = jk;
+          if (!jv) err("S361", x.value, `a map's values join into one type; this is ${T.describe(v)}, and the values before are ${T.describe(value)}`);
+          else value = jv;
+        }
+        if (!["text", "number", "date", "yes-no", "option", "empty", "error"].includes(key.t)) err("S361", e, `a map's keys are words, numbers, dates, yes-no or options, not ${T.describe(key)}`);
+        return T.map(key, value);
+      }
       case "list": {
         // The join of the items' types, left to right (§6.11, §3.9).
         let element = T.EMPTY;
@@ -864,6 +885,7 @@ export function check(resolved, diagnostics) {
           ordered.push({ tv: want.sym, type: got, from });
         }
       } else if (want.t === "list" && got.t === "list") collect(want.element, got.element, from);
+      else if (want.t === "map" && got.t === "map") (collect(want.key, got.key, from), collect(want.value, got.value, from));
     };
     // In the order the arguments are written, then the defaults of those not given, in the parameters' order
     // (§9.5.1): a join does not depend on it, but S367 stands at the first written argument that conflicts.
@@ -951,6 +973,7 @@ export function check(resolved, diagnostics) {
     // The list functions (§14.4) take a list, or a set of options; their value to look for is one of its items.
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
+    if (sym.name === "count" && l.t === "map") return;
     if (LIST_FUNCTIONS.includes(sym.name) && !element && l.t !== "empty") {
       err("S369", bound[0], `${sym.name} takes a list${SET_FUNCTIONS.includes(sym.name) ? " or a set of options" : ""}, and this is ${T.describe(l)}`);
       return;

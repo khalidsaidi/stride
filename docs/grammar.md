@@ -54,6 +54,7 @@ and `faults` are words of the language only where the grammar uses them, and nam
 | `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
 | `list of T`, `list of T most N` | values of type T, up to 1000, or up to N when a most is stated |
+| `map of K to V` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
 | `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
 
 A function written in place, where a value goes: `function(n: number) -> number { return n * 2 }` (§9.11).

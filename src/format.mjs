@@ -338,6 +338,8 @@ export function format(text, name = "program.stride") {
     switch (t.kind) {
       case "type-list":
         return t.most ? `list of ${type(t.element)} most ${expr(t.most)}` : `list of ${type(t.element)}`;
+      case "type-map":
+        return `map of ${type(t.key)} to ${type(t.value)}`;
       case "type-set":
         return `set of ${t.name}`;
       case "type-any":
@@ -408,6 +410,8 @@ export function format(text, name = "program.stride") {
         return `${e.name}: ${expr(e.value)}`;
       case "list":
         return `[${e.items.map((a) => expr(a)).join(", ")}]`;
+      case "map":
+        return `{${e.entries.map((x) => `${expr(x.key)}: ${expr(x.value)}`).join(", ")}}`;
       case "comprehension":
         return `[${expr(e.value)} for each ${e.index ? `${e.index}, ` : ""}${e.item} in ${expr(e.list, 1)}${e.condition ? ` if ${expr(e.condition, 1)}` : ""}]`;
       case "cond":

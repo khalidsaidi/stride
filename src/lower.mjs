@@ -200,6 +200,7 @@ export function lower(resolved, diagnostics, options = {}) {
   // A var's first value when it is declared without one: an empty list or record to fill, or empty.
   function initial(type) {
     if (type?.t === "list") return IR.list([], Number.isFinite(type.most) ? type.most : 1);
+    if (type?.t === "map") return IR.native("map_of", []);
     // A record var without a value starts empty (§7.4); writing a field makes it (§7.5.1).
     return IR.constant(null);
   }
@@ -294,7 +295,7 @@ export function lower(resolved, diagnostics, options = {}) {
         const entry = { index: withAt(expr(st.index, ctx), placeOf(st)) };
         if (s.op) entry.into = ctx.fn.local("at", null);
         path.push(entry);
-        type = type?.element;
+        type = type?.t === "map" ? type.value : type?.element;
       }
     }
     // Where the next step is a field, the step before may make a record of the field's holder.
@@ -532,6 +533,8 @@ export function lower(resolved, diagnostics, options = {}) {
     if (type?.t === "options" && (from?.t === "list" || from?.t === "empty")) return IR.native("to_set", [x, IR.constant(V.list(type.set.options.map((o) => o.value), Math.max(1, type.set.options.length)))]);
     // Each level's most, `?` where it is known only as the program runs: there the value keeps the most it carries,
     // and the levels inside it are still widened (§3.9 rule 4).
+    // The bare `empty` where a map goes is a map with no keys.
+    if (type?.t === "map" && from?.t === "empty") return IR.native("map_of", []);
     const mostsOf = (t) => {
       const out = [];
       for (; t?.t === "list"; t = t.element) out.push(Number.isFinite(t.most) ? t.most : "?");
@@ -666,6 +669,8 @@ export function lower(resolved, diagnostics, options = {}) {
         const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(keyName(sym)), suffix(ctx))]), IR.constant("."));
         return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...args]), 2), at);
       }
+      case "map":
+        return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));
       case "list":
         // Each item widened to the literal's element type (§3.9).
         return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type, x)), Math.max(1, e.items.length));

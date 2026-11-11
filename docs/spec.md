@@ -168,6 +168,11 @@ The value of an expression whose type is a join is placed into that type (§3.7.
 gives a list of most 2 whichever branch runs, and an item of a list literal is widened to the literal's element
 type. The join never depends on which value comes first.
 
+3.10. **Maps.** `map of K to V` holds values of type V, each under its own key of type K: words, a number, a date,
+a yes-no or an option (another type of key is S209). It holds up to 1000 keys (F017), in the order they were first
+given. A map is a value, as a list is: placing it copies it, `==` compares keys and values, and one with no keys
+is empty. A `var` of a map type declared without a value starts with no keys.
+
 ## 4. Files
 
 4.1. **A program**: `program = "form" id "pdf" sha ["fields" plain] item*;` One per form,
@@ -344,6 +349,12 @@ is S352.
 6.11. **List literal** `[a, b, …]`: its element type is the join (§3.9) of its items' types, taken left to right
 (S361 when two have none); its most the number of items (at least 1). An empty
 `[]` takes its type from where it stands; `let x = []` is S328.
+
+6.11.1. **Map literal** `{k: v, …}`: its key type is the join of its keys' types and its value type the join of
+its values' (S361 when two have none); a key written twice keeps its last value. `{}` takes its type from where it
+stands. `m[k]` is the value under k, or empty when m has no such key (a key of another type is S358);
+`m[k] = v` on a var puts v under k, adding the key when it is new (an empty key is F004); `m[k].f = v` makes
+the record under a new key (§7.5.1).
 
 6.12. **Comprehension** `[e for each [n,] x in l if c]` (l a list or a set): for each item x of l (n counting from 1) for which c is
 yes, the value of e, in order. Its type is `list of` e's type `most` l's most when l is a list, and, when l is a set, the number of options its
@@ -938,6 +949,16 @@ entry says "or a set" (its items are then options).
 | `all(l: list of yes-no) -> yes-no` | yes when every item is yes; an empty list: yes |
 | `union(a: S, b: S) -> S`, `intersection(a: S, b: S) -> S`, `difference(a: S, b: S) -> S` | a and b sets of one option set (S387); the options of a or b, of both, of a and not b; in declaration order (§3.8) |
 | `l + m` (an operator, not a function) | §6.5.1: l's items then m's, `list of` the join of the element types (§3.9, by the larger mosts within) `most` the sum of the two operands' mosts, whether or not either holds items |
+
+### 14.4.1 Maps
+
+| Signature | Gives |
+|---|---|
+| `keys(m: map of K to V) -> list of K` | m's keys, in the order they were first given |
+| `values(m: map of K to V) -> list of V` | m's values, in the order of their keys |
+| `has(m: map of K to V, key: K) -> yes-no` | whether m has the key |
+| `remove(m: map of K to V, key: K) -> map of K to V` | m without the key; m itself is not changed |
+| `count(m)` | the number of keys |
 
 ### 14.5 Empty, faults and output
 

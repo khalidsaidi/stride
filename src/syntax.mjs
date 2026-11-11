@@ -515,6 +515,7 @@ class Parser {
     const start = this.take();
     this.expect("keyword", "define");
     const name = this.name();
+    const typeParams = this.typeParams();
     const params = this.params();
     // Without -> type, a native gives no value (§5.5).
     let result = null;
@@ -522,13 +523,11 @@ class Parser {
       this.take();
       result = this.type();
     }
-    return this.node("native", start, { name, params, result });
+    return this.node("native", start, { name, typeParams, params, result });
   }
 
-  define() {
-    const start = this.take();
-    const name = this.name();
-    // Type parameters: define first_of<T>(l: list of T) -> T
+  // Type parameters: define first_of<T>(l: list of T) -> T
+  typeParams() {
     const typeParams = [];
     if (this.sym("<")) {
       this.take();
@@ -539,6 +538,13 @@ class Parser {
       } while (this.sym(","));
       this.expect("punct", ">", '">"');
     }
+    return typeParams;
+  }
+
+  define() {
+    const start = this.take();
+    const name = this.name();
+    const typeParams = this.typeParams();
     const params = this.params();
     let result = null;
     if (this.sym("->")) {
@@ -585,6 +591,15 @@ class Parser {
         most = this.expr();
       }
       return this.node("type-list", start, { element, most });
+    }
+    // map of text to number: values under keys (§3.10).
+    if (this.is("name", "map") && this.peek().value === "of" && ["name", "keyword"].includes(this.peek().type)) {
+      this.take();
+      this.take();
+      const key = this.type();
+      if (!this.is("name", "to")) this.expect("keyword", "to", '"to" and the type of the values');
+      else this.take();
+      return this.node("type-map", start, { key, value: this.type() });
     }
     if (this.word("set")) {
       this.take();
@@ -1149,6 +1164,19 @@ class Parser {
       }
     }
     if (t.type === "name") return (this.take(), { kind: "name", name: t.value, span: t.span });
+    // A map written out: {"a": 1, "b": 2}, {} (§6.12).
+    if (this.sym("{")) {
+      const start = this.take();
+      const entries = [];
+      while (!this.sym("}")) {
+        const key = this.expr();
+        this.expect("punct", ":", '":" and the value under this key');
+        entries.push({ key, value: this.expr() });
+        if (!this.sym("}")) this.expect("punct", ",", '"," or "}"');
+      }
+      this.take();
+      return this.node("map", start, { entries });
+    }
     if (this.sym("[")) {
       const start = this.take();
       const items = this.args("]");

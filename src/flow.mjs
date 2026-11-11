@@ -106,6 +106,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         return e.valueCall ? [e.target, ...e.args] : e.args;
       case "list":
         return e.items;
+      case "map":
+        return e.entries.flatMap((x) => [x.key, x.value]);
       case "new":
         return e.fields.map((f) => f.value);
       case "named-arg":
@@ -213,7 +215,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         case "var":
           // Declared here, on this path (§12.1.1); a var without a value has none yet.
           unset.delete(s.symbol);
-          if (s.kind === "var" && !s.value && s.symbol && !["list", "record"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
+          if (s.kind === "var" && !s.value && s.symbol && !["list", "record", "map"].includes(s.symbol.type?.t)) (unset.add(s.symbol), cause.set(s.symbol, { kind: "declared", node: s }));
           if (s.symbol) declaredOn.add(s.symbol);
           break;
         case "break":
@@ -373,6 +375,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       if (t.most) for (const e of subexpressions(t.most)) if (e.kind === "name" && e.symbol) reads.add(e.symbol);
       mostReads(t.element);
     }
+    if (t.kind === "type-map") mostReads(t.value);
   };
   for (const { body } of bodies) for (const s of statements(body)) if (s.kind === "let" || s.kind === "var") mostReads(s.type);
   const askedInto = new Set();

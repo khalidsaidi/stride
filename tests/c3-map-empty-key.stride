@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var m: map of text to number
+let k = ""
+m[k] = 1
+# rule 6.11.1 F004
+# fault F004

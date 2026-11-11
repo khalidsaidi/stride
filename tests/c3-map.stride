@@ -1,0 +1,31 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record tally {
+  n: number
+}
+var ages: map of text to number = {"Ann": 30, "Bo": 41}
+ages["Cy"] = 25
+ages["Ann"] = ages["Ann"] + 1
+print(ages)
+print(ages["Zed"] is empty)
+print(count(ages))
+print(has(ages, "Bo"))
+let other = ages
+ages = remove(ages, "Bo")
+print(keys(ages))
+print(values(ages))
+print(count(other))
+var seen: map of text to tally
+print(seen is empty)
+seen["x"].n = 1
+seen["x"].n += 1
+print(seen)
+var by_number: map of number to text = {}
+by_number[3] = "three"
+print(by_number == {3: "three"})
+define total<k>(m: map of k to number) -> number {
+  return sum(values(m))
+}
+print(total(ages) + total({1: 2, 3: 4}))
+# rule 3.10 6.11.1 14.4.1
+# prints ["{Ann: 31, Bo: 41, Cy: 25}", "yes", "3", "yes", "[Ann, Cy]", "[31, 25]", "3", "yes", "{x: tally { n: 2 }}", "yes", "62"]

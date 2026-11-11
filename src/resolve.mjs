@@ -306,6 +306,12 @@ export function resolve(loaded, diagnostics) {
         err("S210", unit.file, node.span, sym ? `set of needs an option set, and ${node.name} is ${what(sym)}` : `there is no option set called ${node.name}${didYouMean(node.name, sets)}`);
         return T.ERROR;
       }
+      case "type-map": {
+        const key = resolveType(node.key, scope, unit, native, param);
+        const value = resolveType(node.value, scope, unit, native, param);
+        if (!["text", "number", "date", "yes-no", "option", "typevar", "error"].includes(key.t)) err("S209", unit.file, node.key.span, `a map's keys are words, numbers, dates, yes-no or options, not ${T.describe(key)}`);
+        return T.map(key, value);
+      }
       case "type-list": {
         const element = resolveType(node.element, scope, unit, native, param);
         if (!node.most) {
@@ -894,6 +900,9 @@ export function resolve(loaded, diagnostics) {
         return;
       case "list":
         for (const x of e.items) resolveExpr(x, scope, unit);
+        return;
+      case "map":
+        for (const x of e.entries) (resolveExpr(x.key, scope, unit), resolveExpr(x.value, scope, unit));
         return;
       case "named-arg":
         resolveExpr(e.value, scope, unit);

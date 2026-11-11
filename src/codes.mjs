@@ -1471,6 +1471,56 @@ export const LIBRARY = [
     "gives": "a and b sets of one option set (S387); the options of a or b, of both, of a and not b; in declaration order (§3.8)"
   },
   {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "keys(m: map of K to V) -> list of K"
+    ],
+    "names": [
+      "keys"
+    ],
+    "gives": "m's keys, in the order they were first given"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "values(m: map of K to V) -> list of V"
+    ],
+    "names": [
+      "values"
+    ],
+    "gives": "m's values, in the order of their keys"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "has(m: map of K to V, key: K) -> yes-no"
+    ],
+    "names": [
+      "has"
+    ],
+    "gives": "whether m has the key"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "remove(m: map of K to V, key: K) -> map of K to V"
+    ],
+    "names": [
+      "remove"
+    ],
+    "gives": "m without the key; m itself is not changed"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "count(m)"
+    ],
+    "names": [
+      "count"
+    ],
+    "gives": "the number of keys"
+  },
+  {
     "section": "14.5 Empty, faults and output",
     "signatures": [
       "either(a: T, b: T) -> T"

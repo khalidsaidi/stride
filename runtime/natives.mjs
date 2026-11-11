@@ -7,7 +7,7 @@
 // is wrong, whether or not its main argument is empty (§14.0.3.1); only then does an empty main argument give its
 // empty result (§14.0.3). A value a person gives never faults; a program's own mistake that the compiler cannot see
 // does.
-import { D, StrideFault, StrideRecord, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isEmpty };
 export const textOf = words;
@@ -300,7 +300,14 @@ export const NATIVES = {
   },
 
   // ----- lists and sets (§14.4)
-  count: { pure: true, fn: (l) => num(asList(l).length) },
+  count: { pure: true, fn: (l) => num(l instanceof StrideMap ? l.entries.size : asList(l).length) },
+  // Maps (§14.4.1). A map given is not changed: remove gives a new one.
+  map_of: { pure: true, internal: true, fn: () => new StrideMap() },
+  map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, copy(v)), m) }, // a map being written out: its next key
+  keys: { pure: true, fn: (m) => { const k = m instanceof StrideMap ? m.pairs.map(([key]) => key) : []; return list(k, Math.max(1, k.length)); } },
+  values: { pure: true, fn: (m) => { const v = m instanceof StrideMap ? m.pairs.map(([, x]) => copy(x)) : []; return list(v, Math.max(1, v.length)); } },
+  has: { pure: true, fn: (m, k) => m instanceof StrideMap && m.has(k) },
+  remove: { pure: true, fn: (m, k) => { const out = m instanceof StrideMap ? copy(m) : new StrideMap(); out.remove(k); return out; } },
   join: { pure: true, fn: (l, sep) => result(asList(l).filter((x) => !isEmpty(x)).map(words).join(sep === undefined ? ", " : text(sep))) },
   first: { pure: true, fn: (l) => asList(l)[0] ?? null },
   last: { pure: true, fn: (l) => { const a = asList(l); return a.length ? a[a.length - 1] : null; } },
