@@ -132,7 +132,7 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
-| `match e { "a", "b" => { } else => { } }` | one branch by an option's value (or words) |
+| `match e { "a", "b" => { } else => { } }` | one branch by an option's value, by words, or by a number (`1, 2 => { }`) |
 | `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |
 | `for each x in list { }`, `for each n, x in list { }` | its block for each item of a list or option of a set, n counting from 1 |
 | `while c { }` | its block as long as the condition is yes (§7.11.1) |
@@ -220,8 +220,8 @@ item of a list it answers (`representatives[2].name`), or after the call it is i
 `lib/std.stride`, used by every file; §14 gives every signature and what each does with empty. Words: `upper
 lower title capitalize trim trim_start trim_end remove_prefix remove_suffix length chars character slice digits
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
-rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs min max grouped
-fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days`.
+rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs power min max grouped
+fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days add_months`.
 Lists and sets: `count join first last filled index_of append without reversed sorted sum smallest largest any all union
 intersection difference`. Empty, faults and output: `either fail print`.
 

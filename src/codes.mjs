@@ -1173,6 +1173,16 @@ export const LIBRARY = [
   {
     "section": "14.2 Numbers",
     "signatures": [
+      "power(n: number, k: number) -> number"
+    ],
+    "names": [
+      "power"
+    ],
+    "gives": "n multiplied by itself k times, k a whole number from -10000 to 10000 (F008 otherwise); k below 0: 1 over that; k 0: 1"
+  },
+  {
+    "section": "14.2 Numbers",
+    "signatures": [
       "min(a: number, b: number) -> number",
       "max(a: number, b: number) -> number"
     ],
@@ -1295,6 +1305,16 @@ export const LIBRARY = [
       "add_days"
     ],
     "gives": "the day n days after d, n cut towards zero; outside 0001–9999 F011"
+  },
+  {
+    "section": "14.3 Dates",
+    "signatures": [
+      "add_months(d: date, n: number) -> date"
+    ],
+    "names": [
+      "add_months"
+    ],
+    "gives": "the same day of the month n months after d (12 for a year), n cut towards zero; a month too short for the day ends at its last day; outside 0001–9999 F011"
   },
   {
     "section": "14.4 Lists and sets",

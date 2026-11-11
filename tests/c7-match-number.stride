@@ -2,10 +2,23 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 match n {
-  "1" => {
-    print("x")
+  1 => {
+    print("one")
+  }
+  2, 3 => {
+    print("two or three")
+  }
+  else => {
+    print("many")
   }
 }
-
-# rule 7.10 S329
-# mistake 4:7 S329
+# rule 7.10
+# run three
+# answers {"n": "3"}
+# prints ["two or three"]
+# run one
+# answers {"n": "1.0"}
+# prints ["one"]
+# run many
+# answers {"n": "9"}
+# prints ["many"]

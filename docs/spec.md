@@ -451,7 +451,7 @@ a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = ful
 `const QUESTIONS = ["First?", "Second?"]`, `ask ok: yes-no QUESTIONS[i]` asks each in its turn of a loop.
 
 7.10. **if** `if c { … } [else if … | else { … }]`; **match** `match e { "a", "b" => { … } … [else => { … }] }`:
-e an option or words (S329); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
+e an option, words or a number (S329), each arm's values of that kind; values unique (S331), of the set when e is an option (S332); `else` last (S330); a
 match on an option with no `else` that misses options gives warning W001.
 
 7.11. **for** `for i in a..b { }`: a and b are worked out once, a then b, before the first turn, and never again;
@@ -879,6 +879,7 @@ words given to `print`, and a fault or none.
 | `floor(n: number) -> number` | the greatest whole number ≤ n |
 | `whole(n: number) -> number` | n with its fraction cut off, towards zero |
 | `abs(n: number) -> number` | n without its sign |
+| `power(n: number, k: number) -> number` | n multiplied by itself k times, k a whole number from -10000 to 10000 (F008 otherwise); k below 0: 1 over that; k 0: 1 |
 | `min(a: number, b: number) -> number`, `max(a: number, b: number) -> number` | the smaller, the larger; one empty: the other; both: empty |
 | `grouped(n: number, places: number = 0) -> text` | n with places decimals (rounded half away from zero) and `,` between thousands: `1,234.50`; F008; empty: empty |
 | `fixed(n: number, places: number = 0) -> text` | the same without separators: `1234.50` |
@@ -896,6 +897,7 @@ words given to `print`, and a fault or none.
 | `days_between(from: date, to: date) -> number` | days from from to to (negative when to is earlier) |
 | `years_between(from: date, to: date) -> number` | whole years from from to to: an age on a day. When to ≥ from, the number of anniversaries of from that fall on or before to, where an anniversary on a day the year lacks (29 February in a common year) falls on the last day of that month (28 February). When to < from, minus `years_between(to, from)`: the count goes towards zero, and swapping the arguments changes only the sign. 2000-02-29 → 2001-02-28 is 1; 2000-02-29 → 2004-02-29 is 4; 2023-07-01 → 2024-06-30 is 0; 2024-06-30 → 2023-07-01 is 0 (not −1); 2024-07-01 → 2023-07-01 is −1 |
 | `add_days(d: date, n: number) -> date` | the day n days after d, n cut towards zero; outside 0001–9999 F011 |
+| `add_months(d: date, n: number) -> date` | the same day of the month n months after d (12 for a year), n cut towards zero; a month too short for the day ends at its last day; outside 0001–9999 F011 |
 
 ### 14.4 Lists and sets
 

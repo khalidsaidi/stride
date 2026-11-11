@@ -376,15 +376,23 @@ export function check(resolved, diagnostics) {
 
   function match(s, ctx) {
     const type = expr(s.subject, ctx);
-    if (!T.isError(type) && type.t !== "option" && !T.isTextLike(type)) err("S329", s.subject, `match chooses on an option or on words; ${describeExpr(s.subject)} is ${T.describe(type)}`);
+    if (!T.isError(type) && type.t !== "option" && type.t !== "number" && !T.isTextLike(type)) err("S329", s.subject, `match chooses on an option, on words or on a number; ${describeExpr(s.subject)} is ${T.describe(type)}`);
     const seen = new Map();
     s.arms.forEach((arm, i) => {
       if (!arm.values) {
         if (i !== s.arms.length - 1) err("S330", arm, "else comes last in a match");
       } else {
         for (const v of arm.values) {
-          if (seen.has(v.value)) err("S331", v, `"${v.value}" is in this match twice`, [{ file: v.file, span: seen.get(v.value).span, message: "first here" }]);
-          seen.set(v.value, v);
+          // A value of the subject's kind: a number for a number, words for words or an option.
+          const numeric = v.kind === "number";
+          const shown = numeric ? V.words(v.value) : `"${v.value}"`;
+          if (!T.isError(type) && numeric !== (type.t === "number")) {
+            err("S329", v, `${describeExpr(s.subject)} is ${T.describe(type)}, and ${shown} is ${numeric ? "a number" : "words"}`);
+            continue;
+          }
+          const key = numeric ? `#${shown}` : v.value;
+          if (seen.has(key)) err("S331", v, `${shown} is in this match twice`, [{ file: v.file, span: seen.get(key).span, message: "first here" }]);
+          seen.set(key, v);
           if (type.t === "option" && !type.set.options.some((o) => o.value === v.value)) err("S332", v, `${describeExpr(s.subject)} is never "${v.value}": it is ${either(type.set.options.map((o) => `"${o.value}"`))}`);
         }
       }

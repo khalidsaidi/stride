@@ -222,7 +222,7 @@ export function format(text, name = "program.stride") {
         put(s, indent, `match ${expr(s.subject)} {`);
         opening(s);
         for (const arm of s.arms) {
-          put(arm, `${indent}  `, `${arm.values ? arm.values.map((v) => plain(v.value)).join(", ") : "else"} => {`);
+          put(arm, `${indent}  `, `${arm.values ? arm.values.map((v) => (v.kind === "number" ? v.raw : plain(v.value))).join(", ") : "else"} => {`);
           trailing(arm.span.line);
           block(arm.body, `${indent}    `);
           close(arm, `${indent}  `);

@@ -824,10 +824,16 @@ class Parser {
       let values = null;
       if (this.word("else")) this.take();
       else {
-        values = [this.plain()];
+        // An arm's values: words in quotes, or numbers (§7.10).
+        const value = () => {
+          if (!this.is("number")) return this.plain("words in quotes, or a number");
+          const t = this.take();
+          return { kind: "number", value: t.value, raw: t.raw, span: t.span };
+        };
+        values = [value()];
         while (this.sym(",")) {
           this.take();
-          values.push(this.plain());
+          values.push(value());
         }
       }
       this.expect("punct", "=>", '"=>" and a block');

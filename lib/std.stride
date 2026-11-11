@@ -104,6 +104,8 @@ export native define floor(n: number) -> number
 export native define whole(n: number) -> number
 # example: abs(-3) gives 3
 export native define abs(n: number) -> number
+# example: power(2, 10) gives 1024
+export native define power(n: number, k: number) -> number
 # example: min(2, 5) gives 2
 export native define min(a: number, b: number) -> number
 # example: max(2, empty) gives 2
@@ -139,6 +141,8 @@ export native define days_between(from: date, to: date) -> number
 export native define years_between(from: date, to: date) -> number
 # example: add_days(date_of(2026, 12, 31), 1) gives 2027-01-01
 export native define add_days(d: date, n: number) -> date
+# example: add_months(date_of(2026, 1, 31), 1) gives 2026-02-28
+export native define add_months(d: date, n: number) -> date
 
 # ----- lists and sets (§14.4)
 

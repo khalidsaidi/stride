@@ -256,6 +256,38 @@ export const NATIVES = {
   },
   days_between: { pure: true, fn: (a, b) => (isDate(a) && isDate(b) ? num(dayNumber(b) - dayNumber(a)) : null) },
   years_between: { pure: true, fn: (a, b) => (isDate(a) && isDate(b) ? num(yearsBetween(a, b)) : null) },
+  // The same day of the month n months on; a month too short for it ends at its last day (31 January + 1 month is
+  // the last day of February).
+  add_months: {
+    pure: true,
+    fn: (d, n) => {
+      if (!isDate(d) || isEmpty(n)) return null;
+      const k = D.toInt(D.trunc(n));
+      if (k === null) return null;
+      const months = d.y * 12 + (d.m - 1) + k;
+      const y = Math.floor(months / 12), m = (months % 12 + 12) % 12 + 1;
+      if (y < 1 || y > 9999) throw new StrideFault("F011", "add_months: the day falls outside 0001-01-01 to 9999-12-31");
+      return date(y, m, Math.min(d.d, daysIn(y, m)));
+    },
+  },
+  // n to the power k, k a whole number: n multiplied by itself k times, 1 over that for k below 0.
+  power: {
+    pure: true,
+    fn: (n, k) => {
+      if (isEmpty(n) || isEmpty(k)) return null;
+      const times = D.toInt(k);
+      if (times === null || Math.abs(times) > 10_000) throw new StrideFault("F008", `power: the power is a whole number from -10000 to 10000, and this is ${words(k)}`);
+      return numberOp(() => {
+        let out = num(1);
+        let base = n;
+        for (let e = Math.abs(times); e > 0; e = Math.floor(e / 2)) {
+          if (e % 2) out = D.mul(out, base);
+          base = D.mul(base, base);
+        }
+        return times < 0 ? D.div(num(1), out) : out;
+      });
+    },
+  },
   add_days: {
     pure: true,
     fn: (d, n) => {
