@@ -119,13 +119,22 @@ export function convert(question, raw) {
 //   fault   null, or { code, message, file, line, column, stack: [{ function, file, line, column }] } (innermost
 //           first): the run stopped, and nothing it wrote counts (§13.4)
 // `today` fixes the date today() gives for this run.
-export function run(p, answers = {}, { limit = LIMIT, depth = DEPTH, trace, today = null } = {}) {
+// `watch`, with the compiler's `debug` (what it kept of the source beside the bytecode), is told of the run as a
+// debugger and the trace follow it: each call ({ kind: "call", fn, args }), each statement before it runs
+// ({ kind: "line", fn, node, op, dst, locals }), each turn of a loop, each call of the library, each return and
+// each print. `open`: a box the program names that the form does not list is taken as one of the form's
+// (`onWrite` is told of each), for a program checked without its form.
+export function run(p, answers = {}, { limit = LIMIT, depth = DEPTH, trace, today = null, watch = null, debug = null, open = false, onWrite = null } = {}) {
   setToday(today);
   resetCalls();
   const prints = [];
-  setPrinter((v) => prints.push(printed(v, p.recordNames)));
+  setPrinter((v) => {
+    const text = printed(v, p.recordNames);
+    prints.push(text);
+    watch?.({ kind: "print", text });
+  });
   try {
-    const r = execute(p, answers, limit, depth, trace, prints);
+    const r = execute(p, answers, limit, depth, trace, prints, debug ? watch : null, debug, open, onWrite);
     return { ...r, prints };
   } finally {
     setToday(null);
@@ -133,7 +142,7 @@ export function run(p, answers = {}, { limit = LIMIT, depth = DEPTH, trace, toda
   }
 }
 
-function execute(p, answers, limit, depth, trace, prints) {
+function execute(p, answers, limit, depth, trace, prints, watch, debug, open, onWrite) {
   const steps = [];
   const writes = new Map();
   const results = []; // a test file's expectations (§7.17.1), in order
@@ -149,7 +158,20 @@ function execute(p, answers, limit, depth, trace, prints) {
     for (let i = 0; i < args.length; i++) locals[i] = args[i];
     return { fn, index, locals, code: p.decoded[index], ip: 0 };
   };
+  // A frame's locals as a debugger reads them: each local that has a value, with the value it holds now.
+  const view = (f) => ({
+    *[Symbol.iterator]() {
+      const slots = debug.slots[f.index];
+      for (let k = 0; k < slots.length; k++) if (slots[k] && (f.locals[k] !== null || f.given?.has(k))) yield [slots[k], f.locals[k]];
+    },
+  });
+  const entered = (f, args) => {
+    if (!watch) return;
+    f.given = new Set(args.map((_, k) => k));
+    watch({ kind: "call", fn: debug.fns[f.index], args });
+  };
   frames.push(frame(0, []));
+  entered(frames[0], []);
 
   // The frame at an address: its function and its place.
   const logical = (fn, address) => {
@@ -184,8 +206,14 @@ function execute(p, answers, limit, depth, trace, prints) {
     pending.length = 0;
   };
 
-  const boxAt = (name) => {
-    const i = p.boxIndex.get(p.prefix + words(name));
+  const boxAt = (name, kind, button = null) => {
+    const full = p.prefix + words(name);
+    let i = p.boxIndex.get(full);
+    onWrite?.(full, kind, button);
+    if (i === undefined && open) {
+      i = p.boxes.push({ name: full, kind, on: kind === "tick" ? "Yes" : null }) - 1;
+      p.boxIndex.set(full, i);
+    }
     if (i === undefined) fault("F016", `the program writes the box "${words(name)}", which it does not know`);
     return i;
   };
@@ -223,6 +251,7 @@ function execute(p, answers, limit, depth, trace, prints) {
       if (++count > limit) fault("F014", `the workflow ran more than ${limit} instructions`);
       const op = ins.op;
       if (trace) trace({ fn: f.fn, at: ins.at, op, stack, locals: f.locals });
+      if (watch) for (const m of debug.marks.get(ins.at) ?? []) watch({ ...m, fn: debug.fns[f.index], locals: view(f) });
       const pop = () => stack.pop();
       switch (op) {
         case OP.HALT:
@@ -247,6 +276,7 @@ function execute(p, answers, limit, depth, trace, prints) {
           break;
         case OP.STORE:
           f.locals[ins.a] = copy(pop());
+          f.given?.add(ins.a);
           break;
         case OP.POP:
           pop();
@@ -381,6 +411,7 @@ function execute(p, answers, limit, depth, trace, prints) {
           const args = stack.splice(stack.length - ins.b, ins.b).map(copy);
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(ins.a, args));
+          entered(frames.at(-1), args);
           break;
         }
         case OP.FN:
@@ -394,11 +425,13 @@ function execute(p, answers, limit, depth, trace, prints) {
           const args = p.functions[f.target].keyed ? [`${NATIVES.call_key.fn(before + f.name + turns)}.`, "", ...given] : given;
           if (frames.length >= depth) fault("F015", `calls go deeper than ${depth}`);
           frames.push(frame(f.target, args));
+          entered(frames.at(-1), args);
           break;
         }
         case OP.RETURN:
         case OP.RETURN_NONE: {
           const v = op === OP.RETURN ? pop() : null;
+          if (watch) watch({ kind: "return", fn: debug.fns[f.index], value: v, locals: view(f) });
           frames.pop();
           if (!frames.length) return { steps, writes, results, links, fault: null };
           stack.push(v);
@@ -406,7 +439,13 @@ function execute(p, answers, limit, depth, trace, prints) {
         }
         case OP.NATIVE: {
           const args = stack.splice(stack.length - ins.b, ins.b);
-          stack.push(p.nativeFns[ins.a](...args) ?? null);
+          const value = p.nativeFns[ins.a](...args) ?? null;
+          stack.push(value);
+          // The library's functions the program calls, for the trace; not the machine's own (a loop's bounds…).
+          if (watch && !debug.quiet.has(ins.at)) {
+            const name = p.natives[ins.a].name;
+            if (!NATIVES[name].internal || name === "sorted_by") watch({ kind: "native", name: name === "sorted_by" ? "sorted" : name, args, value });
+          }
           break;
         }
         case OP.ASK:
@@ -461,14 +500,14 @@ function execute(p, answers, limit, depth, trace, prints) {
           break;
         case OP.FILL_AT: {
           const v = pop();
-          const b = boxAt(pop());
+          const b = boxAt(pop(), "fill");
           writes.set(b, { kind: "fill", value: words(v) });
           linked(b);
           break;
         }
         case OP.TICK_AT: {
           const on = truthy(pop());
-          const b = boxAt(pop());
+          const b = boxAt(pop(), "tick");
           writes.set(b, { kind: "tick", value: on ? p.boxes[b].on ?? "Yes" : "Off", on });
           linked(b);
           break;
@@ -476,7 +515,7 @@ function execute(p, answers, limit, depth, trace, prints) {
         case OP.PICK_AT: {
           const cond = truthy(pop());
           const button = words(pop());
-          const b = boxAt(pop());
+          const b = boxAt(pop(), "pick", button);
           if (cond) writes.set(b, { kind: "pick", value: button });
           linked(b);
           break;

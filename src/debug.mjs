@@ -1,13 +1,12 @@
-// The debugger (§17.15): a program run as written, in the intermediate form (which agrees with the
-// machine, §19.1), stopping where it is told: at a breakpoint's line, or after a step in, over or out. Stopped, it
+// The debugger (§17.15): a program run in the machine, which tells it of each statement before it runs,
+// stopping where it is told: at a breakpoint's line, or after a step in, over or out. Stopped, it
 // shows the calls that led there and each one's values, and evaluates a name or an expression of them. Two faces on
 // one core: `stride debug`, at the terminal, and `stride dap`, the Debug Adapter Protocol for editors.
 import { readSync, writeSync } from "node:fs";
 import { basename, dirname, resolve, sep } from "node:path";
 import { compileFile } from "./compile.mjs";
 import { faultWords } from "./source.mjs";
-import { interpretProgram } from "./interpret.mjs";
-import { textOf } from "../runtime/vm.mjs";
+import { textOf, load, run, boxValues } from "../runtime/vm.mjs";
 
 // ----- the core
 
@@ -74,7 +73,10 @@ function follow(prepared, answers, { today, breakpoints, stopOnEntry, stop, prin
     }
   };
   try {
-    return interpretProgram(prepared.out.program, answers, prepared.out.boxes, { today, watch });
+    const p = load(prepared.out.bytecode);
+    const result = run(p, answers, { today, watch, debug: prepared.out.debug });
+    // The boxes by name, as the page holds them.
+    return { ...result, writes: new Map(Object.entries(boxValues(p, result.writes))) };
   } catch (e) {
     if (e instanceof Quit) return null;
     throw e;

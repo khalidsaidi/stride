@@ -98,7 +98,8 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
 
   if (!pdf) return out;
 
-  out.bytecode = generate(program, pdf);
+  out.debug = {};
+  out.bytecode = generate(program, pdf, out.debug);
   // The machine reads it back and verifies it before it goes anywhere.
   loadBytecode(out.bytecode);
   phase("generate");

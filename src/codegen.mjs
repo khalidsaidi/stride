@@ -7,7 +7,11 @@ import { D, isNumber, isDate, isSet, list } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
-export function generate(program, pdf) {
+// `debug`, when given, is filled with what a debugger and the trace follow a run by (it is not written into the
+// bytecode): for each function its intermediate form and the local each slot holds; the marks at instructions (a
+// statement's start, a loop's turn); and the library calls that are a loop's own work.
+export function generate(program, pdf, debug = null) {
+  if (debug) Object.assign(debug, { fns: [], slots: [], marks: new Map(), quiet: new Set() });
   const texts = [];
   const textIndex = new Map();
   const T = (s) => {
@@ -60,8 +64,15 @@ export function generate(program, pdf) {
     // their own entries. The assembler then gives each its address.
     const ins = [];
     let place = null; // the place of the instructions emitted now: { file, line, column }
+    let marks = []; // what starts at the next instruction: a statement, a loop's turn
+    let quietHead = false; // working out a loop's head: its library calls are not the program's
     const emit = (op, ...args) => {
       const i = { op, args, place };
+      if (marks.length) {
+        i.marks = marks;
+        marks = [];
+      }
+      if (quietHead && op === OP.NATIVE) i.quiet = true;
       ins.push(i);
       return i;
     };
@@ -170,7 +181,7 @@ export function generate(program, pdf) {
           placeLabel(head);
           emit(OP.LOAD, k);
           emit(OP.LOAD, src);
-          emit(OP.NATIVE, nativeIndex("count"), 1);
+          emit(OP.NATIVE, nativeIndex("count"), 1).quiet = true; // the loop's own work, not a call of the program's
           emit(OP.LE);
           jumpTo(OP.JUMP_IF_FALSE, end);
           emit(OP.LOAD, src);
@@ -384,18 +395,32 @@ export function generate(program, pdf) {
       } else jumpTo(OP.JUMP, labels.get(to));
     };
 
+    // A loop's head going into its body: a turn starts there.
+    const turnAt = new Map();
+    for (const b of order) if (b.loopHead && b.term?.op === "branch" && b.term.yes !== b.term.no) turnAt.set(b.term.yes, b.term.node);
     for (const b of order) {
       placeLabel(labels.get(b));
       if (b.loopHead) labels.get(b).loopHead = true;
-      for (const s of b.stmts) statement(s);
+      if (turnAt.has(b)) marks.push({ kind: "turn", node: turnAt.get(b) });
+      for (const s of b.stmts) {
+        marks.push({ kind: "line", node: s.node, op: s.op, dst: s.dst?.name });
+        statement(s);
+      }
       const t = b.term;
+      // An if's, a match's and a return's line are statements of the program too (§17.7, §17.15).
+      if (t?.node && ["if", "match", "return"].includes(t.node.kind)) marks.push({ kind: "line", node: t.node, op: t.op });
       at(t?.node);
       switch (t?.op) {
         case "jump":
-          go(b, t.to);
+          // What starts here and has no instruction yet (an if's end, an empty turn) is given one, so a debugger is
+          // told of it on this way through only.
+          if (debug && marks.length && position.get(t.to) === position.get(b) + 1) jumpTo(OP.JUMP, labels.get(t.to));
+          else go(b, t.to);
           break;
         case "branch":
+          quietHead = !!b.loopHead;
           expr(t.cond);
+          quietHead = false;
           if (position.get(t.no) <= position.get(b)) {
             // The no side goes back to a loop's head: test the other way round.
             emit(OP.NOT);
@@ -437,12 +462,20 @@ export function generate(program, pdf) {
         const pl = i.place;
         if (!last || last.line !== pl.line || last.column !== pl.column || last.file !== pl.file) places.push({ address: i.address, ...pl });
       }
+      if (debug && i.marks) debug.marks.set(i.address, i.marks);
+      if (debug && i.quiet) debug.quiet.add(i.address);
       code.u8(i.op);
       if (i.to !== undefined) code.u32(i.to.address);
       for (const a of i.args) code.varint(a);
     }
     const names = [];
     for (const [l, k] of slot) names[k] = l.name ?? `t${k}`;
+    if (debug) {
+      debug.fns.push(fn);
+      const bySlot = [];
+      for (const [l, k] of slot) bySlot[k] = l;
+      debug.slots.push(bySlot);
+    }
     functions.push({ name: fn.name, file: fn.file ?? program.file ?? "", params: fn.params.length, localNames: names.map((n) => n ?? ""), start, end: code.length, keyed: !!fn.keyed });
   }
 

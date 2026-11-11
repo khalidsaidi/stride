@@ -19,7 +19,6 @@ import { spawn } from "node:child_process";
 import { basename } from "node:path";
 import { compile, compileFile, projectOf, LANGUAGE } from "../src/compile.mjs";
 import { find as findInLibrary, setup as exampleSetup, EXAMPLE_TODAY } from "../src/library.mjs";
-import { interpretProgram } from "../src/interpret.mjs";
 import { format } from "../src/format.mjs";
 import { runTests, parseDigits, todayMistake, expectResults } from "../src/test.mjs";
 import { CODES } from "../src/codes.mjs";
@@ -637,19 +636,18 @@ async function main(argv) {
       if (flags.has("--trace") && !file.endsWith(".sbc")) {
         const plain = fromStdin ? { ...compile(stdinSource, "stdin.stride", { trace: true }) } : compileFile(file, { trace: true, ...(r.out.header ? {} : { header: { form: null, pdf: "0".repeat(64), boxes: [] } }) });
         const watch = sourceTrace();
-        result = interpretProgram(plain.program, answers, plain.boxes, { today, watch });
+        const traced = load(plain.bytecode);
+        result = run(traced, answers, { today, watch, debug: plain.debug });
         watch.flush();
-        const boxes = {};
-        for (const [k, w] of result.writes) boxes[k] = w;
-        result.writes = boxes;
-        result.fromInterpreter = true;
+        result.writes = boxValues(traced, result.writes);
+        result.named = true;
       } else {
         const trace = flags.has("--trace") ? traceTo(r.p) : undefined;
         result = run(r.p, answers, { trace, today });
         trace?.flush();
       }
       const script = !r.p.form;
-      const written = Object.entries(result.fromInterpreter ? result.writes : boxValues(r.p, result.writes)).filter(([, v]) => v !== "" && v !== "Off");
+      const written = Object.entries(result.named ? result.writes : boxValues(r.p, result.writes)).filter(([, v]) => v !== "" && v !== "Off");
       if (json) {
         const value = (v) => (v === null || v === undefined ? null : Array.isArray(v) ? v.map(value) : typeof v === "boolean" ? v : textOf(v));
         out(JSON.stringify({ ok: !result.fault, diagnostics: warnings.map((d) => d.toJSON()), questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
