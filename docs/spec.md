@@ -1065,6 +1065,7 @@ entry says "or a set" (its items are then options).
 | `reversed(l: list of T) -> list of T most same` | the items in the other order |
 | `sorted(l: list of T, descending: yes-no = no) -> list of T most same` | T a number, a date or words (else S367): the items in order (§6.7), equal items keeping their order; **empty items come last**, in their order, ascending or descending |
 | `sorted(l: list of R, by: "field", descending: yes-no = no) -> list of R most same` | R a record; `by` is given by its name only (a second value given without a name is `descending`, which is yes-no); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order, items whose field is empty (and empty items) last |
+| `sum(l: list of number) -> number` | the items added up, an empty item counting as 0; no items: 0 |
 | `smallest(l: list of T) -> T`, `largest(l: list of T) -> T` | T a number, a date or words: the least, the greatest of the items that are not empty; none: empty |
 | `any(l: list of yes-no) -> yes-no` | yes when some item is yes (an empty item counts as no); an empty list: no |
 | `all(l: list of yes-no) -> yes-no` | yes when every item is yes; an empty list: yes |
@@ -1076,7 +1077,6 @@ entry says "or a set" (its items are then options).
 | Signature | Gives |
 |---|---|
 | `either(a: T, b: T) -> T` | a when it is not empty, else b |
-| `otherwise(t: text, instead: text) -> text` | the same, for words; written in Stride in `std.stride` |
 | `fail(message: text)` | no value: fault F013 with the message |
 | `print(v: any)` | no value: gives v's words to the host (§13.1); a list's or a record's words are written as `[a, b]` and `R { field: v, … }` for this function only |
 

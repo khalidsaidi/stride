@@ -38,7 +38,7 @@ in whichever of these ways suits (§17.12):
 ```stride answers={"name":"Ada","born":"1815-12-10"}
 ask name: text "Your name"
 ask born: date "Date of birth"
-print("Hello, {otherwise(name, "there")}")
+print("Hello, {either(name, "there")}")
 print("You were born in {year(born)}.")
 ```
 ```output
@@ -147,14 +147,14 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 Every type also has **empty**: the value of a question not answered, a field not set, an item past the end of a
 list. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
 the other side, other arithmetic gives empty, an order comparison with empty is `no`, and empty counts as `no` in a
-condition. Test for it with `is empty`, and replace it with `either` or `otherwise`:
+condition. Test for it with `is empty`, and replace it with `either`:
 
 ```stride
 let price: number = empty
 print(price + 5)
 print(price * 2 is empty)
 print(either(price, 0))
-print(otherwise("", "none given"))
+print(either("", "none given"))
 ```
 ```output
 5
@@ -418,8 +418,7 @@ fault F001: division by zero
 | an answer that is not a number or a date | as it runs | it is empty, and marked unreadable |
 | a check that needs too much work (S602) | when compiling | a mistake: split the work |
 
-There is no try and catch. A program guards against faults before they happen (`if n != 0`, `either`,
-`otherwise`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
+There is no try and catch. A program guards against faults before they happen (`if n != 0`, `either`), and stops itself with `fail("why")` when it must. A test can say a fault is expected (`expect …
 faults`, below).
 
 ## 13. Tests

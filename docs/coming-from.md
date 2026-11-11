@@ -11,7 +11,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 | You know | In Stride |
 |---|---|
 | `x = 1`, `final x = 1`, `const x = 1` | `var x = 1` changes; `let x = 1` does not; `const X = 1` is known before the form opens |
-| `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`, `either(x, 0)`, `otherwise(t, "none")` |
+| `null`, `None`, `nil`, `undefined` | `empty`: every type has it; `x is empty`, `either(x, 0)` |
 | `true`, `false` | `yes`, `no` |
 | `list[0]` | `list[1]`: positions count from 1, as on a form |
 | `"Hello " + name`, f-strings | `"Hello {name}"`; `+` joins words too |
@@ -70,7 +70,7 @@ print(price is empty)
 print(either(price, 0))
 let names: list of text most 3 = ["Ada"]
 print(names[2] is empty)
-print(otherwise(names[2], "nobody"))
+print(either(names[2], "nobody"))
 ```
 ```output
 5

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+var l: list of number most 4
+print(sum(l))
+l = append(l, 1.5)
+l = append(l, 2)
+print(sum(l))
+print(sum([1, empty, 3]))
+# rule 14.4
+# prints ["0", "3.5", "4"]

@@ -154,7 +154,7 @@ export function generate(seed) {
         () => `fixed(${num(sc, d - 1)}, ${r.int(0, 2)})`,
         () => `grouped(${num(sc, d - 1)})`,
         () => `format(${date(sc, d - 1)}, "${r.pick(["YYYY-MM-DD", "DD/MM/YY", "M-D"])}")`,
-        () => `otherwise(${sub()}, "none given")`,
+        () => `either(${sub()}, "none given")`,
         () => `(if ${bool(sc, d - 1)} then ${sub()} else ${sub()})`,
         () => `word(${sub()}, ${r.int(1, 2)})`,
         () => `either(pick_one(${sub()}, ${sub()}), "")`,

@@ -1453,6 +1453,16 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
+      "sum(l: list of number) -> number"
+    ],
+    "names": [
+      "sum"
+    ],
+    "gives": "the items added up, an empty item counting as 0; no items: 0"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
       "smallest(l: list of T) -> T",
       "largest(l: list of T) -> T"
     ],
@@ -1505,16 +1515,6 @@ export const LIBRARY = [
       "either"
     ],
     "gives": "a when it is not empty, else b"
-  },
-  {
-    "section": "14.5 Empty, faults and output",
-    "signatures": [
-      "otherwise(t: text, instead: text) -> text"
-    ],
-    "names": [
-      "otherwise"
-    ],
-    "gives": "the same, for words; written in Stride in `std.stride`"
   },
   {
     "section": "14.5 Empty, faults and output",

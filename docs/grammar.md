@@ -234,8 +234,8 @@ lower title capitalize trim trim_start trim_end remove_prefix remove_suffix leng
 letters is_digits is_letters replace contains starts_with ends_with find occurrences split line line_count
 rest_lines word word_count pad_left text_of number_of`. Numbers: `round ceil floor whole abs min max grouped
 fixed divide remainder`. Dates: `today date_of year month day format days_between years_between add_days`.
-Lists and sets: `count join first last filled index_of append without reversed sorted smallest largest any all union
-intersection difference`. Empty, faults and output: `either otherwise fail print`.
+Lists and sets: `count join first last filled index_of append without reversed sorted sum smallest largest any all union
+intersection difference`. Empty, faults and output: `either fail print`.
 
 `chars(t, from, to)` and `character(t, n)` leave out spaces, dashes, slashes and dots: one answer over a row of
 one-character boxes. `format(d, "MM/DD/YYYY")` writes a date the way a box asks (any of `YYYY YY MM DD M D`).

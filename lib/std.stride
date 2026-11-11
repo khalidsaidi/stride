@@ -165,6 +165,8 @@ export native define reversed(l: any) -> any
 # example: sorted([3, 1, 2]) gives [1, 2, 3]
 # example: join([p.name for each p in sorted(people, by: "age")]) gives Al, Bo
 export native define sorted(l: any, descending: yes-no = no) -> any
+# example: sum([1, 2.5, empty]) gives 3.5
+export native define sum(l: any) -> number
 # example: smallest([3, 1, 2]) gives 1
 export native define smallest(l: any) -> element
 # example: largest([3, 1, 2]) gives 3
@@ -188,12 +190,3 @@ export native define either(a: any, b: any) -> any
 export native define fail(message: text)
 # example: print(people[1]) prints person { name: Bo, age: 40 }
 export native define print(v: any)
-
-# Words, or other words when the first are empty.
-# example: otherwise("", "none given") gives none given
-export define otherwise(t: text, instead: text) -> text {
-  if t is empty {
-    return instead
-  }
-  return t
-}

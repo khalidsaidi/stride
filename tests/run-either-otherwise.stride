@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask a: text "A"
-fill "A" = either(a, "none") + otherwise("", "x")
+fill "A" = either(a, "none") + either("", "x")
 # boxes {"A": "nonex"}
 # rule 14.5

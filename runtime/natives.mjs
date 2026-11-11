@@ -304,6 +304,7 @@ export const NATIVES = {
   sorted: { pure: true, fn: (l, descending) => sortItems(l, (v) => v, descending === true) },
   // sorted(l, by: "field"): the compiler turns the field's name into its number (§14.4).
   sorted_by: { pure: true, internal: true, fn: (l, field, descending) => sortItems(l, (v) => (v instanceof StrideRecord ? v.fields[whole(field)] ?? null : null), descending === true) },
+  sum: { pure: true, fn: (l) => asList(l).filter((x) => !isEmpty(x)).reduce((a, b) => numberOp(() => D.add(a, b)), num(0)) },
   smallest: { pure: true, fn: (l) => asList(l).filter((x) => !isEmpty(x)).reduce((a, b) => (a === null || order(b, a) < 0 ? b : a), null) },
   largest: { pure: true, fn: (l) => asList(l).filter((x) => !isEmpty(x)).reduce((a, b) => (a === null || order(b, a) > 0 ? b : a), null) },
   any: { pure: true, fn: (l) => asList(l).some((x) => x === true) },
