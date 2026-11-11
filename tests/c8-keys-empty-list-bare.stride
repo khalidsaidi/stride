@@ -6,5 +6,5 @@ define q(l: list of number, b: text) {
 }
 q([], "A")
 q(empty, "B")
-# rule 8.6.3 3.7.3.1
+# rule 8.6.3
 # asked ["q(l=[];b=\"A\").name", "q(l=[];b=\"B\").name"]

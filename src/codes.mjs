@@ -257,10 +257,6 @@ export const CODES = {
     "when": "`set of` something that is not an option set",
     "explanation": "`set of` takes an option set's name."
   },
-  "S211": {
-    "when": "a list type without `most`, or a worked-out result whose list's most is not known",
-    "explanation": "Every list says how many it holds at most: `list of text most 4`; only a parameter may leave it out, and a function returning such a list writes its result type (§9.5.2)."
-  },
   "S212": {
     "when": "a `most` that is not a whole number of 1 or more, known",
     "explanation": "`most 4`, or a constant."
@@ -724,10 +720,6 @@ export const CODES = {
   "S394": {
     "when": "a conditional whose two values' types have no join",
     "explanation": "`if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none."
-  },
-  "S395": {
-    "when": "`l + m` holding more than 1000",
-    "explanation": "A list holds at most 1000."
   },
   "S396": {
     "when": "a slice bound that is not a number",

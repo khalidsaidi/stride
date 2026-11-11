@@ -305,8 +305,8 @@ export function resolve(loaded, diagnostics) {
       case "type-list": {
         const element = resolveType(node.element, scope, unit, native, param);
         if (!node.most) {
-          if (!param) err("S211", unit.file, node.span, "a list says how many it holds at most: list of … most 4 (only a parameter takes a list of any length)");
-          return T.list(element, Infinity);
+          // No most written: a parameter takes a list of any length; anywhere else it holds up to 1000 (§3.7).
+          return T.list(element, param ? Infinity : 1000);
         }
         const before = diagnostics.count;
         resolveExpr(node.most, scope, unit);

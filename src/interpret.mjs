@@ -124,8 +124,7 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
   // A list position read (§6.9.2).
   function readPosition(l, i, at) {
     const n = whole(i);
-    const most = Array.isArray(l) ? mostOf(l) : 0;
-    if (n === null || n < 1 || n > most) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number from 1 to the list's most, ${most}`, at);
+    if (n === null || n < 1) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number of 1 or more`, at);
     return n;
   }
 

@@ -1,6 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text most 2 = ["a", "b"]
-# mistake 5 S360 there is no item 3
-fill "A" = l[3]
-# rule 6.9.2 S360

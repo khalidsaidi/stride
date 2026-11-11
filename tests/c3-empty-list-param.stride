@@ -12,5 +12,5 @@ define turns(xs: list of number) -> number {
 }
 print(size(empty))
 print(turns(empty))
-# rule 3.7.3.1
+# rule 3.7
 # prints ["0", "0"]

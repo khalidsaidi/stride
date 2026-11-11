@@ -341,7 +341,7 @@ function widenTo(v, mosts) {
   if (mosts[0] === "?") return v === null || v === undefined || !Array.isArray(v) ? v : list(v.map((x) => widenTo(x, mosts.slice(1))), mostOf(v));
   if (v === null || v === undefined) return list([], mosts[0]);
   if (!Array.isArray(v)) return v;
-  if (mostOf(v) > mosts[0]) throw new StrideFault("F017", `a list of most ${mostOf(v)} was placed where at most ${mosts[0]} fit`);
+  if (v.length > mosts[0]) throw new StrideFault("F017", `a list of ${v.length} items was placed where at most ${mosts[0]} fit`);
   return list(v.map((x) => widenTo(x, mosts.slice(1))), mosts[0]);
 }
 

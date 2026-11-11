@@ -193,14 +193,14 @@ function value(e, env, visiting) {
       });
     }
     case "index": {
-      // An item of a known list (§6.9.2): F004 unless the position is whole and from 1 to the list's most; past the
+      // An item of a known list (§6.9.2): F004 unless the position is a whole number of 1 or more; past the
       // items, empty.
       const l = value(e.target, env, visiting);
       const i = value(e.index, env, visiting);
       if (l === undefined || i === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const n = whole(i);
-        if (n === null || n < 1 || n > mostOf(l)) throw new StrideFault("F004", `${i === null ? "an empty position" : `position ${textOf(i)}`} is not a whole number from 1 to the list's most, ${mostOf(l)}`);
+        if (n === null || n < 1) throw new StrideFault("F004", `${i === null ? "an empty position" : `position ${textOf(i)}`} is not a whole number of 1 or more`);
         return l?.[n - 1] ?? null;
       });
     }

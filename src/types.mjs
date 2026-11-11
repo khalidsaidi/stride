@@ -79,7 +79,7 @@ export function unify(param, value, bindings) {
     }
     return false;
   }
-  if (param.t === "list" && value.t === "list") return (value.element.t === "empty" || unify(param.element, value.element, bindings)) && (value.most <= param.most || !Number.isFinite(value.most));
+  if (param.t === "list" && value.t === "list") return value.element.t === "empty" || unify(param.element, value.element, bindings);
   return fits(value, substitute(param, bindings));
 }
 
@@ -101,9 +101,9 @@ export function fits(value, wanted) {
   if (wanted.t === "text") return isTextLike(value) || value.t === "option";
   if (TEXT_LIKE.has(wanted.t)) return value.t === wanted.t || value.t === "text";
   if (wanted.t === "list" && value.t === "list") {
-    // A list fits a list of the same element type that may hold at least as many.
-    // A most known only as the program runs (a parameter's list without most) is checked then (§3.7.7, F017).
-    return (value.element.t === "empty" || fits(value.element, wanted.element)) && (value.most <= wanted.most || !Number.isFinite(value.most));
+    // A list fits a list of the same element type. How many it holds is checked where it is placed, as the
+    // program runs (§3.7.7, F017).
+    return value.element.t === "empty" || fits(value.element, wanted.element);
   }
   return same(value, wanted);
 }

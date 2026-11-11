@@ -134,38 +134,17 @@ joined by `, `; empty as no words. A list or a record has no words (mistake S309
 - B is an option set S and the value is words in quotes that are one of S's values (checked: S386);
 - B is `set of S` and the value is a list of words in quotes, each one of S's values (checked: S386).
 
-3.7. **A list's most.** Every list value carries a most, a whole number 0–1000, at run time as well as in its type.
-A most written in a type is 1–1000 (S212, S213); 0 is only the most of the bare `empty` placed where no most is
-stated (§3.7.3.1).
-- 3.7.1. A list literal's most is its number of items (at least 1); a literal of more than 1000 items is S213,
-  at its 1001st item. A list made as the program runs that would pass 1000 is F017 (§3.7.7). A var's or a field's list is its declared most;
-  a collected list's is its var's.
-- 3.7.2. A list placed where a list type with most N is expected — given to a var, a field, a record's field in
-  `new`, an item, a parameter with `most N`, a function's result `-> list of T most N`, an answer's place — fits
-  only when its most M ≤ N (S351, S367, S342), and the copy placed there has most N: placing widens, never
-  narrows.
-- 3.7.3. A parameter `list of T` without `most` takes the most of the argument each call gives: inside the
-  function the value keeps the most it came with. Its static most is unknown, so S360 checks only a known position
-  below 1 or not whole.
-- 3.7.3.1. **The bare word `empty` where a list is expected** becomes a list with no items. Its most is the most
-  of the place it goes to when that place states one (`var l: list of text most 4 = empty` has most 4), and 0 when
-  it does not: given to a parameter `list of T` without `most`, or as an operand of `l + m` (§6.5.1). A list of most
-  0 has no positions: any position read from it is F004. With `define second(xs: list of number) -> number { return
-  xs[2] }`, `second(empty)` faults F004 at `xs[2]` whenever it runs; a test shows it: `expect second(empty) faults
-  "F004"`. `second([n])`, with n an answer, gives a list of most 1 and is F004 whatever n is; `second([n, n])` gives most 2 and n. `count(empty)` given to such a parameter is 0, and `for each` runs no turns.
-- 3.7.4. A function's result type always states its most (S211), except a natives' result, whose most §14 states.
-  A result worked out from returns (§9.6) has the largest most of its returns.
-- 3.7.5. The most of what an operation makes: a slice `l[a..b]` and a comprehension over l, l's most; `l + m`, the
-  sum of the two mosts; the library functions, as §14 states for each.
-- 3.7.7. **Mosts known only as the program runs.** When both mosts are known before the form opens, a sum above
-  1000 is S395 and a list placed where a smaller most is expected is S351/S367/S342 (§3.7.2). When either comes
-  from a parameter without `most` (§3.7.3), the same checks are made on the values' mosts as the program runs:
-  `l + m` whose mosts add to more than 1000 is F017 at the `+`; a list whose most M is placed where a list type
-  with most N < M is expected is F017 at the place (the assignment, the argument, the return, the field, the item,
-  the answer's place); a comprehension, slice or library result whose most comes from such a list carries it, and
-  is checked the same way where it is placed. A list's items never exceed its most, so placing checks the most,
-  not how many items it holds.
-- 3.7.6. Indexing (§6.9.2) and setting an item (§7.5) use the value's most, not a static guess.
+3.7. **How many a list holds.** A list holds any number of items up to 1000, and grows as items are added:
+`var l: list of number`, then `l += [x]` or `l = append(l, x)`. A list type may state a smaller most, `list of
+text most 4`: a var, a field or a result declared so holds at most that many.
+- 3.7.1. A list literal of more than 1000 items is S213.
+- 3.7.2. How many items a list holds is checked where it is placed, as the program runs: a list of more items
+  than the most of the var, field, parameter or result it is given to stops the run with F017 at that place. So
+  does a list that would hold more than 1000 items (`l + m`, `append`). The compiler does not compare mosts.
+- 3.7.3. A parameter `list of T` takes a list of any length. The bare word `empty` where a list is expected is a
+  list with no items.
+- 3.7.7. A `collect` into a list asks for items until the person says there are no more, or the list holds its
+  most (§8.5).
 
 3.8. **The order of a set.** A set's options are always in the order their option set declares them, whatever
 order they were chosen or written in. With `options s { "b" "B"  "a" "A" }` and the answer `["a", "b"]`, the set is
@@ -1197,7 +1176,6 @@ its call: the function's name in the call.
 | S208 | a declaration named like a type | `text`, `number`, … are types. |
 | S209 | a type that is not one | Types are §5.6; the message gives the nearest. |
 | S210 | `set of` something that is not an option set | `set of` takes an option set's name. |
-| S211 | a list type without `most`, or a worked-out result whose list's most is not known | Every list says how many it holds at most: `list of text most 4`; only a parameter may leave it out, and a function returning such a list writes its result type (§9.5.2). |
 | S212 | a `most` that is not a whole number of 1 or more, known | `most 4`, or a constant. |
 | S213 | a `most` above 1000, or a list literal of more than 1000 items | A list holds at most 1000. |
 | S214 | `any` or `element` outside the natives | Write the type. |
@@ -1314,7 +1292,6 @@ its call: the function's name in the call.
 | S392 | a required parameter after one with a default | Defaults come last. |
 | S393 | a default not known before the form opens | Defaults are made of known values. |
 | S394 | a conditional whose two values' types have no join | `if c then a else b` takes the join of a's and b's types (§3.9); a number and words have none. |
-| S395 | `l + m` holding more than 1000 | A list holds at most 1000. |
 | S396 | a slice bound that is not a number | `l[a..b]`, numbers. |
 | S398 | a comprehension that asks, writes boxes or collects | A comprehension makes a value; use for each. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not known before the form opens, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |

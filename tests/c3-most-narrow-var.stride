@@ -1,6 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-var v: list of number most 1 = [1, 2]
-print(count(v))
-# rule 3.7.2 S351
-# mistake 3 S351

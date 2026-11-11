@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define g() -> list of number {
-  return [1]
-}
-print(count(g()))
-# rule 3.7.4 S211
-# mistake 3 S211

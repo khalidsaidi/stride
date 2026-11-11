@@ -1,6 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-# mistake 4 S211 says how many it holds at most
-var l: list of text
-fill "A" = join(l, ",")
-# rule 5.6 S211

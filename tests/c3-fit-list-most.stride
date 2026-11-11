@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define f(l: list of number most 3) -> number {
-  return count(l)
-}
-print(f([1, 2]))
-print(f([1, 2, 3, 4]))
-# rule 3.6 3.7.2 S367
-# mistake 7 S367

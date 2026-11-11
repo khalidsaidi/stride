@@ -20,7 +20,7 @@ g()
 print(f(i))
 print(e(i))
 w("x")
-# rule 9.2 3.6 3.8 3.7.2 3.7.3.1
+# rule 9.2 3.6 3.8 3.7.2
 # answers {"i": "3"}
 # asked ["i", "w(who=\"x\";k={\"b\",\"a\"}).v"]
 # prints ["b, a", "b", "", "", ""]

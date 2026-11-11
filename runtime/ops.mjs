@@ -27,8 +27,8 @@ export function binary(op, a, b) {
         const x = Array.isArray(a) ? a : [];
         const y = Array.isArray(b) ? b : [];
         const most = (Array.isArray(a) ? mostOf(a) : 0) + (Array.isArray(b) ? mostOf(b) : 0);
-        if (most > 1000) throw new StrideFault("F017", `the two lists can hold ${most} items together, more than 1000`);
-        return list([...x, ...y], most);
+        if (x.length + y.length > 1000) throw new StrideFault("F017", `the two lists hold ${x.length + y.length} items together, and a list holds at most 1000`);
+        return list([...x, ...y], Math.min(most, 1000));
       }
       // Numbers or words: empty gives the other (§6.3).
       if (isEmpty(a) && !Array.isArray(a)) return b === "" ? null : b;

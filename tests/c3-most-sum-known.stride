@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-var a: list of number most 600
-var b: list of number most 600
-let c = a + b
-print(count(c))
-# rule 3.7.7 S395
-# mistake 5 S395

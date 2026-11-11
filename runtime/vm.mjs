@@ -179,11 +179,10 @@ function execute(p, answers, limit, depth, trace, prints) {
     if (i === undefined) fault("F016", `the program writes the box "${words(name)}", which it does not know`);
     return i;
   };
-  // A list position read (§6.9.2): F004 unless whole and from 1 to the list's most.
+  // A list position read (§6.9.2): F004 unless a whole number of 1 or more; past the items, empty.
   const readPosition = (l, i) => {
     const n = whole(i);
-    const most = Array.isArray(l) ? mostOf(l) : 0;
-    if (n === null || n < 1 || n > most) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number from 1 to the list's most, ${most}`);
+    if (n === null || n < 1) fault("F004", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} is not a whole number of 1 or more`);
     return n;
   };
   const record = (r) => {

@@ -153,11 +153,8 @@ export function check(resolved, diagnostics) {
       }
       // A worked-out list result whose most is not known before the form opens (§9.5.2).
       const unbounded = (t) => t.t === "list" && (!Number.isFinite(t.most) || unbounded(t.element));
-      if (unbounded(result)) {
-        const at = ctx.returns.find((r) => unbounded(r.type))?.node ?? sym.node;
-        err("S211", at, `${sym.name} returns a list whose most is known only as the program runs; write its result: -> list of ${T.describe(result.element)} most 10`);
-        result = T.ERROR;
-      }
+      const bounded = (t) => (t.t === "list" ? T.list(bounded(t.element), Number.isFinite(t.most) ? t.most : 1000) : t);
+      if (unbounded(result)) result = bounded(result); // no most written anywhere: it holds up to 1000 (§3.7)
       sym.result = result;
       sym.type = { t: "function", params: sym.params.map((p) => p.type), result };
     }
@@ -629,12 +626,11 @@ export function check(resolved, diagnostics) {
           err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; character(words, position) takes one character of words" : ""}`);
           return T.ERROR;
         }
-        // A known position outside 1 to the list's most (§6.9.2, §11.3.5); a list without a known most is
-        // checked only below 1 or not whole (§3.7.3).
+        // A known position that is not a whole number of 1 or more (§6.9.2).
         const n = evaluate(e.index);
         if (V.isNumber(n)) {
           const k = V.whole(n);
-          if (k === null || k < 1 || (Number.isFinite(t.most) && k > t.most)) err("S360", e.index, `${describeExpr(e.target)} holds items 1 to ${Number.isFinite(t.most) ? t.most : "its most"}; there is no item ${V.words(n)}`);
+          if (k === null || k < 1) err("S360", e.index, `a list's positions are whole numbers from 1; there is no item ${V.words(n)}`);
         }
         return t.element;
       }
@@ -940,8 +936,8 @@ export function check(resolved, diagnostics) {
           // No join stands at the second value (§3.9 rule 5).
           if (!element) return (err("S373", e.b, `+ joins lists whose items join into one type; these hold ${T.describe(x.element)} and ${T.describe(y.element)}`), T.ERROR);
           const most = x.most + y.most;
-          if (Number.isFinite(most) && most > 1000) return err2("S395", `the two lists can hold ${most} items together, and a list holds at most 1000`);
-          return T.list(element, most);
+          // A list holds at most 1000 (§3.7): more than that when the program runs is F017.
+          return T.list(element, Math.min(most, 1000));
         }
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";
