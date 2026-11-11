@@ -626,7 +626,7 @@ export function check(resolved, diagnostics) {
         if (i.t !== "number" && i.t !== "empty" && !T.isError(i)) err("S358", e.index, `a list's item is chosen by its number (from 1), not ${T.describe(i)}`);
         if (T.isError(t)) return T.ERROR;
         if (t.t !== "list") {
-          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list`);
+          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; character(words, position) takes one character of words" : ""}`);
           return T.ERROR;
         }
         // A known position outside 1 to the list's most (§6.9.2, §11.3.5); a list without a known most is
@@ -672,7 +672,7 @@ export function check(resolved, diagnostics) {
         }
         if (T.isError(t)) return T.ERROR;
         if (t.t !== "list") {
-          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list`);
+          err("S359", e, `${describeExpr(e.target)} is ${T.describe(t)}, not a list${T.isTextLike(t) ? "; slice(words, from, to) takes part of words" : ""}`);
           return T.ERROR;
         }
         return t;
