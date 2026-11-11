@@ -65,7 +65,7 @@ const CONTEXTUAL = new Set(["fields", "list", "set", "then", "when"]);
 const QUESTION_TYPES = ["one_of", "any_of", "long_text", "bool", "string", "number", "date", "phone", "email"];
 // Spellings of the ways of asking that Stride does not have, and what it writes for each.
 const OTHER_QUESTION_TYPES = { "one-of": "one_of", "any-of": "any_of", "long-text": "long_text", "yes-no": "bool", text: "string" };
-const PUNCT = ["..<", "..", "??", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "**=", "**", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
+const PUNCT = ["..<", "..", "??", "?.", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "**=", "**", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["import", "export", "record", "enum", "const", "native", "function", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
 
 export class SyntaxMistake extends Error {
@@ -1361,7 +1361,7 @@ class Parser {
     for (;;) {
       const t = this.token;
       // After a `.`, any word is a field's name (§2.3.2).
-      const field = this.sym(".") && ["name", "keyword"].includes(this.peek().type);
+      const field = (this.sym(".") || this.sym("?.")) && ["name", "keyword"].includes(this.peek().type);
       // After a `.`, digits are a tuple's position (§6.17).
       const position = this.sym(".") && this.peek().type === "number" && /^\d+$/.test(this.peek().raw);
       if (field || position || ((this.sym("[") || this.sym("(")) && !t.broken)) deeper();
@@ -1370,9 +1370,10 @@ class Parser {
         const n = this.take();
         e = { kind: "index", position: true, index: { kind: "number", value: n.value, raw: n.raw, span: n.span }, target: e, opSpan: n.span, span: join(e.span, n.span) };
       } else if (field) {
-        this.take();
+        // a?.f: null when a is null, without reading f (§6.9.1).
+        const safe = this.take().value === "?.";
         const n = this.take();
-        e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span };
+        e = { kind: "field", name: n.value, target: e, span: join(e.span, n.span), nameSpan: n.span, ...(safe ? { safe: true } : {}) };
       } else if (this.sym("[") && !t.broken) {
         const open = this.take();
         // l[..b] starts at the first item, l[a..] goes to the last (§6.9.3).

@@ -432,7 +432,7 @@ export function format(text, name = "program.stride") {
         return wrap(p, `${left} ${e.op} ${right}`);
       }
       case "field":
-        return `${expr(e.target, 8)}.${e.name}`;
+        return `${expr(e.target, 8)}${e.safe ? "?." : "."}${e.name}`;
       case "index":
         return e.position ? `${expr(e.target, 8)}.${e.index.raw}` : `${expr(e.target, 8)}[${expr(e.index)}]`;
       case "tuple":

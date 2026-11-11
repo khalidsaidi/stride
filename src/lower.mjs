@@ -639,7 +639,17 @@ export function lower(resolved, diagnostics, options = {}) {
   }
 
   function expr(e, ctx) {
+    // a?.f, a?.f(…): the receiver once, into a local; what reads it is worked out only when it is not null.
+    if (e.safe && (e.kind === "field" || (e.kind === "call" && e.method))) {
+      const recv = e.kind === "field" ? e.target : e.args[0];
+      const l = ctx.fn.local("safe", recv.type);
+      const stand = { kind: "lowered", ir: IR.local(l), type: recv.type, span: recv.span, file: recv.file };
+      const copy = e.kind === "field" ? { ...e, safe: false, target: stand } : { ...e, safe: false, args: [stand, ...e.args.slice(1)] };
+      return IR.safe(expr(recv, ctx), l, expr(copy, ctx));
+    }
     switch (e.kind) {
+      case "lowered":
+        return e.ir;
       case "number":
       case "bool":
         return IR.constant(e.value);

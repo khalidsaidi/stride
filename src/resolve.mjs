@@ -871,6 +871,7 @@ export function resolve(loaded, diagnostics) {
           }
           // r.label(…) is label(r, …): a function called on its first argument.
           const receiver = e.target.target;
+          if (e.target.safe) e.safe = true; // r?.f(…): no call when r is null
           const name = e.target.name;
           // A library kept under a name lends its functions to calls like this one: f.full() finds people's full.
           let sym = scope.lookup(name);

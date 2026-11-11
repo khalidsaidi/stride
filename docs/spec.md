@@ -446,6 +446,8 @@ is no key of a map; a null s, or a null x within words, is F023 (§6.3).
 6.9. **Postfix.** A line break before `[` or `(` ends the expression before it: the bracket starts a new one.
 - 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357; no such field S318 (with a hint).
   `r.f` of a null record (a null list item) is F023 (§6.3): `if r != null` or `r ?? new R { }` first.
+  `r?.f` and `r?.f(…)` are null when r is null, and otherwise `r.f` and `r.f(…)`; r is worked out once, and the
+  arguments only when r is not null. A chain stops at the first null: `a?.b?.c`.
 - 6.9.2. `l[i]`: i a number (S358), l a list, or words (their characters; S359 otherwise). Positions count from 0: `l[0]` is the first
   item and `l[count(l) - 1]` the last. i not whole, below 0, or `count(l)` or more is F004 (i written out not whole or below 0 is S360); l or i null is F023.
 - 6.9.3. `l[a..b]`: the items a to b, both included, and `l[a..<b]` the items a to before b (of words: the characters; `l[a..]` to the last, `l[..b]` and `l[..<b]` from the first), a list of l's element type. a, b whole (F004); l, a or b null is F023; a < 0 counts from 0;

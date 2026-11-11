@@ -129,6 +129,8 @@ export const native = (name, args) => ({ e: "native", name, args });
 export const outer = (sym) => ({ e: "outer", sym });
 // A shared var itself, not its value: what a function made in place is given to share it (§9.11).
 export const cellref = (l) => ({ e: "cellref", l });
+// a?.f: the target into a local, and the rest worked out only when it is not null (§6.9.1).
+export const safe = (target, l, body) => ({ e: "safe", target, l, body });
 export const fnref = (fn) => ({ e: "fnref", fn });
 // A function made in place, with the values it keeps (§9.11).
 export const closure = (fn, kept) => ({ e: "closure", fn, kept });
@@ -226,6 +228,8 @@ export function showExpr(x) {
       return `concat(${x.parts.map(showExpr).join(", ")})`;
     case "call":
       return `${x.fn.name}(${x.args.map(showExpr).join(", ")})`;
+    case "safe":
+      return `(${show(x.target)} as %${x.l.name} ?. ${show(x.body)})`;
     case "fnref":
       return `function ${x.fn.name}`;
     case "cellref":

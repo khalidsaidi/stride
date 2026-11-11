@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record person {
+  name: string
+  boss: person
+  function greet(self) -> string {
+    return "Hi {self.name}"
+  }
+}
+let a = new person { name: "Ada" }
+let b = new person { name: "Bo", boss: a }
+print(b.boss?.name, a.boss?.name, a.boss?.boss?.name)
+print(b.boss?.greet(), a.boss?.greet())
+print(a.boss?.name ?? "nobody")
+# rule 6.9.1
+# prints ["Ada  ", "Hi Ada ", "nobody"]

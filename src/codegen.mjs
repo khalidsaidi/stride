@@ -161,6 +161,18 @@ export function generate(program, pdf, debug = null) {
           return emit(OP.KEEP, x.kept.length);
         case "cellref":
           return emit(OP.LOAD_CELL, local(x.l));
+        case "safe": {
+          const end = label(), there = label();
+          expr(x.target);
+          emit(OP.DUP);
+          emit(OP.NATIVE, nativeIndex("is_null"), 1);
+          jumpTo(OP.JUMP_IF_FALSE, there);
+          jumpTo(OP.JUMP, end);
+          placeLabel(there);
+          emit(OP.STORE, local(x.l));
+          expr(x.body);
+          return placeLabel(end);
+        }
         case "fnref":
           return emit(OP.FN, fnIndex.get(x.fn), T(x.fn.keyName ?? x.fn.name));
         case "callv":

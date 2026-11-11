@@ -14,6 +14,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `copy.deepcopy(xs)`, `structuredClone(xs)` | `copy(xs)` |
 | `None`, `nil`, `undefined`, a `NullPointerException` | `null`: every type has it; `x == null` tests it; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
 | `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is null; `""`, `0` and `[]` are not null |
+| `a?.b`, `a?.f()`, `a?.b?.c` | the same: null when `a` is null, without reading `b` or calling `f` |
 | `if x:`, `if (x)` on a value that may be null | `if x { }` for a bool: null counts as false; `if x != null { }` for anything else |
 | `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
 | `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
