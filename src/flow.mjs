@@ -305,6 +305,9 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
         return !!sym.node.unroll;
       case "index":
         return !!sym.node.unroll;
+      // The item of a for each over a known list (a list written out): each turn's item is known (§11.1).
+      case "item":
+        return sym.node.kind === "for-each" && !!sym.node.unroll && !seen.has(sym) && (seen.add(sym), known(sym.node.list, fn, seen));
       case "param":
         return [...(fn?.staticParams ?? [])].includes(sym);
       case "let": {

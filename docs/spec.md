@@ -859,7 +859,8 @@ question it follows.
 ## 11. Known before the form opens
 
 11.1. Known: words, numbers, `yes`, `no`, `empty`; constants; lets made of known values; the counters of loops
-that ask or write boxes; the numbers of a collect's or for each's items; pure natives of known values; list
+that ask or write boxes; the numbers of a collect's or for each's items; the items of a `for each` over a known
+list, when it asks or writes boxes (`for each b in ["Race", "Age"] { tick b when b in why }`); pure natives of known values; list
 literals of known values; parameters every call gives a known value. Not known: answers, vars, items, fields, list
 items, records made with `new`, calls of Stride functions. The one exception is a box's or a button's name: there a
 call of a pure Stride function (§9.9) on known values is known too, so a function can build a row's box names
