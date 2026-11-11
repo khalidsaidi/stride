@@ -7,7 +7,7 @@
 //                                         ending in $ are the message's end: # mistake 4 S201 defined here$)
 //   # label 5:15-5:21 no field nmae      a label some mistake carries (the place's first), with its span and words
 //   # warning 7 W002                      the same for a warning
-//   # engines vm                          only these of vm, ir (resource limits, §19.1.2)
+//   # engines vm                          the machine (kept from when there were two engines)
 //   # header-pdf <sha256>, # header-form <id>   the header is for this PDF or form, not the program's (S501, S502)
 //   # std <file>                          this standard library (in tests/lib/) instead of lib/std.stride
 //   # box Name text|check|radio:on|choice:a,b near words   the header's boxes; without any, every box the
@@ -33,15 +33,13 @@
 // give exactly these results in order.
 //
 // A test with mistakes expected passes when exactly those mistakes and warnings are reported. A test with none
-// must compile clean, and every run then goes through both engines — the machine and the intermediate form's
-// interpreter — which must give
-// the golden results above and agree with each other on every question, box, print and fault (§19.1).
+// must compile clean, and every run then goes through the machine, which must give the golden results above
+// (§19.1).
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import { compile } from "../../src/compile.mjs";
 import { load, run, boxValues } from "../../runtime/vm.mjs";
-import { interpretProgram } from "../../src/interpret.mjs";
 import { parseDigits, expectResults } from "../../src/test.mjs";
 import { Diagnostics, SourceFile } from "../../src/source.mjs";
 import { parse } from "../../src/parse.mjs";
@@ -56,7 +54,7 @@ const here = fileURLToPath(new URL(".", import.meta.url));
 // run.
 export const TESTS = existsSync(join(here, "..")) ? join(here, "..") : join(process.cwd(), "tests");
 export const SPEC = existsSync(join(here, "../../docs/spec.md")) ? join(here, "../../docs/spec.md") : join(process.cwd(), "docs/spec.md");
-export const MODES = ["vm", "ir"];
+export const MODES = ["vm"];
 
 // JSON with every number kept as the digits written, as words: what a run's boxes and steps are compared with.
 export const parseExact = (text) => JSON.parse(text, (k, v, context) => (typeof v === "number" ? context.source : v));
@@ -180,10 +178,10 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
       }
     }
   }
-  if (first.diagnostics.empty && !first.program.test && !first.program.script) {
+  if (first.bytecode && !first.program.test && !first.program.script) {
     for (const answers of runs) {
       try {
-        interpretProgram(first.program, answers, new Map(), { onWrite: add });
+        run(load(first.bytecode), answers, { open: true, onWrite: add });
       } catch {
         // What it reached is what is known of it.
       }
@@ -196,15 +194,9 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
 function runMode(mode, compiled, answers, today) {
   const program = compiled.out.program;
   const tests = (r) => (program.test ? expectResults(program, r.results ?? []) : null);
-  if (mode.startsWith("vm")) {
-    const p = compiled.loaded;
-    const r = run(p, answers, { today });
-    return { steps: r.steps, boxes: boxValues(p, r.writes), prints: r.prints ?? [], fault: r.fault, results: tests(r) };
-  }
-  const r = interpretProgram(program, answers, compiled.out.boxes, { today });
-  const boxes = {};
-  for (const [k, w] of r.writes) boxes[k] = w;
-  return { steps: r.steps, boxes, prints: r.prints ?? [], fault: r.fault, results: tests(r) };
+  const p = compiled.loaded;
+  const r = run(p, answers, { today });
+  return { steps: r.steps, boxes: boxValues(p, r.writes), prints: r.prints ?? [], fault: r.fault, results: tests(r) };
 }
 
 const stepView = (s) => ({ key: s.key, printed: s.printed, value: canon(s.value), default: s.default === undefined ? undefined : canon(s.default), failed: s.failed ?? [], unreadable: s.unreadable ?? null });

@@ -2,7 +2,6 @@
 // Words answers at and past 100,000 code points (§8.7): at the limit kept whole, past it empty and unreadable
 // "too long", with the default not coming back; an emoji is one code point though two UTF-16 units. Both engines.
 import { compile } from "../../src/compile.mjs";
-import { interpretProgram } from "../../src/interpret.mjs";
 import { load, run } from "../../runtime/vm.mjs";
 
 export function test() {
@@ -17,7 +16,7 @@ export function test() {
     ["😀".repeat(100_001), "0", "too long"],
   ];
   for (const [answer, printed, why] of cases) {
-    const engines = { vm: run(load(out.bytecode), { w: answer }), ir: interpretProgram(out.program, { w: answer }) };
+    const engines = { vm: run(load(out.bytecode), { w: answer }) };
     for (const [name, r] of Object.entries(engines)) {
       const label = `${name}, ${[...answer].length} code points of ${answer[0] === "x" ? "x" : "emoji"}`;
       if (r.fault) problems.push(`${label}: fault ${r.fault.code}`);

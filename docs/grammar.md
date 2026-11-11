@@ -324,8 +324,7 @@ machine and standard library bundled with Node inside);
 - `stride run <file.stride|.sbc> [answers.json] [--trace] [--today D]` runs with answers (`{ "key": answer }`)
   and prints the questions asked, the boxes written, what `print` gave and a fault; `--trace` each instruction.
 - `stride test <file.stride> [name …]` runs the tests in `<file>.tests/`: each `{ "answers", "boxes",
-  "asked", "unasked", "loose" }`; every box the test does not list must be empty unless it is loose. Each test
-  runs in the machine and in the intermediate form, and they must agree. `stride test <name>.test.stride` runs a
+  "asked", "unasked", "loose" }`; every box the test does not list must be empty unless it is loose. `stride test <name>.test.stride` runs a
   test file's `expect`s.
 - `stride eval "<expression>" [--use lib]` prints the value of one expression.
 - `stride explain <code>` explains a mistake's or a fault's code.

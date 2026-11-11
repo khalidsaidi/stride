@@ -372,7 +372,7 @@ S311, S380); empty counts as no.
 | empty | yes, no or empty | no (b not worked out) | b read as a condition: yes, no, no |
 
 `yes or b` is yes without working out b. `not yes` is no; `not no` and `not empty` are yes. So with a unanswered,
-`(yes and a) is empty` and `(no or a) is empty` are both no, in every engine. Comparisons,
+`(yes and a) is empty` and `(no or a) is empty` are both no. Comparisons,
 `in` and `is empty` likewise always give yes or no.
 
 ## 7. Statements
@@ -1320,8 +1320,8 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
   UTF-16 units (columns of §1.3 are characters); a declaration in another file found at that file's own path;
   the rest as §17.16.
 
-17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program as written, in the
-intermediate form (which agrees with the machine, §19.1). It prints each statement's file, line and text when it
+17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program in the
+machine, which tells of each statement as it starts. It prints each statement's file, line and text when it
 starts, and under it the names it gave a value; each turn of a loop,
 at the loop's line, with its counter, or its item and number, as that turn has them; each call of a function with
 its arguments, and what it gives back; each call of a standard library function with its arguments and what it
@@ -1537,27 +1537,18 @@ the stack's height the same where paths meet, never below what an instruction ta
 
 ## 19. Conformance
 
-19.1. An implementation conforms when every test in `tests` passes in the machine and in the
-intermediate form's interpreter, and they agree on: every question reached, in order, with its
-key, printed words, value, default, failed checks' messages in order, and unreadable answer with its reason;
-every box written and its value; every `print`, in order; and every fault: its code, its message, and its whole
-stack — the function and place of the faulting operation and of every call that led there, innermost
-first (§13.4).
+19.1. An implementation conforms when every test in `tests` passes: for each run a test names, the machine gives
+the questions reached, in order, each with its key, printed words, value, default, failed checks' messages in
+order, and unreadable answer with its reason; every box written and its value; every `print`, in order; and
+every fault: its code, its message, and its whole stack — the function and place of the faulting operation and of
+every call that led there, innermost first (§13.4).
 
-19.1.1. **Resource limits are not semantics.** F014 (instructions) and F015 (call depth) depend on the engine:
-the machine counts instructions and the interpreter counts steps. Two engines that agree on every question, box, `print` and fault may still exhaust a limit
-differently. So:
-- the **reference** is the program in the machine;
-- **semantic comparison** (§19.1) is made only on runs the reference finishes within the limits; on those, every
-  engine must finish and agree, so an engine stopping where the reference finishes is a conformance failure;
-- a run the reference exhausts is not compared, whatever the other engines do.
-19.1.2. **Each engine's enforcement is tested on its own.** The machine is tested to stop with F014 at 2,000,000
-instructions and with F015 past 200 frames, counted as it runs the program it was given; the interpreter to stop
-at its own count of steps and frames; each test runs one engine on a program built to exhaust that engine, and
-names the engine. No test claims that every engine exhausts on the same run.
-19.1.3. `node scripts/fuzz.mjs` drops a generated run that the reference exhausts.
+19.1.2. **A run's limits.** The machine stops a run with F014 at 2,000,000 instructions and with F015 past 200
+calls, counted as it runs the program it was given.
 
-19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs each in both engines; a disagreement, a crash, or a mistake on a valid program is a bug.
+19.2. `node scripts/fuzz.mjs [runs] [seed]`, in the repository, generates valid programs and answers and runs
+each in the machine; a crash, a fault that is the compiler's or the machine's own (§19.3), or a mistake on a valid
+program is a bug.
 
 19.3. **Faults no type-correct program reaches.** F006, F016, F018 and F019 guard against a fault in the
 compiler or the machine itself; no program the compiler accepts can reach them. They are tested by the machine's
@@ -1583,7 +1574,7 @@ it too.
 - A **minor** version adds, keeping what every program the version before accepted does: a function, a statement,
   a command, a warning. A change counts as minor only when it keeps that; one that seems an addition and does not
   is major. Raising a limit is not minor when a program could see it: more digits change what a calculation gives,
-  and a longer list or longer words remove an F017 or F012 a program stopped with. The one exception is §19.1.1's:
+  and a longer list or longer words remove an F017 or F012 a program stopped with. The one exception is §19.1.2's:
   a run the instruction or call-depth budget stops (F014, F015) may finish in a later version, as an engine with
   more room may finish it now.
 - A **major** version is any other change: a rule's meaning changed, a mistake given to a program accepted before,

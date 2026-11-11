@@ -5,7 +5,7 @@ for i in 1..n {
   print("x")
 }
 fill "A" = "done"
-# rule F014 19.1.2 19.1.3
+# rule F014 19.1.2
 # engines vm
 # answers {"n": 2000001}
 # fault F014

@@ -1,17 +1,15 @@
 // node scripts/fuzz.mjs (docs/spec.md §19.2): programs made at random, valid by construction, each with answers made
-// at random, run in the machine and the intermediate form's interpreter, and through the PDF
-// check. A crash, a disagreement between the two (§19.1), or a mistake on a program the generator meant to be
-// valid is a bug; each is reported with its seed, so `node scripts/fuzz.mjs 1 S` gives it again.
+// at random, run in the machine. A crash, a fault that is the compiler's or the machine's own, or a mistake on a
+// program the generator meant to be valid is a bug; each is reported with its seed, so `node scripts/fuzz.mjs 1 S` gives it again.
 //
 // The generator writes a program as a person would: an option set and a record, a few functions (pure ones that
 // work numbers and words out, and one that asks), then a body of questions, lets, vars and their assignments, ifs,
 // matches, loops, for eaches, collects, comprehensions and every kind of box write, each name used after it is
 // declared and every answer and let read. Expressions are made by type, to a depth, from what is in scope.
 //
-// A run the machine exhausts (F014, F015) is not compared (§19.1.1).
+// A run the machine exhausts (F014, F015) is passed over (§19.1.2).
 import { compile } from "../../src/compile.mjs";
 import { load, run, boxValues } from "../../runtime/vm.mjs";
-import { interpretProgram } from "../../src/interpret.mjs";
 import { autoHeader } from "./selftest.mjs";
 
 const PDF = "0".repeat(64);
@@ -572,22 +570,15 @@ export function fuzzOne(seed) {
     try {
       // The boxes these answers reach are the form's for this run (a name worked out as the program runs).
       build = compile(source, "fuzz.stride", { header: autoHeader(source, "fuzz.stride", {}, [answers]) });
-      for (const [mode, b] of [["vm", build], ["ir", build]]) {
-        if (mode.startsWith("vm")) {
-          const p = load(b.bytecode);
-          const x = run(p, answers, { today });
-          results[mode] = { steps: x.steps, boxes: boxValues(p, x.writes), prints: x.prints, fault: x.fault };
-        } else {
-          const x = interpretProgram(b.program, answers, b.boxes, { today });
-          const boxes = {};
-          for (const [k, w] of x.writes) boxes[k] = w;
-          results[mode] = { steps: x.steps, boxes, prints: x.prints, fault: x.fault };
-        }
-      }
+      const p = load(build.bytecode);
+      const x = run(p, answers, { today });
+      results.vm = { steps: x.steps, boxes: boxValues(p, x.writes), prints: x.prints, fault: x.fault };
+      // A fault that is the compiler's or the machine's own (never a program's) is a bug.
+      if (["F006", "F018", "F019"].includes(x.fault?.code)) return { seed, outcome: "bug", problem: `the machine stopped with ${x.fault.code}: ${x.fault.message}`, source, answers: { ...answers } };
     } catch (e) {
       return { seed, outcome: "bug", problem: `an engine crashed: ${e.stack}`, source, answers };
     }
-    // A run the reference exhausts is not compared (§19.1.1).
+    // A run the reference exhausts is passed over (§19.1.2).
     if (["F014", "F015"].includes(results.vm.fault?.code)) return { seed, outcome: "exhausted", source };
     const ref = view(results.vm);
     for (const [mode, x] of Object.entries(results)) {

@@ -4,7 +4,6 @@
 // what `stride eval` gives, what it prints, or the fault it stops with. `stride doc` shows them.
 import { compile } from "../../src/compile.mjs";
 import { load, run } from "../../runtime/vm.mjs";
-import { interpretProgram } from "../../src/interpret.mjs";
 import { LIBRARY } from "../../src/codes.mjs";
 import { examples, setup, EXAMPLE_TODAY } from "../../src/library.mjs";
 
@@ -25,7 +24,7 @@ export function test() {
         problems.push(`${x.text}: ${mistakes[0].line}:${mistakes[0].column} ${mistakes[0].code} ${mistakes[0].message}`);
         continue;
       }
-      const runs = [["vm", run(load(out.bytecode), {}, { today: EXAMPLE_TODAY })], ["ir", interpretProgram(out.program, {}, out.boxes, { today: EXAMPLE_TODAY })]];
+      const runs = [["vm", run(load(out.bytecode), {}, { today: EXAMPLE_TODAY })]];
       for (const [engine, r] of runs) {
         const got = x.verb === "faults" ? r.fault?.code ?? "no fault" : r.fault ? `fault ${r.fault.code}` : r.prints[0];
         if (got !== x.want) problems.push(`${x.text}: ${engine} gives ${JSON.stringify(got)}`);

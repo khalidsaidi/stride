@@ -12,6 +12,6 @@ for k in 1..1000 {
   }
 }
 fill "C" = "{n}"
-# rule 19.1.1 F014
+# rule F014
 # answers {"a": "1", "b": "1"}
 # boxes {"C": "0"}

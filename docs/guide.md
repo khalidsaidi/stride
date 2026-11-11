@@ -445,7 +445,7 @@ must not be asked, what it prints and the fault it stops with (§17.8):
 }
 ```
 
-`stride test consent.stride` runs every one, in the machine and in the compiler's own interpreter. `stride test`
+`stride test consent.stride` runs every one. `stride test`
 with no path runs every test in the folder you are in and the folders in it: each program's `.tests/` and every
 `.test.stride` file; `--match words` runs only those whose name holds the words (§17.13).
 
