@@ -9,7 +9,7 @@ print("a".pad_left(w))
 print(w.f())
 # rule 16.3.1 F009 F001
 # run wide
-# answers {"w": "2000"}
+# answers {"w": "-2"}
 # fault F009 at 8:11
 # run zero
 # answers {"w": "0"}

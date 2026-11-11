@@ -84,7 +84,7 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 
 | Type | Values | Written |
 |---|---|---|
-| `text` | words: a sequence of Unicode code points, at most 100,000 | `"words"` |
+| `text` | words: a sequence of Unicode code points | `"words"` |
 | `number` | an exact decimal (§3.3) | `12`, `1.5` |
 | `date` | a day of the Gregorian calendar, 0001-01-01 to 9999-12-31 | from answers, `date_of(…)`, `today()` |
 | `yes-no` | `yes`, `no` | `yes`, `no` |
@@ -311,7 +311,7 @@ and, for r, rounded.
   a again, and it is yes.
 
 6.5. **Words.** `a + b` with both words (text, or an option) joins them; the result is
-`text`. A number and words is S372 (write `"…{n}…"`). The result longer than 100,000 characters is F012.
+`text`. A number and words is S372 (write `"…{n}…"`).
 
 6.5.1. **Lists.** `l + m`, with l and m lists whose item types have a join (§3.9; S373 otherwise), is a new list:
 l's items, then m's. `l += m` is `l = l + m`.
@@ -606,9 +606,7 @@ is empty (never a fault):
   marked unreadable `not words`. A number question takes words or a JSON number; anything else is `not a number`.
   An answer given as JSON `null` is a valid empty answer, with no unreadable mark; only a key the answers do not
   hold at all brings the default (§8.4.1);
-- words (text, long-text, phone, email): the words as given; nothing is empty; more than 100,000 Unicode code
-  points (§3.1) is empty, marked unreadable `too long`: never cut short, never a fault, and the answer is still
-  given, so its default does not come back (§8.4.1);
+- words (text, long-text, phone, email): the words as given; nothing is empty;
 - number: optional spaces (U+0020; a tab or any other white space is not one), an optional `+` or `-`, optional
   spaces, digits with `,`, space or `'` between groups, an optional `.` and digits (digits on both sides of the point: `0.5` and `5.0` are numbers, `.5` and `5.` are not), optional spaces; `$ € £` ignored; else empty. `0x10`, `1e5`, `12abc` are empty. A number written with more than 34
   significant digits, of absolute value 10^34 or more, or finer than 10^-6176, is not rounded: it is empty, and the
@@ -630,7 +628,7 @@ is empty (never a fault):
 - **the reasons an answer is unreadable**, the only ones: for a number `not a number`, `more than 34 digits`, `too
   large`, `too small`; for a date `not a date` (not `YYYY-MM-DD`, or no such day); for yes-no `not yes or no`; for one-of `not one
   of the options`; for any-of `not among the options` (when any value given is not an option: the others are
-  kept); for words (text, long-text, phone, email) `too long` and `not words`;
+  kept); for words (text, long-text, phone, email) `not words`;
 - date: `YYYY-MM-DD` of a real day;
 - yes-no: exactly `yes`, `Yes`, `on`, `true` and JSON true for yes; `no`, `No`, `Off`, `false` and JSON false for
   no; `null` and `""` are a valid empty answer; any other spelling is `not yes or no`;
@@ -823,10 +821,9 @@ words given to `print`, and a fault or none.
 | F006 | a field read or set on a value that is not a record and not empty: a compiler fault, never reached by a type-correct program |
 | F007 | a native given a position that is not a whole number of 1 or more |
 | F008 | a native given places that are not a whole number from 0 to 10 |
-| F009 | `pad_left` given a width outside 0–1000, or padding that is not one character |
+| F009 | `pad_left` given a width that is not a whole number of 0 or more, or padding that is not one character |
 | F010 | a date pattern with none of YYYY YY MM DD M D |
 | F011 | a date outside 0001-01-01 to 9999-12-31 |
-| F012 | words longer than 100,000 characters |
 | F013 | `fail(message)`: the program's own fault |
 | F014 | more than 2,000,000 instructions in one run |
 | F015 | calls deeper than 200 |
@@ -890,13 +887,13 @@ words given to `print`, and a fault or none.
 | `starts_with(t: text, part: text) -> yes-no`, `ends_with(t: text, part: text) -> yes-no` | the same at the start, at the end |
 | `find(t: text, part: text) -> number` | the position of the first part in t; 0 when it is not there or part is empty |
 | `occurrences(t: text, part: text) -> number` | how many times part is in t, not overlapping; 0 when part is empty |
-| `split(t: text, separator: text) -> list of text` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017 |
+| `split(t: text, separator: text) -> list of text` | t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character |
 | `line(t: text, n: number) -> text` | line n of t (lines end at `\n`, `\r\n`, `\r`), with spaces and tabs off both ends and its inner spacing kept as written (not `trim`); every other character, a non-breaking space among them, stays |
 | `line_count(t: text) -> number` | how many lines, every line end (`\n`, `\r\n`, `\r`, each one) starting a new one, so a trailing end counts its empty last line: `line_count("a\n")` is 2; empty: 0 |
 | `rest_lines(t: text) -> text` | every line after the first, joined by `\n`, with spaces and tabs off both ends of the whole and its inner spacing kept as written (not `trim`); every other character stays |
 | `word(t: text, n: number) -> text` | word n of t, words split on runs of spaces and tabs |
 | `word_count(t: text) -> number` | how many words; empty: 0 |
-| `pad_left(t: text, width: number, padding: text = " ") -> text` | padding put before t until it is width characters; t at least width long: t. width a whole number 0–1000 and padding exactly one character, else F009 |
+| `pad_left(t: text, width: number, padding: text = " ") -> text` | padding put before t until it is width characters; t at least width long: t. width a whole number of 0 or more and padding exactly one character, else F009 |
 | `text_of(v: any) -> text` | v's words (§3.5); a list or record is S367 |
 | `number_of(t: text) -> number` | the number t holds by §8.7, or empty |
 
@@ -977,7 +974,6 @@ entry says "or a set" (its items are then options).
 |---|---|
 | nesting of blocks, brackets and expressions | 200 (S019) |
 | arguments of a call, parameters of a function | 255 (S601) |
-| words | 100,000 characters (F012) |
 | significant digits of a number | 34 (S009; §3.3) |
 | instructions in one run | 2,000,000 (F014) |
 | depth of calls | 200 (F015) |
@@ -1612,7 +1608,7 @@ it too.
 - A **minor** version adds, keeping what every program the version before accepted does: a function, a statement,
   a command, a warning. A change counts as minor only when it keeps that; one that seems an addition and does not
   is major. Raising a limit is not minor when a program could see it: more digits change what a calculation gives,
-  and a longer list or longer words remove an F017 or F012 a program stopped with. The one exception is §19.1.2's:
+  and a longer list removes an F017 a program stopped with. The one exception is §19.1.2's:
   a run the instruction or call-depth budget stops (F014, F015) may finish in a later version, as an engine with
   more room may finish it now.
 - A **major** version is any other change: a rule's meaning changed, a mistake given to a program accepted before,

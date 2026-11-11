@@ -69,11 +69,7 @@ function value(e, env, visiting) {
           out += textOf(v);
         }
       }
-      // Words longer than the limit fault (F012, §3.1): known, that is S413.
-      return faultOf(e, () => {
-        if ([...out].length > 100_000) throw new StrideFault("F012", "the words would be more than 100000 characters");
-        return out;
-      });
+      return out;
     }
     case "plain-string":
       return e.value;

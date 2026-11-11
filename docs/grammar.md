@@ -256,7 +256,7 @@ after twenty; the command line shows the first twenty and counts the rest (§16.
   statement of the wrong kind for its box; a button a radio group does not have; a list box filled with an entry,
   written out, that it does not have; a program written for another PDF.
 
-Limits (§15): nesting 200 deep, 255 arguments or parameters, words of 100,000 characters, numbers of 34 significant digits.
+Limits (§15): nesting 200 deep, 255 arguments or parameters, numbers of 34 significant digits.
 
 Warnings do not stop the compiler: a match with no else that misses options; a function, a constant, an answer,
 a let or a var never used; a field asked and never read. Stride is no stricter than the form (§10.4).

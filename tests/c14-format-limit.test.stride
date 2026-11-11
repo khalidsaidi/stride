@@ -1,5 +1,0 @@
-let pattern = replace(pad_left("", 1000, "M"), "M", replace(pad_left("", 50, "M"), "M", "Mx"))
-expect length(pattern) == 100000
-expect format(date_of(2024, 12, 1), pattern) faults "F012"
-expect length(format(date_of(2024, 1, 1), pattern)) == 100000
-# rule 14.3 14.0.3 F012

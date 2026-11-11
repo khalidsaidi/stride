@@ -132,7 +132,7 @@ export function generate(program, pdf, debug = null) {
           return emit(BINARY_OPS[x.op]);
         case "concat":
           for (const p of x.parts) expr(p);
-          atExpr(x); // F012 stands at the words in quotes (§16.3.1)
+          atExpr(x);
           return emit(OP.CONCAT, x.parts.length);
         case "call":
           args(x);

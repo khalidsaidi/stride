@@ -4,7 +4,6 @@
 // F018: the checker refuses such a program, so reaching it is a compiler fault, never silently empty.
 import { D, StrideFault, equal, order, truthy, isEmpty, isNumber, words, list, mostOf } from "./values.mjs";
 
-const MAX_WORDS = 100_000; // §3.1, F012
 
 function numberOp(f) {
   try {
@@ -34,9 +33,7 @@ export function binary(op, a, b) {
       if (isEmpty(b)) return a;
       if (isNumber(a) && isNumber(b)) return numberOp(() => D.add(a, b));
       if (typeof a === "string" && typeof b === "string") {
-        const s = a + b;
-        if ([...s].length > MAX_WORDS) throw new StrideFault("F012", `the words would be more than ${MAX_WORDS} characters`);
-        return s;
+        return a + b;
       }
       return noOp(op, a, b);
     }

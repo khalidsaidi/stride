@@ -9,7 +9,7 @@ fill "B" = pad_left("7", 2, c)
 # answers {"w": 3, "c": "x"}
 # boxes {"A": "007", "B": "x7"}
 # run width
-# answers {"w": 1001, "c": "x"}
+# answers {"w": -1, "c": "x"}
 # fault F009 at 5:12
 # run padding
 # answers {"w": 3, "c": "ab"}

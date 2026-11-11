@@ -134,7 +134,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 
 | Type | Values | Written |
 |---|---|---|
-| `text` | words, up to 100,000 characters | `"words"`, `"Line {n}"` |
+| `text` | words | `"words"`, `"Line {n}"` |
 | `number` | an exact decimal: `0.1 + 0.2` is `0.3` | `12`, `1.5` |
 | `date` | a day, 0001-01-01 to 9999-12-31 | `date_of(2026, 7, 4)`, `today()` |
 | `yes-no` | `yes`, `no` | |
@@ -709,5 +709,5 @@ Linux. Other platforms are outside this release's scope.
 | outside access | none: no network, files, clock but `today()`, or randomness; the program sees only its answers |
 | the PDF | never changed; only its boxes are filled |
 | a run | at most 2,000,000 instructions (F014) and calls 200 deep (F015) |
-| values | words at most 100,000 characters, numbers below 10^34 with 34 digits |
+| values | numbers below 10^34 with 34 digits |
 | errors | at most 20 mistakes shown; the rest are counted |

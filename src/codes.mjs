@@ -34,7 +34,7 @@ export const CODES = {
     "explanation": ""
   },
   "F009": {
-    "when": "`pad_left` given a width outside 0–1000, or padding that is not one character",
+    "when": "`pad_left` given a width that is not a whole number of 0 or more, or padding that is not one character",
     "explanation": ""
   },
   "F010": {
@@ -43,10 +43,6 @@ export const CODES = {
   },
   "F011": {
     "when": "a date outside 0001-01-01 to 9999-12-31",
-    "explanation": ""
-  },
-  "F012": {
-    "when": "words longer than 100,000 characters",
     "explanation": ""
   },
   "F013": {
@@ -1034,7 +1030,7 @@ export const LIBRARY = [
     "names": [
       "split"
     ],
-    "gives": "t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character; more than 1000 pieces F017"
+    "gives": "t cut at every separator (case as written), pieces kept even when empty; t empty: an empty list; separator empty: each character"
   },
   {
     "section": "14.1 Words",
@@ -1094,7 +1090,7 @@ export const LIBRARY = [
     "names": [
       "pad_left"
     ],
-    "gives": "padding put before t until it is width characters; t at least width long: t. width a whole number 0–1000 and padding exactly one character, else F009"
+    "gives": "padding put before t until it is width characters; t at least width long: t. width a whole number of 0 or more and padding exactly one character, else F009"
   },
   {
     "section": "14.1 Words",

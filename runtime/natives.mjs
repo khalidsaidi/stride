@@ -12,13 +12,9 @@ import { D, StrideFault, StrideRecord, StrideMap, NO_MOST, copy, StrideDate, isE
 export { StrideFault, StrideRecord, isEmpty };
 export const textOf = words;
 
-const MAX_WORDS = 100_000;
 const chars = (t) => [...(t ?? "")];
 const text = (t) => (t === null || t === undefined ? "" : typeof t === "string" ? t : words(t));
-const result = (s) => {
-  if (chars(s).length > MAX_WORDS) throw new StrideFault("F012", `the words would be more than ${MAX_WORDS} characters`);
-  return s === "" ? null : s;
-};
+const result = (s) => (s === "" ? null : s);
 
 // A position (§14.0.4): a whole number of 1 or more, else F007, empty included. One past every text there can be
 // (beyond JavaScript's safe whole numbers too) is a position all the same: past the end.
@@ -155,9 +151,7 @@ export const NATIVES = {
     pure: true,
     fn: (t, part, w) => {
       if (text(part) === "") return result(text(t));
-      // Too long is said before the words are built: each part found grows them by a known amount.
       const pieces = text(t).split(text(part));
-      if (text(t).length + (pieces.length - 1) * (text(w).length - text(part).length) > MAX_WORDS * 2) throw new StrideFault("F012", `the words would be more than ${MAX_WORDS} characters`);
       return result(pieces.join(text(w)));
     },
   },
@@ -195,7 +189,7 @@ export const NATIVES = {
     control: [1, 2],
     fn: (t, width, padding) => {
       const w = whole(width);
-      if (w === null || w < 0 || w > 1000) throw new StrideFault("F009", `pad_left: the width is a whole number from 0 to 1000, and this is ${isEmpty(width) ? "empty" : words(width)}`);
+      if (w === null || w < 0) throw new StrideFault("F009", `pad_left: the width is a whole number of 0 or more, and this is ${isEmpty(width) ? "empty" : words(width)}`);
       const p = padding === undefined ? [" "] : chars(text(padding));
       if (p.length !== 1) throw new StrideFault("F009", "pad_left: the padding is exactly one character");
       const s = chars(text(t));

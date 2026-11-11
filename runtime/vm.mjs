@@ -66,9 +66,6 @@ export function convert(question, raw) {
       if (typeof raw !== "string" && typeof raw !== "number" && !isNumber(raw)) return { value: null, unreadable: "not words" };
       const s = typeof raw === "string" ? raw : typeof raw === "number" ? jsNumberWords(raw) : words(raw);
       if (s === null) return { value: null, unreadable: "not words" };
-      // Words hold at most 100,000 characters (code points, §3.1): longer is empty and unreadable, never cut.
-      let n = 0;
-      for (const _ of s) if (++n > 100_000) return { value: null, unreadable: "too long" };
       return { value: s === "" ? null : s, unreadable: null };
     }
     case "number": {
@@ -431,7 +428,6 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           break;
         case OP.CONCAT: {
           const s = stack.splice(stack.length - ins.a, ins.a).map(words).join("");
-          if ([...s].length > 100_000) fault("F012", "the words would be more than 100000 characters");
           stack.push(s);
           break;
         }
