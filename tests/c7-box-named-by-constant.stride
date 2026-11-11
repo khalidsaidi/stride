@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const name_box = "A"
+const agree_box = "B"
+ask name: text "Name"
+ask agrees: yes-no "Agree"
+if agrees {
+  fill name_box = name
+} else {
+  skip name_box because "only with agreement"
+}
+tick agree_box when agrees
+# rule 7.6 7.9.1
+# box A text
+# box B check
+# run yes
+# answers {"name": "Ada", "agrees": "yes"}
+# boxes {"A": "Ada", "B": "Yes"}
