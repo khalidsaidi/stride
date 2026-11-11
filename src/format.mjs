@@ -337,7 +337,7 @@ export function format(text, name = "program.stride") {
   function type(t) {
     switch (t.kind) {
       case "type-list":
-        return t.most ? `list of ${type(t.element)} most ${expr(t.most)}` : `list of ${type(t.element)}`;
+        return `list of ${type(t.element)}`;
       case "type-map":
         return `map of ${type(t.key)} to ${type(t.value)}`;
       case "type-set":

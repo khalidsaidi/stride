@@ -1,8 +1,8 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 define at(l: list of number) -> number {
-  return l[1.5]
+  return l[0]
 }
 print(at([1]))
-# rule 3.7.3 S360
+# rule 6.9.2 S360
 # mistake 4 S360

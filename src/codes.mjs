@@ -14,11 +14,11 @@ export const CODES = {
     "explanation": ""
   },
   "F004": {
-    "when": "a list position or a loop bound not a whole number, or a position below 1 or above the list's most",
+    "when": "a list position or a loop bound not a whole number, or a position below 1",
     "explanation": ""
   },
   "F005": {
-    "when": "a list item set outside 1 to (items + 1), or above its most",
+    "when": "a list item set outside 1 to (items + 1)",
     "explanation": ""
   },
   "F006": {
@@ -59,10 +59,6 @@ export const CODES = {
   },
   "F016": {
     "when": "a box name, worked out as the program runs, that the program does not know (a compiler fault)",
-    "explanation": ""
-  },
-  "F017": {
-    "when": "a list given more than its most items; or placed where a smaller most is expected (§3.7.7)",
     "explanation": ""
   },
   "F018": {
@@ -252,14 +248,6 @@ export const CODES = {
   "S210": {
     "when": "`set of` something that is not an option set",
     "explanation": "`set of` takes an option set's name."
-  },
-  "S212": {
-    "when": "a `most` that is not a whole number of 1 or more, known",
-    "explanation": "`most 4`, or a constant."
-  },
-  "S213": {
-    "when": "a `most` too large to count",
-    "explanation": "A most is a whole number a list can count to."
   },
   "S214": {
     "when": "`any` or `element` outside the natives",
@@ -451,7 +439,7 @@ export const CODES = {
   },
   "S328": {
     "when": "a `let` or `var` without a type whose list value no item tells the type of (`[]`, `[empty, empty]`, `[[empty]]`)",
-    "explanation": "`var l: list of text most 4`."
+    "explanation": "`var l: list of text`."
   },
   "S329": {
     "when": "`match` on something that is not an option or words",
@@ -471,7 +459,7 @@ export const CODES = {
   },
   "S333": {
     "when": "collect into something not a var",
-    "explanation": "Declare `var l: list of T most N`."
+    "explanation": "Declare `var l: list of T`."
   },
   "S334": {
     "when": "collect into something not a list",
@@ -574,8 +562,8 @@ export const CODES = {
     "explanation": "Only lists have items."
   },
   "S360": {
-    "when": "a known position outside 1 to the list's most",
-    "explanation": "The list holds items 1 to its most."
+    "when": "a known position that is not a whole number of 1 or more",
+    "explanation": "A list's positions are whole numbers from 1."
   },
   "S361": {
     "when": "a list literal whose items' types have no join",
@@ -1323,7 +1311,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "filled(l: list of T) -> list of T most same"
+      "filled(l: list of T) -> list of T"
     ],
     "names": [
       "filled"
@@ -1343,17 +1331,17 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "append(l: list of T, x: T) -> list of T most same"
+      "append(l: list of T, x: T) -> list of T"
     ],
     "names": [
       "append"
     ],
-    "gives": "the list with x after its last item; the list already holding its most: F017"
+    "gives": "the list with x after its last item"
   },
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "without(l: list of T, x: T) -> list of T most same"
+      "without(l: list of T, x: T) -> list of T"
     ],
     "names": [
       "without"
@@ -1363,7 +1351,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "reversed(l: list of T) -> list of T most same"
+      "reversed(l: list of T) -> list of T"
     ],
     "names": [
       "reversed"
@@ -1373,7 +1361,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "sorted(l: list of T, descending: yes-no = no) -> list of T most same"
+      "sorted(l: list of T, descending: yes-no = no) -> list of T"
     ],
     "names": [
       "sorted"
@@ -1383,7 +1371,7 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "sorted(l: list of R, by: \"field\", descending: yes-no = no) -> list of R most same"
+      "sorted(l: list of R, by: \"field\", descending: yes-no = no) -> list of R"
     ],
     "names": [
       "sorted"

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text most 3 = ["a", "b"]
+var l: list of text = ["a", "b"]
 fill "A" = upper(first(l)) + last(l)
 # boxes {"A": "Ab"}
 # rule 14.4 9.5

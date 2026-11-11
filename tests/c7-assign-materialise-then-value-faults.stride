@@ -9,7 +9,7 @@ record person {
   home: address
 }
 ask z: number "Z"
-var xs: list of person most 2 = [empty]
+var xs: list of person = [empty]
 xs[1].age = 1 / z
 print("{xs[1].age}")
 

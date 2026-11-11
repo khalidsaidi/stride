@@ -71,4 +71,4 @@ expect pad_left("7", -1, "0") faults "F009"
 expect pad_left("7", 3, "ab") faults "F009"
 expect pad_left("7", 3, "") faults "F009"
 expect pad_left(empty, 2.5, "0") faults "F009"
-# rule 14.0 14.0.1 14.0.3 14.0.4 F007 F009 F017
+# rule 14.0 14.0.1 14.0.3 14.0.4 F007 F009

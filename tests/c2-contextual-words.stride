@@ -3,7 +3,6 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 let list = [1, 2, 3]
 let set = "x"
 let fields = count(list)
-let most = 2
 let of = 1
 let when = "now"
 let then = "later"
@@ -14,9 +13,9 @@ for each x in list {
 for each in 1..2 {
   print(each)
 }
-var names: list of text most 3
+var names: list of text
 names += [set, when, then]
-print(if fields > most then join(names, ",") else "no")
+print(if fields > 2 then join(names, ",") else "no")
 print(of + total)
 # rule 2.3.1
 # prints ["1", "2", "x,now,later", "7"]

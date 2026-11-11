@@ -9,7 +9,7 @@ record person {
   home: address
 }
 var p: person
-var l: list of text most 2
+var l: list of text
 var n: number
 n = 3
 print(p.name is empty)

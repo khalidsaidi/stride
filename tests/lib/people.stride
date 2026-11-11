@@ -2,7 +2,7 @@ export record person {
   first: text
   last: text
 }
-export const MOST = 2
+export const ROWS = 2
 export define full(p: person) -> text {
   return "{p.first} {p.last}"
 }

@@ -13,10 +13,8 @@
 //
 // Inside a block, a name is known from the statement that defines it on; a name used before is a mistake that
 // says where it is defined. Unknown names get the nearest known name as a hint.
-import * as V from "../runtime/values.mjs";
 import { KIND, nameSpan, didYouMean } from "./source.mjs";
 import * as T from "./types.mjs";
-import { evaluate } from "./constant.mjs";
 
 let nextId = 1;
 
@@ -174,8 +172,7 @@ export function resolve(loaded, diagnostics) {
       ({ record: result.records, options: result.options, const: result.consts, define: result.functions, native: result.natives })[item.kind].push(sym);
     }
 
-    // What declarations hold: option sets' options, records' fields, functions' signatures. Constants come
-    // first, so a list's most may be a constant.
+    // What declarations hold: option sets' options, records' fields, functions' signatures.
     for (const sym of result.consts) resolveExpr(sym.node.value, scope, unit);
     for (const sym of result.options) sym.type = T.option(optionSet(sym.node, unit, sym.name, false));
     for (const sym of result.records) sym.decl = { name: sym.name, fields: [], node: sym.node, sym };
@@ -213,7 +210,7 @@ export function resolve(loaded, diagnostics) {
       }
       for (const p of sym.node.params) {
         const param = new Sym("param", p.name, p, unit);
-        param.type = resolveType(p.type, fnScope, unit, sym.kind === "native", true);
+        param.type = resolveType(p.type, fnScope, unit, sym.kind === "native");
         // A default is worked out by the compiler: made of words, numbers and the file's constants (§9.2).
         if (p.default) {
           // Seen from the function, with no parameter in sight; resolved after the program's statements, whose
@@ -274,13 +271,13 @@ export function resolve(loaded, diagnostics) {
     return false;
   }
 
-  function resolveType(node, scope, unit, native = false, param = false) {
+  function resolveType(node, scope, unit, native = false) {
     switch (node.kind) {
       case "type-any":
         if (!native) err("S214", unit.file, node.span, "any is only for the natives of the standard library");
         return T.ANY;
       case "type-function":
-        return T.fn(node.params.map((p) => resolveType(p, scope, unit, native, true)), node.result ? resolveType(node.result, scope, unit, native, false) : T.NONE);
+        return T.fn(node.params.map((p) => resolveType(p, scope, unit, native)), node.result ? resolveType(node.result, scope, unit, native) : T.NONE);
       case "type-name": {
         if (T.SCALARS[node.name]) return T.SCALARS[node.name];
         if (node.name === "element" && native) return T.ELEMENT;
@@ -304,31 +301,13 @@ export function resolve(loaded, diagnostics) {
         return T.ERROR;
       }
       case "type-map": {
-        const key = resolveType(node.key, scope, unit, native, param);
-        const value = resolveType(node.value, scope, unit, native, param);
+        const key = resolveType(node.key, scope, unit, native);
+        const value = resolveType(node.value, scope, unit, native);
         if (!["text", "number", "date", "yes-no", "option", "typevar", "error"].includes(key.t)) err("S209", unit.file, node.key.span, `a map's keys are words, numbers, dates, yes-no or options, not ${T.describe(key)}`);
         return T.map(key, value);
       }
       case "type-list": {
-        const element = resolveType(node.element, scope, unit, native, param);
-        if (!node.most) {
-          // No most written: a parameter takes a list of any length; anywhere else it grows as items are added (§3.7).
-          return T.list(element, param ? Infinity : T.NO_MOST);
-        }
-        const before = diagnostics.count;
-        resolveExpr(node.most, scope, unit);
-        const most = V.whole(evaluate(node.most));
-        // A most whose own names are already refused says nothing more (§16.1).
-        if (diagnostics.count > before) return T.list(element, 1);
-        if (most === null || most < 1) {
-          err("S212", unit.file, node.most.span, "a list's most is a whole number of 1 or more, written out or a constant");
-          return T.list(element, 1);
-        }
-        if (most > T.NO_MOST) {
-          err("S213", unit.file, node.most.span, "a list's most is too large a number");
-          return T.list(element, T.NO_MOST);
-        }
-        return T.list(element, most);
+        return T.list(resolveType(node.element, scope, unit, native));
       }
       default:
         throw new Error(`unknown type node ${node.kind}`);
@@ -746,7 +725,7 @@ export function resolve(loaded, diagnostics) {
         if (e.called) fnScope.names.set(e.called, sym);
         for (const p of e.params) {
           const param = new Sym("param", p.name, p, unit);
-          param.type = resolveType(p.type, scope, unit, false, true);
+          param.type = resolveType(p.type, scope, unit);
           if (p.default) err("S392", unit.file, p.span, "a function written in place is called through a value, so its parameters have no defaults");
           p.symbol = param;
           if (fnScope.own(p.name)) err("S219", unit.file, p.span, `the function has two parameters called ${p.name}`);
@@ -789,7 +768,7 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(e.operand, scope, unit);
         return;
       case "field": {
-        // people.MOST: a name a library exports, under the name it was brought in with.
+        // people.ROWS: a name a library exports, under the name it was brought in with.
         const mod = e.target.kind === "name" ? scope.lookup(e.target.name) : null;
         if (mod?.kind === "module") {
           const sym = mod.exports.get(e.name);

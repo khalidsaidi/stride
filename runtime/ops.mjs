@@ -2,7 +2,7 @@
 // runs them on answers, and the compiler on a constant's value: one definition.
 // An operator given values it does not take is
 // F018: the checker refuses such a program, so reaching it is a compiler fault, never silently empty.
-import { D, StrideFault, equal, order, truthy, StrideMap, isEmpty, isNumber, words, list, mostOf } from "./values.mjs";
+import { D, StrideFault, equal, order, truthy, StrideMap, isEmpty, isNumber, words } from "./values.mjs";
 
 
 function numberOp(f) {
@@ -25,7 +25,7 @@ export function binary(op, a, b) {
       if (Array.isArray(a) || Array.isArray(b)) {
         const x = Array.isArray(a) ? a : [];
         const y = Array.isArray(b) ? b : [];
-        return list([...x, ...y], 2147483647);
+        return [...x, ...y];
       }
       // Numbers or words: empty gives the other (§6.3).
       if (isEmpty(a) && !Array.isArray(a)) return b === "" ? null : b;

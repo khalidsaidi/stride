@@ -29,10 +29,9 @@ function random(seed) {
 }
 
 const N = { t: "number" }, T = { t: "text" }, B = { t: "yes-no" }, D = { t: "date" }, O = { t: "option" }, S = { t: "set" }, R = { t: "record" };
-const LN = (most) => ({ t: "list", of: "number", most });
-const LT = (most) => ({ t: "list", of: "text", most });
-const same = (a, b) => a.t === b.t && a.of === b.of && a.most === b.most;
-const typeWords = (t) => (t.t === "list" ? `list of ${t.of} most ${t.most}` : t.t === "option" ? "option of colour" : t.t === "set" ? "set of colour" : t.t === "record" ? "item" : t.t);
+const LN = { t: "list", of: "number" }, LT = { t: "list", of: "text" };
+const same = (a, b) => a.t === b.t && a.of === b.of;
+const typeWords = (t) => (t.t === "list" ? `list of ${t.of}` : t.t === "option" ? "option of colour" : t.t === "set" ? "set of colour" : t.t === "record" ? "item" : t.t);
 
 const COLOURS = ["red", "green", "blue"];
 const WORDS = ["", "a", "Ada", "  x  ", "a,b,c", "Straße", "ς", "ſ", "İa", "12", "1 234.5", "\\u{1F600}", "line\\none", "quote \\\" in", "\\{brace\\}"];
@@ -97,7 +96,7 @@ export function generate(seed) {
         const l = r.pick(lists);
         choices.push(
           () => `count(${use(l)})`,
-          () => `${use(l)}[${r.int(1, l.type.most)}]`,
+          () => `${use(l)}[${r.int(1, 3)}]`,
           () => `either(smallest(${use(l)}), 0)`,
           () => `either(largest(${use(l)}), 0)`,
           () => `index_of(${use(l)}, ${sub()})`,
@@ -221,7 +220,7 @@ export function generate(seed) {
   function list(sc, type, d) {
     const vars = ofType(sc, type);
     const item = () => (type.of === "number" ? num(sc, d - 1) : text(sc, d - 1));
-    const choices = [() => `[${Array.from({ length: r.int(0, type.most) }, item).join(", ")}]`];
+    const choices = [() => `[${Array.from({ length: r.int(0, 3) }, item).join(", ")}]`];
     if (vars.length) {
       const v = r.pick(vars);
       choices.push(() => use(v), () => `${r.pick(["sorted", "reversed", "filled"])}(${use(v)})`);
@@ -231,7 +230,6 @@ export function generate(seed) {
         if (type.of === "number") choices.push(() => `doubled(${use(v)})`);
       }
     }
-    // A literal with no items is a list of most 0, placed anywhere (§3.7); only literals and same-typed names here.
     return r.pick(choices)();
   }
 
@@ -298,16 +296,16 @@ export function generate(seed) {
         // A collect of records: each item's fields asked, then the list read field by field.
         const name = fresh("rows");
         const x = fresh("row");
-        const out = [`${i}var ${name}: list of item most ${r.int(1, 3)}`, `${i}collect ${x} in ${name} "Another row?" {`, `${i}  ask ${x}.label: text "Label"`, `${i}  ask ${x}.amount: number "Amount"`, `${i}  ask ${x}.done: yes-no "Done"`, `${i}}`];
+        const out = [`${i}var ${name}: list of item`, `${i}collect ${x} in ${name} "Another row?" {`, `${i}  ask ${x}.label: text "Label"`, `${i}  ask ${x}.amount: number "Amount"`, `${i}  ask ${x}.done: yes-no "Done"`, `${i}}`];
         out.push(`${i}for each n, row in ${r.chance(0.5) ? `sorted(${name}, by: "${r.pick(["label", "amount"])}"${r.chance(0.5) ? ", descending: yes" : ""})` : name} {`, `${i}  fill "${box("R")}_{n}" = row.label`, `${i}  print(row.amount)`, `${i}  print(row.done)`, `${i}}`);
         boxes.pop();
         return out;
       }
       case "grow": {
-        // A list made longer by +: the sum's most is the two mosts added (§3.7.5), placed where that fits.
+        // A list made longer by +.
         const name = fresh("grow");
         const more = fresh("grow");
-        return [`${i}var ${name}: list of number most 4 = [${num(sc, 1)}]`, `${i}${name}[2] = ${num(sc, 1)}`, `${i}let ${more}: list of number most 6 = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[1..3])`, `${i}print(${name})`];
+        return [`${i}var ${name}: list of number = [${num(sc, 1)}]`, `${i}${name}[2] = ${num(sc, 1)}`, `${i}let ${more}: list of number = ${name} + [${num(sc, 1)}, ${num(sc, 1)}]`, `${i}print(${more})`, `${i}print(${more}[1..3])`, `${i}print(${name})`];
       }
       case "loopfill":
         return [`${i}fill "${ctx.inLoop.box}_{${ctx.inLoop.counter}}_${++counter}" = ${expr(sc, r.pick([N, T]), d)}`];
@@ -326,14 +324,14 @@ export function generate(seed) {
         return out;
       }
       case "let": {
-        const type = r.pick([N, T, B, D, LN(3), LT(2)]);
+        const type = r.pick([N, T, B, D, LN, LT]);
         const name = fresh("v");
         const line = `${i}let ${name}${type.t === "list" ? `: ${typeWords(type)}` : ""} = ${expr(sc, type, d)}`;
         declare(sc, name, type, "let");
         return [line];
       }
       case "var": {
-        const type = r.pick([N, T, B, LN(3)]);
+        const type = r.pick([N, T, B, LN]);
         const name = fresh("m");
         const line = `${i}var ${name}: ${typeWords(type)} = ${expr(sc, type, d)}`;
         declare(sc, name, type, "var");
@@ -343,9 +341,9 @@ export function generate(seed) {
         const v = r.pick(all(sc).filter((n) => n.kind === "var"));
         if (v.type.t === "record") return [`${i}${v.name}.label = ${text(sc, d)}`];
         if (v.type.t === "list") {
-          // Known positions within the most (one outside is S360); a worked-out one may fault as the program runs.
+          // Known positions from 1 (one below is S360); a position past the items may fault as the program runs.
           const answers = all(sc).filter((n) => n.kind === "answer" && n.type.t === "number");
-          const at = answers.length && r.chance(0.3) ? `whole(either(${use(r.pick(answers))}, 1))` : r.int(1, v.type.most);
+          const at = answers.length && r.chance(0.3) ? `whole(either(${use(r.pick(answers))}, 1))` : r.int(1, 3);
           return [`${i}${v.name}[${at}] = ${num(sc, d)}`];
         }
         if (v.type.t === "number" && r.chance(0.5)) return [`${i}${v.name} ${r.pick(["+=", "-=", "*="])} ${num(sc, d)}`];
@@ -412,11 +410,10 @@ export function generate(seed) {
       }
       case "collect": {
         const name = fresh("people");
-        const most = r.int(1, 3);
         const x = fresh("p");
         const extra = r.chance(0.5) ? [`${i}  ask ${x}_note: text "Note"`, `${i}  print(${x}_note)`] : [];
-        const out = [`${i}var ${name}: list of text most ${most}`, `${i}collect ${x} in ${name}${r.chance(0.5) ? ` any "Any {${r.int(1, 3)}}?"` : ""} "Another?" {`, `${i}  ask ${x}: text "Who"`, ...extra, `${i}}`];
-        declare(sc, name, LT(most), "collected");
+        const out = [`${i}var ${name}: list of text`, `${i}collect ${x} in ${name}${r.chance(0.5) ? ` any "Any {${r.int(1, 3)}}?"` : ""} "Another?" {`, `${i}  ask ${x}: text "Who"`, ...extra, `${i}}`];
+        declare(sc, name, LT, "collected");
         return out;
       }
       case "record": {
@@ -447,9 +444,9 @@ export function generate(seed) {
 
   lines.push("form fuzz", `pdf ${PDF}`, "");
   lines.push(`options colour {`, ...COLOURS.map((c) => `  "${c}" "${c[0].toUpperCase()}${c.slice(1)}"`), `}`);
-  lines.push("record item {", "  label: text", "  amount: number", "  done: yes-no", "  tags: list of text most 2", "}", "");
-  // Helpers every program has: a loop with bounds worked out as it runs, a generic function, list parameters
-  // whose most comes with the argument. (A function calling itself is S401.)
+  lines.push("record item {", "  label: text", "  amount: number", "  done: yes-no", "  tags: list of text", "}", "");
+  // Helpers every program has: a loop with bounds worked out as it runs, a generic function, list
+  // parameters. (A function calling itself is S401.)
   lines.push(
     "define fact(n: number) -> number {",
     "  var p = 1",
@@ -470,8 +467,8 @@ export function generate(seed) {
     "define second(xs: list of number) -> number {",
     "  return xs[2]",
     "}",
-    "define doubled(xs: list of number most 3) -> list of number most 3 {",
-    "  var out: list of number most 3",
+    "define doubled(xs: list of number) -> list of number {",
+    "  var out: list of number",
     "  for each k, x in xs {",
     "    out[k] = x * 2",
     "  }",

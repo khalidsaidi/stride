@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record kid { name: text, born: number }
-var kids: list of kid most 4
+var kids: list of kid
 collect k in kids "Another child?" {
   ask k.name: text "Name"
   ask k.born: number "Born"

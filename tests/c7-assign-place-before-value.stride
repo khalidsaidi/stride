@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask i: number "I"
 ask z: number "Z"
-var xs: list of number most 2 = [1]
+var xs: list of number = [1]
 xs[i] = 1 / z
 print("{xs[1]}")
 

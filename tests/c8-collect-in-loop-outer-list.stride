@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 2
+var l: list of number
 for i in 1..2 {
   collect x in l "Another {i}?" {
     ask x: number "N {i}"
@@ -8,7 +8,7 @@ for i in 1..2 {
 }
 print(count(l))
 for j in 1..2 {
-  var m: list of number most 2
+  var m: list of number
   collect y in m "More {j}?" {
     ask y: number "M {j}"
   }

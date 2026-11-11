@@ -5,10 +5,10 @@ define g(k: set of s = ["a", "b"]) {
   print(k)
   print(first(k))
 }
-define f(i: number, xs: list of number most 5 = [1]) -> number {
+define f(i: number, xs: list of number = [1]) -> number {
   return xs[i]
 }
-define e(i: number, xs: list of number most 5 = empty) -> number {
+define e(i: number, xs: list of number = empty) -> number {
   return xs[i]
 }
 define w(who: text, k: set of s = ["a", "b"]) {
@@ -20,7 +20,7 @@ g()
 print(f(i))
 print(e(i))
 w("x")
-# rule 9.2 3.6 3.8 3.7.2
+# rule 9.2 3.6 3.8 3.7.1
 # answers {"i": "3"}
 # asked ["i", "w.v"]
 # prints ["b, a", "b", "", "", ""]

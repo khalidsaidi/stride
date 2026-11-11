@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-const rows = 3
-var l: list of text most rows = ["a"]
-fill "A" = "{count(l)}"
-
-# rule 5.6
-# run
-# boxes {"A": "1"}

@@ -5,7 +5,7 @@
 //   option(set)                      one option of an option set
 //   options(set)                     several options of one set (an any-of answer)
 //   record(decl)                     a record's named fields
-//   list(element, most)              up to `most` values of one type
+//   list(element)                    values of one type, in order
 //   empty                            the type of `empty`: fits every type
 //   any                              only in a native function's parameters: takes any value
 //   none                             what a function with no result gives
@@ -30,9 +30,7 @@ export const SCALARS = { text: TEXT, number: NUMBER, date: DATE, "yes-no": YES_N
 export const option = (set) => ({ t: "option", set });
 export const options = (set) => ({ t: "options", set });
 export const record = (decl) => ({ t: "record", decl });
-// A list with no most stated holds as many as there is room for (runtime/values.mjs).
-export const NO_MOST = 2147483647;
-export const list = (element, most) => ({ t: "list", element, most });
+export const list = (element) => ({ t: "list", element });
 // map of K to V: values of one type, each under its own key (§3.10).
 export const map = (key, value) => ({ t: "map", key, value });
 // A function as a value (§9.10): what it takes and what it gives.
@@ -94,7 +92,7 @@ export function unify(param, value, bindings) {
 // A type with its type parameters replaced by what a call bound them to.
 export function substitute(type, bindings) {
   if (type.t === "typevar") return bindings.get(type.sym) ?? type;
-  if (type.t === "list") return list(substitute(type.element, bindings), type.most);
+  if (type.t === "list") return list(substitute(type.element, bindings));
   if (type.t === "map") return map(substitute(type.key, bindings), substitute(type.value, bindings));
   if (type.t === "function") return fn(type.params.map((p) => substitute(p, bindings)), substitute(type.result, bindings));
   return type;
@@ -110,8 +108,7 @@ export function fits(value, wanted) {
   if (value.t === "empty") return wanted.t !== "none";
   if (wanted.t === "text") return isTextLike(value) || value.t === "option";
   if (wanted.t === "list" && value.t === "list") {
-    // A list fits a list of the same element type. How many it holds is checked where it is placed, as the
-    // program runs (§3.7.7, F017).
+    // A list fits a list whose element type its own fits.
     return value.element.t === "empty" || fits(value.element, wanted.element);
   }
   if (wanted.t === "map" && value.t === "map") return (value.key.t === "empty" || fits(value.key, wanted.key)) && (value.value.t === "empty" || fits(value.value, wanted.value));
@@ -126,8 +123,7 @@ export function comparable(a, b) {
   if (b.t === "option" && isTextLike(a)) return true;
   // Options of different sets compare by their words (§6.6), as they order (§6.7).
   if (a.t === "option" && b.t === "option") return true;
-  // Records of one type, sets of one option set: by value; lists whose element types join (§3.9), whatever their
-  // mosts (§6.6).
+  // Records of one type, sets of one option set: by value; lists whose element types join (§3.9, §6.6).
   if (a.t === "list" && b.t === "list") return a.element.t === "empty" || b.element.t === "empty" || join(a.element, b.element) !== null;
   if (a.t === "map" && b.t === "map") return join(a, b) !== null;
   return same(a, b);
@@ -147,7 +143,7 @@ export const ordered = (a, b) => {
 // Whether a value can go into a box with `fill`: words, a number, a date, an option.
 export const fillable = (type) => isTextLike(type) || ["number", "date", "option", "empty", "error"].includes(type.t);
 
-// A type in words, for a mistake: "text", "a list of representative (at most 4)", "one of acts".
+// A type in words, for a mistake: "text", "a list of representative", "one of acts".
 export function describe(type) {
   switch (type.t) {
     case "option":
@@ -157,7 +153,7 @@ export function describe(type) {
     case "record":
       return type.decl.name;
     case "list":
-      return type.most >= NO_MOST ? `a list of ${describe(type.element)}` : `a list of ${describe(type.element)} (at most ${type.most})`;
+      return `a list of ${describe(type.element)}`;
     case "map":
       return `a map of ${describe(type.key)} to ${describe(type.value)}`;
     case "function":
@@ -175,7 +171,7 @@ export function describe(type) {
   }
 }
 
-// The type written in the source: `text`, `list of representative most 4`, `set of acts`.
+// The type written in the source: `text`, `list of representative`, `set of acts`.
 export function typeOfAnswer(question, set) {
   if (question === "one-of") return option(set);
   if (question === "any-of") return options(set);
@@ -184,8 +180,7 @@ export function typeOfAnswer(question, set) {
 }
 
 // The join of two types (docs/spec.md §3.9): the one type two values take together, or null when they
-// have none. The same both ways round; never a narrower kind of words; lists by their elements, with the larger
-// most at every level.
+// have none. The same both ways round; never a narrower kind of words; lists by their elements.
 export function join(a, b) {
   if (isError(a) || isError(b)) return ERROR;
   if (a.t === "empty") return b;
@@ -199,7 +194,7 @@ export function join(a, b) {
   if (wordy(a) && wordy(b)) return TEXT;
   if (a.t === "list" && b.t === "list") {
     const e = join(a.element, b.element);
-    return e ? list(e, Math.max(a.most, b.most)) : null;
+    return e ? list(e) : null;
   }
   return null;
 }

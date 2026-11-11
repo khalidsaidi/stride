@@ -1,14 +1,11 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 3 = [1]
+var l: list of number = [1]
 l = append(l, 2)
 l = append(l, 3)
 print(join(l, ","))
-var names: list of text most 2
+var names: list of text
 names = append(names, "a")
 print(count(names))
-l = append(l, 4)
-# rule 14.4 F017
-# run full
+# rule 14.4
 # prints ["1,2,3", "1"]
-# fault F017

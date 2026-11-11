@@ -4,7 +4,7 @@ record r {
   a: text
   b: text
 }
-var l: list of r most 2
+var l: list of r
 collect x in l "Another?" {
   ask x.a: text "A"
 # warning 11 W005 no r's b is ever read

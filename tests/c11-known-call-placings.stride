@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 define w(n: number) -> number {
-  var l: list of number most 3 = [n]
+  var l: list of number = [n]
   return count(l) + either(l[3], 0)
 }
-define keep(b: yes-no) -> list of number most 3 {
+define keep(b: yes-no) -> list of number {
   return [1]
 }
 print(w(1))
 print(keep(yes)[3] is empty)
-# rule 3.7.2
+# rule 6.9.2
 # prints ["1", "yes"]

@@ -141,7 +141,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | an option set | one of its options | `"red"` where one is expected |
 | `set of` an option set | some of its options | `["red", "blue"]` where one is expected |
 | a record | a value for each of its fields | `new person { name: "Bo" }` |
-| `list of T` | any number of items; `list of T most N` holds at most N | `[1, 2, 3]` |
+| `list of T` | any number of items | `[1, 2, 3]` |
 
 Every type also has **empty**: the value of a question not answered, a field not set, an item past the end of a
 list. Empty is never a mistake to hold; operations treat it so a form's empty boxes stay empty (§6.3): `+` gives
@@ -284,8 +284,8 @@ A function reads the program's own names (an answer, a let, a var), and may chan
 
 ## 7. Lists, records and sets
 
-Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`), or
-up to the `most` its type states. Lists and records are values: `var b = a` copies, and `==` compares items:
+Lists count from 1. Reading past the items gives empty (a form's empty row); a position below 1 is a fault (§6.9.2). A list grows as items are added (`l += [x]`, `append(l, x)`).
+Lists and records are values: `var b = a` copies, and `==` compares items:
 
 ```stride
 options colour {
@@ -297,7 +297,7 @@ record person {
   name: text
   age: number
 }
-var names: list of text most 5 = ["Ada", "Bo"]
+var names: list of text = ["Ada", "Bo"]
 var copy = names
 copy[3] = "Cy"
 print(names)
@@ -630,12 +630,12 @@ write the same boxes.
 - **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
   on the page and on the form. Stride does not read them off the PDF: you do.
 - **Conditional questions** are questions inside an `if`: asked only when the condition holds.
-- **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", up to the list's
-  most; a `for each` then fills one row of boxes per item, `"Name{n}"`.
+- **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", until
+  the answer is no; a `for each` then fills one row of boxes per item, `"Name{n}"`.
 
   ```
   record vehicle { vin: text, make: text }
-  var vehicles: list of vehicle most 5
+  var vehicles: list of vehicle
   collect n, v in vehicles "Add another vehicle?" {
     ask v.vin: text "Vehicle Identification Number"
     ask v.make: text "Make"

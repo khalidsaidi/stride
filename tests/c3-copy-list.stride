@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var a: list of number most 3 = [1, 2]
+var a: list of number = [1, 2]
 var b = a
 b[1] = 9
 print(a[1])

@@ -15,11 +15,5 @@ define evens(xs: list of number) -> list of number {
   return out
 }
 print(join(evens(l), ","))
-var small: list of text most 2
-small += ["a"]
-small += ["b"]
-print(count(small))
-small += ["c"]
-# rule 3.7 3.7.2 F017
-# prints ["4", "2,4", "2"]
-# fault F017
+# rule 3.7
+# prints ["4", "2,4"]

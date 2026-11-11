@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 3 = [1]
+var l: list of number = [1]
 l[2] += 5
 print(join(l, ","))
 

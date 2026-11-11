@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 4
+var l: list of number
 print(sum(l))
 l = append(l, 1.5)
 l = append(l, 2)

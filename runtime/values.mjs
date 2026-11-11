@@ -8,7 +8,7 @@
 //   yes-no           true, false
 //   a set            an array of option values, always in the option set's declaration order (§3.8), marked as
 //                    a set (`isSet`), the option set's values in `order`
-//   a list           an array of its items with its most (§3.7) in a `most` property
+//   a list           an array of its items
 //   a record         a StrideRecord: its type's name and its fields in declaration order
 //
 // Lists and records are values (§3.4): every place takes a copy, never the same object.
@@ -72,16 +72,9 @@ export class StrideRecord {
   }
 }
 
-// A record made where a place on the way to a field holds empty (§7.5.1): every field empty, a list field an empty
-// list of its declared most (§3.7.1), so an item can be set in it. `mosts` has a field's most, or null.
-export const emptyRecord = (name, mosts, names) => new StrideRecord(name, mosts.map((m) => (m === null ? null : list([], m))), names);
-
-// A list of items with its most. The most travels with the list (§3.7).
-export function list(items, most) {
-  items.most = most;
-  return items;
-}
-export const mostOf = (l) => (Array.isArray(l) ? l.most ?? l.length : 0);
+// A record made where a place on the way to a field holds empty (§7.5.1): every field empty, a list field a list
+// with no items, so an item can be set in it. `lists` tells, for each field, whether it is a list.
+export const emptyRecord = (name, lists, names) => new StrideRecord(name, lists.map((l) => (l ? [] : null)), names);
 
 export const isEmpty = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && v.length === 0) || (v instanceof StrideMap && v.entries.size === 0);
 export const isNumber = (v) => v instanceof D.Decimal;
@@ -129,9 +122,6 @@ export class Cell {
   }
 }
 
-// A list or a map with no most stated holds as many as there is room for: the most a list can count.
-export const NO_MOST = 2147483647;
-
 // A function as a value (§9.10): its name, and what an engine calls it by.
 export class StrideFunction {
   constructor(name, target, kept = []) {
@@ -147,7 +137,7 @@ export class StrideFunction {
 // A deep copy: what a place receives (§3.4). Scalars are immutable and shared.
 export function copy(v) {
   if (isSet(v)) return set([...v], v.order);
-  if (Array.isArray(v)) return list(v.map(copy), v.most);
+  if (Array.isArray(v)) return v.map(copy);
   if (v instanceof StrideRecord) return new StrideRecord(v.type, v.fields.map(copy), v.names);
   if (v instanceof StrideMap) return new StrideMap(v.pairs.map(([k, x]) => [k, copy(x)]));
   return v;

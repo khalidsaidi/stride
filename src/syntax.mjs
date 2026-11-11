@@ -20,7 +20,7 @@
 //   const       = "const" name [":" type] "=" expr
 //   native      = "native" "define" name "(" [params] ")" "->" type
 //   define      = "define" name ["<" name ("," name)* ">"] "(" [params] ")" ["->" type] block
-//   type        = "list" "of" type ["most" expr] | "set" "of" qname | "any" | qname
+//   type        = "list" "of" type | "set" "of" qname | "any" | qname
 //   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
 //   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
@@ -48,9 +48,9 @@ export const KEYWORDS = new Set([
   "native", "new", "no", "not", "options", "or", "pdf", "pick", "record", "return", "tick",
   "use", "var", "while", "yes",
 ]);
-// Words the grammar uses in one place only (§2.3.1): a type's `list`, `set`, `of` and `most`, the header's `fields`,
+// Words the grammar uses in one place only (§2.3.1): a type's `list`, `set` and `of`, the header's `fields`,
 // `for each`, `when` and `then`. Anywhere else each is a name like any other.
-const CONTEXTUAL = new Set(["each", "fields", "list", "most", "of", "set", "then", "when"]);
+const CONTEXTUAL = new Set(["each", "fields", "list", "of", "set", "then", "when"]);
 const HYPHENATED = new Set(["long-text", "yes-no", "one-of", "any-of"]);
 const PUNCT = ["..", "==", "!=", "<=", ">=", "=>", "->", "+=", "-=", "*=", "//=", "/=", "%=", "//", "{", "}", "(", ")", "[", "]", ",", ":", ".", "=", "<", ">", "+", "-", "*", "/", "%"];
 const STARTS = new Set(["use", "export", "record", "options", "const", "native", "define", "ask", "let", "var", "fill", "tick", "pick", "while", "if", "match", "for", "collect", "return", "break", "continue", "expect"]);
@@ -584,13 +584,7 @@ class Parser {
       this.take();
       this.expect("keyword", "of");
       const element = this.type();
-      // Without a most, in a parameter: a list of any length.
-      let most = null;
-      if (this.word("most")) {
-        this.take();
-        most = this.expr();
-      }
-      return this.node("type-list", start, { element, most });
+      return this.node("type-list", start, { element });
     }
     // map of text to number: values under keys (§3.10).
     if (this.is("name", "map") && this.peek().value === "of" && ["name", "keyword"].includes(this.peek().type)) {

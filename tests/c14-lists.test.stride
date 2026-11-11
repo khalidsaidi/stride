@@ -1,7 +1,7 @@
 record kid { name: text, born: number }
 options letters { "b" "B"  "a" "A"  "c" "C" }
-let no_items: list of number most 2 = []
-let no_answers: list of yes-no most 1 = []
+let no_items: list of number = []
+let no_answers: list of yes-no = []
 let ks = [new kid { name: "A", born: 2 }, new kid { name: "B", born: 1 }, new kid { name: "C", born: 2 }, new kid { name: "D" }]
 let x: set of letters = ["a", "b"]
 let y: set of letters = ["c", "a"]
@@ -40,4 +40,4 @@ expect join(intersection(x, y)) == "a"
 expect join(difference(x, y)) == "b"
 expect count([1] + [2, 3]) == 3
 expect [1] + [2] == [1, 2]
-# rule 14.0.6 14.4 3.8
+# rule 14.4 3.8

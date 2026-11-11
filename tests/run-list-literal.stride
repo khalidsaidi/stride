@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 3 = [3, 1, 2]
+var l: list of number = [3, 1, 2]
 fill "A" = "{l[1]}{l[3]} {count(l)}"
 # boxes {"A": "32 3"}
 # rule 6.11 6.9.2 14.4

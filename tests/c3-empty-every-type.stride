@@ -11,7 +11,7 @@ ask y: yes-no "Y"
 ask o: one-of s "O"
 ask m: any-of s "M"
 var v: r
-var l: list of number most 2
+var l: list of number
 print(t is empty)
 print(n is empty)
 print(d is empty)

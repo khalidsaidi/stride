@@ -19,7 +19,7 @@
 #   }
 #   let warm: set of colour = ["red", "green"]
 #   let cool: set of colour = ["green", "blue"]
-#   let people: list of person most 2 = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }]
+#   let people: list of person = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }]
 #
 # and the day today() gives is 2026-11-09.
 

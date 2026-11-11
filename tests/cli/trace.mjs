@@ -18,7 +18,7 @@ define twice(n: number) -> number {
 var counter = 1
 counter = 2
 let result = twice(counter)
-var xs: list of number most 2 = [1]
+var xs: list of number = [1]
 xs[1] = counter
 print(result)
 print(xs[1])

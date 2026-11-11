@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most 4 = [1, 2]
+var l: list of number = [1, 2]
 for each x in l {
   l[x] = x * 10
   print("{x}")

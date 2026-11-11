@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text most 2
+var l: list of text
 collect x in l "Another?" {
   ask x: number "N"
 }

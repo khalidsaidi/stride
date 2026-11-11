@@ -136,7 +136,7 @@ export const callv = (args) => ({ e: "callv", args });
 export const field = (a, i, name) => ({ e: "field", a, i, name });
 export const item = (a, i) => ({ e: "item", a, i });
 export const record = (decl, fields) => ({ e: "record", decl, fields });
-export const list = (items, most) => ({ e: "list", items, most });
+export const list = (items) => ({ e: "list", items });
 export const cond = (c, yes, no) => ({ e: "cond", cond: c, yes, no });
 export const slice = (a, from, to) => ({ e: "slice", a, from, to });
 

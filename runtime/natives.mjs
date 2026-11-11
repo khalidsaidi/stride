@@ -7,7 +7,7 @@
 // is wrong, whether or not its main argument is empty (§14.0.3.1); only then does an empty main argument give its
 // empty result (§14.0.3). A value a person gives never faults; a program's own mistake that the compiler cannot see
 // does.
-import { D, StrideFault, StrideRecord, StrideMap, NO_MOST, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, list, mostOf, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideMap, copy, StrideDate, isEmpty, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole } from "./values.mjs";
 
 export { StrideFault, StrideRecord, isEmpty };
 export const textOf = words;
@@ -96,7 +96,7 @@ function yearsBetween(a, b) {
 }
 
 const asList = (l) => (Array.isArray(l) ? l : isEmpty(l) ? [] : [l]);
-const listLike = (items, of) => (isSet(of) ? set(items, of.order) : list(items, mostOf(of)));
+const listLike = (items, of) => (isSet(of) ? set(items, of.order) : items);
 
 // The sort of §14.4: stable, empty last, ascending or descending.
 function sortItems(l, key, descending) {
@@ -107,7 +107,7 @@ function sortItems(l, key, descending) {
     const c = order(x.k, y.k);
     return c === 0 ? x.i - y.i : descending ? -c : c;
   });
-  return list(items.map((x) => x.v), mostOf(l));
+  return items.map((x) => x.v);
 }
 
 // Each native: its function, whether it is pure (only a pure native is worked out by the compiler, in a constant), and
@@ -126,7 +126,7 @@ export const NATIVES = {
   remove_prefix: { pure: true, fn: (t, p) => result(text(p) && text(t).startsWith(text(p)) ? text(t).slice(text(p).length) : text(t)) },
   remove_suffix: { pure: true, fn: (t, s) => result(text(s) && text(t).endsWith(text(s)) ? text(t).slice(0, text(t).length - text(s).length) : text(t)) },
   length: { pure: true, fn: (t) => num(Array.isArray(t) ? t.length : t instanceof StrideMap ? t.entries.size : chars(text(t)).length) },
-  each_character: { pure: true, internal: true, fn: (t) => list(chars(text(t)), NO_MOST) },
+  each_character: { pure: true, internal: true, fn: (t) => chars(text(t)) },
   chars: {
     pure: true,
     control: [1, 2],
@@ -174,9 +174,9 @@ export const NATIVES = {
     pure: true,
     fn: (t, sep) => {
       const s = text(t);
-      if (s === "") return list([], NO_MOST);
+      if (s === "") return [];
       const parts = text(sep) === "" ? chars(s) : s.split(text(sep));
-      return list(parts.map((p) => (p === "" ? null : p)), NO_MOST);
+      return parts.map((p) => (p === "" ? null : p));
     },
   },
   line: { pure: true, control: [1], fn: (t, n) => { const i = position("line", n); return result(trimmed(lines(t)[i - 1] ?? "")); } },
@@ -298,8 +298,8 @@ export const NATIVES = {
   // Maps (§14.4.1). A map given is not changed: remove gives a new one.
   map_of: { pure: true, internal: true, fn: () => new StrideMap() },
   map_put: { pure: true, internal: true, fn: (m, k, v) => (m.set(k, copy(v)), m) }, // a map being written out: its next key
-  keys: { pure: true, fn: (m) => { const k = m instanceof StrideMap ? m.pairs.map(([key]) => key) : []; return list(k, NO_MOST); } },
-  values: { pure: true, fn: (m) => { const v = m instanceof StrideMap ? m.pairs.map(([, x]) => copy(x)) : []; return list(v, NO_MOST); } },
+  keys: { pure: true, fn: (m) => (m instanceof StrideMap ? m.pairs.map(([key]) => key) : []) },
+  values: { pure: true, fn: (m) => (m instanceof StrideMap ? m.pairs.map(([, x]) => copy(x)) : []) },
   has: { pure: true, fn: (m, k) => m instanceof StrideMap && m.has(k) },
   remove: { pure: true, fn: (m, k) => { const out = m instanceof StrideMap ? copy(m) : new StrideMap(); out.remove(k); return out; } },
   join: { pure: true, fn: (l, sep) => result(asList(l).map(words).join(sep === undefined ? ", " : text(sep))) },
@@ -307,16 +307,9 @@ export const NATIVES = {
   last: { pure: true, fn: (l) => { const a = asList(l); return a.length ? a[a.length - 1] : null; } },
   filled: { pure: true, fn: (l) => listLike(asList(l).filter((x) => !isEmpty(x)), l) },
   index_of: { pure: true, fn: (l, x) => num(asList(l).findIndex((y) => equal(y, x)) + 1) },
-  append: {
-    pure: true,
-    fn: (l, x) => {
-      const items = asList(l);
-      if (items.length >= mostOf(l)) throw new StrideFault("F017", `the list holds its most, ${mostOf(l)}, and cannot take one more item`);
-      return list([...items, x], mostOf(l));
-    },
-  },
+  append: { pure: true, fn: (l, x) => [...asList(l), x] },
   without: { pure: true, fn: (l, x) => listLike(asList(l).filter((y) => !equal(y, x)), l) },
-  reversed: { pure: true, fn: (l) => list([...asList(l)].reverse(), mostOf(l)) },
+  reversed: { pure: true, fn: (l) => [...asList(l)].reverse() },
   sorted: { pure: true, fn: (l, descending) => sortItems(l, (v) => v, descending === true) },
   // sorted(l, by: "field"): the compiler turns the field's name into its number (§14.4).
   sorted_by: { pure: true, internal: true, fn: (l, field, descending) => sortItems(l, (v) => (v instanceof StrideRecord ? v.fields[whole(field)] ?? null : null), descending === true) },
@@ -343,32 +336,24 @@ export const NATIVES = {
       return n === 1 ? base : `${base}#${n}`;
     },
   },
-  // A list placed where a list type is expected (§3.7.2, §3.7.7): the type's mosts, outer to inner, as "4,3"; each
-  // level widened, F017 when a level holds a larger most.
-  widen: { pure: true, internal: true, fn: (v, shape) => widenTo(v, text(shape).split(",").map((m) => (m === "?" ? m : Number(m)))) },
+  // A value placed where a type of lists `depth` deep is expected (§3.7.1): empty there is a list with no items.
+  as_lists: { pure: true, internal: true, fn: (v, depth) => asLists(v, whole(depth)) },
   // Words in quotes where a set is expected (§3.6): the options they name, in the set's order.
   to_set: { pure: true, internal: true, fn: (l, order) => set(asList(l), asList(order)) },
   // A for loop's bound (§7.11): a whole number, else F004.
   loop_bound: { pure: true, internal: true, fn: (v) => { if (whole(v) === null) throw new StrideFault("F004", `a loop's bound is a whole number, and this is ${isEmpty(v) ? "empty" : words(v)}`); return v; } },
   // A date constant, from its words: the compiler's.
   date_from_iso: { pure: true, internal: true, fn: (s) => dateFrom(s) },
-  // A list with no items and the most of the list given (§3.7.5): a comprehension over a list whose most comes
-  // with it, the compiler's.
-  empty_like: { pure: true, internal: true, fn: (l) => list([], mostOf(l)) },
-  // A list field read (§6.9.1, §3.7.1): the field of an empty record is a list with no items, of the field's most.
-  field_list: { pure: true, internal: true, fn: (v, most) => (isEmpty(v) ? list([], Number(text(most))) : v) },
+  // A list field read (§6.9.1): the field of an empty record is a list with no items.
+  field_list: { pure: true, internal: true, fn: (v) => (isEmpty(v) ? [] : v) },
   // `x is empty`: the compiler's, not declared in the standard library.
   is_empty: { pure: true, internal: true, fn: (v) => isEmpty(v) },
 };
 
-// A level of `?` keeps the most the value carries there (§3.9 rule 4); the levels inside it are still widened.
-function widenTo(v, mosts) {
-  if (!mosts.length || isSet(v)) return v;
-  if (mosts[0] === "?") return v === null || v === undefined || !Array.isArray(v) ? v : list(v.map((x) => widenTo(x, mosts.slice(1))), mostOf(v));
-  if (v === null || v === undefined) return list([], mosts[0]);
-  if (!Array.isArray(v)) return v;
-  if (v.length > mosts[0]) throw new StrideFault("F017", `a list of ${v.length} items was placed where at most ${mosts[0]} fit`);
-  return list(v.map((x) => widenTo(x, mosts.slice(1))), mosts[0]);
+function asLists(v, depth) {
+  if (depth < 1 || isSet(v)) return v;
+  if (v === null || v === undefined) return [];
+  return Array.isArray(v) ? v.map((x) => asLists(x, depth - 1)) : v;
 }
 
 function numberOp(f) {

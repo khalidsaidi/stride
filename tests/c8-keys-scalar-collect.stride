@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var names: list of text most 3
+var names: list of text
 collect x in names "Another?" {
   ask x: text "Name"
 }

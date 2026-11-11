@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 options color { "r" "Red"  "g" "Green" }
 const DAYS = ["Mon", "Tue", "Wed"]
-const PRIMES: list of number most 5 = [2, 3, 5]
+const PRIMES: list of number = [2, 3, 5]
 const WARM: set of color = ["r"]
 const NESTED = [[1, 2], [3]]
 print(DAYS[2])

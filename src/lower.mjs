@@ -2,9 +2,9 @@
 // function `main`, each function a function of basic blocks.
 //
 // Everything runs in the machine as it is written: a loop is a loop, a for each goes through its list, a collect
-// asks one item after the other until the person says no or the list's most is reached (Docassemble's gathering
-// loop), a function is one function whatever it is called with. What a person is asked, and which box each
-// value goes into, are worked out as the program runs:
+// asks one item after the other until the person says no (Docassemble's gathering loop), a function is one
+// function whatever it is called with. What a person is asked, and which box each value goes into, are worked out
+// as the program runs:
 //
 //   - a question's key is built from where it is asked: its name, after the key of the function call it is in
 //     (line_2(2).name), with the turn of each loop it is in after it (other_act[1]), or on the item of a list it
@@ -148,7 +148,7 @@ export function lower(resolved, diagnostics, options = {}) {
         const l = (s.symbol?.branchDeclared && ctx.locals.get(s.symbol)) || ctx.fn.local(s.name, s.symbol?.type);
         ctx.locals.set(s.symbol, l);
         // A var a function made in place shares is a new var each time its declaration runs (§9.11).
-        emit(ctx, { op: "set", dst: l, fresh: !!s.symbol?.shared, value: s.value ? placeAs(expr(s.value, ctx), s.symbol?.type, s.value.type, s.value) : initial(s.symbol?.type), node: s });
+        emit(ctx, { op: "set", dst: l, fresh: !!s.symbol?.shared, value: s.value ? placeAs(expr(s.value, ctx), s.symbol?.type, s.value.type) : initial(s.symbol?.type), node: s });
         return;
       }
       case "assign":
@@ -178,7 +178,7 @@ export function lower(resolved, diagnostics, options = {}) {
         return lowerCollect(s, ctx);
       case "return":
         if (!ctx.fnSym) terminate(ctx, { op: "halt", node: s });
-        else terminate(ctx, { op: "return", value: s.value ? placeAs(expr(s.value, ctx), ctx.fnSym.result, s.value.type, s.value) : null, node: s });
+        else terminate(ctx, { op: "return", value: s.value ? placeAs(expr(s.value, ctx), ctx.fnSym.result, s.value.type) : null, node: s });
         return;
       case "call-statement":
         if (s.call.kind === "call") emit(ctx, { op: "eval", value: expr(s.call, ctx), node: s });
@@ -200,7 +200,7 @@ export function lower(resolved, diagnostics, options = {}) {
 
   // A var's first value when it is declared without one: an empty list or record to fill, or empty.
   function initial(type) {
-    if (type?.t === "list") return IR.list([], Number.isFinite(type.most) ? type.most : 1);
+    if (type?.t === "list") return IR.list([]);
     if (type?.t === "map") return IR.native("map_of", []);
     // A record var without a value starts empty (§7.4); writing a field makes it (§7.5.1).
     return IR.constant(null);
@@ -249,7 +249,7 @@ export function lower(resolved, diagnostics, options = {}) {
     });
     const def = s.modifiers.find((m) => m.kind === "default");
     // The default is placed as the answer's type (§3.6, §3.8): words for an any-of made the set, in its order.
-    emit(ctx, { op: "ask", q, key, printed: expr(s.printed, ctx), dst, path, default: def ? placeAs(expr(def.value, ctx), answerType, def.value.type, def.value) : null, node: s });
+    emit(ctx, { op: "ask", q, key, printed: expr(s.printed, ctx), dst, path, default: def ? placeAs(expr(def.value, ctx), answerType, def.value.type) : null, node: s });
     // §8.4.1 step 5: the checks, in the order written, after the answer is bound; none when it is empty.
     const checks = s.modifiers.filter((m) => m.kind === "check");
     if (checks.length) {
@@ -277,7 +277,7 @@ export function lower(resolved, diagnostics, options = {}) {
       const dst = ctx.locals.get(target.symbol);
       let value = expr(s.value, ctx);
       if (s.op) value = withAt(IR.binary(s.op, held(dst), value), placeOf(s, s.opSpan));
-      emit(ctx, { op: "set", dst, outer, value: placeAs(value, target.symbol?.type, s.value.type, s.value), node: s });
+      emit(ctx, { op: "set", dst, outer, value: placeAs(value, target.symbol?.type, s.value.type), node: s });
       return;
     }
     const steps = [];
@@ -315,7 +315,7 @@ export function lower(resolved, diagnostics, options = {}) {
       for (const p of path) read = p.field !== undefined ? IR.field(read, p.field, p.name) : IR.item(read, withAt(IR.local(p.into), p.index.at));
       value = withAt(IR.binary(s.op, read, value), placeOf(s, s.opSpan));
     }
-    emit(ctx, { op: "store", dst, outer, path, value: placeAs(value, type, s.value.type, s.value), node: s });
+    emit(ctx, { op: "store", dst, outer, path, value: placeAs(value, type, s.value.type), node: s });
   }
 
   // expect e / expect e faults "…" (§7.17): the test runner runs each as its own sub-run.
@@ -443,7 +443,7 @@ export function lower(resolved, diagnostics, options = {}) {
     // Over a map: its keys, in their order; with two names, each key and the value under it.
     const overMap = s.list.type?.t === "map";
     const mapLocal = overMap ? ctx.fn.local("map", s.list.type) : null;
-    const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key, most: 2147483647 } : s.list.type);
+    const listLocal = ctx.fn.local("each", overMap ? { t: "list", element: s.list.type.key } : s.list.type);
     const k = ctx.fn.local(overMap ? "k" : s.index ?? "k", null);
     if (overMap) emit(ctx, { op: "set", dst: mapLocal, value: expr(s.list, ctx), node: s });
     emit(ctx, { op: "set", dst: listLocal, value: overMap ? IR.native("keys", [IR.local(mapLocal)]) : s.list.type?.t === "text" ? IR.native("each_character", [expr(s.list, ctx)]) : expr(s.list, ctx), node: s });
@@ -478,13 +478,12 @@ export function lower(resolved, diagnostics, options = {}) {
     ctx.block = exit;
   }
 
-  // Docassemble's gathering loop: (are there any?) then each turn asks one item and, short of the list's most,
-  // whether there is another; a no ends it.
+  // Docassemble's gathering loop: (are there any?) then each turn asks one item and whether there is another; a
+  // no ends it.
   function lowerCollect(s, ctx) {
     const listSym = s.listSymbol;
     const listLocal = ctx.locals.get(listSym);
-    const type = listSym.type;
-    const element = type.element;
+    const element = listSym.type.element;
     const base = listKey({ kind: "name", name: listSym.name, symbol: listSym }, ctx);
     const exit = ctx.fn.block();
     if (s.any) {
@@ -517,10 +516,7 @@ export function lower(resolved, diagnostics, options = {}) {
     turn.prefix = join(itemBase, IR.constant("."));
     lowerBlock(s.body, turn);
     emit(turn, { op: "append", dst: listLocal, value: IR.local(itemLocal), node: s });
-    // Short of the most: another?
-    const ask = ctx.fn.block();
-    terminate(turn, { op: "branch", cond: IR.binary("<", IR.local(k), IR.constant(V.num(type.most))), yes: ask, no: exit, node: s });
-    turn.block = ask;
+    // Another?
     const another = ctx.fn.local(`${listSym.name}.another`, null);
     const q = new IR.Question({ name: `${listSym.name}.another`, type: "yes-no", options: [], set: null, hasDefault: false, check: null, node: s, item: true });
     emit(turn, { op: "ask", q, key: join(segment, IR.constant("#another"), turns), printed: expr(s.another, ctx), dst: another, path: [], default: null, node: s });
@@ -542,28 +538,23 @@ export function lower(resolved, diagnostics, options = {}) {
     return at ? { ...x, at } : x;
   }
 
-  // A list value placed where a list type with most `most` is expected: widened (§3.7.2).
-  function placeAs(x, type, from, node = null) {
+  // How many lists deep a type is: 2 for a list of lists of numbers.
+  function depth(t) {
+    return t?.t === "list" ? 1 + depth(t.element) : 0;
+  }
+
+  // A value of type `from` placed where `type` is expected (§3.6).
+  function placeAs(x, type, from) {
     // A list of options placed where a set is expected becomes the set, in declaration order (§3.8).
     // The bare `empty` where a set is expected is the set with no options (§3.8): its key is {} (§8.6.3).
-    if (type?.t === "options" && (from?.t === "list" || from?.t === "empty")) return IR.native("to_set", [x, IR.constant(V.list(type.set.options.map((o) => o.value), Math.max(1, type.set.options.length)))]);
-    // Each level's most, `?` where it is known only as the program runs: there the value keeps the most it carries,
-    // and the levels inside it are still widened (§3.9 rule 4).
+    if (type?.t === "options" && (from?.t === "list" || from?.t === "empty")) return IR.native("to_set", [x, IR.constant(type.set.options.map((o) => o.value))]);
     // The bare `empty` where a map goes is a map with no keys.
     if (type?.t === "map" && from?.t === "empty") return IR.native("map_of", []);
-    const mostsOf = (t) => {
-      const out = [];
-      for (; t?.t === "list"; t = t.element) out.push(Number.isFinite(t.most) ? t.most : "?");
-      while (out.at(-1) === "?") out.pop();
-      return out;
-    };
-    const shape = mostsOf(type);
-    // The bare `empty` where a list of no stated most goes is a list with no items, of most 0 (§3.7.3.1).
-    if (!Number.isFinite(shape[0]) && type?.t === "list" && from?.t === "empty") return IR.constant(V.list([], 2147483647));
-    if (!shape.length) return x;
-    if (mostsOf(from).join(",") === shape.join(",")) return x;
-    // F017 stands at the expression placed (§16.3.1).
-    return withAt(IR.native("widen", [x, IR.constant(shape.join(","))]), (node?.span ? placeOf(node, node.span) : null) ?? x.at ?? null);
+    if (type?.t !== "list") return x;
+    // The bare `empty` where a list goes is a list with no items (§3.7.1).
+    if (from?.t === "empty") return IR.constant([]);
+    // An empty item where a list goes, at any level, is a list with no items too: [empty] as a list of lists.
+    return depth(from) >= depth(type) ? x : IR.native("as_lists", [x, IR.constant(V.num(depth(type)))]);
   }
 
   // A function's name as a key writes it: after its library's use path when a library declares it (§8.6.2).
@@ -617,20 +608,20 @@ export function lower(resolved, diagnostics, options = {}) {
         let a = expr(e.a, ctx);
         let b = expr(e.b, ctx);
         // A set and a list of its option values: the list as a set (§3.6, §6.6).
-        const asSet = (x, t) => IR.native("to_set", [x, IR.constant(V.list(t.set.options.map((o) => o.value), Math.max(1, t.set.options.length)))]);
+        const asSet = (x, t) => IR.native("to_set", [x, IR.constant(t.set.options.map((o) => o.value))]);
         if (e.a.type?.t === "options" && e.b.type?.t === "list") b = asSet(b, e.a.type);
         if (e.b.type?.t === "options" && e.a.type?.t === "list") a = asSet(a, e.b.type);
-        // Lists joined take the joined type: their items widened to it (§3.9, §6.5.1).
-        if (e.op === "+" && e.type?.t === "list") return placeAs(withAt(IR.binary("+", a, b), placeOf(e)), e.type, null, e);
+        // Lists joined take the joined type (§3.9, §6.5.1).
+        if (e.op === "+" && e.type?.t === "list") return placeAs(withAt(IR.binary("+", a, b), placeOf(e)), e.type, depth(e.a.type) < depth(e.b.type) ? e.a.type : e.b.type);
         return withAt(IR.binary(e.op, a, b), placeOf(e));
       }
       case "cond":
-        return IR.cond(expr(e.condition, ctx), placeAs(expr(e.yes, ctx), e.type, e.yes.type, e.yes), placeAs(expr(e.no, ctx), e.type, e.no.type, e.no));
+        return IR.cond(expr(e.condition, ctx), placeAs(expr(e.yes, ctx), e.type, e.yes.type), placeAs(expr(e.no, ctx), e.type, e.no.type));
       case "field": {
         const read = withAt(IR.field(expr(e.target, ctx), e.fieldIndex, e.name), placeOf(e, e.target.span ? { line: e.span.line, col: e.span.col } : e.span));
-        // A list field of an empty record is an empty list of the field's declared most, so its positions read
-        // as any such list's do (§6.9.1, §3.7.1, §6.9.2).
-        return e.type?.t === "list" && Number.isFinite(e.type.most) ? IR.native("field_list", [read, IR.constant(String(e.type.most))]) : read;
+        // A list field of an empty record is a list with no items, so its positions read as any list's do
+        // (§6.9.1, §6.9.2).
+        return e.type?.t === "list" ? IR.native("field_list", [read]) : read;
       }
       case "index":
         return withAt(IR.item(expr(e.target, ctx), expr(e.index, ctx)), placeOf(e));
@@ -654,21 +645,19 @@ export function lower(resolved, diagnostics, options = {}) {
           index,
           cond: e.condition ? expr(e.condition, inner) : null,
           value: expr(e.value, inner),
-          // Its list's most (§3.7.5): known here, or, from a parameter without `most`, the list's own as it runs.
-          most: Number.isFinite(e.type?.most) ? e.type.most : null,
         };
       }
       case "call": {
         // A call of a function a name holds (§9.10).
         if (e.valueCall) {
-          const given = e.args.map((a, i) => placeAs(expr(a, ctx), e.valueType.params[i], a.type, a));
+          const given = e.args.map((a, i) => placeAs(expr(a, ctx), e.valueType.params[i], a.type));
           return withAt(IR.callv([expr(e.target, ctx), join(ctx.prefix), join(suffix(ctx)), ...given]), placeOf(e, e.target.span));
         }
         const sym = e.callee;
         const params = sym.params ?? [];
         const bound = e.bound ?? e.args;
         // Every argument bound to its parameter (defaults filled in, §9.4.1), each placed as its parameter's type.
-        const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), e.placedAs?.[i] ?? params[i]?.type, a.param.defaultExpr.type, a.param.defaultExpr) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), e.placedAs?.[i] ?? params[i]?.type, a.type, a)));
+        const args = bound.map((a, i) => (a.kind === "default-of" ? (a.param.defaultExpr ? placeAs(expr(a.param.defaultExpr, ctx), e.placedAs?.[i] ?? params[i]?.type, a.param.defaultExpr.type) : IR.constant(a.param.defaultValue ?? null)) : placeAs(expr(a, ctx), e.placedAs?.[i] ?? params[i]?.type, a.type)));
         // Arguments are worked out as written, left to right, whatever parameters they bind (§9.4.1).
         const written = (x) => e.args.findIndex((a) => a === x || a.value === x);
         const order = bound.map((_, i) => i).sort((i, j) => (written(bound[i]) < 0 ? Infinity : written(bound[i])) - (written(bound[j]) < 0 ? Infinity : written(bound[j])));
@@ -677,9 +666,9 @@ export function lower(resolved, diagnostics, options = {}) {
         if (sym.kind === "native") {
           if (sym.name === "sorted" && e.sortField !== undefined) return withAt(IR.native("sorted_by", [args[0], IR.constant(V.num(e.sortField)), args[1]]), at);
           // Words in quotes given to a set operation are made the set they name (§3.6).
-          // Both of either's values placed as their join (§3.9): either(a, [n, n]) is a list of the larger most.
-          if (e.joined) args.forEach((a, i) => (args[i] = placeAs(a, e.joined, bound[i]?.type, bound[i])));
-          if (e.setOperand) args.forEach((a, i) => bound[i]?.type?.t === "list" && (args[i] = placeAs(a, e.setOperand, bound[i].type, bound[i])));
+          // Both of either's values placed as their join (§3.9): either(empty, [n]) is a list.
+          if (e.joined) args.forEach((a, i) => (args[i] = placeAs(a, e.joined, bound[i]?.type)));
+          if (e.setOperand) args.forEach((a, i) => bound[i]?.type?.t === "list" && (args[i] = placeAs(a, e.setOperand, bound[i].type)));
           return withAt(ordered(IR.native(sym.name, args)), at);
         }
         const fn = functionOf(sym);
@@ -694,13 +683,13 @@ export function lower(resolved, diagnostics, options = {}) {
       case "map":
         return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));
       case "list":
-        // Each item widened to the literal's element type (§3.9).
-        return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type, x)), 2147483647);
+        // Each item placed as the literal's element type (§3.9).
+        return IR.list(e.items.map((x) => placeAs(expr(x, ctx), e.type?.element, x.type)));
       case "new": {
         const decl = e.recordSymbol.decl;
         const record = IR.record(decl, decl.fields.map((f) => {
           const given = e.fields.find((x) => x.name === f.name);
-          return given ? placeAs(expr(given.value, ctx), f.type, given.value.type, given.value) : initial(f.type);
+          return given ? placeAs(expr(given.value, ctx), f.type, given.value.type) : initial(f.type);
         }));
         // The fields given are worked out as written (§6.2), the others after.
         const at = (i) => e.fields.findIndex((x) => x.name === decl.fields[i].name);

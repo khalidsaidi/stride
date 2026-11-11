@@ -152,10 +152,6 @@ export function check(resolved, diagnostics) {
         err("S344", sym.node, `${sym.name} returns only empty, so its type cannot be worked out; write it: -> text`);
         result = T.ERROR;
       }
-      // A worked-out list result with no most stated anywhere.
-      const unbounded = (t) => t.t === "list" && (!Number.isFinite(t.most) || unbounded(t.element));
-      const bounded = (t) => (t.t === "list" ? T.list(bounded(t.element), Number.isFinite(t.most) ? t.most : T.NO_MOST) : t);
-      if (unbounded(result)) result = bounded(result); // no most written anywhere (§3.7)
       sym.result = result;
       sym.type = { t: "function", params: sym.params.map((p) => p.type), result };
     }
@@ -183,20 +179,11 @@ export function check(resolved, diagnostics) {
       if (v === undefined && faultIn(d)) p.fault = faultIn(d);
       else if (v === undefined) p.defaultExpr = d; // worked out at each call that leaves it out (§9.2)
       else {
-        // Placed as the parameter's type, as an argument is (§9.2, §3.7.2): words for a set become the set, a list
-        // takes the parameter's most, a bare empty a list's (§3.7.3.1).
-        const placed = T.hasTypevar(p.type) ? v : knownPlaced(d, p.type);
-        if (placed === undefined) err("S367", d, `${p.name} is ${T.describe(p.type)}, and its default does not fit it`);
-        else p.defaultValue = placed;
+        // Placed as the parameter's type, as an argument is (§9.2): words for a set become the set, a bare empty
+        // where a list goes a list with no items (§3.7.1).
+        p.defaultValue = T.hasTypevar(p.type) ? v : knownPlaced(d, p.type);
       }
     }
-  }
-
-  // Whether a list type fits another but for a most that is too large, at some level (§3.7.2: S351).
-  function narrows(a, b) {
-    if (a?.t !== "list" || b?.t !== "list") return false;
-    const widenAll = (t) => (t.t === "list" ? T.list(widenAll(t.element), Infinity) : t);
-    return T.fits(widenAll(a), widenAll(b)) && !T.fits(a, b);
   }
 
   function block(statements, ctx) {
@@ -358,9 +345,7 @@ export function check(resolved, diagnostics) {
       type = T.ERROR;
     }
     if (s.declaredType) {
-      // A list too large for its declared most is S351 (§3.7.2); any other mismatch S325.
-      const narrowing = narrows(type, s.declaredType);
-      if (type && !fitsAt(s.value, type, s.declaredType)) err(narrowing ? "S351" : "S325", s.value, `${s.name} is ${T.describe(s.declaredType)}, and this is ${T.describe(type)}`);
+      if (type && !fitsAt(s.value, type, s.declaredType)) err("S325", s.value, `${s.name} is ${T.describe(s.declaredType)}, and this is ${T.describe(type)}`);
       else if (type) optionLiteral(s.value, s.declaredType);
       type = s.declaredType;
     } else if (!type) {
@@ -371,12 +356,8 @@ export function check(resolved, diagnostics) {
       type = T.ERROR;
     } else if (type.t === "list" && untold(type.element)) {
       // `[]`, `[[]]`, `[[empty]]`: no item says what the list holds, at any depth (§6.11, §7.4).
-      err("S328", s.value, `an empty list says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: list of text most 4`);
+      err("S328", s.value, `an empty list says nothing about what it holds; give ${s.name} a type: ${s.kind} ${s.name}: list of text`);
       type = T.ERROR;
-    }
-    if (type.t === "list" && s.kind === "var" && !s.declaredType && s.value) {
-      // A var list made from a literal can grow only as far as the literal is long; say so if it is collected.
-      s.literalMost = type.most;
     }
     // One let or var declared in two arms has one type (§12.4, S315).
     if (sym && s.sameAs && sym.type && !T.isError(sym.type) && !T.isError(type) && !T.same(sym.type, type)) err("S315", s, `${s.name} is ${T.describe(sym.type)} where it is declared on line ${sym.line}; declared again in another branch, it must be the same`);
@@ -729,8 +710,7 @@ export function check(resolved, diagnostics) {
           if (!j) err("S361", item, `a list's items join into one type; this is ${T.describe(t)}, and the items before are ${T.describe(element)}`);
           else element = j;
         }
-        // A list written out grows like any other: only a declared most limits a list (§3.7).
-        return T.list(element, T.NO_MOST);
+        return T.list(element);
       }
       case "cond": {
         condition(e.condition, ctx, "if … then");
@@ -759,26 +739,20 @@ export function check(resolved, diagnostics) {
       }
       case "comprehension": {
         const l = expr(e.list, ctx);
-        let most = 1;
         if (T.isTextLike(l)) {
           e.itemSymbol.type = T.TEXT; // each character
           e.overText = true;
-          most = T.NO_MOST;
         } else if (l.t === "list") {
           e.itemSymbol.type = l.element;
-          most = T.NO_MOST;
         } else if (l.t === "options") {
           e.itemSymbol.type = T.option(l.set);
-          most = T.NO_MOST;
         } else if (l.t === "map") {
           // A map's keys, in their order; with two names, each key and the value under it.
           if (e.indexSymbol) (e.indexSymbol.type = l.key), (e.itemSymbol.type = l.value);
           else e.itemSymbol.type = l.key;
           e.overMap = true;
-          most = T.NO_MOST;
         } else if (l.t === "empty") {
           e.itemSymbol.type = T.EMPTY; // no items (§3.6)
-          most = T.NO_MOST;
         } else {
           if (!T.isError(l)) err("S314", e.list, `for each goes through a list, a map or a set of options; ${describeExpr(e.list)} is ${T.describe(l)}`);
           e.itemSymbol.type = T.ERROR;
@@ -786,7 +760,7 @@ export function check(resolved, diagnostics) {
         if (e.condition) condition(e.condition, ctx, "a comprehension's if");
         const v = expr(e.value, ctx);
         if (v.t === "none") err("S366", e.value, `${describeExpr(e.value)} gives no value`);
-        return T.list(v, most);
+        return T.list(v);
       }
       case "named-arg":
         return expr(e.value, ctx);
@@ -937,7 +911,7 @@ export function check(resolved, diagnostics) {
 
     let result = sym.result ? T.substitute(sym.result, bindings) : T.ERROR;
     // Each argument is placed as its parameter's type with the type parameters bound (§9.5.1): with t bound to a
-    // list of most 2, [1] given as a t is a list of most 2.
+    // list of lists, [empty] given as a t is a list of one list with no items.
     if (bindings.size) e.placedAs = params.map((p) => T.substitute(p.type, bindings));
     // A type parameter the arguments do not tell (§9.5): S368, whatever the result's type.
     if ((sym.typeParams ?? []).some((tv) => !bindings.has(tv))) {
@@ -1038,15 +1012,15 @@ export function check(resolved, diagnostics) {
       case "+":
         if (anyError) return T.isError(a) ? b : a;
         if (a.t === "number" && b.t === "number") return T.NUMBER;
-        // Lists join (§6.5.1): the join of the elements, the sum of the mosts.
+        // Lists join (§6.5.1): the join of the elements.
         if (a.t === "list" || b.t === "list") {
-          const x = a.t === "list" ? a : T.list(T.EMPTY, 0);
-          const y = b.t === "list" ? b : T.list(T.EMPTY, 0);
+          const x = a.t === "list" ? a : T.list(T.EMPTY);
+          const y = b.t === "list" ? b : T.list(T.EMPTY);
           if ((a.t !== "list" && a.t !== "empty") || (b.t !== "list" && b.t !== "empty")) return err2("S373", `+ joins two lists, not ${T.describe(a)} and ${T.describe(b)}`);
           const element = T.join(x.element, y.element);
           // No join stands at the second value (§3.9 rule 5).
           if (!element) return (err("S373", e.b, `+ joins lists whose items join into one type; these hold ${T.describe(x.element)} and ${T.describe(y.element)}`), T.ERROR);
-          return T.list(element, T.NO_MOST);
+          return T.list(element);
         }
         // Words of any kind, an option among them, join into text (§6.5).
         const wordy = (t) => T.isTextLike(t) || t.t === "option" || t.t === "empty";

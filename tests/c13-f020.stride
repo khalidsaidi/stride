@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 record person { name: text }
 ask i: number "I"
-var xs: list of person most 3 = [new person { name: "a" }, new person { name: "b" }]
+var xs: list of person = [new person { name: "a" }, new person { name: "b" }]
 xs[i].name = "z"
 fill "A" = join([x.name for each x in xs], ",")
 # rule F020 7.5.1

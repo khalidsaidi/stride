@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask c: yes-no "C"
-var kids: list of text most 2
+var kids: list of text
 collect x in kids any "Any kids?" "More?" {
   ask x: text "Kid"
 }

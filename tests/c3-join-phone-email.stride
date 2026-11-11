@@ -2,7 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask ph: phone "Phone"
 ask em: email "Email"
-define t(l: list of text most 2) -> text {
+define t(l: list of text) -> text {
   return join(l, " ")
 }
 let l = [ph, em]

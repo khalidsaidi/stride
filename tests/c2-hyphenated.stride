@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 let t: yes-no = yes
-var l: list of text most 2 = ["a"]
+var l: list of text = ["a"]
 ask k: one-of "K" {
   option "a" "A"
 }

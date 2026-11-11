@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 for i in 1..2 {
-  var names: list of text most 2
+  var names: list of text
   collect x in names any "Any?" "Another?" {
     ask x: text "Name"
   }

@@ -67,7 +67,7 @@ try {
   // 3. A project, a library, a program that uses it.
   expect("stride init", stride(["init", "-q"]), (x) => x.status === 0 && existsSync(join(work, "stride.json")));
   write("lib/shares.stride", 'export record person {\n  name: text\n  owes: number\n}\nexport define share(total: number, n: number) -> number {\n  if total < 0 {\n    fail("a bill is never below zero")\n  }\n  return round(total / n, 2)\n}\n');
-  write("bills/split.stride", 'use "shares"\nask total: number "The bill"\nvar people: list of text most 5\ncollect who in people "Another person?" {\n  ask who: text "Name"\n}\nlet part = share(total, count(people))\nfor each name in people {\n  print("{name} owes {fixed(part, 2)}")\n}\n');
+  write("bills/split.stride", 'use "shares"\nask total: number "The bill"\nvar people: list of text\ncollect who in people "Another person?" {\n  ask who: text "Name"\n}\nlet part = share(total, count(people))\nfor each name in people {\n  print("{name} owes {fixed(part, 2)}")\n}\n');
   expect("check the program", stride(["check", "-q"]), (x) => x.status === 0 && x.stderr === "");
   // 4. Input, every way.
   expect("answers as key=value", stride(["run", "bills/split.stride", "total=90", "people[1]=Ada", "people[1]#another=yes", "people[2]=Bo", "people[2]#another=no"]), (x) => x.stdout === "Ada owes 45.00\nBo owes 45.00\n");

@@ -5,7 +5,7 @@ let q = upper("x")
 for i in 1..2 {
   fill "{P}{i}{q}" = "v"
 }
-var l: list of text most 2
+var l: list of text
 collect n, x in l "More?" {
   ask x: text "Item"
   fill "Item{n}" = x

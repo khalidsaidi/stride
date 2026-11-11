@@ -1,5 +1,5 @@
-// What the compiler works out itself (docs/spec.md §11.1): a constant's value, a parameter's default, a list
-// type's most, an option's printed words. This is its evaluator for them; it works on the syntax tree, before
+// What the compiler works out itself (docs/spec.md §11.1): a constant's value, a parameter's default, an
+// option's printed words. This is its evaluator for them; it works on the syntax tree, before
 // anything is lowered, and gives a value, or undefined for what only a run can work out.
 //
 // The values are the machine's (runtime/values.mjs): words, exact decimals, dates, yes or no, null for
@@ -7,32 +7,22 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as textOf, list, isEmpty, mostOf, whole, copy, set, isSet } from "../runtime/values.mjs";
+import { StrideFault, words as textOf, isEmpty, num, whole, copy, set, isSet } from "../runtime/values.mjs";
 
-// A value placed where `type` is expected, as the machine places it (§3.7.2, §3.8): a list widened to the type's
-// mosts (F017 when it holds more), a list of options made the set.
+// A value placed where `type` is expected, as the machine places it (§3.7.1, §3.8): empty where a list goes made
+// a list with no items, a list of options made the set.
 function placed(v, type) {
   if (!type) return v;
   if (type.t === "options" && (v === null || (Array.isArray(v) && !isSet(v)))) return set(v ?? [], type.set.options.map((o) => o.value));
-  // `?` where a level's most is known only as the program runs: the value keeps its own there (§3.9 rule 4).
-  const mosts = [];
-  for (let t = type; t?.t === "list"; t = t.element) mosts.push(Number.isFinite(t.most) ? t.most : "?");
-  while (mosts.at(-1) === "?") mosts.pop();
-  if (!Number.isFinite(mosts[0]) && type.t === "list" && v === null) return list([], 0); // §3.7.3.1
-  return mosts.length ? NATIVES.widen.fn(v, mosts.join(",")) : v;
+  let depth = 0;
+  for (let t = type; t?.t === "list"; t = t.element) depth++;
+  return depth ? NATIVES.as_lists.fn(v, num(depth)) : v;
 }
 
-// A known value placed where `type` is: what a let made of it holds (undefined when not known, or when placing it
-// faults, which the run reports where it stands).
+// A known value placed where `type` is: what a let made of it holds (undefined when not known).
 export function knownPlaced(expr, type, env = new Map()) {
   const v = evaluate(expr, env);
-  if (v === undefined) return undefined;
-  try {
-    return placed(v, type);
-  } catch (e) {
-    if (e instanceof StrideFault) return undefined;
-    throw e;
-  }
+  return v === undefined ? undefined : placed(v, type);
 }
 
 const faultOf = (e, f) => {
@@ -91,9 +81,6 @@ function value(e, env, visiting) {
         try {
           const v = value(sym.node.value, env, visiting);
           return v === undefined ? undefined : placed(v, sym.type);
-        } catch (x) {
-          if (x instanceof StrideFault) return undefined; // placing it faults: the run reports it where it stands
-          throw x;
         } finally {
           visiting.delete(sym);
         }
@@ -137,7 +124,7 @@ function value(e, env, visiting) {
       return faultOf(e, () => native.fn(...(e.joined ? args.map((v) => placed(v, e.joined)) : args)));
     }
     case "slice": {
-      // l[a..b] (§6.9.3): bounds whole numbers, else F004; then the items a to b, l's most.
+      // l[a..b] (§6.9.3): bounds whole numbers, else F004; then the items a to b.
       const l = value(e.target, env, visiting);
       const a = value(e.from, env, visiting), b = value(e.to, env, visiting);
       if (l === undefined || a === undefined || b === undefined || (l !== null && !Array.isArray(l))) return undefined;
@@ -145,7 +132,7 @@ function value(e, env, visiting) {
         const x = whole(a), y = whole(b);
         if (x === null || y === null) throw new StrideFault("F004", "a slice's bounds are whole numbers");
         const from = Math.max(1, x), to = Math.min(l?.length ?? 0, y);
-        return list(from > to ? [] : l.slice(from - 1, to).map(copy), mostOf(l));
+        return from > to ? [] : l.slice(from - 1, to).map(copy);
       });
     }
     case "index": {
@@ -161,14 +148,14 @@ function value(e, env, visiting) {
       });
     }
     case "list": {
-      // Each item widened to the literal's element type (§3.9).
+      // Each item placed as the literal's element type (§3.9).
       const items = [];
       for (const x of e.items) {
         const v = value(x, env, visiting);
         if (v === undefined) return undefined;
         items.push(v);
       }
-      return faultOf(e, () => list(items.map((v) => placed(v, e.type?.element)), Math.max(1, items.length)));
+      return items.map((v) => placed(v, e.type?.element));
     }
     case "cond": {
       // Whichever branch runs, its value has the conditional's type: the join of the two (§3.9, §6.13).

@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of text most 2 = ["a", "b"]
+var l: list of text = ["a", "b"]
 l[2] = "z"
 fill "A" = join(l, "")
 # boxes {"A": "az"}

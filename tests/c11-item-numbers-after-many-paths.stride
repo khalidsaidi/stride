@@ -3,22 +3,22 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record item {
   label: text
 }
-var a: list of text most 2
+var a: list of text
 collect x in a any "Any a?" "Another a?" {
   ask x: text "A"
 }
-var b: list of text most 2
+var b: list of text
 collect y in b any "Any b?" "Another b?" {
   ask y: text "B"
 }
-var c: list of text most 3
+var c: list of text
 collect z in c "Another c?" {
   ask z: text "C"
 }
 if count(a) > count(b) {
   print("more a")
 }
-var rows: list of item most 2
+var rows: list of item
 collect row in rows "Another row?" {
   ask row.label: text "Label"
 }

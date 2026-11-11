@@ -1,6 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-var l: list of number most nope
-print(count(l))
-# rule 16.1 S201 S212
-# mistake 3:28 S201

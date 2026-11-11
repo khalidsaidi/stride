@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var names: list of text most 2
+var names: list of text
 collect x in names "Another?" {
   ask x: text "Name"
   print(x)
@@ -10,6 +10,6 @@ collect x in names "Another?" {
 fill "N" = join(names, ",")
 # rule 8.5.1
 # answers {"names[1]": "A", "names[1]#another": "yes", "names[2]": "B"}
-# asked ["names[1]", "names[1]#another", "names[2]"]
+# asked ["names[1]", "names[1]#another", "names[2]", "names[2]#another"]
 # prints ["A", "0", "yes", "B", "1", "yes"]
 # boxes {"N": "A,B"}

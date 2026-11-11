@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-define takes_one(xs: list of number most 1, d: number) -> number {
+define takes_one(x: number, d: number) -> number {
   return d
 }
 define pass(l: list of number) -> number {
   ask z: number "Z"
-  return takes_one(l, 1 / z)
+  return takes_one(l[z], 1 / z)
 }
 fill "A" = pass([1, 2])
-# rule 9.4.1 3.7.7 F017
+# rule 9.4.1 F004
 # answers {"pass.z": "0"}
-# fault F017 at 8:20
+# fault F004 at 8:21

@@ -1,9 +1,9 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 4) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 5) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
 import { BINARY_OPS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
-import { D, isNumber, isDate, isSet, list } from "../runtime/values.mjs";
+import { D, isNumber, isDate, isSet } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
@@ -33,7 +33,7 @@ export function generate(program, pdf, debug = null) {
   const records = [];
   const recordIndex = (decl) => {
     let i = records.findIndex((r) => r.decl === decl);
-    if (i < 0) i = records.push({ decl, name: decl.name, fields: decl.fields.map((f) => f.name), mosts: decl.fields.map((f) => (f.type?.t === "list" && Number.isFinite(f.type.most) ? f.type.most : null)) }) - 1;
+    if (i < 0) i = records.push({ decl, name: decl.name, fields: decl.fields.map((f) => f.name), lists: decl.fields.map((f) => f.type?.t === "list") }) - 1;
     return i;
   };
   // Every record type the program declares is in the records section, so the loader can tell that each field an
@@ -192,8 +192,7 @@ export function generate(program, pdf, debug = null) {
             emit(OP.NATIVE, nativeIndex("keys"), 1).quiet = true;
           }
           emit(OP.STORE, src);
-          if (x.most !== null) emit(OP.NEW_LIST, 0, x.most);
-          else (emit(OP.LOAD, src), emit(OP.NATIVE, nativeIndex("empty_like"), 1));
+          emit(OP.NEW_LIST, 0);
           emit(OP.STORE, acc);
           emit(OP.NUMBER, N(D.fromInt(1)));
           emit(OP.STORE, k);
@@ -253,7 +252,7 @@ export function generate(program, pdf, debug = null) {
           return;
         case "list":
           for (const item of x.items) expr(item);
-          return emit(OP.NEW_LIST, x.items.length, x.most ?? Math.max(1, x.items.length));
+          return emit(OP.NEW_LIST, x.items.length);
         default:
           throw new Error(`cannot generate the expression ${x.e}`);
       }
@@ -278,12 +277,12 @@ export function generate(program, pdf, debug = null) {
       else if (isSet(v)) {
         // A set keeps its options' declaration order (§3.8): its values, then the order, made a set.
         v.forEach(value);
-        emit(OP.NEW_LIST, v.length, Math.max(1, v.length));
-        value(list([...v.order], Math.max(1, v.order.length)));
+        emit(OP.NEW_LIST, v.length);
+        value([...v.order]);
         emit(OP.NATIVE, nativeIndex("to_set"), 2);
       } else if (Array.isArray(v)) {
         v.forEach(value);
-        emit(OP.NEW_LIST, v.length, v.most ?? Math.max(1, v.length));
+        emit(OP.NEW_LIST, v.length);
       } else throw new Error(`cannot generate the constant ${JSON.stringify(v)}`);
     }
 
@@ -556,7 +555,7 @@ export function generate(program, pdf, debug = null) {
   });
   section(SECTION.RECORDS, (s) => {
     s.varint(records.length);
-    for (const r of records) (s.varint(T(r.name)), s.varint(r.fields.length), r.fields.forEach((f, i) => (s.varint(T(f)), s.varint(r.mosts[i] === null ? 0 : r.mosts[i] + 1))));
+    for (const r of records) (s.varint(T(r.name)), s.varint(r.fields.length), r.fields.forEach((f, i) => (s.varint(T(f)), s.u8(r.lists[i] ? 1 : 0))));
   });
   section(SECTION.QUESTIONS, (s) => {
     s.varint(questions.length);

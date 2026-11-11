@@ -1,7 +1,7 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask i: number "I"
-var l: list of text most 5 = ["a"]
+var l: list of text = ["a"]
 l[i] = "z"
 print(join(l, ","))
 

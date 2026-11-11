@@ -36,12 +36,12 @@ In Python, Java and JavaScript a list or an object is a reference: two names can
 and a record are values, like numbers: `var b = a` copies, and a function changes only its own copy (§3.4).
 
 ```stride
-var a: list of number most 5 = [1, 2]
+var a: list of number = [1, 2]
 var b = a
 b[3] = 3
 print(a)
 print(b)
-define add_one(xs: list of number most 5) -> list of number most 5 {
+define add_one(xs: list of number) -> list of number {
   var out = xs
   out[1] = out[1] + 1
   return out
@@ -69,7 +69,7 @@ let price: number = empty
 print(price + 5)
 print(price is empty)
 print(either(price, 0))
-let names: list of text most 3 = ["Ada"]
+let names: list of text = ["Ada"]
 print(names[2] is empty)
 print(either(names[2], "nobody"))
 ```
@@ -84,10 +84,10 @@ nobody
 ## Positions count from 1
 
 `xs[1]` is the first item, as row 1 is the first row of a form. A position past the items gives empty; a position
-below 1, or past what the list can ever hold (its `most`), stops the run (F004).
+below 1 stops the run (F004).
 
 ```stride
-let xs: list of text most 3 = ["a", "b"]
+let xs: list of text = ["a", "b"]
 print(xs[1])
 print(count(xs))
 print(xs[3] is empty)
@@ -135,7 +135,7 @@ record person {
   name: text
   age: number
 }
-let people: list of person most 3 = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }, new person { name: "Cy", age: 17 }]
+let people: list of person = [new person { name: "Bo", age: 40 }, new person { name: "Al", age: 30 }, new person { name: "Cy", age: 17 }]
 let adults = [p.name for each p in people if p.age >= 18]
 print(adults)
 print([upper(n) for each n in adults])

@@ -370,16 +370,6 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       }
     }
   }
-  // A name in a type's most (`list of number most m`) is read there (§5.6).
-  const mostReads = (t) => {
-    if (!t || typeof t !== "object") return;
-    if (t.kind === "type-list") {
-      if (t.most) for (const e of subexpressions(t.most)) if (e.kind === "name" && e.symbol) reads.add(e.symbol);
-      mostReads(t.element);
-    }
-    if (t.kind === "type-map") mostReads(t.value);
-  };
-  for (const { body } of bodies) for (const s of statements(body)) if (s.kind === "let" || s.kind === "var") mostReads(s.type);
   const askedInto = new Set();
   for (const { body } of bodies) for (const s of statements(body)) if (s.kind === "ask" && s.fieldPath && s.target.symbol) askedInto.add(s.target.symbol);
   for (const { body } of bodies) {
@@ -432,7 +422,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   for (const r of resolved.units) {
     if (r.unit.library) continue;
     for (const f of r.functions) if (!called.has(f)) warn("W002", { file: f.node.file, span: nameSpan(f.node.file, f.node.span, f.name) }, `${f.name} is defined, and never called`);
-    // A constant may be used where no statement is: a list's most, another constant.
+    // A constant may be used where no statement is: in another constant.
     for (const c of r.consts) if (!usedConsts.has(c) && !c.referenced) warn("W003", c.node, `the constant ${c.name} is never used`);
   }
 

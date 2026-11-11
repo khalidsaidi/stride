@@ -1,9 +1,9 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
-var a: list of number most 1
+var a: list of number
 let e = either(a, [n, n])
-var v: list of number most 2 = e
+var v: list of number = e
 print(count(v))
 print(either([1], [1, 2])[2] is empty)
 print(either(empty, "x"))

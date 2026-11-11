@@ -1,6 +1,6 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-var kids: list of text most 3 = ["a", "b", "c"]
+var kids: list of text = ["a", "b", "c"]
 define row(n: number) {
   ask v: text "V"
   fill "R{n}" = v

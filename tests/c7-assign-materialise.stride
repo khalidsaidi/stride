@@ -12,7 +12,7 @@ var p: person
 p.name = "Ada"
 var q: person
 q.home.city = "Paris"
-var xs: list of person most 2 = [empty]
+var xs: list of person = [empty]
 xs[1].name = "Ada"
 print(p.name)
 print(p.age is empty)

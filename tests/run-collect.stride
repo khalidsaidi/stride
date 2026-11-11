@@ -3,7 +3,7 @@ pdf 0000000000000000000000000000000000000000000000000000000000000000
 record r {
   name: text
 }
-var l: list of r most 3
+var l: list of r
 collect n, x in l "Another?" {
   ask x.name: text "Name"
 }

@@ -1,4 +1,4 @@
-// Stride's bytecode, version 4 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 5 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -6,7 +6,7 @@
 //    2 numbers    every number constant, as its words (§3.3.5): exact, never a binary float
 //    3 program    the form's id, the PDF's sha256, the prefix of its field names
 //    4 boxes      each box the program writes: its name, how (fill, tick, pick), its export value
-//    5 records    each record type: its name and its fields' names
+//    5 records    each record type: its name, its fields' names and which of them are lists
 //    6 questions  each question as written: its name, type, option set, options, flags, line, file
 //    7 natives    the natives the code calls: name and how many values each takes
 //    8 functions  each function: name, file, parameters, its locals' names, where its code starts and ends, whether it takes its call's key
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 4;
+export const VERSION = 5;
 
 export const SECTION = { TEXTS: 1, NUMBERS: 2, PROGRAM: 3, BOXES: 4, RECORDS: 5, QUESTIONS: 6, NATIVES: 7, FUNCTIONS: 8, CODE: 9, PLACES: 10, LINKS: 11 };
 
@@ -41,7 +41,7 @@ export const OP = {
   NEW_RECORD: 10, // v record type: push a record with every field empty
   GET_FIELD: 11, // v field: pop a record, push its field (empty of an empty record; F006 of anything else)
   SET_FIELD: 12, // v field: pop a value, pop a record, set the field to a copy of the value
-  NEW_LIST: 13, // v count, v most: pop that many values, push a list of them with that most
+  NEW_LIST: 13, // v count: pop that many values, push a list of them
   GET_ITEM: 14, // pop a position, pop a list, push the item (§6.9.2: F004, empty past the items)
   SET_ITEM: 15, // pop a value, pop a position, pop a list, set the item (§7.5.1: F005)
   APPEND: 16, // v local: pop a value, append it to the list in the local
@@ -106,7 +106,7 @@ export const OP = {
 export const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 export const OPERANDS = {
   [OP.TEXT]: "v", [OP.NUMBER]: "v", [OP.LOAD]: "v", [OP.STORE]: "v", [OP.NEW_RECORD]: "v", [OP.GET_FIELD]: "v",
-  [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "vv", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
+  [OP.SET_FIELD]: "v", [OP.NEW_LIST]: "v", [OP.APPEND]: "v", [OP.CONCAT]: "v", [OP.JUMP]: "a", [OP.JUMP_IF_FALSE]: "a",
   [OP.JUMP_IF_TRUE]: "a", [OP.LOOP]: "a", [OP.CALL]: "vv", [OP.NATIVE]: "vv", [OP.ASK]: "v", [OP.ASK_DEFAULT]: "v",
   [OP.CHECK_FAILED]: "v", [OP.FILL]: "v", [OP.TICK]: "v", [OP.PICK]: "vv", [OP.ENSURE_RECORD]: "vv",
   [OP.ENSURE_FIELD]: "vv", [OP.ENSURE_ITEM]: "v", [OP.EXPECT]: "av", [OP.EXPECT_DONE]: "v", [OP.FROM]: "vv", [OP.FN]: "vv", [OP.CELL]: "v", [OP.LOAD_CELL]: "v", [OP.STORE_MAIN]: "v", [OP.ENSURE_MAIN]: "vv", [OP.TRY]: "av", [OP.KEEP]: "v", [OP.LOAD_MAIN]: "v", [OP.CALL_VALUE]: "v",
@@ -278,14 +278,13 @@ export function load(input) {
         p.boxes = list(() => ({ name: t(s), kind: one(s, WRITES, "the way of writing a box"), on: opt(s) }));
         break;
       case SECTION.RECORDS:
-        // Each field: its name, then 0, or a list field's declared most plus one (what a record made on the way to
-        // a field starts with, §7.5.1).
+        // Each field: its name, then 1 for a list (what a record made on the way to a field starts with, §7.5.1),
+        // 0 for anything else.
         p.records = list(() => {
-          const r = { name: t(s), fields: [], mosts: [] };
+          const r = { name: t(s), fields: [], lists: [] };
           for (let k = s.varint(); k > 0; k--) {
             r.fields.push(t(s));
-            const m = s.varint();
-            r.mosts.push(m === 0 ? null : m - 1);
+            r.lists.push(one(s, [false, true], "whether a field is a list"));
           }
           return r;
         });
@@ -387,9 +386,6 @@ export function verify(p) {
         case OP.GET_FIELD:
         case OP.SET_FIELD:
           check(args[0] < widest, "field");
-          break;
-        case OP.NEW_LIST:
-          check(args[1] <= 2147483647 && args[0] <= Math.max(args[1], 1), "list most");
           break;
         case OP.FN:
           check(args[0] < p.functions.length, "function");
@@ -586,7 +582,7 @@ export function assemble({ texts = [], numbers = [], natives = [], boxes = [], r
   section(SECTION.NUMBERS, (w) => (w.varint(numbers.length), numbers.forEach((n) => w.varint(T(n)))));
   section(SECTION.PROGRAM, (w) => (w.varint(T(form)), w.varint(T(pdf)), w.varint(T(prefix))));
   section(SECTION.BOXES, (w) => (w.varint(boxes.length), boxes.forEach((b) => (w.varint(T(b.name)), w.u8(WRITES.indexOf(b.kind)), w.varint(b.on ? T(b.on) + 1 : 0)))));
-  section(SECTION.RECORDS, (w) => (w.varint(records.length), records.forEach((r) => (w.varint(T(r.name)), w.varint(r.fields.length), r.fields.forEach((f, i) => (w.varint(T(f)), w.varint(r.mosts?.[i] == null ? 0 : r.mosts[i] + 1)))))));
+  section(SECTION.RECORDS, (w) => (w.varint(records.length), records.forEach((r) => (w.varint(T(r.name)), w.varint(r.fields.length), r.fields.forEach((f, i) => (w.varint(T(f)), w.u8(r.lists?.[i] ? 1 : 0)))))));
   section(SECTION.NATIVES, (w) => (w.varint(natives.length), natives.forEach((n) => (w.varint(T(n.name)), w.varint(n.params)))));
   section(SECTION.FUNCTIONS, (w) => {
     w.varint(fns.length);

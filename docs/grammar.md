@@ -36,10 +36,10 @@ without a `use`. Declarations may be used before the line they stand on (§5.7).
 
 Whitespace and line breaks are free between tokens, except that a line break before `[` or `(` ends the
 expression before it, and a `return`'s value is on its line (§1.4); `#` starts a comment to the end of the line.
-Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `MOST`)
+Names are ASCII: a letter or `_`, then letters, digits and `_` (`name`, `maxRows`, `LIMIT`)
 (§2.1). Keywords cannot be names (§2.3): `and as ask break check collect const continue default define
 else empty export expect fill for form if in is let match native new no not options or pdf pick record return
-tick use var while yes`. `list`, `set`, `of`, `most`, `fields`, `each`, `when`, `then`, `option`, `any`, `another`
+tick use var while yes`. `list`, `set`, `of`, `fields`, `each`, `when`, `then`, `option`, `any`, `another`
 and `faults` are words of the language only where the grammar uses them, and names everywhere else (§2.3.1).
 
 ## Types
@@ -53,7 +53,7 @@ and `faults` are words of the language only where the grammar uses them, and nam
 | an option set's name | one of its options |
 | `set of` an option set's name | several of its options (an `any-of` answer), always in the set's declared order (§3.8) |
 | a record's name | a record of that type |
-| `list of T`, `list of T most N` | values of type T, as many as are added, or up to N when a most is stated |
+| `list of T` | values of type T, as many as are added |
 | `map of K to V` | values of type V under keys of type K: `{"a": 1}`, `m["a"]`, `m["b"] = 2` (§3.10) |
 | `function(T, …) -> R` | a function as a value: `define apply(f: function(number) -> number, n: number)` |
 
@@ -86,7 +86,7 @@ options changes {                  # an option set: values, each with the words 
   "fax" "Fax No."
 }
 
-const MOST = 4                     # worked out by the compiler: words, a number, a date, yes or no, a list of them
+const LIMIT = 4                    # worked out by the compiler: words, a number, a date, yes or no, a list of them
 
 define line_2(n: number, r: representative) {        # a function; `-> type` after the parameters
   fill "Page1[0].RepresentativesName{n}[0]" = r.name  # when it gives a value
@@ -164,7 +164,7 @@ that defines it; the same name is not defined twice in one function or program.
 ### Lists and collect
 
 ```
-var representatives: list of representative most 4
+var representatives: list of representative
 collect n, r in representatives "Add another representative?" {
   ask r.name: text "Name and address"
   if n <= 2 {
@@ -176,8 +176,7 @@ for each n, r in representatives {
 }
 ```
 
-`collect` asks the first item, then the quoted yes-no question; a yes asks the next item, up to the list's
-most, where it stops without asking. An item
+`collect` asks the first item, then the quoted yes-no question; a yes asks the next item, and a no ends it. An item
 enters the list when its block ends (§8.5.1). A list that may stay empty (trips abroad, arrests) asks first
 whether there are any:
 
@@ -272,7 +271,7 @@ assembler).
 
 ## Bytecode
 
-Version 4 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 5 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),

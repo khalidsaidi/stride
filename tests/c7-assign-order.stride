@@ -4,7 +4,7 @@ define p(t: text) -> number {
   print(t)
   return 1
 }
-var xs: list of number most 2 = [0]
+var xs: list of number = [0]
 xs[p("place")] = p("value")
 xs[p("again")] += p("plus")
 print("{xs[1]}")

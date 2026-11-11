@@ -5,9 +5,9 @@ record child {
 }
 record parent {
   name: text
-  children: list of child most 2
+  children: list of child
 }
-var parents: list of parent most 2
+var parents: list of parent
 collect p in parents "Another parent?" {
   ask p.name: text "Parent"
 }

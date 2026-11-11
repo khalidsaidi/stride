@@ -1,13 +1,13 @@
 form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: text, kids: list of text most 3 }
+record person { name: text, kids: list of text }
 ask i: number "I"
-var ps: list of person most 2 = [new person { name: "a", kids: ["k"] }]
+var ps: list of person = [new person { name: "a", kids: ["k"] }]
 var q: person
 print(ps[i].kids[1])
 print(q.kids[2])
 print(count(q.kids))
 print(ps[1].kids[1])
-# rule 6.9.1 3.7.1 6.9.2
+# rule 6.9.1 6.9.2
 # answers {"i": "2"}
 # prints ["", "", "0", "k"]

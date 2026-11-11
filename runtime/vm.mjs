@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 4) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 5) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -11,7 +11,7 @@
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
 import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
-import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, list, mostOf, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
+import { D, StrideFault, StrideRecord, StrideFunction, StrideMap, Cell, isEmpty, words, printed, copy, set, dateFrom, isNumber, whole, expectation, emptyRecord } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
 export { MAGIC, VERSION, disassemble, BytecodeError, StrideFault };
@@ -314,7 +314,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           break;
         }
         case OP.NEW_LIST:
-          stack.push(list(stack.splice(stack.length - ins.a, ins.a).map(copy), ins.b));
+          stack.push(stack.splice(stack.length - ins.a, ins.a).map(copy));
           break;
         case OP.GET_ITEM: {
           const i = pop();
@@ -350,7 +350,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 1 || n > l.length + 1 || n > mostOf(l)) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length} of at most ${mostOf(l)}`);
+          if (n === null || n < 1 || n > l.length + 1) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
           l[n - 1] = copy(v);
           break;
         }
@@ -363,15 +363,15 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           }
           const n = whole(i);
           if (!Array.isArray(l)) fault("F006", "an item was set on something that is not a list");
-          if (n === null || n < 1 || n > l.length + 1 || n > mostOf(l)) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length} of at most ${mostOf(l)}`);
+          if (n === null || n < 1 || n > l.length + 1) fault("F005", `${isEmpty(i) ? "an empty position" : `position ${words(i)}`} cannot be set: the list holds ${l.length}`);
           break;
         }
         case OP.ENSURE_RECORD: {
           if (f.locals[ins.a] instanceof Cell) {
-            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].mosts, p.records[ins.b].fields);
+            if (isEmpty(f.locals[ins.a].v)) f.locals[ins.a].v = emptyRecord(p.records[ins.b].name, p.records[ins.b].lists, p.records[ins.b].fields);
           } else if (isEmpty(f.locals[ins.a])) {
             const r = p.records[ins.b];
-            f.locals[ins.a] = emptyRecord(r.name, r.mosts, r.fields);
+            f.locals[ins.a] = emptyRecord(r.name, r.lists, r.fields);
           }
           break;
         }
@@ -379,7 +379,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const r = record(stack[stack.length - 1]);
           if (r && isEmpty(r.fields[ins.a])) {
             const t = p.records[ins.b];
-            r.fields[ins.a] = emptyRecord(t.name, t.mosts, t.fields);
+            r.fields[ins.a] = emptyRecord(t.name, t.lists, t.fields);
           }
           break;
         }
@@ -390,7 +390,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             // A record under a key not there yet is made, as a record var's is (§7.5.1).
             if (isEmpty(l.get(i))) {
               const t = p.records[ins.a];
-              l.set(i, emptyRecord(t.name, t.mosts, t.fields));
+              l.set(i, emptyRecord(t.name, t.lists, t.fields));
             }
             break;
           }
@@ -398,7 +398,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           if (n > l.length) fault("F020", `there is no item ${n} to change: the list holds ${l.length}`);
           if (isEmpty(l[n - 1])) {
             const t = p.records[ins.a];
-            l[n - 1] = emptyRecord(t.name, t.mosts, t.fields);
+            l[n - 1] = emptyRecord(t.name, t.lists, t.fields);
           }
           break;
         }
@@ -406,7 +406,6 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const v = pop();
           const l = f.locals[ins.a];
           if (!Array.isArray(l)) fault("F006", "an item was added to something that is not a list");
-          if (l.length >= mostOf(l)) fault("F017", `the list already holds its most, ${mostOf(l)}`);
           l.push(copy(v));
           break;
         }
@@ -422,7 +421,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
             break;
           }
           const to = Math.min(Array.isArray(l) ? l.length : 0, y);
-          stack.push(list(from > to ? [] : l.slice(from - 1, to).map(copy), mostOf(l)));
+          stack.push(from > to ? [] : l.slice(from - 1, to).map(copy));
           break;
         }
         case OP.TO_BOOL:
@@ -461,7 +460,7 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         case OP.ENSURE_MAIN: {
           if (isEmpty(frames[0].locals[ins.a])) {
             const r = p.records[ins.b];
-            frames[0].locals[ins.a] = emptyRecord(r.name, r.mosts, r.fields);
+            frames[0].locals[ins.a] = emptyRecord(r.name, r.lists, r.fields);
           }
           break;
         }
