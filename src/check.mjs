@@ -448,7 +448,7 @@ export function check(resolved, diagnostics) {
       } else {
         for (const v of arm.values) {
           if (v.kind !== "plain-string" && v.kind !== "number") {
-            // An expression of the subject's type, worked out by the compiler.
+            // An expression of the subject's type: worked out as the program runs, in order, when it is not known.
             const t = expr(v, ctx);
             if (T.isError(t) || T.isError(type)) continue;
             if (!T.comparable(type, t)) {
@@ -456,10 +456,7 @@ export function check(resolved, diagnostics) {
               continue;
             }
             const k = evaluate(v);
-            if (k === undefined) {
-              err("S744", v, "an arm's value is one the compiler works out: a value written out, a constant, or made of these");
-              continue;
-            }
+            if (k === undefined) continue;
             v.known = k;
             const first = known.find((x) => V.equal(x.k, k));
             if (first) err("S331", v, `${V.printed(k)} is in this match twice`, [{ file: v.file, span: first.v.span, message: "first here" }]);
@@ -1249,6 +1246,7 @@ export function check(resolved, diagnostics) {
     const LIST_FUNCTIONS = ["count", "join", "first", "last", "filled", "index_of", "append", "insert", "remove_at", "without", "reversed", "sorted", "sum", "smallest", "largest"];
     const SET_FUNCTIONS = ["count", "join", "first", "last"];
     if (sym.name === "count" && (l.t === "map" || l.t === "range" || l.t === "set" || T.isStringLike(l))) return;
+    if (sym.name === "reversed" && T.isStringLike(l)) return;
     if (sym.name === "clear") {
       if (l.t !== "list" && l.t !== "map" && l.t !== "set" && l.t !== "null") err("S369", bound[0], `clear takes a list or a map, and this is ${T.describe(l)}`);
       return;

@@ -417,7 +417,7 @@ export const NATIVES = {
   extend: { pure: true, internal: true, fn: (l, m) => { if (isNull(l)) needed("a list is", "the left side of +="); if (isNull(m)) needed("a list is", "the right side of +="); l.push(...m); return l; } },
   copy: { pure: true, takes: "x:V", fn: (x) => copy(x) },
   without: { pure: true, takes: "l:l x:V", fn: (l, x) => listLike(l.filter((y) => !equal(y, x)), l) },
-  reversed: { pure: true, takes: "l:l", fn: (l) => [...l].reverse() },
+  reversed: { pure: true, takes: "l:l", fn: (l) => (typeof l === "string" ? [...l].reverse().join("") : [...l].reverse()) },
   sorted: { pure: true, takes: "l:l descending:V", fn: (l, descending) => sortItems(valued(l, "an item sorted puts in order"), (v) => v, descending === true) },
   // sorted(l, key: f) (§14.4.2): the items in the order of the values f gave for them, one for each item.
   sort_by_keys: {

@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let s = 85
+print(match true { s >= 90 => "A", s >= 80 => "B", else => "C" })
+print(reversed("abc"))
+# rule 7.10.1
+# prints ["B", "cba"]

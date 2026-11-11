@@ -642,8 +642,9 @@ a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = ful
 e a value of any type, each arm's values of a type that compares with it (S329, §7.10.1); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
 match on an option with no `else` that misses options gives warning W001.
 
-7.10.1. **An arm's values.** Each is words in quotes, a number, or any expression the compiler works out (§11.1;
-one it cannot is S744): `true`, `-1`, a constant's name, `date_of(2026, 1, 2)`, `(1, "a")`. Its type compares
+7.10.1. **An arm's values.** Each is any expression: `true`, `-1`, a constant's name, `date_of(2026, 1, 2)`,
+`(1, "a")`, `limit + 1`, `s >= 90` (with `match true`). The arms are tried in order, and an arm's values only
+when the arms before it did not match. Its type compares
 with the subject's with `==` (§6.6), else S329; an arm is chosen when one of its values equals the subject. So a
 match chooses on a bool, a date or a tuple as it does on words.
 
@@ -1224,7 +1225,7 @@ entry says "or a set" (its items are then options).
 | `clear(l: list<T>) -> list<T>`, `clear(m: map<K, V>) -> map<K, V>` | takes every item out of l itself, or every key out of m itself, and gives it |
 | `copy(x: T) -> T` | a list, a record or a map made anew, with everything inside it copied too (§3.4.2); any other value, x itself |
 | `without(l: list<T>, x: T) -> list<T>` | a new list of the items not equal to x; l is not changed |
-| `reversed(l: list<T>) -> list<T>` | a new list of the items in the other order; l is not changed |
+| `reversed(l: list<T>) -> list<T>`, `reversed(t: string) -> string` | a new list of the items, or new words of the characters, in the other order; l is not changed |
 | `sorted(l: list<T>, descending: bool = false) -> list<T>` | T a number, a date or words (else S367): a new list of the items in order (§6.7); l is not changed; equal items keeping their order, ascending or descending; a null item is F023 (`sorted(filled(l))`) |
 | `sorted(l: list<R>, by: "field", descending: bool = false) -> list<R>` | R a record; `by` is given by its name only (a second value given without a name is `descending`, which is bool); `by` is plain words known before the form opens naming a field of R (S399 when it is not one, with the nearest; S399 when the field's type is not a number, a date or words); the items in the order of that field, equal ones keeping their order; a null item, or one whose field is null, is F023 |
 | `sum(l: list<number>) -> number` | the items added up; no items: 0; a null item is F023 (`sum(filled(l))`) |
@@ -1558,7 +1559,6 @@ its call: the function's name in the call.
 | S741 | `(a, b) = e`, `let (a, b) = e` or `for (a, b) in l` where e, or l's item, is not a tuple of as many values | As many names as the tuple has values. |
 | S742 | a tuple's value given another | A tuple keeps its values; make a new tuple. |
 | S743 | `set(l)` of items that are not words, numbers, dates or bools | A set holds values told apart by their words. |
-| S744 | a `match` arm's value the compiler cannot work out | An arm's value is written out, a constant, or made of these. |
 | S745 | a `match` expression whose arms' types have no join | Every arm gives a value of one type (§3.9). |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |

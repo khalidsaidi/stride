@@ -737,10 +737,6 @@ export const CODES = {
     "when": "`set(l)` of items that are not words, numbers, dates or bools",
     "explanation": "A set holds values told apart by their words."
   },
-  "S744": {
-    "when": "a `match` arm's value the compiler cannot work out",
-    "explanation": "An arm's value is written out, a constant, or made of these."
-  },
   "S745": {
     "when": "a `match` expression whose arms' types have no join",
     "explanation": "Every arm gives a value of one type (§3.9)."
@@ -1511,12 +1507,14 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
-      "reversed(l: list<T>) -> list<T>"
+      "reversed(l: list<T>) -> list<T>",
+      "reversed(t: string) -> string"
     ],
     "names": [
+      "reversed",
       "reversed"
     ],
-    "gives": "a new list of the items in the other order; l is not changed"
+    "gives": "a new list of the items, or new words of the characters, in the other order; l is not changed"
   },
   {
     "section": "14.4 Lists and sets",

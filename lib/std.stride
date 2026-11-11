@@ -252,6 +252,7 @@ export native function copy(x: any) -> any
 # example: without([1, 2, 1], 1) gives [2]
 export native function without(l: any, x: any) -> any
 # example: reversed([1, 2, 3]) gives [3, 2, 1]
+# example: reversed("abc") gives cba
 export native function reversed(l: any) -> any
 # example: sorted([3, 1, 2]) gives [1, 2, 3]
 # example: sorted([3, null, 2]) faults F023
