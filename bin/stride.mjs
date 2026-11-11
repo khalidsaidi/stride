@@ -55,8 +55,8 @@ const COMMANDS = {
   check: ["stride check [path …]", "Every check the compiler makes, writing nothing: a program against its form's header, a script, a test file; a folder, every one in it. No path: the folder you are in. run and compile make these checks first, so check is never needed before them.", { "--json": ["one JSON document: each file and its mistakes and warnings", null] }, "stride check w9.stride"],
   compile: ["stride compile <file.stride> [-o <file.sbc>]", "Compiles to bytecode, beside the source or to -o: the program, the library code it uses, its questions, the boxes each answer goes into, its words and its form's PDF fingerprint; everything a run needs but the PDF. It needs no answers and opens nothing. Share the .sbc with its PDF: stride run file.sbc.", { "--output": ["where the bytecode goes", "file.sbc"], "--json": ["one JSON document: the bytecode written, or the mistakes", null] }, "stride compile w9.stride -o w9.sbc"],
   test: ["stride test [path …] | stride test <file.stride> [name …]", "Tests: a program's in <file>.tests/ (answers in; boxes, prints and faults compared), a test file's expects; a folder, every program with tests and every test file in it. No path: the folder you are in. After one program, names choose its tests.", { "--today": ["the date today() gives, unless a test gives its own", "YYYY-MM-DD"], "--match": ["only the tests whose name holds these words", "words"], "--json": ["one JSON document: every test and what went wrong", null] }, "stride test"],
-  eval: ['stride eval "<expression>"', "The value of one expression, with the standard library and, with --use, a library. An expression starting with a dash and a letter is given after --: stride eval -- -x.", { "--use": ["a library of lib/ to use", "name"], "--today": ["the date today() gives", "YYYY-MM-DD"], "--json": ["one JSON document: the value, or the mistakes or fault", null] }, 'stride eval "pad_left(\\"7\\", 3, \\"0\\")"'],
-  repl: ["stride repl", "A session to try Stride in: declarations and statements are kept, each expression's value is shown, questions are asked as they come. :help, :list, :reset, :quit.", { "--use": ["a library of lib/ to use", "name"], "--today": ["the date today() gives", "YYYY-MM-DD"] }, "stride repl"],
+  eval: ['stride eval "<expression>"', "The value of one expression, with the standard library and, with --import, a library. An expression starting with a dash and a letter is given after --: stride eval -- -x.", { "--import": ["a library of lib/ to use", "name"], "--today": ["the date today() gives", "YYYY-MM-DD"], "--json": ["one JSON document: the value, or the mistakes or fault", null] }, 'stride eval "pad_left(\\"7\\", 3, \\"0\\")"'],
+  repl: ["stride repl", "A session to try Stride in: declarations and statements are kept, each expression's value is shown, questions are asked as they come. :help, :list, :reset, :quit.", { "--import": ["a library of lib/ to use", "name"], "--today": ["the date today() gives", "YYYY-MM-DD"] }, "stride repl"],
   debug: ["stride debug <file.stride> [answers.json|-] [key=value …]", "Runs the program under a debugger at the terminal: break at lines, step in, over and out, see the values and the calls. help lists its commands.", { "--today": ["the date today() gives", "YYYY-MM-DD"] }, "stride debug w9.stride"],
   explain: ["stride explain <code>", "What a mistake, warning or fault means and what to do, from the spec.", {}, "stride explain W009"],
   doc: ["stride doc [word]", "The standard library: every function whose name or description holds the word, with its signature, what it gives, and an example; with no word, all of them.", {}, "stride doc date"],
@@ -686,7 +686,7 @@ async function main(argv) {
         if (e.projectProblem) return fail(e.message);
         throw e;
       }
-      return repl({ use: values.get("--use") ?? null, today, readLine, out, err, prompt, context });
+      return repl({ use: values.get("--import") ?? null, today, readLine, out, err, prompt, context });
     }
 
     case "eval": {
@@ -704,7 +704,7 @@ async function main(argv) {
         for (const m of alone.mistakes) d.add(KIND.SYNTAX, own, m.span, m.message, [], m.code ?? "S010");
         return json ? (done(false, { diagnostics: d.sorted().map((x) => x.toJSON()) }), 1) : (report(d.sorted()), 1);
       }
-      const uses = values.has("--use") ? `import "${values.get("--use")}"\n` : "";
+      const uses = values.has("--import") ? `import "${values.get("--import")}"\n` : "";
       const pdf = "0".repeat(64);
       let context;
       try {
@@ -715,11 +715,11 @@ async function main(argv) {
       }
       const compiled = compile(`form eval\npdf ${pdf}\n${uses}print(\n${own.text}\n)\n`, "eval.stride", { ...context, header: { form: "eval", pdf, boxes: [] }, depth: -1 });
       // Places in the expression are its own, from line 1, column 1 (§17.2); a library's keep their file. A mistake
-      // in the --use line is a usage mistake; one in the lines put around the expression has no place of its own.
+      // in the --import line is a usage mistake; one in the lines put around the expression has no place of its own.
       const before = uses ? 4 : 3; // the lines put before the expression
       const mistakes = compiled.diagnostics.sorted().filter((d) => d.severity === "error");
       const bad = mistakes.find((d) => d.file?.name === "eval.stride" && uses && d.span?.line === 3);
-      if (bad) return usage("eval", `--use ${values.get("--use")}: ${bad.message}`);
+      if (bad) return usage("eval", `--import ${values.get("--import")}: ${bad.message}`);
       const inside = (line) => line > before && line <= before + own.lineCount;
       const moved = (file, span) => {
         if (file?.name !== "eval.stride" || !span) return [file, span];

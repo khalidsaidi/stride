@@ -18,7 +18,7 @@ export function test() {
     const r = stride(...args);
     if (r.status !== status || !(r.stdout + r.stderr).includes(out) || /at .*\.mjs:\d+/.test(r.stderr)) problems.push(`${args.join(" ")}: expected exit ${status} with "${out}", got ${r.status}: ${r.stdout}${r.stderr}`);
   };
-  expect(["eval", "1", "--use"], 2, "--use needs a value");
+  expect(["eval", "1", "--import"], 2, "--import needs a value");
   expect(["eval", "1", "--foo"], 2, "stride eval: there is no option --foo");
   expect(["eval", "1", "--trace"], 2, "stride eval: there is no option --trace");
   expect(["eval", "1", "-o", "x"], 2, "stride eval: there is no option -o");
@@ -32,7 +32,7 @@ export function test() {
   expect(["--help"], 0, "usage:");
   expect(["help", "nosuch"], 2, "no command nosuch");
   expect(["nosuch"], 2, "no command nosuch");
-  expect(["eval", "1", "--use", "nolib"], 2, "there is no lib/nolib.stride");
+  expect(["eval", "1", "--import", "nolib"], 2, "there is no lib/nolib.stride");
   expect(["eval", "--1"], 0, "1");
   expect(["compile", "x.stride", "-o"], 2, "-o needs a value");
   const dir = mkdtempSync(join(tmpdir(), "stride-options-"));

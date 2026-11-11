@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function id<t>(x: t) -> t {
+  return x
+}
+print(id<number, string>(1))
+print(id<string>(1))
+# rule 9.5.2 S780 S367
+# mistake 6:7 S780
+# mistake 7:18 S367

@@ -386,6 +386,15 @@ export function unique<t>(l: list<t>) -> list<t> {
 }
 # A new list of the items of every list in l, in order.
 # example: flatten([[1, 2], [], [3]]) gives [1, 2, 3]
+# The items of a and of b, in pairs, as long as the shorter list.
+# example: zip([1, 2, 3], ["a", "b"]) gives [(1, a), (2, b)]
+export function zip<a, b>(xs: list<a>, ys: list<b>) -> list<(a, b)> {
+  let out: list<(a, b)> = []
+  for i in 0..<min(count(xs), count(ys)) {
+    append(out, (xs[i], ys[i]))
+  }
+  return out
+}
 # example: flatten([[1], null]) faults F023
 export function flatten<t>(l: list<list<t>>) -> list<t> {
   let out: list<t> = []

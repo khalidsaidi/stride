@@ -2,7 +2,7 @@
 // `stride eval`: two expressions side by side, or a complete one followed by text that does not even lex, are a
 // usage mistake (exit 2); an expression starting with "-" is an
 // expression, not an option; a mistake at the expression's end is placed in it, never on the lines put around it;
-// a library --use cannot find is a usage mistake, not one placed in the expression.
+// a library --import cannot find is a usage mistake, not one placed in the expression.
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -21,7 +21,7 @@ export function test() {
     const r = stride(expr);
     if (r.status !== 1 || !r.stderr.startsWith(where)) problems.push(`${JSON.stringify(expr)}: expected a mistake at ${where}, got ${r.status} ${r.stdout}${r.stderr}`);
   }
-  const lib = stride("1", "--use", "nope");
-  if (lib.status !== 2 || !/--use nope/.test(lib.stderr) || lib.stdout.includes("eval:")) problems.push(`--use nope: expected a usage mistake, got ${lib.status} ${lib.stdout}${lib.stderr}`);
+  const lib = stride("1", "--import", "nope");
+  if (lib.status !== 2 || !/--import nope/.test(lib.stderr) || lib.stdout.includes("eval:")) problems.push(`--import nope: expected a usage mistake, got ${lib.status} ${lib.stdout}${lib.stderr}`);
   return problems;
 }

@@ -789,6 +789,10 @@ export const CODES = {
     "when": "an error's code or message given a value",
     "explanation": "An error does not change; `error(message, code: \"…\")` makes another (§3.11)."
   },
+  "S780": {
+    "when": "type arguments for a function that has another number of type parameters",
+    "explanation": "Give one type for each of the function's type parameters, or none."
+  },
   "S760": {
     "when": "a short function `(x) => …` where nothing tells a parameter's type",
     "explanation": "A short function takes its parameters' types from the function type wanted where it stands (§9.12): an argument, a typed let, a field, a return. Elsewhere write them, `(x: number) => …`, or the long form `function(x: number) -> number { … }`."
@@ -1703,6 +1707,16 @@ export const LIBRARY = [
       "map"
     ],
     "gives": "a new list of what f gives for each item, in order"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
+      "zip(xs: list<A>, ys: list<B>) -> list<(A, B)>"
+    ],
+    "names": [
+      "zip"
+    ],
+    "gives": "the items of xs and ys in pairs, in order, as many as the shorter list holds"
   },
   {
     "section": "14.4 Lists and sets",

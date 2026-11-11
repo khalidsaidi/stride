@@ -1,0 +1,16 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function id<t>(x: t) -> t {
+  return x
+}
+function first_or<t>(l: list<t>, d: t) -> t {
+  return if count(l) > 0 then l[0] else d
+}
+let a = 3
+let b = 4
+print(id<number>(1) + 1)
+print(first_or<string>([], "none"))
+print(a < b, a<b)
+print(id<map<string, list<number>>>({"x": [1]}))
+# rule 9.5.2
+# prints ["2", "none", "true true", "{x: [1]}"]

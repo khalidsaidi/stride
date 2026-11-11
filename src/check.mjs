@@ -1165,6 +1165,16 @@ export function check(resolved, diagnostics) {
       else joined.set(c.tv, next);
     }
     for (const [tv, j] of joined) if (j.t !== "null") bindings.set(tv, j);
+    // f<T, …>(…): the type arguments written are the bindings, and the arguments are checked against them (§9.5.2).
+    if (e.typeArgTypes) {
+      const tps = sym.typeParams ?? [];
+      if (tps.length !== e.typeArgTypes.length) {
+        err("S780", e, `${sym.name} has ${tps.length === 0 ? "no type parameters" : `${tps.length} type parameter${tps.length === 1 ? "" : "s"}`}, and is given ${e.typeArgTypes.length}`);
+        return T.ERROR;
+      }
+      tps.forEach((tv, i) => bindings.set(tv, e.typeArgTypes[i]));
+      joinFailed = null;
+    }
     if (joinFailed) {
       // The first argument whose candidate does not join the ones before it (§9.5.1).
       const i = joinFailed.from;

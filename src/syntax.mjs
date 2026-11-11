@@ -1397,6 +1397,16 @@ class Parser {
         }
         const end = this.expect("punct", "]");
         e = { kind: "index", index, target: e, opSpan: open.span, span: join(e.span, end.span) };
+      } else if (this.sym("<") && !t.broken && e.kind === "name" && this.typeArgsAhead()) {
+        // f<number>(x): the call's type arguments, written out (§9.5.2).
+        this.take();
+        const typeArgs = [this.type()];
+        while (this.sym(",")) (this.take(), typeArgs.push(this.type()));
+        this.closeAngle();
+        this.take();
+        const args = this.unsliced(() => this.args(")", true));
+        const end = this.expect("punct", ")", '"," or ")"');
+        e = { kind: "call", args, target: e, typeArgs, span: join(e.span, end.span) };
       } else if (this.sym("(") && !t.broken) {
         this.take();
         const args = this.unsliced(() => this.args(")", true));
@@ -1566,6 +1576,25 @@ class Parser {
     }
     node.writtenValue = written.value;
     return node;
+  }
+
+  // f<…>(: type arguments, when what is between < and its > holds only names, commas and type brackets, and a
+  // "(" follows straight after.
+  typeArgsAhead() {
+    let depth = 0;
+    for (let i = this.at; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      if (t.type === "end" || (i > this.at && t.broken)) return false;
+      if (t.type === "name" || (t.type === "keyword" && ["function"].includes(t.value))) continue;
+      if (t.type !== "punct") return false;
+      if (t.value === "<") depth++;
+      else if (t.value === ">") {
+        depth -= 1;
+        if (depth === 0) return this.tokens[i + 1]?.type === "punct" && this.tokens[i + 1].value === "(" && !this.tokens[i + 1].broken;
+        if (depth < 0) return false;
+      } else if (![",", "(", ")", "->"].includes(t.value)) return false;
+    }
+    return false;
   }
 
   // ( … ) => : a short function (§9.12). The bracket that closes this one is followed by "=>".

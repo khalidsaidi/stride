@@ -903,6 +903,11 @@ to string. When the candidates have no join (a number and words), the
 call is S367 at the first argument whose candidate does not join the ones before it. Once t is bound, every
 argument is checked against its parameter with t replaced (§3.6).
 
+9.5.2. **Type arguments written out.** `f<number>(x)` gives a generic function's type parameters, in order, instead of
+working them out from the arguments; each argument must then fit its parameter's type with them (S367). As many
+type arguments as the function has type parameters (S780). A `<` right after a function's name is a type argument
+list only when a `>` closes it and `(` follows at once; otherwise it is a comparison.
+
 9.6. **Result**: `-> type`, or worked out from the returns when not written (S343, S344). A function with a result
 returns one on every path (S405). One without `-> type` has its result worked out from its returns, so a value
 returned is never a mistake, and its call is a value like any other: with `function identity(n: number) { return n }`,
@@ -1258,6 +1263,7 @@ through it is (§7.11); items may be null. No list given is changed.
 | Signature | Gives |
 |---|---|
 | `map(l: list<T>, f: function(T) -> R) -> list<R>` | a new list of what f gives for each item, in order |
+| `zip(xs: list<A>, ys: list<B>) -> list<(A, B)>` | the items of xs and ys in pairs, in order, as many as the shorter list holds |
 | `filter(l: list<T>, f: function(T) -> bool) -> list<T>` | a new list of the items f gives true for, in order |
 | `reduce(l: list<T>, start: A, f: function(A, T) -> A) -> A` | every item folded into one value: start, then for each item in order f of the value so far and the item; no items: start |
 | `sorted(l: list<T>, key: function(T) -> K, descending: bool = false) -> list<T>` | `key` is given by its name. K a number, a date or words (else S367): a new list of the items in the order of what key gives for each (§6.7), equal ones keeping their order; key is called once for each item; a null it gives is F023 |
@@ -1563,6 +1569,7 @@ its call: the function's name in the call.
 | S720 | throw of a value that is not an error and not words | `throw "message"`, or `throw error("message", code: "CODE")` (§7.19). |
 | S721 | a return in a finally block, or a break or continue there of a loop around the try | The finally block runs to its end, and what the try was doing goes on after it; return, break or continue after the try statement, or in the try or the catch (§7.18.2). |
 | S722 | an error's code or message given a value | An error does not change; `error(message, code: "…")` makes another (§3.11). |
+| S780 | type arguments for a function that has another number of type parameters | Give one type for each of the function's type parameters, or none. |
 | S760 | a short function `(x) => …` where nothing tells a parameter's type | A short function takes its parameters' types from the function type wanted where it stands (§9.12): an argument, a typed let, a field, a return. Elsewhere write them, `(x: number) => …`, or the long form `function(x: number) -> number { … }`. |
 | S761 | a short function with another number of parameters than the function type wanted | Give it as many parameters as the function wanted takes values. |
 | S762 | a record field's default of another type than the field | The default is a value of the field's type (§5.1.1). |
@@ -1587,7 +1594,7 @@ its call: the function's name in the call.
 | `stride run <file\|.sbc\|-> --terminal [answers.json\|-] [key=value …]` | a program in the terminal, and a script always (§17.18); answers §17.12; `--trace` §17.7; `--json` §16.2 |
 | `stride debug <file> [answers] [key=value …]` | §17.15 |
 | `stride test [path …] [--match words] [--json]`, or `stride test <file.stride> [name …]` | as before; folders §17.13 |
-| `stride eval "<expression>" [--use lib] [--today D]` | the value of one expression, with the standard library (and libraries) |
+| `stride eval "<expression>" [--import lib] [--today D]` | the value of one expression, with the standard library (and libraries) |
 | `stride repl` | §17.14 |
 | `stride explain <code>` | §16.4 |
 | `stride guide [topic]` | the guide and `coming-from`, built in; a topic: the parts whose heading holds it; `topics`: the headings |
@@ -1630,7 +1637,7 @@ Options such as `--today` stay allowed.
 failing test, a layout `fmt --check` would change, or a bug; 2 for a usage mistake, after which nothing runs. A
 command takes only the options its row shows: an unknown option, an option of another command, or one that takes a
 value given none, is a usage mistake. So is an argument that names nothing: `stride explain` with a code that is not
-one, `stride test` with a name no test of the program has, `stride eval --use` with a name that is not a library's
+one, `stride test` with a name no test of the program has, `stride eval --import` with a name that is not a library's
 or names no library. A library that holds mistakes is reported as any program's mistakes are, at their places
 (exit 1). A program without tests is said so by `stride test` (exit 1). Expected diagnostics or faults in tests
 do not cause exit 1. A command takes the number of arguments its row
@@ -1773,7 +1780,7 @@ stdout each file it would change. `stride test --match words` runs only the test
 - W004–W007 (a name, answer, function or constant not used yet) are not given in a session.
 - `:list` shows what is kept, numbered; `:answers` the answers kept; `:reset` forgets everything, answers and the
   libraries read; `:help` lists these; `:quit` or the end of stdin ends it.
-- `--use` and `--today` are as `eval`'s; the session stands in the folder it is run in (§4.7).
+- `--import` and `--today` are as `eval`'s; the session stands in the folder it is run in (§4.7).
 
 17.15. **The debugger.** `stride debug <file>` runs a program or script as `--trace` does (the intermediate
 form), with its answers taken exactly as `run` takes them (§17.12), and stops before its first

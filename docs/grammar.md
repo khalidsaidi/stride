@@ -343,7 +343,7 @@ machine and standard library bundled with Node inside);
 - `stride test <file.stride> [name …]` runs the tests in `<file>.tests/`: each `{ "answers", "boxes",
   "asked", "unasked", "loose" }`; every box the test does not list must be empty unless it is loose. `stride test <name>.test.stride` runs a
   test file's `expect`s.
-- `stride eval "<expression>" [--use lib]` prints the value of one expression.
+- `stride eval "<expression>" [--import lib]` prints the value of one expression.
 - `stride explain <code>` explains a mistake's or a fault's code.
 - `stride asm <file> [--ir]` prints the instructions with their source lines, or the intermediate form.
 - `stride fmt <file.stride> … [--check]` puts files in Stride's one layout, comments kept.

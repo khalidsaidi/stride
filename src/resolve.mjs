@@ -849,6 +849,7 @@ export function resolve(loaded, diagnostics) {
         resolveExpr(e.index, scope, unit);
         return;
       case "call":
+        if (e.typeArgs) e.typeArgTypes = e.typeArgs.map((t) => resolveType(t, scope, unit));
         if (e.args.length > 255) err("S601", unit.file, e.span, `this call gives ${e.args.length} arguments; a call gives at most 255`);
         // What is called is a function's name, or any value that holds a function (§9.10): fs[1](2), (f)(2).
         if (e.target.parenthesised || !["name", "field"].includes(e.target.kind)) {

@@ -447,7 +447,7 @@ export function format(text, name = "program.stride") {
       case "slice":
         return `${expr(e.target, 8)}[${e.from.open ? "" : expr(e.from)}${e.exclusive ? "..<" : ".."}${e.to.open ? "" : expr(e.to)}]`;
       case "call":
-        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}(${e.args.map((a) => expr(a)).join(", ")})`;
+        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}${e.typeArgs ? `<${e.typeArgs.map(type).join(", ")}>` : ""}(${e.args.map((a) => expr(a)).join(", ")})`;
       case "named-arg":
         return `${e.name}: ${expr(e.value)}`;
       case "list":
