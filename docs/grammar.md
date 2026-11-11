@@ -133,7 +133,7 @@ text`. A native's parameter may be `any`; its result may be `any` (the type of i
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is yes |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is yes |
 | `skip "box" because "reason"` | a box the workflow leaves alone, and why |
-| `const b = "box"`, then `fill b = e` | a box named once: where a box's name goes, a constant that holds it does too (§7.9.1) |
+| `const b = "box"`, then `fill b = e` | a box named once: where words in quotes must be known (a box's name, a question's words, a reason), a constant that holds them goes too (§7.9.1) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value (or words) |
 | `for i in a..b { }` | its block for each whole number from a to b; a and b worked out once (§7.11) |

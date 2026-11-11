@@ -390,6 +390,7 @@ export function format(text, name = "program.stride") {
 
   function str(e) {
     if (e.kind === "plain-string") return plain(e.value);
+    if (e.kind === "name") return e.name;
     return `"${e.parts.map((p) => (typeof p === "string" ? escape(p) : `{${expr(p)}}`)).join("")}"`;
   }
 

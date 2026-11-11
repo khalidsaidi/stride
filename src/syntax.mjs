@@ -676,7 +676,7 @@ class Parser {
     const value = this.expr();
     if (this.is("name", "faults")) {
       this.take();
-      const fault = this.string("the fault's code or words, in quotes");
+      const fault = this.wordsOrName("the fault's code or words, in quotes, or a constant that holds them");
       return this.node("expect", start, { value, fault });
     }
     const message = this.is("string") ? this.string() : null;
@@ -700,7 +700,7 @@ class Parser {
     let set = null;
     if ((q.value === "one-of" || q.value === "any-of") && this.is("name")) set = this.qname();
     const question = this.node("question-type", q, { form: q.value, set });
-    const printed = this.string("the question's printed words, in quotes");
+    const printed = this.wordsOrName("the question's printed words, in quotes, or a constant that holds them");
     let options = null;
     if (this.sym("{")) {
       this.take();
@@ -717,7 +717,7 @@ class Parser {
       } else if (this.word("check")) {
         this.take();
         const condition = this.expr();
-        const message = this.string("the check's message, in quotes");
+        const message = this.wordsOrName("the check's message, in quotes, or a constant that holds them");
         modifiers.push(this.node("check", m, { condition, message }));
       } else break;
     }
@@ -743,31 +743,31 @@ class Parser {
 
   fill() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.wordsOrName("the box's name, in quotes, or a constant that holds it");
     this.expect("punct", "=", '"=" and what goes into the box');
     return this.node("fill", start, { box, value: this.expr() });
   }
 
   tick() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.wordsOrName("the box's name, in quotes, or a constant that holds it");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("tick", start, { box, condition: this.condition() });
   }
 
   pick() {
     const start = this.take();
-    const box = this.boxName("the radio group's name, in quotes, or a constant that holds it");
-    const button = this.boxName("the button's name, in quotes, or a constant that holds it");
+    const box = this.wordsOrName("the radio group's name, in quotes, or a constant that holds it");
+    const button = this.wordsOrName("the button's name, in quotes, or a constant that holds it");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("pick", start, { box, button, condition: this.condition() });
   }
 
   skip() {
     const start = this.take();
-    const box = this.boxName("the box's name, in quotes, or a constant that holds it");
+    const box = this.wordsOrName("the box's name, in quotes, or a constant that holds it");
     this.expect("keyword", "because", '"because" and the reason');
-    return this.node("skip", start, { box, reason: this.string("the reason, in quotes") });
+    return this.node("skip", start, { box, reason: this.wordsOrName("the reason, in quotes, or a constant that holds them") });
   }
 
   condition() {
@@ -846,10 +846,10 @@ class Parser {
     let any = null;
     if (this.is("name", "any") && this.peek().type === "string") {
       this.take();
-      any = this.string("the question whether there are any, in quotes");
+      any = this.wordsOrName("the question whether there are any, in quotes, or a constant that holds them");
     }
     if (this.is("name", "another") && this.peek().type === "string") this.take();
-    const another = this.string("the question whether there is another, in quotes");
+    const another = this.wordsOrName("the question whether there is another, in quotes, or a constant that holds them");
     return this.node("collect", start, { index, item, list, any, another, body: this.block() });
   }
 
@@ -1132,8 +1132,8 @@ class Parser {
   }
 
   // Words in quotes, with {expression}s: { kind: "string", parts }.
-  // A box's or a button's name (§7.6): words in quotes, or the name of a constant that holds them.
-  boxName(what) {
+  // Words a statement needs known before the form opens (§11.2): in quotes, or the name of a constant that holds them.
+  wordsOrName(what) {
     if (!this.is("name")) return this.string(what);
     const t = this.take();
     return { kind: "name", name: t.value, span: t.span };
