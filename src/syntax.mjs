@@ -367,6 +367,7 @@ class Parser {
       const before = this.at;
       try {
         out.push(this.item());
+        this.ownLine();
       } catch (e) {
         if (!(e instanceof SyntaxMistake)) throw e;
         this.mistakes.push(e);
@@ -377,6 +378,16 @@ class Parser {
       }
     }
     return out;
+  }
+
+  // A statement ends where its line does (§7.1): the next one starts on a line of its own; a block's closing
+  // brace may follow on the same line (`if c { print(1) }`).
+  ownLine() {
+    const last = this.tokens[this.at - 1], next = this.token;
+    if (!last || next.type === "end" || (next.type === "punct" && next.value === "}")) return;
+    // Only where another statement plainly starts: anything else is the mistake the statement itself reports.
+    const starts = next.type === "name" || (next.type === "keyword" && STARTS.has(next.value));
+    if (starts && next.span.line === last.span.endLine) this.mistakes.push(new SyntaxMistake("a statement starts on a line of its own", next.span, "S024"));
   }
 
   // On to the next statement or declaration: at the start of a line, a word that starts one, or a name (an
@@ -633,6 +644,7 @@ class Parser {
       const before = this.at;
       try {
         body.push(this.statement());
+        this.ownLine();
       } catch (e) {
         if (!(e instanceof SyntaxMistake)) throw e;
         this.mistakes.push(e);

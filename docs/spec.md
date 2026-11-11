@@ -380,7 +380,8 @@ S311, S380); empty counts as no.
 7.1. `statement = ask | let | var | fill | tick | pick | if | match | for | foreach | while | collect | break |
 continue | return | assign | call | expect;` A block is `{ statement* }`. Nested blocks, brackets and expressions
 deeper than 200 levels are S019, at the place. Each operator in an expression chain adds one level of nesting,
-including unary operators and postfix field access, indexing, slicing and calls.
+including unary operators and postfix field access, indexing, slicing and calls. A statement starts on a line of its own (S024); a block's closing
+brace may follow its last statement on the same line (`if c { print(1) }`).
 
 7.2. **ask** `ask target ":" qtype "printed words" [options-block] modifier*` asks a question (§8). The target is
 a name followed by zero or more `.field`s; any other shape is S010. S319 stands for a target of that shape that
@@ -1065,6 +1066,7 @@ its call: the function's name in the call.
 | S021 | a `\u{…}` out of range | A character is `\u{0}` to `\u{10FFFF}`, not D800–DFFF. |
 | S022 | an option of a question's own without `option` | A question's own options are written `option "value" "printed words"`. |
 | S023 | `==` where a statement is meant | `x == 1` on its own does nothing; to give a value, `x = 1`. |
+| S024 | two statements on one line | A statement starts on a line of its own; a block may close on the same line. |
 | S101 | `use "std"` | The standard library is in every file already. |
 | S102 | a library path that is not one | Small letters, digits, `-`, `_`, with `/` between folders. |
 | S103 | libraries using each other in a circle | A library cannot use, through others, a library that uses it. |

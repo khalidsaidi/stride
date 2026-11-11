@@ -169,6 +169,10 @@ export const CODES = {
     "when": "`==` where a statement is meant",
     "explanation": "`x == 1` on its own does nothing; to give a value, `x = 1`."
   },
+  "S024": {
+    "when": "two statements on one line",
+    "explanation": "A statement starts on a line of its own; a block may close on the same line."
+  },
   "S101": {
     "when": "`use \"std\"`",
     "explanation": "The standard library is in every file already."
