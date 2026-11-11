@@ -486,6 +486,11 @@ unticked.
 
 7.9. **skip** `skip "box" because "reason"`: a box the workflow leaves alone.
 
+7.9.1. **A box's name.** In `fill`, `tick`, `pick` and `skip`, a box's name, and a button's, is words in quotes, or
+a name that holds them and is known before the form opens (§11.2): after `const name_box = "f1_01[0]"`, `fill
+name_box = full_name` fills that box. So a box whose name in the PDF is a machine's is named once, in the
+writer's own words.
+
 7.10. **if** `if c { … } [else if … | else { … }]`; **match** `match e { "a", "b" => { … } … [else => { … }] }`:
 e an option or words (S329); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
 match on an option with no `else` that misses options gives warning W001.
