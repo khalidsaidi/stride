@@ -100,6 +100,7 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
     pdf = checkPdf(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics);
     out.questions = pdf.questions;
     out.boxes = pdf.boxes;
+    out.written = pdf.written ?? new Set(pdf.boxes.keys());
     out.links = pdf.links;
     out.keys = pdf.keys;
     phase("pdf");

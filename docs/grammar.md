@@ -210,13 +210,9 @@ Loosest first (§6.1): `if c then a else b`; `or`; `and`; `not`; comparisons `==
 
 ## Known before the form opens
 
-A box's name, a button's name, a question's printed words, an option's printed words, the quoted questions of a
-collect, a skip's reason, a list's most, a constant's value, a parameter's default, and the bounds of a loop
-that asks or writes boxes must be known before the form opens (§11.2): made of words and numbers, `yes`, `no`,
-`empty`, constants, the counters of such loops, the numbers of a collect's or a for each's items, lets made of
-them, pure natives of them, list literals of them, and parameters every call gives a known value. A parameter
-used where a known value is needed becomes such a parameter; every call must then give it one, the same in every
-turn of a loop that does not count it.
+A box's name, a button's name, a question's printed words, a skip's reason and a loop's bounds are ordinary
+expressions, worked out as the program runs (§11.2). The compiler works out only a constant's value, a parameter's
+default and an option's printed words.
 
 Loops, collects, for eaches and calls run in the machine as they are written. A question's key is worked out
 as it runs, from where it is asked (§8.6): its name, with the turn of each loop it is in (`other_act[1]`), on the

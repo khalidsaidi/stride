@@ -385,22 +385,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     if (sym.kind === "item") return `${sym.name} is an item of a list, known only when the form is filled`;
     return `${sym.name} is not known before the form opens`;
   };
-  for (const r of required) {
-    if (!known(r.expr, r.fn, new Set(), r.why === "a box's name" || r.why === "a button's name")) {
-      const x = unknownPart(r.expr, r.fn);
-      err("S403", r.expr, `${r.why} must be known before the form opens; ${reason(x)}`);
-    }
-  }
-  for (const { fn, body } of bodies) {
-    for (const c of callsIn(body)) {
-      c.callee.params.forEach((p, i) => {
-        const a = (c.bound ?? c.args)[i];
-        if (!a || a.kind === "default-of" || !c.callee.staticParams.has(p) || known(a, fn)) return;
-        const x = unknownPart(a, fn);
-        err("S404", a, `${c.callee.name}'s ${p.name} names a box or a question, so it must be known before the form opens; ${reason(x)}`, [{ file: p.file, span: p.span, message: `${p.name} is declared here` }]);
-      });
-    }
-  }
+  // What a box's name or a question's words are made of is worked out as the program runs: nothing here must be
+  // known beforehand. The parameters marked above still name a function's questions apart (§8.6).
   for (const [sym, l] of lets) sym.known = !sym.branchDeclared && known(l.s.value, l.fn);
 
   // ----- 4. vars given a value before they are read; returns; nothing after a return

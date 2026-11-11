@@ -494,8 +494,8 @@ async function main(argv) {
       const byKey = new Map();
       for (const l of r.out.links) byKey.set(l.key, [...(byKey.get(l.key) ?? []), l]);
       const linked = new Set(r.out.links.map((l) => l.box));
-      const written = [...r.out.boxes.keys()].filter((b) => !linked.has(b));
-      const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.boxes.has(b));
+      const written = [...r.out.written].filter((b) => !linked.has(b));
+      const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b));
       if (json) {
         out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })) })), writtenFromNoAnswer: written.map(short), onlySkipped: skipped.map(short) }));
         return 0;

@@ -749,14 +749,6 @@ export const CODES = {
     "when": "functions calling each other in a circle",
     "explanation": "The same, through others."
   },
-  "S403": {
-    "when": "something that must be known before the form opens, and is not",
-    "explanation": "§11.2; the message says which part is not and why."
-  },
-  "S404": {
-    "when": "an argument for a parameter that names a box or question, not known",
-    "explanation": "Give a known value at every call."
-  },
   "S405": {
     "when": "a function giving a value on some paths only",
     "explanation": "End every path with a return."
@@ -770,8 +762,8 @@ export const CODES = {
     "explanation": "Declare it, or give it a value, on every path before the read (§12.1.1)."
   },
   "S412": {
-    "when": "a known value that changes between turns of a loop",
-    "explanation": "Box names and printed words in a loop are made from its counter, words and constants."
+    "when": "an option's printed words, or the words after `faults`, not known before the form opens",
+    "explanation": "They are written out, or made of constants."
   },
   "S413": {
     "when": "a constant's value or a default that faults",

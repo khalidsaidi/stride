@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+define row(n: number, v: text) {
+  fill "R{n}" = v
+}
+ask n: number "N"
+ask title: text "Title"
+ask more: yes-no "{title}, is there more?"
+fill "Box{n}" = "x"
+for i in 1..n {
+  fill "B{i}" = "y"
+}
+row(n, title)
+tick "More" when more
+# rule 11.2
+# box Box2 text
+# box B1 text
+# box B2 text
+# box B3 text
+# box R2 text
+# box More check
+# run two
+# answers {"n": "2", "title": "Dr", "more": "yes"}
+# boxes {"Box2": "x", "B1": "y", "B2": "y", "R2": "Dr", "More": "Yes"}
+# run a box the form lacks
+# answers {"n": "3"}
+# fault F016

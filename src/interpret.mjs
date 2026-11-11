@@ -246,20 +246,24 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
         return;
       }
       case "fill": {
-        const box = program.prefix + words(expr(s.box, locals));
-        writes.set(box, words(expr(s.value, locals)));
+        const name = words(expr(s.box, locals));
+        const w = words(expr(s.value, locals));
+        writes.set(boxAt(name), w);
         return;
       }
       case "tick": {
-        const box = program.prefix + words(expr(s.box, locals));
+        const name = words(expr(s.box, locals));
         const on = truthy(expr(s.cond, locals));
+        const box = boxAt(name);
         writes.set(box, on ? boxes.get(box)?.on ?? "Yes" : "Off");
         return;
       }
       case "pick": {
-        const box = program.prefix + words(expr(s.box, locals));
+        const name = words(expr(s.box, locals));
         const button = words(expr(s.button, locals));
-        if (truthy(expr(s.cond, locals))) writes.set(box, button);
+        const cond = truthy(expr(s.cond, locals));
+        const box = boxAt(name);
+        if (cond) writes.set(box, button);
         return;
       }
       case "skip":
@@ -279,6 +283,13 @@ export function interpret(program, fn, args = [], { answers = {}, boxes = new Ma
     for (const i of x.order ?? parts.keys()) out[i] = expr(parts[i], locals);
     return out;
   }
+
+  // A box by the name the program gives it: one of the form's, else F016 (as the machine, runtime/vm.mjs).
+  const boxAt = (name) => {
+    const full = program.prefix + name;
+    if (boxes.size && !boxes.has(full)) fault("F016", `the program writes the box "${name}", which it does not know`);
+    return full;
+  };
 
   function expr(x, locals) {
     switch (x.e) {

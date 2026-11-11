@@ -1,9 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-define row(n: number) {
-  fill "R{n}" = "x"
-}
-ask k: number "K"
-row(k)
-# rule 11.2 S404
-# mistake 7 S404

@@ -389,6 +389,7 @@ const WORDS = {
 export function checkPdf(program, header, diagnostics, { discover = false } = {}) {
   // A code W… is a warning: the program compiles all the same.
   const err = (code, node, message, notes) => !discover && (code.startsWith("W") ? diagnostics.warn(KIND.PDF, node?.file ?? null, node?.span ?? null, message, notes ?? [], code) : diagnostics.add(KIND.PDF, node?.file ?? null, node?.span ?? null, message, notes, code));
+  let unknownName = false; // a box or button name the check could not work out beforehand
   const once = new Set();
   const errOnce = (code, key, node, message, notes) => {
     if (once.has(key)) return;
@@ -747,7 +748,8 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
 
   function boxName(s, name) {
     if (isTop(name) || typeof name !== "string") {
-      errOnce("S403", `name\t${s.node?.span?.start}`, s.node, "the PDF check cannot tell which box this is: its name depends on an answer, or working it out faults; it must be known before the form opens");
+      // A name worked out from an answer: the run says which box it is; the check passes it over.
+      unknownName = true;
       return null;
     }
     return prefix + name;
@@ -760,10 +762,8 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
         questions.add(s.q);
         out.push(st);
         if (isTop(key)) {
-          errOnce("S403", `key\t${s.node?.span?.start}`, s.node, "this question's key depends on an answer; it must be known before the form opens");
-          continue;
+          continue; // a key worked out from an answer: the run asks it; the check passes it over
         }
-        if (isTop(printed)) errOnce("S403", `printed\t${s.node?.span?.start}`, s.node, "this question's printed words depend on an answer; they must be known before the form opens");
         const first = under(st.asked.get(key), st);
         if (first) {
           errOnce("S507", `asked\t${key}\t${s.node?.span?.start}`, s.node, `the question ${key} is asked twice when the form is filled one way`, [{ file: first.node?.file, span: first.node?.span, message: "asked here first" }, ...fromCalls()]);
@@ -838,7 +838,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
         let box = first;
         if (s.op === "pick") {
           if (isTop(button)) {
-            errOnce("S403", `button\t${s.node?.span?.start}`, s.node, "this button's name depends on an answer; it must be known before the form opens");
+            unknownName = true;
             continue;
           }
           box = found.find((b) => b.on === button);
@@ -1507,8 +1507,13 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
   analyse(program.main, [], new State());
   if (discover) return { boxes, questions: [...questions], links: [], maxOf, keys, discovered: [...discovered.values()] };
 
-  // Every box written or skipped somewhere.
-  const missing = header.boxes.filter((b) => !done.has(keyOf(b)));
+  // The machine knows every box of the form, whichever the check saw written: a name worked out as the program
+  // runs is looked up among them.
+  const written = new Set(boxes.keys()); // the boxes the check saw written
+  for (const b of header.boxes) if (!boxes.has(b.field)) boxes.set(b.field, { kind: b.kind === "check" ? "tick" : b.kind === "radio" ? "pick" : "fill", on: b.kind === "check" ? b.on ?? "Yes" : null });
+
+  // Every box written or skipped somewhere; not said when a name could not be told beforehand.
+  const missing = unknownName ? [] : header.boxes.filter((b) => !done.has(keyOf(b)));
   for (const b of missing.slice(0, 40)) err("W009", program.formNode ?? null, `the box "${b.field.slice(prefix.length)}"${b.kind === "radio" ? ` button "${b.on}"` : ""} (${b.kind}, page ${b.page}${b.near?.[0] ? `, beside "${b.near[0].slice(0, 60)}"` : ""}) is neither written nor skipped`);
   if (missing.length > 40) err("W010", program.formNode ?? null, `and ${plural(missing.length - 40, "more box", "more boxes")} neither written nor skipped`);
 
@@ -1535,7 +1540,7 @@ export function checkPdf(program, header, diagnostics, { discover = false } = {}
     }
   }
 
-  return { boxes, questions: [...questions], links: [...links.values()], maxOf, keys };
+  return { boxes, written, questions: [...questions], links: [...links.values()], maxOf, keys };
 }
 
 // Printed words, compared without case, dashes of every kind, quotes of every kind, and runs of spaces.

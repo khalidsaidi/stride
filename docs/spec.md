@@ -515,7 +515,7 @@ line. Statements after a `return`, `break` or `continue` in the same block never
 7.17. **expect** (at the top level of a test file only; in a program, in a library, or inside any function, a
 test file's included, it is S236): `expect e ["words"]`: e yes-no; the expectation fails with the words when e is
 not yes.
-`expect e faults "code or words"`: working out e must be a fault. The words are known before the form opens (§11.2, S403). A selector matching F[0-9]{3} exactly matches
+`expect e faults "code or words"`: working out e must be a fault. The words are known before the form opens (S412). A selector matching F[0-9]{3} exactly matches
 only the fault code. Every other selector matches a case-sensitive substring of the message. There is no message
 fallback when the code differs: `fail("F001 happened")` faults with F013, and does not satisfy `faults "F001"`. The test passes only when
 both engines give that fault. Its expression may be a call of a function that gives no value (`expect fail("stop")
@@ -852,9 +852,7 @@ does. An option's button is found the same way: `match o { "a" => { tick "A" whe
 and `let isa = o == "a"` with `tick "A" when isa` each make A option a's box. S517 asks for at least one of an
 answer's boxes, as above.
 
-10.7. Box names, button names, question keys and printed words must be known before the form opens (§11). The
-flow phase refuses any that is not (S403) before the PDF check runs, so the PDF check always knows every box and
-question it follows.
+10.7. Box names, button names, question keys and printed words are worked out as the program runs (§11.2).
 
 ## 11. Known before the form opens
 
@@ -868,10 +866,12 @@ call of a pure Stride function (§9.9) on known values is known too, so a functi
 (`fill "Make{suffix(n)}" = v.make`). A known value is therefore a scalar, an option, a set, or
 a list of known values (§8.6.3 encodes each).
 
-11.2. Must be known: a box's and a button's name, a question's printed words and an option's, the questions of a
-collect, a skip's reason, the words after `faults` in a test, a list's most, a constant's value, a parameter's default, and the bounds of a loop that
-asks or writes boxes (S403). A parameter used where a known value is needed becomes known-only; every call gives it
-a known value (S404). Such a value must be the same in every turn of a loop that does not count it (S412).
+11.2. **Worked out as the program runs.** A box's name and a button's, a question's printed words, a check's
+message, a skip's reason, a collect's questions and a loop's bounds are ordinary expressions: they may be made of
+answers, vars and calls, and are worked out when the statement runs (`fill "Row{n}" = v`, with n an answer). A
+box's name written out that the form does not have is mistake S508; one worked out as the program runs that the
+form does not have stops the run with F016. The compiler itself works out only a constant's value (S304), a
+parameter's default (S393), an option's printed words and the words after `faults` (S412).
 
 11.3. **A fault in what the compiler works out.** The compiler works out a constant's value (§5.3) and a
 parameter's default (§9.2). One whose working out faults (`const X = 1 / 0`) is mistake S413 at the operation,
@@ -1388,12 +1388,10 @@ its call: the function's name in the call.
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not known before the form opens, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
 | S401 | a function calling itself | Every program ends; a function may not call itself. |
 | S402 | functions calling each other in a circle | The same, through others. |
-| S403 | something that must be known before the form opens, and is not | §11.2; the message says which part is not and why. |
-| S404 | an argument for a parameter that names a box or question, not known | Give a known value at every call. |
 | S405 | a function giving a value on some paths only | End every path with a return. |
 | S406 | a statement after return, break or continue | It never runs; remove it. |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
-| S412 | a known value that changes between turns of a loop | Box names and printed words in a loop are made from its counter, words and constants. |
+| S412 | an option's printed words, or the words after `faults`, not known before the form opens | They are written out, or made of constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |

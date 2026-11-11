@@ -28,7 +28,7 @@ export function test() {
     expect(["new", "hello"], 1, "is there already");
     expect(["new", "bad name"], 2, "is not a form id");
     expect(["new", "consent", "--pdf", "consent.pdf"], 0, "consent.boxes.json");
-    expect(["check", "consent.stride"], 0, "no mistakes (1 question, 1 box)");
+    expect(["check", "consent.stride"], 0, "no mistakes (1 question, 2 boxes)");
     expect(["test", "consent.stride"], 0, "1 test passed");
     expect(["map", "consent.stride"], 0, "name                                 = name");
     expect(["map", "consent.stride"], 0, "only skipped\n  agree");

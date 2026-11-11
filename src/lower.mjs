@@ -68,7 +68,7 @@ export function lower(resolved, diagnostics, options = {}) {
   function knownText(ctx, e, why) {
     const v = evaluate(e, ctx.known);
     if (v === undefined) {
-      if (diagnostics.empty) err("S412", e, `${why} must be the same in every turn of a loop: words, or constants`);
+      if (diagnostics.empty) err("S412", e, `${why} must be known before the form opens: words, or constants`);
       return "";
     }
     return textOf(v);
