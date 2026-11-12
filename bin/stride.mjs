@@ -71,6 +71,7 @@ const COMMANDS = {
   lsp: ["stride lsp", "The language server, for editors: mistakes as you type, completion, signatures, going to a definition, references, renaming, what a name is.", {}, "stride lsp"],
   dap: ["stride dap", "The debugger for editors (the Debug Adapter Protocol): breakpoints, stepping, the calls and their values.", {}, "stride dap"],
   vscode: ["stride vscode [-o <file.vsix>]", "Writes the VS Code extension, to install with: code --install-extension stride.vsix", { "--output": ["where it goes; else stride-<version>.vsix here", "file.vsix"] }, "stride vscode"],
+  runtime: ["stride runtime [-o <file.mjs>]", "Writes Stride's machine for a page of your own: one ES module with no imports, exporting load(bytes), run(program, answers, options), boxValues(program, writes), convert, stringOf, faultWords and VERSION. A host page loads a compiled workflow (.sbc) with it, runs it on the answers so far, shows each step (a question the run reached: its key, type, printed words, options and default) as it likes, and puts the boxes' values into the PDF.", { "--output": ["where it goes; else stride-runtime.mjs here", "file.mjs"] }, "stride runtime -o site/stride-runtime.mjs"],
   help: ["stride help [command]", "These commands, or one command's options and an example.", {}, "stride help run"],
   version: ["stride version", "The tools' version, the language's (§21) and the bytecode's, and the build.", {}, "stride version"],
 };
@@ -78,7 +79,7 @@ const COMMANDS = {
 const COMMON = { "--help": ["this command's help", null], "--quiet": ["no warnings and no status lines; never what the command gives, nor its mistakes or faults", null], "--color": ["colour: auto (at a terminal, without NO_COLOR), always or never", "auto|always|never"] };
 const SHORT = { "-h": "--help", "-q": "--quiet", "-o": "--output" };
 // How many arguments each command takes.
-const ARGS = { run: [1, Infinity], check: [0, Infinity], compile: [1, 1], test: [0, Infinity], eval: [1, 1], repl: [0, 0], debug: [1, Infinity], explain: [1, 1], doc: [0, 1], guide: [0, 1], new: [1, 1], init: [0, 1], header: [1, 1], map: [1, 1], asm: [1, 1], fmt: [1, Infinity], lsp: [0, 0], dap: [0, 0], vscode: [0, 0], help: [0, 1], version: [0, 0] };
+const ARGS = { run: [1, Infinity], check: [0, Infinity], compile: [1, 1], test: [0, Infinity], eval: [1, 1], repl: [0, 0], debug: [1, Infinity], explain: [1, 1], doc: [0, 1], guide: [0, 1], new: [1, 1], init: [0, 1], header: [1, 1], map: [1, 1], asm: [1, 1], fmt: [1, Infinity], lsp: [0, 0], dap: [0, 0], vscode: [0, 0], runtime: [0, 0], help: [0, 1], version: [0, 0] };
 
 const USAGE = `stride ${LANGUAGE}: the Stride tools\n\nusage:\n${Object.values(COMMANDS).map(([u]) => `  ${u}`).join("\n")}\n\nstride help <command> says more; stride guide says how to write Stride.`;
 function helpOf(command) {
@@ -499,6 +500,16 @@ async function main(argv) {
       const w = writing(to, () => writeFileSync(to, vsix()));
       if (w) return fail(w);
       status(`${to}: the VS Code extension; install it with: code --install-extension ${to}`);
+      return 0;
+    }
+    case "runtime": {
+      // The machine for a host's page (§17.19), one ES module.
+      const { runtimeModule } = await import("../src/runtime-module.mjs");
+      const to = values.get("--output") ?? "stride-runtime.mjs";
+      const text = await runtimeModule({ language: LANGUAGE, build: BUILD, bytecode: VERSION });
+      const w = writing(to, () => writeFileSync(to, text));
+      if (w) return fail(w);
+      status(`${to}: Stride's machine for a page, running bytecode version ${VERSION}`);
       return 0;
     }
     case "map": {

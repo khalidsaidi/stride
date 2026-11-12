@@ -1759,6 +1759,7 @@ its call: the function's name in the call.
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
 | `stride vscode [-o file.vsix]` | §17.16 |
+| `stride runtime [-o file.mjs]` | the machine for a page of your own, one ES module (§17.19) |
 | `stride asm <file> [--ir]` | the instructions with their places, or the intermediate form |
 | `stride fmt <path …> [--check]` | Stride's one layout, comments kept; folders §17.13 |
 | `stride help [command]` | the commands; with a command, its options and an example. `--help` or `-h` after a command, or alone, says the same (exit 0) |
@@ -2008,7 +2009,7 @@ the open file under `stride dap`). It runs `stride`, or the command the `stride.
 17.17. **Building, installing and sharing.** This release supports Linux x64, including WSL2. Other platforms
 are outside this release's scope. Building or running from the repository requires Node 22 or later and the
 repository's dependencies. `node scripts/build.mjs` makes `dist/stride`, one Linux executable holding the
-tools, the standard library, the guides, the workflow page (§17.18) and the VS Code extension; the installed executable
+tools, the standard library, the guides, the workflow page (§17.18), the machine for a page (§17.19) and the VS Code extension; the installed executable
 needs neither a separate Node installation nor the repository.
 
 A build's name is `YYYY-MM-DD.` and twelve hex digits of the sha256 of the bundle as built (everything put in
@@ -2064,6 +2065,27 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 - Sample answers belong to tests (§17.8), which run a program on them and compare what it does; looking at the
   source's logic step by step is the debugger's (§17.15). `stride check` remains, for checking without running or
   writing anything, and for a folder (§17.13).
+
+17.19. **The machine for a page.** `stride runtime` writes Stride's virtual machine as one ES module
+(`stride-runtime.mjs`, or `-o`) with no imports, for a host that shows a workflow in a page of its own, as Stride's
+runner does in the page of §17.18. Its first line names the language, the build and the bytecode version it runs; a
+host writes it again after upgrading stride and compiling its programs again. It reaches nothing outside: no
+network, storage, page or clock but `today()`. It exports:
+- `load(bytes)`: a compiled program (§18) from its bytes, checked as §18.3 says; a program of another bytecode
+  version is refused (`BytecodeError`). The program's `boxes` are its form's boxes by full field name with their
+  kinds (`fill`, `tick`, `pick`) and on values, its `questions` every question with its type and options, and its
+  `links` the boxes each question's answer goes into, by key, as `stride map` says (§17.6.1).
+- `run(program, answers, { today, limit })`: one run on the answers so far, by key (§8.6), as `stride run` makes it
+  (§17.18). It gives `steps`, each question the run reached, in order, with its `key`, its `question` (`type`, and
+  `options`, each a `value` and its `printed` words), its `printed` words, its `default`, `answered`, the messages of
+  its `failed` checks and why its answer is `unreadable`; `writes`; the run's own `links`; `prints`; and `fault`.
+- `boxValues(program, writes)`: what each box of the form holds after the run, by its full field name: the value
+  written, else empty (`""` for words, `"Off"` for a check box or a radio group).
+- `convert(question, raw)`, `stringOf(value)`, `faultWords(fault)` and `VERSION`, the bytecode version it runs.
+
+How a question is shown, and any words of the host's own around it (help, headings, other languages), are the
+host's, keyed by the question's key. For the same answers and date it reaches the same questions and writes the
+same boxes as §17.18's three places.
 
 ## 18. Bytecode
 

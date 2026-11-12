@@ -812,6 +812,12 @@ tick "agree" when agrees
   pattern, `qty[…]`), the boxes a name worked out as the program runs may write, and those it never names.
 - A program never changes the PDF: it only fills its boxes, and nothing a person types leaves their browser.
 
+**Your own page.** `stride runtime -o stride-runtime.mjs` writes the machine as one ES module with no imports, for a
+site that shows the workflow its own way: `load` the `.sbc`'s bytes, `run` it on the answers so far, show its
+`steps` (each a question the run reached: its key, type, printed words, options and default), and put
+`boxValues(program, run.writes)` into the PDF's boxes. Help texts, headings and translations are your page's,
+keyed by each question's key (§17.19).
+
 ## 21. Sharing a program
 
 `stride compile w9.stride` writes `w9.sbc`: the whole program in one file, with its libraries, its questions and
