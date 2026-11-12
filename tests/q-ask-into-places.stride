@@ -1,0 +1,32 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address { street: string, city: string }
+record party { name: string, address: address }
+function ask_party(p: party, who: string) {
+  ask p.name: string "{who}'s name"
+  ask p.address.street: string "{who}'s street"
+}
+function ask_city() {
+  ask plaintiff.address.city: string "City"
+}
+var plaintiff = new party {}
+ask_party(plaintiff, "Plaintiff")
+ask_city()
+let held = new party {}
+ask held.name: string "Held"
+var homes: map<string, address>
+for k in ["home", "work"] {
+  ask homes[k].street: string "Street of {k}"
+}
+var lines: list<string>
+ask lines[0]: string "First line"
+ask lines[1]: string "Second line"
+var amounts: map<string, number>
+ask amounts["rent"]: number "Rent"
+print(plaintiff.name, plaintiff.address.street, plaintiff.address.city, held.name)
+print(homes["home"].street, homes["work"].street, lines, amounts["rent"])
+fill "A" = plaintiff.name
+# rule 7.2.1 7.2 8.6.2
+# answers {"ask_party.p.name": "Ann", "ask_party.p.address.street": "Main", "ask_city.plaintiff.address.city": "Ely", "held.name": "H", "homes[home].street[home]": "Elm", "homes[work].street[work]": "Oak", "lines[0]": "a", "lines[1]": "b", "amounts[rent]": "100"}
+# asked ["ask_party.p.name", "ask_party.p.address.street", "ask_city.plaintiff.address.city", "held.name", "homes[home].street[home]", "homes[work].street[work]", "lines[0]", "lines[1]", "amounts[rent]"]
+# prints ["Ann Main Ely H", "Elm Oak [a, b] 100"]

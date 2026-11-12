@@ -419,7 +419,7 @@ export const CODES = {
   },
   "S319": {
     "when": "an answer into something that cannot hold it",
-    "explanation": "An answer goes into a new name, a var's field or a collect's item."
+    "explanation": "An answer goes into a new name, or a field or an item reached from a var, a let, a parameter or a loop's or collect's item (§7.2.1)."
   },
   "S320": {
     "when": "an answer of another type than its place",
@@ -428,6 +428,14 @@ export const CODES = {
   "S321": {
     "when": "a var's field asked twice",
     "explanation": "One question per field."
+  },
+  "S820": {
+    "when": "`f(…) as \"…\"` with a name that is not letters, digits and `_`",
+    "explanation": "The name a call's questions are keyed under is a key's segment: `as \"home\"` (§8.6.2)."
+  },
+  "S821": {
+    "when": "`f(…) as \"…\"` of a function that asks nothing, of the library's or of a function value",
+    "explanation": "Only a call of a function declared with `function` that can reach a question has questions to key under a name (§8.6.2)."
   },
   "S322": {
     "when": "a default of another type",

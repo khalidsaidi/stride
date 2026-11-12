@@ -25,7 +25,8 @@
 //               | "(" type ("," type)+ ")" | "function" "(" [type ("," type)*] ")" ["->" type] | "any" | qname
 //   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
-//   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
+//   ask         = "ask" place ":" qtype string [options-block] ("default" expr | "check" expr string)*
+//   place       = name ("." word | "[" expr "]")*
 //   if          = "if" expr block ["else" (if | block)]
 //   let         = "let" (name [":" type] | names) "=" expr;  names = "(" name ("," name)+ ")"
 //   assign      = (postfix | "(" postfix ("," postfix)+ ")") "=" expr
@@ -40,7 +41,7 @@
 //   compare     = range [("=="|"!="|"<"|"<="|">"|">="|"in"|"not" "in") range];  range = sum [(".." | "..<") sum]
 //   sum         = product (("+"|"-") product)*;  product = unary (("*"|"/"|"//"|"%") unary)*
 //   unary       = "-" unary | power;  power = postfix ["**" unary]
-//   postfix     = primary ("." word | "." digits | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")")*   (no line break before "[" or "(")
+//   postfix     = primary ("." word | "." digits | "[" expr "]" | "[" [expr] (".." [expr] | "..<" expr) "]" | "(" [args] ")" ["as" plain])*   (no line break before "[" or "(")
 //   primary     = number | string | "true" | "false" | "null" | "[" [args] "]" | "new" qname "{" fields "}" | name
 //               | "(" expr ")" | "(" expr ("," expr)+ ")" | "function" "(" [params] ")" ["->" type] block
 //               | "[" expr fors "]" | "{" expr ":" expr fors "}" | "{" [expr ":" expr ("," expr ":" expr)*] "}"
@@ -909,12 +910,25 @@ class Parser {
   ask() {
     const start = this.take();
     const p = this.token;
+    // The place the answer goes into (§7.2): a name, then fields and positions, as an assignment's target.
     const names = [this.name("the answer's name")];
-    while (this.sym(".")) {
-      this.take();
-      names.push(this.fieldName());
+    let place = { kind: "name", name: names[0], span: p.span };
+    let indexed = false;
+    while (this.sym(".") || (this.sym("[") && !this.token.broken)) {
+      if (this.sym(".")) {
+        this.take();
+        const n = this.token;
+        names.push(this.fieldName());
+        place = { kind: "field", name: names.at(-1), target: place, span: join(place.span, n.span), nameSpan: n.span };
+      } else {
+        const open = this.take();
+        const index = this.unsliced(() => this.expr());
+        const end = this.expect("punct", "]");
+        place = { kind: "index", index, target: place, opSpan: open.span, span: join(place.span, end.span) };
+        indexed = true;
+      }
     }
-    const target = this.node("path", p, { names });
+    const target = this.node("path", p, indexed ? { names, place, indexed } : { names, place });
     this.expect("punct", ":", '":" and the question\'s type');
     const q = this.token;
     if (!(this.is("name") && QUESTION_TYPES.includes(q.value))) {
@@ -1413,6 +1427,12 @@ class Parser {
         const args = this.unsliced(() => this.args(")", true));
         const end = this.expect("punct", ")", '"," or ")"');
         e = { kind: "call", args, target: e, span: join(e.span, end.span) };
+        // f(x) as "home": the call's questions are keyed under that name (§8.6.2).
+        if (this.word("as") && this.peek().type === "string") {
+          this.take();
+          const name = this.plain("the name its questions are keyed under, in quotes");
+          e = { ...e, keyAs: name, span: join(e.span, name.span) };
+        }
       } else return e;
     }
   }

@@ -381,7 +381,7 @@ export function resolve(loaded, diagnostics) {
     const out = new Map();
     const walk = (list) => {
       for (const s of list) {
-        if (s.kind === "ask" && s.target.names.length === 1 && !out.has(s.target.names[0])) out.set(s.target.names[0], s);
+        if (s.kind === "ask" && s.target.names.length === 1 && !s.target.indexed && !out.has(s.target.names[0])) out.set(s.target.names[0], s);
         if ((s.kind === "let" || s.kind === "var") && !out.has(s.name)) out.set(s.name, s);
         if (s.kind === "if") (walk(s.then), walk(s.otherwise));
         if (s.kind === "match") for (const a of s.arms) walk(a.body);
@@ -650,8 +650,14 @@ export function resolve(loaded, diagnostics) {
     for (const m of s.modifiers) {
       if (m.kind === "default") resolveExpr(m.value, scope, unit);
     }
-    if (rest.length) {
-      // An answer into a record's field: the record is a collect's item or a var.
+    if (s.target.indexed) {
+      // An answer into a place with positions (§7.2): the place is read as an assignment's target is.
+      resolveExpr(s.target.place, scope, unit);
+      let root = s.target.place;
+      while (root.kind !== "name") root = root.target;
+      s.target.symbol = root.symbol ?? null;
+    } else if (rest.length) {
+      // An answer into a record's field, reached from a name that holds the record.
       const base = lookupName(head, s.target, scope, unit);
       s.target.symbol = base;
     } else {

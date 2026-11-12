@@ -6,5 +6,5 @@ enum s {
 ask x: any_of s "X"
 tick "E" when x == null
 tick "F" when x == null
-# boxes {"E": "Yes", "F": "Yes"}
+# boxes {}
 # rule 3.2 6.6

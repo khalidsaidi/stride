@@ -187,7 +187,7 @@ export function format(text, name = "program.stride") {
     switch (s.kind) {
       case "ask": {
         const q = s.question.set ? `${s.question.form} ${s.question.set}` : s.question.form;
-        let head = `ask ${s.target.names.join(".")}: ${q} ${str(s.printed)}`;
+        let head = `ask ${s.target.indexed ? expr(s.target.place) : s.target.names.join(".")}: ${q} ${str(s.printed)}`;
         const mods = s.modifiers.map((m) => (m.kind === "default" ? `default ${expr(m.value)}` : `check ${expr(m.condition)} ${str(m.message)}`));
         if (s.options) {
           put(s, indent, `${head} {`);
@@ -447,7 +447,7 @@ export function format(text, name = "program.stride") {
       case "slice":
         return `${expr(e.target, 8)}[${e.from.open ? "" : expr(e.from)}${e.exclusive ? "..<" : ".."}${e.to.open ? "" : expr(e.to)}]`;
       case "call":
-        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}${e.typeArgs ? `<${e.typeArgs.map(type).join(", ")}>` : ""}(${e.args.map((a) => expr(a)).join(", ")})`;
+        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}${e.typeArgs ? `<${e.typeArgs.map(type).join(", ")}>` : ""}(${e.args.map((a) => expr(a)).join(", ")})${e.keyAs ? ` as ${str(e.keyAs)}` : ""}`;
       case "named-arg":
         return `${e.name}: ${expr(e.value)}`;
       case "list":

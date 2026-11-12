@@ -1,0 +1,31 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record member { name: string, age: number }
+var members: list<member>
+collect x in members "Another member?" {
+  ask x.name: string "Name"
+  ask x.age: number "Age"
+}
+var names: list<string>
+collect n in names "Another name?" {
+  ask n: string "Name"
+}
+fill "Count" = count(members)
+fill "Who" = join(["{m.name} {m.age}" for m in members], ", ")
+fill "Names" = count(names)
+# rule 8.5.2 8.5.1
+# run nothing answered
+# asked ["members[0].name", "members[0].age", "names[0]"]
+# boxes {"Count": "0", "Who": "", "Names": "0"}
+# run one field of the first
+# answers {"members[0].age": 30}
+# asked ["members[0].name", "members[0].age", "members[0]#another", "names[0]"]
+# boxes {"Count": "1", "Who": " 30", "Names": "0"}
+# run an empty answer counts
+# answers {"names[0]": ""}
+# asked ["members[0].name", "members[0].age", "names[0]", "names[0]#another"]
+# boxes {"Count": "0", "Who": "", "Names": "1"}
+# run another
+# answers {"members[0].name": "A", "members[0]#another": true}
+# asked ["members[0].name", "members[0].age", "members[0]#another", "members[1].name", "members[1].age", "members[1]#another", "names[0]"]
+# boxes {"Count": "2", "Who": "A ,  ", "Names": "0"}

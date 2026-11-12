@@ -340,7 +340,7 @@ export function check(resolved, diagnostics) {
     text(s.printed, ctx, "a question's printed words");
     if (s.set?.anonymous) for (const o of s.set.options) text(o.printed, ctx, "an option's printed words");
     const target = s.target;
-    if (target.names.length === 1) {
+    if (target.names.length === 1 && !target.indexed) {
       const sym = target.symbol;
       if (sym?.kind === "answer") {
         // The same answer asked in another branch must be of the same type.
@@ -350,6 +350,14 @@ export function check(resolved, diagnostics) {
       else if (sym?.kind === "item") {
         if (!T.fits(answer, sym.type ?? T.ERROR)) err("S316", target, `the items of ${sym.node.list} are ${T.describe(sym.type)}, and this question's answer is ${T.describe(answer)}`);
       }
+    } else if (target.indexed) {
+      // A place with positions (§7.2): typed as an assignment's target is; the answer fits the place.
+      const type = expr(target.place, ctx);
+      const base = target.symbol;
+      const shown = describeExpr(target.place);
+      if (base && !receives(base)) err("S319", target, `an answer goes into a new name, or into a field or an item reached from a var, a let or a parameter; ${base.name} is ${refusal(base)}`);
+      else if (target.place.kind === "index" && (target.place.target.type?.t === "tuple" || T.isStringLike(target.place.target.type ?? T.ERROR))) err("S319", target, `${describeExpr(target.place.target)} is ${T.describe(target.place.target.type)}, whose positions cannot hold an answer; a list's item or a map's key can`);
+      else if (!T.isError(type) && !T.fits(answer, type)) err("S320", target, `${shown} is ${T.describe(type)}, and this question's answer is ${T.describe(answer)}`);
     } else if (target.symbol) {
       const base = target.symbol;
       let type = base.type ?? T.ERROR;
@@ -369,10 +377,10 @@ export function check(resolved, diagnostics) {
         }
         type = field.type;
       }
-      if (!["item", "var"].includes(base.kind)) err("S319", target, `an answer goes into a new name, a var's field or a collect's item; ${base.name} is ${what(base)}`);
+      if (!receives(base)) err("S319", target, `an answer goes into a new name, or into a field or an item reached from a var, a let or a parameter; ${base.name} is ${refusal(base)}`);
       else if (!T.isError(type) && !T.fits(answer, type)) err("S320", target, `${target.names.join(".")} is ${T.describe(type)}, and this question's answer is ${T.describe(answer)}`);
       const key = `${base.id}.${target.names.slice(1).join(".")}`;
-      if (askedFields.has(key) && base.kind === "var") {
+      if (askedFields.has(key) && base.kind !== "item") {
         const first = askedFields.get(key);
         err("S321", target, `${target.names.join(".")} is asked twice (first on line ${first.span.line})`);
       }
@@ -392,6 +400,23 @@ export function check(resolved, diagnostics) {
     // At the second default, the first as related code (§16.2.1).
     const defaults = s.modifiers.filter((m) => m.kind === "default");
     if (defaults.length > 1) err("S323", defaults[1], "a question has one default", [{ file: defaults[0].file, span: defaults[0].span, message: "the first default" }]);
+  }
+
+  // A name whose record, list or map an answer may go into (§7.2): a var, a let, a parameter, a loop's item or a
+  // collect's own item, read where it stands or kept by a function written in place; not a constant, an answer, a
+  // counter, nor a collected list or an item of one read through a for.
+  function receives(base) {
+    const sym = base.kept ?? base;
+    if (!["var", "let", "param", "item"].includes(sym.kind)) return false;
+    if (sym.collectedBy || base.collectedBy) return false;
+    return !(sym.kind === "item" && sym.ofCollected);
+  }
+
+  function refusal(base) {
+    const sym = base.kept ?? base;
+    if (sym.collectedBy || base.collectedBy) return `collected on line ${(sym.collectedBy ?? base.collectedBy).span.line}; its items are answers`;
+    if (sym.kind === "item" && sym.ofCollected) return "a collected item; its fields are answers";
+    return what(sym);
   }
 
   function binding(s, ctx) {
@@ -877,8 +902,11 @@ export function check(resolved, diagnostics) {
         }
         return t.element;
       }
-      case "call":
+      case "call": {
+        // f(x) as "home" (§8.6.2): a name, as a key's segment is.
+        if (e.keyAs && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(e.keyAs.value)) err("S820", e.keyAs, `the name a call's questions are keyed under is letters, digits and _, not starting with a digit; "${e.keyAs.value}" is not one`);
         return call(e, ctx, how);
+      }
       case "map": {
         // The join of the keys' types, and of the values' (§6.12, §3.9).
         let key = T.NULL, value = T.NULL;

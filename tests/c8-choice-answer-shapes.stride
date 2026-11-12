@@ -16,5 +16,5 @@ ask y: any_of "Y" {
 print("{o}|{p}|{x == null}|{count(y)}")
 # rule 8.7
 # answers {"o": ["a", "b"], "p": "a", "x": "b", "y": ["b"]}
-# prints ["|a|true|1"]
+# prints ["|a|false|1"]
 # steps [{"key": "o", "unreadable": "not one of the options"}, {"key": "p", "value": "a"}, {"key": "x", "unreadable": "not among the options"}, {"key": "y", "value": ["b"]}]

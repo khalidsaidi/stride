@@ -113,7 +113,8 @@ the PDF's sha256 (exactly 64 hexadecimal digits in small letters; else S017).
 Words of no characters `""`, a list with no items `[]`, a set with no options and a map with no keys `{}` are
 values, not null: `"" == null` and `[] == null` are false (§6.6), `length("")` and `count([])` are 0. `x == null`
 and `x != null` test it; `x ?? y` gives y in its place (§6.16). Null counts as false in a condition (§6.15) and
-has no words (§3.5); any other operation that needs a value and is given null is error F023 (§6.3).
+has no words (§3.5); any other operation that needs a value and is given null is error F023 (§6.3). An any_of
+answer is never null: nothing chosen is the set with no options (§8.7).
 
 3.3. **Numbers.** A number is an exact decimal: a whole number of at most 34 significant digits times a power of
 ten, of absolute value below 10^34, and a multiple of 10^-6176 (its power of ten is from -6176 up).
@@ -555,8 +556,18 @@ including unary operators and postfix field access, indexing, slicing and calls.
 brace may follow its last statement on the same line (`if c { print(1) }`).
 
 7.2. **ask** `ask target ":" qtype "printed words" [options-block] modifier*` asks a question (§8). The target is
-a name followed by zero or more `.field`s; any other shape is S010. S319 stands for a target of that shape that
+a name followed by zero or more `.field`s and `[expr]` positions; any other shape is S010. S319 stands for a target of that shape that
 cannot receive an answer.
+
+7.2.1. **Where an answer goes.** A name alone is a new answer (§12.2), or a scalar collect's item. A target with
+fields or positions is a place, as an assignment's target is (§7.5): a field or an item reached from a name that
+holds the record, list or map — a var, a let, a parameter, a loop's item, a collect's item, a name of the program
+read in a function, a name a function written in place keeps: `function ask_party(p: party) { ask p.name: string
+"Name" }`, `ask l[i]: string "Line {i}"`, `ask m[k].street: string "Street"`, `ask p.address.street: string
+"Street"`. A constant, an answer, a loop's counter or an item's number, a collected list, and an item of one read
+through a `for` are S319, as is a position of a tuple or of words. Each position is worked out once, with the key
+(§8.4.1 step 1); the answer is bound as §7.5.1 sets a place: a record is made where a var, a field or an item on
+the way holds null, `l[count(l)]` adds an item after the last, and a map's key not there yet is added.
 
 7.3. **let** `let name [":" type] "=" expr`: a name that keeps the value it is given. When the value is a list, a
 record or a map, its items and fields may still be given values (§3.4.3).
@@ -765,11 +776,13 @@ which changes nothing below.
    asked at most once (S321).
 3. **Answer.** When the answers hold the key, the answer given is converted (§8.7) and the value is the converted
    answer, whatever it is: an answer given as no words or no options chosen is a valid empty answer, with no
-   unreadable mark (an answer is never `""` or a set with no options, §8.7); an answer that does not convert (§8.7) is null and marked unreadable with its reason; both stay
+   unreadable mark (a words answer is never `""`, and an any_of answer is never null, §8.7); an answer that does not convert (§8.7) is null and marked unreadable with its reason; both stay
    null — the default never comes back once the person has answered, so a
    prefilled name can be cleared and every option of an any_of deselected, and an unreadable number never puts the
    default into the PDF. Only when the answers do not hold the key at all is the value the default, or null
-   without one; a default of no characters or no options is null too.
+   without one; a default of no characters is null too. An any_of's value is never null: unanswered with no default,
+   with a default that is null, or answered with nothing chosen or with what does not convert, it is the set with no
+   options.
 4. **Binding.** The value goes into its place: a new name is defined from here on (§12.2); a field or an item is
    set by §7.5.1 (a null record on the way is made).
 5. **Checks**, each in the order written, with the value bound: when the value is null, no check is worked out
@@ -788,6 +801,11 @@ So inside the block for item k, `count(l)` is k, `l[k]` is outside the list (F00
 answers are read through x (`x.name`), not through `l`. After the block, the item is appended; then "Another…?" is asked, and a true starts item k + 1, a false (or no answer
 yet) ends the collect.
 
+8.5.2. **The first item without `any`.** Without `any`, item 0 enters the list only once one of its questions is
+answered: when the answers hold the key of no question its block reached, the collect ends after the block, the
+list keeps no items and "Another…?" is not asked. So a person who has answered nothing has no items, and `count(l)`
+is 0. An item started by a true "Another…?" always enters.
+
 8.6. **Keys.** Each question a run reaches has a key: a string worked out as the program runs, by this
 construction. A question reached again with a key already asked in the run has the same answer.
 
@@ -795,13 +813,13 @@ construction. A question reached again with a key already asked in the run has t
 ```
 key      = (segment ".")* (tail | item turns) | (segment ".")* list generated;
 segment  = call turns | item turns;
-call     = function ["#" whole];              # the function; its second call there in a run is #2
+call     = (function | name) ["#" whole];     # the function, or the name given with as; its second call there is #2
 function = [library ":"] name;                 # library: the import path, e.g. people or forms/irs
 item     = name "[" whole "]";                 # a collect's list and the item's position, from 0
-tail     = name ("." name)* turns;
+tail     = name ("." name | "[" words "]")* turns;   # a place (§7.2.1), each position by its words
 generated = ("#any" | "[" whole "]#another") turns;   # a collect's own questions
 list     = name;
-turns    = ("[" whole "]")*;                   # loop turns, outermost first
+turns    = ("[" (whole | words) "]" ["#" whole])*;   # loop turns, outermost first
 ```
 
 8.6.2. **Construction.** The key of a question is built from the run's position, outermost first:
@@ -813,15 +831,27 @@ turns    = ("[" whole "]")*;                   # loop turns, outermost first
   adds nothing;
 - the function is written by its name, after its library's import path and `:` when it is declared in a library
   (`people:line_2.`), so two libraries' functions of one name never share a key;
+- a call written `f(…) as "home"` adds `home.` in place of the function's name, numbered as a function's segment is
+  (a second such call there is `home#2.`): `let home = ask_address("Home") as "home"` asks `home.a.street`, whatever
+  calls of ask_address come before it. The name is letters, digits and `_`, not starting with a digit (S820), and
+  the call is of a function declared with `function` that can reach a question (S821);
+- a question asked into a place (§7.2.1) is keyed by the place as written, after the segments: its name, each
+  field `.field`, each position `[` its words `]`: `m[home].street`, `l[2]`, `ask_party.p.address.street`;
 - the turns of the loops around a question or a call follow it, outermost first: a `while`'s and a `for x in l`'s
-  count from 0 (`[0]`, `[1]`, …; a `for x in l`'s turn is its item's position), a `for i in a..b`'s is its counter's value. A
+  count from 0 (`[0]`, `[1]`, …; a `for x in l`'s turn is its item's position), a `for i in a..b`'s is its counter's value.
+  A `for x in l` whose items are words, numbers, dates, bools or options (an any_of's answer among them) is keyed
+  by the item's words instead, so an answer stays with its item when the list changes: `for kind in wanted { ask
+  copies: number "…" }` asks `copies[long]` and `copies[short]`; an item the list holds earlier too is numbered
+  after the bracket by how many times it has come, `copies[long]#2` for the second `long`. A function called in
+  such a loop has the same turn in its questions' keys. A
   collect's item k is `list[k]`, so the key of an item is its position in the list.
 
 Since every word is quoted, the signs `[ ] { } , ; = ( ) .` of the encodings can never come from a value, and
 two different values of one type give different encodings. `split("a,b", ",")` is `["a","b"]`; the list `["a,b"]` is `["a,b"]`.
 
 8.6.4. **Examples.** `first().name`; `items(parts=["a","b"]).count`; `representatives[2].name`; `other_act[1]`; `line_2(n=2).name`; `people:address(who="spouse").city`;
-`trips#any`; `trips[3]#another`; `names[2]` (a scalar collect's item); in `for i in 1..2 { for n, c in kids { ask … } }`, `age[1][3]` for i 1 and the fourth of kids.
+`trips#any`; `trips[3]#another`; `names[2]` (a scalar collect's item); in `for i in 1..2 { for n, c in kids { ask … } }` with kids a list of records, `age[1][3]` for i 1 and the fourth of kids, and with kids `["a", "b"]`, `age[1][b]`;
+`copies[long]#2`; `m[home].street`; `home.a.street` (a call named with `as "home"`).
 
 8.7. **Answers given** come as the page holds them and are converted to the question's type; what does not convert
 is null (never a fault):
@@ -850,6 +880,8 @@ is null (never a fault):
   writes (more than 34 significant digits, 10^34 or more, finer than 10^-6176: null, unreadable). Words in quotes
   are read as a person's words: `"1e5"` is not a number. A words or one_of question given a JSON number receives
   the token as written, as its words (`1e5` is the words `1e5`). Number literals in programs are unchanged (§2.5);
+- **an answer that does not convert** is null, but an any_of's: that is the set with no options, marked
+  unreadable all the same;
 - **the reasons an answer is unreadable**, the only ones: for a number `not a number`, `more than 34 digits`, `too
   large`, `too small`; for a date `not a date` (not `YYYY-MM-DD`, or no such day); for a bool `not true or false`; for one_of `not one
   of the options`; for any_of `not among the options` (when any value given is not an option: the others are
@@ -862,8 +894,9 @@ is null (never a fault):
   `not one of the options`. any_of: a list of such members, giving those of its values named, in declaration order
   (§3.8); a member that is none of its values, or not words or a number, is `not among the options`, and the
   valid members are kept; a null member (`null`, `""`) adds no option; an answer that is not a list is `not
-  among the options`, and `null` or `""` as the whole answer is a valid empty one. An any_of answer that names
-  none of its values is null, never a set with no options.
+  among the options`, and `null` or `""` as the whole answer is a valid empty one. An any_of answer is never
+  null: one that names none of its values is the set with no options, as a list var starts with no items (§7.4),
+  so `"x" in answer` and `count(answer)` need no guard.
 
 ## 9. Functions
 
@@ -1479,9 +1512,11 @@ its call: the function's name in the call.
 | S316 | a collected item asked with another type | The list's items are of its type. |
 | S317 | a field path through something with no fields | Only records have fields. |
 | S318 | no such field | The message gives the nearest field. |
-| S319 | an answer into something that cannot hold it | An answer goes into a new name, a var's field or a collect's item. |
+| S319 | an answer into something that cannot hold it | An answer goes into a new name, or a field or an item reached from a var, a let, a parameter or a loop's or collect's item (§7.2.1). |
 | S320 | an answer of another type than its place | The place's type and the question's must fit. |
 | S321 | a var's field asked twice | One question per field. |
+| S820 | `f(…) as "…"` with a name that is not letters, digits and `_` | The name a call's questions are keyed under is a key's segment: `as "home"` (§8.6.2). |
+| S821 | `f(…) as "…"` of a function that asks nothing, of the library's or of a function value | Only a call of a function declared with `function` that can reach a question has questions to key under a name (§8.6.2). |
 | S322 | a default of another type | The default is a value of the answer's type. |
 | S323 | two defaults | A question has one default. |
 | S324 | `let`/`var` of a call with no result | The function gives nothing to keep. |
@@ -1747,7 +1782,7 @@ the program and the answers, and `--prompt` with `--no-prompt` are usage mistake
 
 **Asking.** With `--prompt`, or with no answers given, stdin a terminal and neither `--no-prompt` nor `--json`,
 each question the run reaches without an answer is asked, in the order the run reaches them, even when the run
-with the answers so far would stop at a fault after it. A question is its printed words, its default in brackets,
+with the answers so far would stop at a fault after it. A question is its printed words, its default in brackets (none for a default of null, no words or no options),
 its options numbered, on stderr. The line typed is the answer as typed, converted by §8.7 like a `key=value`
 value, except for these, which are all: an empty line leaves the question unanswered (its default, if it has
 one, is used); for bool, `y` or `Y` is yes and `n` or `N` is no (§8.7); for one_of and any_of, a whole number is the
@@ -1868,7 +1903,8 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
   `stride run
   <name>.sbc` serves the same workflow from it alone, with no source, library or header, and its PDF.
 - **In the terminal.** `--terminal` runs a program in the terminal, saying the questions it asked with their
-  answers, what it printed and the boxes it wrote, with answers (§17.12), `--prompt`, `--no-prompt`, `--json`
+  answers (an unanswered question's default after it, `(default)`; a default of null, no words or no options, which
+  stands for none, as an unanswered question without one: `—`), what it printed and the boxes it wrote, with answers (§17.12), `--prompt`, `--no-prompt`, `--json`
   (§16.2) and `--trace` (§17.7). A script always runs in the terminal; `--terminal` changes nothing for it.
 - **Options of the other place.** In the browser, answers (a file, `-` or `key=value`), `--prompt`, `--no-prompt`,
   `--json` and `--trace` are usage mistakes, which say to add `--terminal`; in the terminal, `--pdf` and `--port`
@@ -1882,7 +1918,7 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 
 ## 18. Bytecode
 
-18.1. Version 10. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
+18.1. Version 11. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
 it does not know; a section that holds more or fewer bytes than it says is refused. The program and code sections
 must be there, each once; a tag that comes twice is refused. The places section may be left out: then no fault
 has a source place. The compiler always writes it. Sections may come in any order.

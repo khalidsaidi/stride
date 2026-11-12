@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function ask_name() -> string {
+  ask name: string "Name"
+  return name
+}
+fill "A" = ask_name() as "the name"
+# rule S820 8.6.2
+# mistake 7:26 S820

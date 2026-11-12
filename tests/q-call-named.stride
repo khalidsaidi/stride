@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record address { street: string }
+function ask_address(who: string) -> address {
+  var a = new address {}
+  ask a.street: string "{who} street"
+  return a
+}
+let mail = ask_address("Mail")
+let home = ask_address("Home") as "home"
+let work = ask_address("Work") as "work"
+let again = ask_address("Again") as "home"
+let other = ask_address("Other")
+for i in 1..2 {
+  let x = ask_address("Row {i}") as "row"
+  print(x.street)
+}
+print(mail.street, home.street, work.street, again.street, other.street)
+fill "A" = "x"
+# rule 8.6.2 8.6.4
+# answers {"home.a.street": "H", "work.a.street": "W", "ask_address.a.street": "M", "row[2].a.street": "R"}
+# asked ["ask_address.a.street", "home.a.street", "work.a.street", "home#2.a.street", "ask_address#2.a.street", "row[1].a.street", "row[2].a.street"]
+# prints ["", "R", "M H W  "]
