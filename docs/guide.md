@@ -63,6 +63,16 @@ stride> twice(21)
 
 ## 2. A first form
 
+Writing a form's workflow starts before any code: read the form and its instructions. They are on the issuer's
+page for the form, the page of the issuer's site that links its PDF: a separate instructions document, or pages
+of the form itself. The questions, when each applies and how each line is worked out come from them; no tool
+checks this. Name what the program follows at its top:
+
+```
+# IRS Form W-9, Request for Taxpayer Identification Number and Certification (Rev. March 2024)
+# Instructions: https://www.irs.gov/instructions/iw9
+```
+
 A program that fills a form starts with the form's id and the sha256 of its PDF, and is checked against the form's
 *header*: every box of the PDF and its kind, as the PDF itself gives them. `stride new` makes it from the PDF:
 
