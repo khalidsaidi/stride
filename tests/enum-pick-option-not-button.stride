@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum relation { "Self" "Myself"  "Father" "My father" }
+ask r: one_of relation "Relationship"
+pick "Relationship" r when r != null
+# rule 7.8.1 S511
+# box Relationship radio:Self near Relationship
+# mistake 5:21 S511 no button "Father", one of relation

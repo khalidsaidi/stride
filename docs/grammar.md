@@ -169,6 +169,10 @@ ask kind: one_of "Kind of taxpayer" {
 }
 ```
 
+The block may also stand before the printed words: `ask n: one_of { option "1" "One" option "2" "Two" } "Plates"`.
+`one_of GRADES`, GRADES a constant list of words, takes its items as the options, and the answer is words (§8.2.1).
+`x.label` is an option's printed words, and an option set's name as a value is the list of its options (§5.2.1).
+
 An `if` and a `match` are not scopes: a question asked in a branch is known after it, and null when that branch
 did not run. A `let` or `var` declared in a branch may be read after it only where every path has declared it
 (§12.1.1). Loops, collects, comprehensions and functions are scopes. A name is used only after the statement

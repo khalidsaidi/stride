@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: number "N"
+pick "Group" n when n > 1
+# rule 7.8.1 S800
+# mistake 4:14 S800 a button's name is words or an option, not number

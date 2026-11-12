@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum party { "p" "Petitioner"  "r" "Respondent" }
+let l: list<party> = ["p", "q"]
+let m: map<party, number> = {"x": 1}
+let c = true
+let a: party = if c then "p" else "z"
+print(l, m, a)
+# rule 3.6.1 S386
+# mistake 4:28 S386 "q" is not one of party
+# mistake 5:30 S386 "x"
+# mistake 7:35 S386 "z"

@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum signer { "applicant" "Applicant"  "guardian" "Guardian" }
+ask minor: bool "Minor?"
+ask s: one_of signer "Who signs?" default (if minor then "guardian" else "applicant")
+print(s)
+# rule 3.6.1
+# run
+# answers {"minor": true}
+# prints ["guardian"]

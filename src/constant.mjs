@@ -63,6 +63,7 @@ function value(e, env, visiting) {
       const sym = e.symbol;
       if (!sym) return undefined;
       if (env.has(sym)) return env.get(sym);
+      if (sym.kind === "enum") return sym.type.set.options.map((o) => o.value); // its options, in declared order (§5.2.1)
       if (sym.kind === "const") {
         if (sym.known) return copy(sym.value); // a constant's own value is never the one handed out (§3.4)
         if (visiting.has(sym)) return undefined; // a constant made of itself: reported by the checker

@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum relation { "Self" "Myself"  "Mother" "My mother" }
+ask r: one_of relation "Relationship"
+pick "Relationship" r when r != null
+# rule 7.8.1
+# box Relationship radio:Self near Relationship
+# box Relationship radio:Mother near Relationship
+# run
+# answers {"r": "Mother"}
+# boxes {"Relationship": "Mother"}

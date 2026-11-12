@@ -1,0 +1,6 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: one_of { option "1" "One" } "Plates" { option "2" "Two" }
+print(n)
+# rule 8.3 S802
+# mistake 3:45 S802 in one block

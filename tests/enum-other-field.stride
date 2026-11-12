@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum status { "single" "Single" }
+let s: status = "single"
+print(s.words)
+# rule 5.2.2 S357
+# mistake 5:7 S357 s.label is its printed words

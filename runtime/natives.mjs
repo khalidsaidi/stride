@@ -376,13 +376,14 @@ export const NATIVES = {
   tuple_of: { pure: true, internal: true, fn: (items) => new StrideTuple(items) },
   // Sets of any type (§14.4.2). `add` and `remove` change the set they are given, and give it.
   set: { takes: "items:l", fn: (items) => new StrideSet(items) },
-  add: { changes: true, takes: "s:s x:V", fn: (s, x) => (s.add(x), s) },
+  // A set of options never changes (§3.4.4): add and remove give a new one, in its declaration order.
+  add: { changes: true, takes: "s:s x:V", fn: (s, x) => (s instanceof StrideSet ? (s.add(x), s) : isNull(x) ? needed("a value is", "add's x") : set([...s, x], s.order)) },
   // What a for or a comprehension over a set goes through: its values, in the order first added.
   set_items: { pure: true, internal: true, fn: (s) => s.items },
   keys: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([key]) => key) },
   values: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([, x]) => x) },
   has: { pure: true, takes: "m:m key:V", fn: (m, k) => m.has(k) },
-  remove: { pure: true, changes: true, takes: "m:m key:V", fn: (m, k) => (m.remove(k), m) },
+  remove: { pure: true, changes: true, takes: "m:m key:V", fn: (m, k) => (isSet(m) ? set(m.filter((x) => x !== k), m.order) : (m.remove(k), m)) },
   join: { pure: true, takes: "l:l separator:t", fn: (l, sep) => l.map(words).join(sep === undefined ? ", " : text(sep)) },
   first: { pure: true, takes: "l:l", fn: (l) => l[0] ?? null },
   last: { pure: true, takes: "l:l", fn: (l) => (l.length ? l[l.length - 1] : null) },

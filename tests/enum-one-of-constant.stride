@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const GRADES = ["E-1", "E-2", "O-1"]
+ask g: one_of GRADES "Grade" default "E-2"
+let w: string = g
+print(w, upper(g))
+# rule 8.2.1
+# run
+# answers {"g": "O-1"}
+# prints ["O-1 O-1"]

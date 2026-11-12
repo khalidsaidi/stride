@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum party { "p" "Petitioner"  "r" "Respondent" }
+let l: list<party> = ["r", "p"]
+let m: map<party, string> = {"p": "box p", "r": "box r"}
+let n: map<string, party> = {"x": "p"}
+var counts: map<party, number> = {}
+counts["r"] = 2
+let nested: map<party, list<party>> = {"p": ["r"]}
+print(l, m["r"], n["x"], counts["r"], nested["p"])
+# rule 3.6.1
+# prints ["[r, p] box r p 2 [r]"]

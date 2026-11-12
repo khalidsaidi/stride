@@ -172,6 +172,17 @@ joined by `, `; null as no words. A list or a record has no words (mistake S309,
 - B is an option set S and the value is words in quotes that are one of S's values (checked: S386);
 - B is `set<S>` and the value is a list of words in quotes, each one of S's values (checked: S386).
 
+3.6.1. **Words in quotes inside what is written out.** Where a type is wanted of a value written out, the parts
+of the value are placed by the parts of the type, and words in quotes in them become options as above: each value
+of `if … then … else` and of a `match` (§6.20) where the type is wanted; each item of a list literal where a
+`list<T>` is wanted, as T; each key and each value of a map literal where a `map<K, V>` is wanted, as K and as V;
+each value of a tuple written out, as its place's type. This holds wherever a value is placed as a type: a `let`
+or `var` with its type written, an assignment, `return` in a function whose result is written, an argument, a
+record's field, a question's `default`, and a map's key in `m[k]` (§6.9.2). With `enum party { "p" "P"  "r" "R" }`,
+`let a: party = if c then "p" else "r"`, `let l: list<party> = ["p", "r"]` and `let m: map<party, number> =
+{"p": 1}` are options, and `m["r"]` reads under the option `"r"`; words that are not one of the set's values are
+S386 there too.
+
 3.7. **How many a list holds.** A list holds any number of items, and grows as items are added:
 `var l: list<number>`, then `l += [x]` or `l = append(l, x)`. A list written out, joined with `+`, or given by a
 comprehension grows like any other.
@@ -306,6 +317,15 @@ record person {
 5.2. **enum** declares an option set: `"enum" name "{" (["option"] plain string)* "}"`. Values unique (S215), not `""` (S216); at
 least 1 option (S235). A question's own options obey the same. The
 printed words are the form's own, as its writer reads them.
+
+5.2.1. **The options listed.** An option set's name used as a value is a new list of its options, in the order
+declared: `list<S>`. With `enum colour { "red" "Red"  "blue" "Blue" }`, `for c in colour { }` goes through
+`"red"` then `"blue"`, `count(colour)` is 2, `[c.label for c in colour]` is `[Red, Blue]`, and `colour` is given
+where a `list<colour>` is wanted. A record's name is not a value (S226).
+
+5.2.2. **An option's printed words.** `x.label`, x an option, is the printed words of the option x (§5.2), a
+string; null when x is null, without F023. `x?.label` is the same. The option's value stays what its words are
+(§3.5): `"{x}"` is `red`, `x.label` is `Red`.
 
 5.3. **const**: `"const" name [":" type] "=" expr`. Its value is worked out by the compiler (§11): words, a
 number, a date, true or false, a set, or a list of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
@@ -444,7 +464,8 @@ x is within s. With `s` a map: true when x is one of its keys. A null x is in a 
 is no key of a map; a null s, or a null x within words, is F023 (§6.3).
 
 6.9. **Postfix.** A line break before `[` or `(` ends the expression before it: the bracket starts a new one.
-- 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357; no such field S318 (with a hint).
+- 6.9.1. `r.f`: the field f of record r. r of a type without fields is S357, except an option's `label` (§5.2.2);
+  no such field S318 (with a hint).
   `r.f` of a null record (a null list item) is F023 (§6.3): `if r != null` or `r ?? new R { }` first.
   `r?.f` and `r?.f(…)` are null when r is null, and otherwise `r.f` and `r.f(…)`; r is worked out once, and the
   arguments only when r is not null. A chain stops at the first null: `a?.b?.c`.
@@ -633,6 +654,11 @@ unticked.
 
 7.8. **pick** `pick "group" "button" when c`: picks that button when c is true.
 
+7.8.1. **An option names a button.** The button's name is words or an option (S800 otherwise); an option names the
+button its value is: `pick "Group1" relation when relation != null` picks the button `"Mother"` when relation is
+the option `"Mother"`. Each value of the option's set is one of the radio group's buttons (S511 at the first that
+is not, §10.3).
+
 7.9. **Words, or an expression that gives them.** Where a statement takes words — a box's name and a button's, a question's printed words, a check's message, a
 collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
 a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box; with
@@ -747,7 +773,15 @@ set's options for `any_of`.
 8.2. `one_of S` / `any_of S` take S's options; or the question has its own block (8.3); both is S223, neither
 S224; options on another type S225.
 
-8.3. Own options: `{ option "value" "printed words" … }` (`option` is required here: S022).
+8.2.1. **Options from a constant list.** `one_of C`, C a constant (§5.3) whose value is a list of words, takes
+C's items as its options, in order: each item an option whose value and printed words are the item. The answer
+is words, a `string`, which is one of the items or null. An item `""` is S216, an item there twice S215, and C
+with no items S235, as for an option set; C of another value is S801. A literal `default` is one of the items
+(S386). `any_of` takes an option set or its own options only.
+
+8.3. Own options: `{ option "value" "printed words" … }` (`option` is required here: S022). The block stands after
+the printed words, `ask n: one_of "Plates" { … }`, or before them, as a type is written, `ask n: one_of { … }
+"Plates"`; a question has one block (S802).
 
 8.4. Modifiers: `default e` (at most one: S323; e of the answer's type: S322): the value the answer has until the
 person gives one. `check c "message"`: a condition the answer should meet; when it does not, the page shows the
@@ -977,7 +1011,7 @@ form. The header's PDF and form must be the program's (S501, S502).
 10.3. **What the compiler looks up.** A box's name written out in the program is looked up in the header, as a
 name is looked up among the declarations: it is one of the form's boxes (S508, with the nearest
 name), and it is written by the statement of its kind: `fill` a text or list box, `tick` a check box, `pick` a
-radio group (S509); a button written out is one the group has (S511); words written out for a list box are one of
+radio group (S509); a button written out is one the group has (S511), and so is each value of an option's set given as the button (§7.8.1); words written out for a list box are one of
 its entries (S514). That is all: the compiler follows no path and proves nothing about what a program does with
 its boxes.
 
@@ -1257,6 +1291,13 @@ entry says "or a set" (its items are then options).
 | `count(s: set<T>) -> number` | how many values s holds |
 | `union(a: set<T>, b: set<T>) -> set<T>`, `intersection(a: set<T>, b: set<T>) -> set<T>`, `difference(a: set<T>, b: set<T>) -> set<T>` | a new set of the values of a or b, of both, of a and not b, in a's order then b's; a and b sets of one type (S387) |
 
+### 14.4.2.1 Sets of options
+
+`add(s: S, x) -> S` and `remove(s: S, x) -> S`, S a set of options (§3.8) and x an option of its set (words in quotes
+of its values, §3.6): a new set of s's options and x, or of s's options but x, in declaration order. s itself
+never changes (§3.4.4), so the call is a value and not a statement of its own (S803): `chosen = add(chosen,
+"court")`. A null x given to `add` is F023.
+
 ### 14.4.3 Lists and functions
 
 These take a function (§9.10), often a short one (§9.12). All but `sorted`, `any` and `all` are written in Stride in
@@ -1452,7 +1493,7 @@ its call: the function's name in the call.
 | S223 | a question with a set and its own options | One or the other. |
 | S224 | a one_of or any_of without options | Give a set, or `{ option "v" "printed" … }`. |
 | S225 | options on a question that is not a choice | Only one_of and any_of have options. |
-| S226 | a record or option set used as a value | A record is made with `new R { … }`; an option set is a type. |
+| S226 | a record used as a value | A record is made with `new R { … }`; an option set's name as a value is the list of its options (§5.2.1). |
 | S227 | a call of a function not defined | The message gives the nearest function. |
 | S228 | a call of something that is not a function | Only functions are called. |
 | S230 | a method call with no such function | `r.f()` calls `f(r)`; a record's fields are read without `()`. |
@@ -1576,6 +1617,10 @@ its call: the function's name in the call.
 | S761 | a short function with another number of parameters than the function type wanted | Give it as many parameters as the function wanted takes values. |
 | S762 | a record field's default of another type than the field | The default is a value of the field's type (§5.1.1). |
 | S764 | a record's method named as another of its methods or as one of its fields | A record's fields and methods have each their own name (§5.1.2). |
+| S800 | a button's name that is not words or an option | `pick "group" x when …` takes words, or an option whose value is the button (§7.8.1). |
+| S801 | one_of given a constant that is not a list of words | `one_of C` takes an option set, or a constant list of words (§8.2.1). |
+| S802 | a question's own options given in two blocks | Give them in one block, before the printed words or after them (§8.3). |
+| S803 | add or remove of a set of options as a statement of its own | A set of options never changes; give the new set a place: `s = add(s, "x")` (§14.4.2.1). |
 | W001 | a match on an option missing options, without else | Warning: nothing happens for those. |
 | W002 | a function never called | Warning. |
 | W003 | a constant never used | Warning. |

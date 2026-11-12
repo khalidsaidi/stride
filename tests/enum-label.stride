@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum status { "single" "Single"  "married" "Married, filing jointly" }
+ask s: one_of status "Status"
+print(s.label, s?.label, "{s}")
+let none: status = null
+print(none.label == null, none?.label == null)
+# rule 5.2.2
+# run
+# answers {"s": "married"}
+# prints ["Married, filing jointly Married, filing jointly married", "true true"]

@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const GRADES = ["E-1", "E-1"]
+ask g: one_of GRADES "Grade"
+print(g)
+# rule 8.2.1 S215
+# mistake 4:8 S215 twice in GRADES

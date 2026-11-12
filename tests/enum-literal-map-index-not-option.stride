@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum party { "p" "Petitioner"  "r" "Respondent" }
+let m: map<party, number> = {"p": 1}
+print(m["w"])
+# rule 3.6.1 S386
+# mistake 5:9 S386 "w"

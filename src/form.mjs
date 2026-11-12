@@ -120,6 +120,10 @@ export function checkForm(program, header, diagnostics, { open = false } = {}) {
         }
         if (s.op === "pick") {
           const button = wordsOf(s.button);
+          // An option names a button by its value: each of its set's values is one of the group's buttons (§7.8.1).
+          const set = button === undefined && s.node?.button?.type?.t === "option" ? s.node.button.type.set : null;
+          const missing = set ? set.options.filter((o) => !found.some((b) => b.on === o.value)) : [];
+          if (missing.length) errOnce("S511", `button\t${full}\t${missing[0].value}`, s.node?.button ?? s.node, `the radio group "${short}" has no button "${missing[0].value}", one of ${set.anonymous ? "the options" : set.name}; it has ${found.map((b) => `"${b.on}"`).join(", ")}`);
           if (button !== undefined && !found.some((b) => b.on === button)) {
             errOnce("S511", `button\t${full}\t${button}`, s.node?.button ?? s.node, `the radio group "${short}" has no button "${button}"; it has ${found.map((b) => `"${b.on}"`).join(", ")}`);
           }

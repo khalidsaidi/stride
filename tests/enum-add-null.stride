@@ -1,0 +1,9 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum evidence { "court" "Court order"  "letter" "Letter" }
+var s: set<evidence> = ["letter"]
+var x: evidence = null
+s = add(s, x)
+print(s)
+# rule 14.4.2.1
+# fault F023
