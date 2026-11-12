@@ -634,6 +634,8 @@ export function resolve(loaded, diagnostics) {
     if (s.question.set) {
       const sym = lookupQualified(scope, s.question.set);
       if (sym?.kind === "enum") s.set = sym.type.set;
+      // one_of C, C a constant list of words: its items are the options (§8.2.1); the checker reads them.
+      else if (sym?.kind === "const" && s.question.form === "one_of") s.optionsFrom = sym;
       else {
         const sets = scope.visible().filter((n) => scope.lookup(n)?.kind === "enum");
         err("S222", unit.file, s.question.span, sym ? `${s.question.set} is ${what(sym)}, not an option set` : `there is no option set called ${s.question.set}${didYouMean(s.question.set, sets)}`);
@@ -815,8 +817,9 @@ export function resolve(loaded, diagnostics) {
           err("S111", unit.file, e.span, `${e.name} is the library ${e.symbol.library.file.name}; name what it exports: ${e.name}.${[...e.symbol.exports.keys()][0] ?? "…"}`);
           e.symbol = null;
         }
-        if (e.symbol?.kind === "record" || e.symbol?.kind === "enum") {
-          err("S226", unit.file, e.span, `${e.name} is ${what(e.symbol)}, a type, not a value${e.symbol.kind === "record" ? `; new ${e.name} { … } makes one` : ""}`);
+        // An option set's name as a value is the list of its options (§5.2.1).
+        if (e.symbol?.kind === "record") {
+          err("S226", unit.file, e.span, `${e.name} is ${what(e.symbol)}, a type, not a value; new ${e.name} { … } makes one`);
           e.symbol = null;
         }
         return;

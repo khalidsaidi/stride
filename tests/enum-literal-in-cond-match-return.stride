@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum party { "p" "Petitioner"  "r" "Respondent" }
+let c = true
+let a: party = if c then "p" else "r"
+let b: party = match c { true => "r", else => "p" }
+function f(x: bool) -> party {
+  return if x then "p" else "r"
+}
+print(a, b, f(false), a == "p")
+# rule 3.6.1
+# prints ["p r r true"]

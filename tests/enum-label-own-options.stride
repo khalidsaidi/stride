@@ -1,0 +1,12 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: one_of "Plates" {
+  option "1" "One plate"
+  option "2" "Two plates"
+}
+fill "Count" = n?.label ?? ""
+# rule 5.2.2
+# box Count text near Plates
+# run
+# answers {"n": "2"}
+# boxes {"Count": "Two plates"}

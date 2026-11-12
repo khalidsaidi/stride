@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum colour { "red" "Red"  "green" "Green"  "blue" "Blue" }
+for c in colour {
+  print(c)
+}
+function total(l: list<colour>) -> number {
+  return count(l)
+}
+var all = colour
+append(all, "red")
+print([c.label for c in colour], count(colour), total(colour), count(all))
+# rule 5.2.1
+# prints ["red", "green", "blue", "[Red, Green, Blue] 3 3 4"]

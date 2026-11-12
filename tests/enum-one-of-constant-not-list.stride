@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const LIMIT = 5
+const COUNTS = [1, 2]
+ask g: one_of LIMIT "Grade"
+ask h: one_of COUNTS "Count"
+print(g, h)
+# rule 8.2.1 S801
+# mistake 5:8 S801 LIMIT is number
+# mistake 6:8 S801 COUNTS is a list of number

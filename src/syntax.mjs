@@ -25,7 +25,7 @@
 //               | "(" type ("," type)+ ")" | "function" "(" [type ("," type)*] ")" ["->" type] | "any" | qname
 //   statement   = ask | let | var | fill | tick | pick | if | match | for | foreach | collect | return
 //               | assign | call
-//   ask         = "ask" path ":" qtype string [options-block] ("default" expr | "check" expr string)*
+//   ask         = "ask" path ":" qtype [options-block] string [options-block] ("default" expr | "check" expr string)*
 //   if          = "if" expr block ["else" (if | block)]
 //   let         = "let" (name [":" type] | names) "=" expr;  names = "(" name ("," name)+ ")"
 //   assign      = (postfix | "(" postfix ("," postfix)+ ")") "=" expr
@@ -927,13 +927,19 @@ class Parser {
     let set = null;
     if ((q.value === "one_of" || q.value === "any_of") && this.is("name")) set = this.qname();
     const question = this.node("question-type", q, { form: q.value, set });
+    // The question's own options: a block before its printed words, as a type is written, or after them (§8.3).
+    const block = () => {
+      this.take();
+      const out = [];
+      while (!this.sym("}")) out.push(this.option(true));
+      this.take();
+      return out;
+    };
+    let options = this.sym("{") ? block() : null;
     const printed = this.wordsOrName("the question's printed words, in quotes, or a constant that holds them");
-    let options = null;
     if (this.sym("{")) {
-      this.take();
-      options = [];
-      while (!this.sym("}")) options.push(this.option(true));
-      this.take();
+      if (options) throw new SyntaxMistake("the question's options are given once: in one block, before its printed words or after them", this.token.span, "S802");
+      options = block();
     }
     const modifiers = [];
     for (;;) {

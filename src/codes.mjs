@@ -310,8 +310,8 @@ export const CODES = {
     "explanation": "Only one_of and any_of have options."
   },
   "S226": {
-    "when": "a record or option set used as a value",
-    "explanation": "A record is made with `new R { … }`; an option set is a type."
+    "when": "a record used as a value",
+    "explanation": "A record is made with `new R { … }`; an option set's name as a value is the list of its options (§5.2.1)."
   },
   "S227": {
     "when": "a call of a function not defined",
@@ -804,6 +804,22 @@ export const CODES = {
   "S764": {
     "when": "a record's method named as another of its methods or as one of its fields",
     "explanation": "A record's fields and methods have each their own name (§5.1.2)."
+  },
+  "S800": {
+    "when": "a button's name that is not words or an option",
+    "explanation": "`pick \"group\" x when …` takes words, or an option whose value is the button (§7.8.1)."
+  },
+  "S801": {
+    "when": "one_of given a constant that is not a list of words",
+    "explanation": "`one_of C` takes an option set, or a constant list of words (§8.2.1)."
+  },
+  "S802": {
+    "when": "a question's own options given in two blocks",
+    "explanation": "Give them in one block, before the printed words or after them (§8.3)."
+  },
+  "S803": {
+    "when": "add or remove of a set of options as a statement of its own",
+    "explanation": "A set of options never changes; give the new set a place: `s = add(s, \"x\")` (§14.4.2.1)."
   },
   "W001": {
     "when": "a match on an option missing options, without else",

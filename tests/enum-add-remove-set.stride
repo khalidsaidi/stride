@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum evidence { "court" "Court order"  "letter" "Letter"  "id" "ID card" }
+var suggested: set<evidence> = []
+suggested = add(suggested, "id")
+suggested = add(suggested, "court")
+suggested = add(suggested, "id")
+let fewer = remove(suggested, "id")
+print(suggested, fewer, count(suggested))
+# rule 14.4.2.1
+# prints ["court, id court 2"]

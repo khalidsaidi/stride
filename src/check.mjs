@@ -254,7 +254,11 @@ export function check(resolved, diagnostics) {
         return condition(s.condition, ctx, "tick … when");
       case "pick":
         text(s.box, ctx, "a box's name");
-        text(s.button, ctx, "a button's name");
+        {
+          // A button's name: words, or an option, whose value names the button (§7.8.1).
+          const b = expr(s.button, ctx);
+          if (!T.isStringLike(b) && b.t !== "option" && b.t !== "null" && !T.isError(b)) err("S800", s.button, `a button's name is words or an option, not ${T.describe(b)}`);
+        }
         return condition(s.condition, ctx, "pick … when");
       case "if":
         condition(s.condition, ctx, "if");
@@ -335,7 +339,9 @@ export function check(resolved, diagnostics) {
 
   function ask(s, ctx) {
     const form = s.question.form;
-    const answer = form === "one_of" || form === "any_of" ? (s.set ? T.typeOfAnswer(form, s.set) : T.ERROR) : T.typeOfAnswer(form);
+    if (s.optionsFrom && !s.set) optionsFromConstant(s);
+    // A question whose options are a constant list of words is answered with words (§8.2.1).
+    const answer = form === "one_of" && s.set?.words ? T.STRING : form === "one_of" || form === "any_of" ? (s.set ? T.typeOfAnswer(form, s.set) : T.ERROR) : T.typeOfAnswer(form);
     s.answerType = answer;
     text(s.printed, ctx, "a question's printed words");
     if (s.set?.anonymous) for (const o of s.set.options) text(o.printed, ctx, "an option's printed words");
@@ -383,7 +389,7 @@ export function check(resolved, diagnostics) {
       if (m.kind === "default") {
         const t = expr(m.value, ctx);
         if (!fitsAt(m.value, t, answer)) err("S322", m.value, `the default is ${T.describe(t)}, and the answer is ${T.describe(answer)}`);
-        else optionLiteral(m.value, answer);
+        else optionLiteral(m.value, s.set?.words ? T.option(s.set) : answer);
       } else {
         condition(m.condition, ctx, "check");
         text(m.message, ctx, "a check's message");
@@ -392,6 +398,29 @@ export function check(resolved, diagnostics) {
     // At the second default, the first as related code (§16.2.1).
     const defaults = s.modifiers.filter((m) => m.kind === "default");
     if (defaults.length > 1) err("S323", defaults[1], "a question has one default", [{ file: defaults[0].file, span: defaults[0].span, message: "the first default" }]);
+  }
+
+  // one_of C, C a constant list of words (§8.2.1): each item an option whose value and printed words are the
+  // item, and the answer words.
+  function optionsFromConstant(s) {
+    const c = s.optionsFrom;
+    const type = constType(c);
+    if (T.isError(type)) return;
+    const values = c.known && Array.isArray(c.value) ? c.value : null;
+    if (type.t !== "list" || !(T.isStringLike(type.element) || type.element.t === "option" || type.element.t === "null") || !values || values.some((v) => typeof v !== "string")) {
+      err("S801", s.question, `one_of takes its options from an option set, or from a constant list of words; ${c.name} is ${T.describe(type)}`);
+      return;
+    }
+    const at = { file: s.question.file, span: s.question.span };
+    const seen = new Set();
+    const options = [];
+    for (const v of values) {
+      if (v === "") err("S216", at, `an option's value cannot be empty, and ${c.name} holds ""`);
+      else if (seen.has(v)) err("S215", at, `the option "${v}" is there twice in ${c.name}`);
+      else (seen.add(v), options.push({ value: v, printed: { kind: "plain-string", value: v, file: s.question.file, span: s.question.span }, node: null }));
+    }
+    if (!options.length && !values.length) err("S235", at, `${c.name} holds no items; a question has at least one option`);
+    s.set = { name: c.name, anonymous: true, words: true, options };
   }
 
   function binding(s, ctx) {
@@ -639,6 +668,12 @@ export function check(resolved, diagnostics) {
   // A literal compared with or given to an option must be one of its values.
   function optionLiteral(e, type) {
     if (type.t === "tuple" && e.kind === "tuple") return e.items.forEach((x, i) => type.elements[i] && optionLiteral(x, type.elements[i]));
+    // The values an if … then … else or a match gives, the items of a list and the keys and values of a map
+    // written out: each where the type's part is wanted (§3.6).
+    if (e.kind === "cond") return (optionLiteral(e.yes, type), optionLiteral(e.no, type));
+    if (e.kind === "match-expr") return e.arms.forEach((a) => optionLiteral(a.value, type));
+    if (type.t === "list" && e.kind === "list") return e.items.forEach((x) => optionLiteral(x, type.element));
+    if (type.t === "map" && e.kind === "map") return e.entries.forEach((x) => (optionLiteral(x.key, type.key), optionLiteral(x.value, type.value)));
     if (type.t !== "option" && type.t !== "options") return;
     const values = literalValues(e);
     for (const [node, v] of values) {
@@ -651,6 +686,14 @@ export function check(resolved, diagnostics) {
   // where several options are.
   function fitsAt(e, type, wanted) {
     if (T.fits(type, wanted)) return true;
+    if (!e) return false;
+    const at = (x, w) => !x.type || fitsAt(x, x.type, w);
+    // Each value an if … then … else or a match gives, each item of a list and each key and value of a map
+    // written out, where the type's part is wanted (§3.6.1).
+    if (e.kind === "cond") return at(e.yes, wanted) && at(e.no, wanted);
+    if (e.kind === "match-expr") return e.arms.every((a) => at(a.value, wanted));
+    if (wanted.t === "list" && e.kind === "list") return e.items.every((x) => at(x, wanted.element));
+    if (wanted.t === "map" && e.kind === "map") return e.entries.every((x) => at(x.key, wanted.key) && at(x.value, wanted.value));
     if (wanted.t === "option" && T.isStringLike(type) && literalValues(e).length === 1 && e.kind === "string") return true;
     if (wanted.t === "options" && e.kind === "list" && e.items.every((x) => x.kind === "string" && literalValues(x).length === 1)) return true;
     // A tuple written out: each value where its place's type is wanted.
@@ -753,6 +796,8 @@ export function check(resolved, diagnostics) {
         const sym = e.symbol;
         if (!sym) return T.ERROR;
         if (sym.kind === "const") return constType(sym);
+        // An option set's name: the list of its options, in declared order (§5.2.1).
+        if (sym.kind === "enum") return T.list(T.option(sym.type.set));
         // One of the standard library's, when its types are plain ones (§9.10): upper, round, year.
         if (sym.kind === "native") {
           const plain = (t) => t && !["any", "element", "error", "typevar"].includes(t.t) && (t.t !== "list" || plain(t.element));
@@ -813,8 +858,13 @@ export function check(resolved, diagnostics) {
           }
           return T.STRING;
         }
+        // An option's printed words (§5.2.2).
+        if (t.t === "option" && e.name === "label") {
+          e.optionLabel = t.set;
+          return T.STRING;
+        }
         if (t.t !== "record") {
-          err("S357", e, `${describeExpr(e.target)} is ${T.describe(t)}, which has no fields${t.t === "list" ? "; count(…) is how many items, [n] the n-th" : ""}`);
+          err("S357", e, `${describeExpr(e.target)} is ${T.describe(t)}, which has no fields${t.t === "list" ? "; count(…) is how many items, [n] the n-th" : t.t === "option" ? `; ${describeExpr(e.target)}.label is its printed words` : ""}`);
           return T.ERROR;
         }
         const field = t.decl.fields.find((f) => f.name === e.name);
@@ -856,7 +906,7 @@ export function check(resolved, diagnostics) {
         }
         // A map's value is chosen by its key (§6.12).
         if (t.t === "map") {
-          if (!T.isError(i) && i.t !== "null" && t.key.t !== "null" && !T.fits(i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
+          if (!T.isError(i) && i.t !== "null" && t.key.t !== "null" && !fitsAt(e.index, i, t.key)) err("S358", e.index, `this map's keys are ${T.describe(t.key)}, and this is ${T.describe(i)}`);
           else optionLiteral(e.index, t.key);
           e.mapIndex = true;
           return t.value;
@@ -1058,6 +1108,17 @@ export function check(resolved, diagnostics) {
       for (const a of e.args) if (a.type?.t === "none") err("S366", a, `${describeExpr(a)} gives no value`);
       e.printAll = true;
       return sym.result ?? T.NONE;
+    }
+    // add(s, x) and remove(s, x), s a set of options (§14.4.2.1): x one of its set's options; the set itself never
+    // changes (§3.4.4), so the call gives a new one and is not a statement on its own (S803).
+    if (sym.kind === "native" && sym.unit?.std && (sym.name === "add" || sym.name === "remove") && e.args.length === 2 && e.args.every((a) => a.kind !== "named-arg") && e.args[0].type?.t === "options") {
+      const [s, x] = e.args;
+      const want = T.option(s.type.set);
+      if (x.type && !T.isError(x.type) && x.type.t !== "none" && !fitsAt(x, x.type, want)) err("S367", x, `${sym.name}'s x is ${T.describe(want)}, and this is ${T.describe(x.type)}`);
+      else optionLiteral(x, want);
+      if (how.statement) err("S803", e, `a set of options never changes; ${sym.name} gives a new set: ${describeExpr(s)} = ${sym.name}(${describeExpr(s)}, …)`);
+      e.bound = e.args;
+      return s.type;
     }
     if (sym.kind === "function" && !sym.checked) {
       if (sym.checking) {

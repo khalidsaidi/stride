@@ -472,6 +472,8 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     // A function used as a value is used (§9.10).
     for (const st of statements(body)) for (const e of expressionsOf(st)) if (e.functionValue) called.add(e.functionValue);
     for (const s of statements(body)) for (const e of expressionsOf(s)) if (e.kind === "name" && e.symbol?.kind === "const") usedConsts.add(e.symbol);
+    // A constant whose items are a question's options (§8.2.1).
+    for (const s of statements(body)) if (s.kind === "ask" && s.optionsFrom) usedConsts.add(s.optionsFrom);
   }
   for (const r of resolved.units) {
     if (r.unit.library) continue;

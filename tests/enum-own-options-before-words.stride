@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask n: one_of { option "1" "One"  option "2" "Two" } "Number of plates"
+print(n, n?.label)
+# rule 8.3
+# run
+# answers {"n": "1"}
+# prints ["1 One"]

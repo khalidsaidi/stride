@@ -671,6 +671,8 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.functionValue) return IR.fnref(e.functionValue.kind === "native" ? nativeOf(e.functionValue) : functionOf(e.functionValue));
         const sym = e.symbol;
         if (sym.kind === "const") return IR.constant(sym.value ?? null);
+        // An option set's name: a new list of its options' values, in declared order (§5.2.1).
+        if (sym.kind === "enum") return IR.list(sym.type.set.options.map((o) => IR.constant(o.value)));
         // The program's own name, read in a function: where the program holds it (§9.1).
         if (ctx.fnSym && sym.program && !ctx.locals.has(sym)) return IR.outer(sym);
         const l = ctx.locals.get(sym);
@@ -698,6 +700,12 @@ export function lower(resolved, diagnostics, options = {}) {
       case "cond":
         return IR.cond(expr(e.condition, ctx), expr(e.yes, ctx), expr(e.no, ctx));
       case "field": {
+        // An option's printed words (§5.2.2): those of the option equal to it; null for null.
+        if (e.optionLabel) {
+          const l = ctx.fn.local("option", e.target.type);
+          const out = e.optionLabel.options.reduceRight((no, o) => IR.cond(IR.binary("==", IR.local(l), IR.constant(o.value)), IR.constant(knownText(ctx, o.printed, "an option's printed words")), no), IR.constant(null));
+          return IR.bind(l, expr(e.target, ctx), out);
+        }
         return withAt(IR.field(expr(e.target, ctx), e.fieldIndex, e.name), placeOf(e, e.target.span ? { line: e.span.line, col: e.span.col } : e.span));
       }
       case "index":

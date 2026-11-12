@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum evidence { "court" "Court order"  "letter" "Letter" }
+var suggested: set<evidence> = []
+add(suggested, "court")
+print(suggested)
+# rule 14.4.2.1 S803
+# mistake 5:1 S803 suggested = add(suggested

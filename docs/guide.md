@@ -344,6 +344,30 @@ true
 `append(l, x)`, `insert(l, position, x)`, `remove_at(l, position)`, `clear(l)` and `l += m` change the list
 itself; `sorted`, `reversed`, `filled`, `without`, a slice and `l + m` give a new list (§14.4).
 
+An option set's name is also the list of its options, in the order declared, as `for c in Color` is in Python;
+`x.label` is an option's printed words, and words in quotes become options wherever an option set's type is
+wanted: in a list, a map, `if … then … else` and `match` (§3.6.1, §5.2):
+
+```stride
+enum colour {
+  "red" "Red"
+  "green" "Green"
+}
+let box: map<colour, string> = {"red": "Line 1", "green": "Line 2"}
+for c in colour {
+  print("{c}: {c.label} in {box[c]}")
+}
+let liked: colour = if count(colour) > 1 then "green" else "red"
+var chosen: set<colour> = []
+chosen = add(chosen, liked)
+print(chosen)
+```
+```output
+red: Red in Line 1
+green: Green in Line 2
+green
+```
+
 A map holds values under keys (§3.10). Reading a key it does not have gives null:
 
 ```stride

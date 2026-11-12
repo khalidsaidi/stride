@@ -1,0 +1,13 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum condition { "heart" "Heart"  "lungs" "Lungs" }
+ask has: any_of condition "Conditions"
+for n, c in condition {
+  tick "Cond{n + 1}" when has != null and c in has
+}
+# rule 5.2.1
+# box Cond1 check near Heart
+# box Cond2 check near Lungs
+# run
+# answers {"has": ["lungs"]}
+# boxes {"Cond2": "Yes"}

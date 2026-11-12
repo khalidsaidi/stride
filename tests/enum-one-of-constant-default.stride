@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const GRADES = ["E-1", "E-2"]
+ask g: one_of GRADES "Grade" default "E-9"
+print(g)
+# rule 8.2.1 S386
+# mistake 4:38 S386 "E-9"

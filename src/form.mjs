@@ -447,6 +447,10 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
           if (s.op === "pick") {
             const button = buttons[turn];
             const ons = onValuesOf(found);
+            // An option names a button by its value: each of its set's values is one of the group's buttons (§7.8.1).
+            const set = button === undefined && s.node?.button?.type?.t === "option" ? s.node.button.type.set : null;
+            const missing = set ? set.options.filter((o) => !ons.includes(o.value)) : [];
+            if (missing.length) errOnce("S511", `button\t${full}\t${missing[0].value}`, s.node?.button ?? s.node, `the ${first.kind === "check" ? "check box" : "radio group"} "${short}" has no ${first.kind === "check" ? "on value" : "button"} "${missing[0].value}", one of ${set.anonymous ? "the options" : set.name}; it has ${quoted(ons)}`);
             if (button !== undefined && !ons.includes(button)) {
               const what = first.kind === "check" ? `the check box "${short}" has no on value "${button}"` : `the radio group "${short}" has no button "${button}"`;
               errOnce("S511", `button\t${full}\t${button}`, s.node?.button ?? s.node, `${what}; it has ${quoted(ons)}${didYouMeanEntry(button, ons)}`);
