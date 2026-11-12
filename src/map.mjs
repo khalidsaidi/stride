@@ -5,6 +5,8 @@
 // It follows the program as it is lowered (ir.mjs), each function once for each way it is called: the key its
 // questions have there (a call named `as "home"` and one named `as "mail"` ask under their own names), the values
 // the compiler knows of its arguments (a box's name given to a helper), and which answers each argument is made of.
+// A box named by what a Stride function returns is each name its returns may give, worked out on the syntax tree
+// from what the call gives it.
 // A question asked in a loop has its key's pattern: `qty[…]` stands for each turn's key. What the map says is said
 // for the reader; nothing in it is checked (form.mjs checks the boxes a program names, §10.3).
 //
@@ -24,6 +26,39 @@ const MOST_CANDIDATES = 500;
 
 // ----- what the compiler knows: values made of constants, loop items and the arguments of a call
 
+// A value the compiler knows to be one of a few, but not which: a name's in a loop over what only the run knows (a
+// turn's position in `l[..<5]`, an item of a constant table zipped with answers), or an argument made of such.
+class Possible {
+  constructor(values) {
+    this.values = values;
+  }
+}
+const isPossible = (v) => v instanceof Possible;
+
+// The lets whose value the program changes after making it: what they hold is not their value.
+const changedLets = new WeakSet();
+// A let made once, of a value it keeps: what it stands for is its value.
+const letOf = (sym) => (sym?.kind === "let" && sym.branches?.length === 1 && sym.node?.value && !changedLets.has(sym) ? sym : null);
+// A call of a Stride function: the function's symbol, its parameters and its syntax tree.
+const strideCallee = (e) => (e?.kind === "call" && e.callee?.kind === "function" && Array.isArray(e.callee.node?.body) ? e.callee : null);
+// The parts of a syntax tree that are not its expressions.
+const NOT_EXPRESSIONS = new Set(["span", "opSpan", "type", "symbol", "callee", "itemSymbol", "indexSymbol", "recordSymbol", "param", "written", "writtenValue", "knownFault", "decl", "declaredType", "sameAs"]);
+function* childrenOf(e) {
+  for (const [k, v] of Object.entries(e)) {
+    if (NOT_EXPRESSIONS.has(k) || !v || typeof v !== "object") continue;
+    if (Array.isArray(v)) {
+      for (const x of v) if (x && typeof x === "object") yield x;
+    } else yield v;
+  }
+}
+// Each name an expression reads, outside the functions written in it.
+function* namesIn(e, seen = new Set()) {
+  if (!e || typeof e !== "object" || seen.has(e) || seen.size > 5000 || e.kind === "lambda") return;
+  seen.add(e);
+  if (e.kind === "name") yield e;
+  for (const x of childrenOf(e)) yield* namesIn(x, seen);
+}
+
 function known(e, env) {
   if (!e || typeof e !== "object") return true;
   switch (e.kind) {
@@ -35,7 +70,7 @@ function known(e, env) {
     case "string":
       return e.parts.every((p) => typeof p === "string" || known(p, env));
     case "name":
-      return !e.functionValue && !!e.symbol && (e.symbol.kind === "const" || e.symbol.kind === "enum" || env.has(e.symbol));
+      return !e.functionValue && !!e.symbol && (env.has(e.symbol) ? !isPossible(env.get(e.symbol)) : e.symbol.kind === "const" || e.symbol.kind === "enum");
     case "unary":
       return known(e.operand, env);
     case "binary":
@@ -63,14 +98,105 @@ function known(e, env) {
       return false;
   }
 }
-const valueIn = (e, env) => {
-  if (!known(e, env)) return undefined;
+const evaluated = (e, env) => {
   try {
     return evaluate(e, env);
   } catch {
     return undefined;
   }
 };
+// Whether an expression reads what the evaluator leaves to the run but the map can work out: a let, a call of a
+// Stride function, a comprehension.
+const workableMemo = new WeakMap();
+function workable(e, depth = 0) {
+  if (!e || typeof e !== "object" || depth > 60 || e.kind === "lambda") return false;
+  if (workableMemo.has(e)) return workableMemo.get(e);
+  let out = (e.kind === "name" && !!letOf(e.symbol)) || !!strideCallee(e) || e.kind === "comprehension";
+  if (!out) {
+    for (const x of childrenOf(e)) {
+      if (workable(x, depth + 1)) {
+        out = true;
+        break;
+      }
+    }
+  }
+  workableMemo.set(e, out);
+  return out;
+}
+const valueIn = (e, env) => {
+  if (known(e, env)) return evaluated(e, env);
+  if (!workable(e)) return undefined;
+  const p = prepared(e, env);
+  return known(p.e, p.env) ? evaluated(p.e, p.env) : undefined;
+};
+// The expression with the env the evaluator can work it out in: each let the compiler knows the value of given it,
+// each call of a Stride function and each comprehension whose value it knows put in as a name of that value.
+function prepared(e, env) {
+  const out = new Map(env);
+  const done = new Map();
+  const go = (x, depth) => {
+    if (!x || typeof x !== "object" || depth > 60) return x;
+    if (done.has(x)) return done.get(x);
+    const y = goOnce(x, depth);
+    done.set(x, y);
+    return y;
+  };
+  const goOnce = (x, depth) => {
+    if (Array.isArray(x)) {
+      const ys = x.map((y) => go(y, depth + 1));
+      return ys.some((y, i) => y !== x[i]) ? ys : x;
+    }
+    if (x.kind === "lambda") return x;
+    if (x.kind === "name") {
+      const sym = letOf(x.symbol);
+      if (sym && !out.has(sym)) {
+        const v = valueIn(sym.node.value, out);
+        if (v !== undefined) out.set(sym, v);
+      }
+      return x;
+    }
+    if (strideCallee(x) || x.kind === "comprehension") {
+      const v = strideCallee(x) ? callValue(x, out) : comprehensionValue(x, out);
+      if (v === undefined) return x;
+      const sym = { kind: "worked-out", name: "" };
+      out.set(sym, v);
+      return { kind: "name", name: "", symbol: sym, span: x.span };
+    }
+    let copy = null;
+    for (const [k, v] of Object.entries(x)) {
+      if (NOT_EXPRESSIONS.has(k) || !v || typeof v !== "object") continue;
+      const y = go(v, depth + 1);
+      if (y !== v) (copy ??= { ...x })[k] = y;
+    }
+    return copy ?? x;
+  };
+  const ready = go(e, 0);
+  return { e: ready, env: out };
+}
+// [v for n, x in l if c]: its items, when the compiler knows the list and each value.
+function comprehensionValue(e, env) {
+  if (e.asMap || !e.itemSymbol) return undefined;
+  let l = valueIn(e.list, env);
+  if (l instanceof V.StrideRange) l = Number(stringOf(l.count)) > MOST_TURNS ? undefined : l.items;
+  if (!Array.isArray(l) || l.length > MOST_TURNS) return undefined;
+  const out = [];
+  for (let i = 0; i < l.length; i++) {
+    const t = new Map(env).set(e.itemSymbol, l[i]);
+    if (e.indexSymbol) t.set(e.indexSymbol, V.num(i));
+    if (e.condition) {
+      const c = valueIn(e.condition, t);
+      if (c === undefined) return undefined;
+      if (c !== true) continue;
+    }
+    const v = valueIn(e.value, t);
+    if (v === undefined) return undefined;
+    if (e.nested) {
+      if (!Array.isArray(v)) return undefined;
+      out.push(...v);
+    } else out.push(v);
+  }
+  return out;
+}
 // Its value in each env, or undefined when any is not known.
 function knownIn(e, envs) {
   if (!e || !envs?.length) return undefined;
@@ -83,20 +209,129 @@ function knownIn(e, envs) {
   return out;
 }
 const wordsOfValue = (v) => (V.isNull(v) ? "" : stringOf(v));
+const distinct = (vs) => [...new Map(vs.map((v) => [signature(v), v])).values()];
 
-// The values an expression may have when the compiler cannot tell which: the items of a constant list or the values
-// of a constant map it reads at a position worked out as the program runs, a field of each, either value of an
-// `if … then … else`; undefined when it cannot tell.
+// ----- what a call of a Stride function gives: each value its returns may have, given what is known of its arguments
+
+const calling = []; // the functions being worked out, one inside another
+const MOST_DEPTH = 8;
+const callMemo = new WeakMap(); // function -> what its arguments are -> what it gives
+
+// What the function's parameters are at the call: a value, a few it may be, or nothing known.
+function callStart(call, env) {
+  const fn = strideCallee(call);
+  const bound = call.bound ?? call.args;
+  const start = new Map();
+  (fn.params ?? []).forEach((p, i) => {
+    const a = bound[i];
+    if (!a) return;
+    if (a.kind === "default-of") {
+      const v = a.param.defaultExpr ? valueIn(a.param.defaultExpr, new Map()) : a.param.defaultValue ?? null;
+      if (v !== undefined) start.set(p, v);
+      return;
+    }
+    const xs = possible(a.kind === "named-arg" ? a.value : a, env);
+    if (xs?.length === 1) start.set(p, xs[0]);
+    else if (xs?.length) start.set(p, new Possible(xs));
+  });
+  return start;
+}
+const returnsOf = (fn) => {
+  if (fn.mapReturns) return fn.mapReturns;
+  const out = [];
+  const walk = (list) => {
+    for (const s of list ?? []) {
+      if (!s || typeof s !== "object") continue;
+      if (s.kind === "function") continue;
+      if (s.kind === "return" && s.value) out.push(s);
+      for (const k of ["then", "otherwise", "final", "body"]) if (Array.isArray(s[k])) walk(s[k]);
+      for (const a of s.arms ?? []) walk(a.body);
+    }
+  };
+  walk(fn.node.body);
+  fn.mapReturns = out;
+  return out;
+};
+// What each of the function's returns gives, by `how` (possible or shapes), in each way it is reached; undefined
+// when any is not known.
+function callGives(call, env, how) {
+  const fn = strideCallee(call);
+  if (!fn || calling.includes(fn) || calling.length >= MOST_DEPTH) return undefined;
+  const start = callStart(call, env);
+  const memoKey = `${how.name}|${[...start].map(([k, v]) => `${k.name}=${signature(v)}`).join("&")}`;
+  if (!callMemo.has(fn)) callMemo.set(fn, new Map());
+  const memo = callMemo.get(fn);
+  if (memo.has(memoKey)) return memo.get(memoKey);
+  calling.push(fn);
+  let out = [];
+  try {
+    const returns = returnsOf(fn);
+    const envs = returns.length ? statementEnvs(fn.node.body, [start]) : null;
+    for (const r of returns) {
+      for (const e of envs.get(r) ?? [start]) {
+        const xs = how(r.value, e);
+        if (!xs) {
+          out = undefined;
+          break;
+        }
+        out.push(...xs);
+        if (out.length > MOST_CANDIDATES) {
+          out = undefined;
+          break;
+        }
+      }
+      if (!out) break;
+    }
+    if (out && !out.length) out = undefined;
+  } finally {
+    calling.pop();
+  }
+  if (out && how === possible) out = distinct(out);
+  memo.set(memoKey, out);
+  return out;
+}
+// The value of a call, when each way it may go gives the same one.
+function callValue(call, env) {
+  const xs = callGives(call, env, possible);
+  return xs?.length === 1 ? xs[0] : undefined;
+}
+
+// The values an expression may have when the compiler cannot tell which: those of the names it knows only to be one
+// of a few, each way they may be; the items of a constant list or the values of a constant map it reads at a
+// position worked out as the program runs, a field of each, either value of an `if … then … else`, an option of the
+// name's type, what a Stride function called returns; undefined when it cannot tell.
 function possible(e, env) {
   const v = valueIn(e, env);
   if (v !== undefined) return [v];
+  const ways = eachWay(e, env);
+  if (ways) {
+    const out = [];
+    for (const w of ways) {
+      const x = valueIn(e, w);
+      if (x === undefined) {
+        out.length = 0;
+        break;
+      }
+      out.push(x);
+    }
+    if (out.length) return distinct(out);
+  }
   switch (e?.kind) {
+    case "name": {
+      const x = env.get(e.symbol);
+      if (isPossible(x)) return x.values;
+      const sym = letOf(e.symbol);
+      if (sym && !env.has(sym)) return possible(sym.node.value, env);
+      const type = e.symbol?.type ?? e.type;
+      return type?.t === "option" && !env.has(e.symbol) ? type.set.options.map((o) => o.value) : undefined;
+    }
     case "index": {
       const t = possible(e.target, env);
       if (!t) return undefined;
       const out = [];
       for (const x of t) {
         if (x instanceof V.StrideMap) out.push(...x.pairs.map(([, y]) => y));
+        else if (x instanceof V.StrideTuple && e.position) out.push(x.items[Number(e.index.raw)] ?? null);
         else if (Array.isArray(x)) out.push(...x);
         else return undefined;
       }
@@ -136,6 +371,7 @@ function possible(e, env) {
       return out;
     }
     case "call": {
+      if (strideCallee(e)) return callGives(e, env, possible);
       if (e.callee?.kind !== "native" || e.callee.name !== "get") return undefined;
       const [l, , d] = e.bound ?? e.args;
       const items = possible({ kind: "index", target: l, index: null }, env);
@@ -144,6 +380,66 @@ function possible(e, env) {
     }
     default:
       return undefined;
+  }
+}
+// The envs of each way the names an expression reads, itself or through its lets, may be, when some are known only
+// to be one of a few; undefined when none is, or there are too many ways.
+function eachWay(e, env) {
+  const few = new Map();
+  const seen = new Set();
+  const look = (x) => {
+    for (const n of namesIn(x)) {
+      if (seen.has(n.symbol)) continue;
+      seen.add(n.symbol);
+      const v = env.get(n.symbol);
+      if (isPossible(v)) few.set(n.symbol, v.values);
+      else if (!env.has(n.symbol) && letOf(n.symbol)) look(n.symbol.node.value);
+    }
+  };
+  look(e);
+  if (!few.size) return undefined;
+  let ways = [new Map(env)];
+  for (const [sym, values] of few) {
+    if (ways.length * values.length > MOST_CANDIDATES) return undefined;
+    ways = ways.flatMap((w) => values.map((v) => new Map(w).set(sym, v)));
+  }
+  return ways;
+}
+const isWords = (v) => v === null || typeof v === "string" || typeof v === "boolean" || V.isNumber(v) || V.isDate(v) || V.isNull(v);
+// A box's name as far as the compiler can tell it: each name it may be, as words with a hole where only the run
+// decides; undefined when even that cannot be told.
+function shapes(e, env) {
+  const xs = possible(e, env);
+  if (xs) return xs.every(isWords) ? xs.map((v) => [wordsOfValue(v)]) : undefined;
+  const either = (...ys) => (ys.every(Boolean) ? ys.flat() : undefined);
+  const product = (lists) => {
+    let out = [[]];
+    for (const l of lists) {
+      if (!l) return undefined;
+      out = out.flatMap((a) => l.map((b) => [...a, ...b]));
+      if (out.length > MOST_CANDIDATES) return undefined;
+    }
+    return out;
+  };
+  switch (e?.kind) {
+    case "string":
+      return product(e.parts.map((p) => (typeof p === "string" ? [[p]] : shapes(p, env))));
+    case "cond":
+      return either(shapes(e.yes, env), shapes(e.no, env));
+    case "binary":
+      if (e.op === "??") return either(shapes(e.a, env), shapes(e.b, env));
+      if (e.op === "+" && e.type?.t === "string") return product([shapes(e.a, env), shapes(e.b, env)]);
+      return [[HOLE]];
+    case "match-expr":
+      return either(...e.arms.map((a) => shapes(a.value, env)));
+    case "name": {
+      const sym = letOf(e.symbol);
+      return sym && !env.has(sym) ? shapes(sym.node.value, env) : [[HOLE]];
+    }
+    case "call":
+      return strideCallee(e) ? callGives(e, env, shapes) ?? [[HOLE]] : [[HOLE]];
+    default:
+      return [[HOLE]];
   }
 }
 
@@ -190,8 +486,19 @@ function statementEnvs(body, start) {
     else if (V.isSet(l) || Array.isArray(l)) l.forEach((x, i) => turn(V.num(i), x));
     else if (l instanceof V.StrideSet) l.items.forEach((x, i) => turn(V.num(i), x));
     else if (typeof l === "string") [...l].forEach((c, i) => turn(V.num(i), c));
+    else if (l instanceof V.StrideRange && Number(stringOf(l.count)) <= MOST_TURNS) l.items.forEach((x, i) => turn(V.num(i), x));
     else return null;
     return turns.length > MOST_TURNS ? null : turns;
+  };
+  // A loop over what only the run knows: the items and positions its names may have, when the compiler knows them.
+  const loopNames = (s, hidden, env) => {
+    const t = new Map(env);
+    const put = (sym, xs) => sym && xs?.length && xs.length <= MOST_CANDIDATES && t.set(sym, new Possible(distinct(xs)));
+    const { items, indices, positions } = itemsOf(s.list, env, !!s.indexSymbol) ?? {};
+    put(s.itemSymbol, items);
+    put(s.indexSymbol, indices);
+    hidden.forEach((x, i) => put(x.symbol, positions?.[i] ?? possible(x.value, t)));
+    return t;
   };
   const walk = (list, envs) => {
     for (const s of list ?? []) {
@@ -202,21 +509,21 @@ function statementEnvs(body, start) {
         for (const env of envs) {
           const turns = s.kind === "for" ? rangeTurns(s, env) : eachTurns(s, env);
           if (!turns || inner.length + turns.length > MOST_TURNS) {
-            inner = envs;
+            inner = null;
             break;
           }
           inner.push(...turns);
         }
+        const hidden = s.destructure ? s.body.filter((b) => b.kind === "let" && b.hidden && b.symbol) : [];
         // `for (a, b) in l`: its names are hidden lets made of the item (§7.11.2).
-        if (inner !== envs && s.destructure) {
-          for (const x of s.body.filter((b) => b.kind === "let" && b.hidden)) {
-            if (!x.symbol) continue;
+        if (inner) {
+          for (const x of hidden) {
             for (const env of inner) {
               const v = valueIn(x.value, env);
               if (v !== undefined) env.set(x.symbol, v);
             }
           }
-        }
+        } else inner = s.kind === "for-each" ? envs.map((env) => loopNames(s, hidden, env)) : envs;
         walk(s.body, inner);
         continue;
       }
@@ -227,8 +534,44 @@ function statementEnvs(body, start) {
   return out;
 }
 
+// What a loop over a list may go through: the items it may have, the positions of its turns (of `l[..<5]`, 0 to 4,
+// whatever l is), and for `zip(a, b)` the items of each list; undefined when the compiler knows none of them.
+function itemsOf(e, env, keyed) {
+  const ls = possible(e, env);
+  if (ls) {
+    const items = [], indices = [];
+    for (const l of ls) {
+      if (l instanceof V.StrideMap) for (const [k, v] of l.pairs) keyed ? (indices.push(k), items.push(v)) : items.push(k);
+      else if (Array.isArray(l)) l.forEach((x, i) => (items.push(x), indices.push(V.num(i))));
+      else if (l instanceof V.StrideSet) l.items.forEach((x, i) => (items.push(x), indices.push(V.num(i))));
+      else if (l instanceof V.StrideRange && Number(stringOf(l.count)) <= MOST_TURNS) l.items.forEach((x, i) => (items.push(x), indices.push(V.num(i))));
+      else return undefined;
+      if (items.length > MOST_TURNS) return undefined;
+    }
+    return { items, indices };
+  }
+  if (e?.kind === "slice") {
+    const from = e.from ? valueIn(e.from, env) : V.num(0);
+    const to = e.to ? valueIn(e.to, env) : undefined;
+    let indices;
+    if (V.isNumber(from) && V.isNumber(to)) {
+      const a = Number(stringOf(from)), b = Number(stringOf(to));
+      const n = b - a + (e.exclusive ? 0 : 1);
+      if (Number.isInteger(n) && a >= 0 && n >= 0 && n <= MOST_TURNS) indices = Array.from({ length: n }, (_, i) => V.num(i));
+    }
+    const items = itemsOf(e.target, env, false)?.items;
+    return items || indices ? { items, indices } : undefined;
+  }
+  if (e?.kind === "call" && (e.callee?.kind === "native" || e.callee?.unit?.std) && e.callee.name === "zip") {
+    const [a, b] = (e.bound ?? e.args).map((x) => itemsOf(x, env, false));
+    return a || b ? { positions: [a?.items, b?.items], indices: a?.indices ?? b?.indices } : undefined;
+  }
+  return undefined;
+}
+
 // A value's signature, for telling apart the ways a function is called.
 function signature(v) {
+  if (isPossible(v)) return `?[${v.values.map(signature).join(",")}]`;
   if (V.isNull(v)) return "n";
   if (typeof v === "string") return JSON.stringify(v);
   if (typeof v === "boolean") return v ? "t" : "f";
@@ -415,6 +758,22 @@ export function mapOf(program, header, resolved) {
   let mainVersion = 0;
   const memo = new Map();
   let invocations = 0;
+  // The lets the program changes after making them: a field or an item given a value, a native that changes it.
+  const rootOf = (x) => {
+    while (x && (x.kind === "field" || x.kind === "index")) x = x.target;
+    return x?.kind === "name" ? x.symbol : null;
+  };
+  const scanned = new Set();
+  const scan = (x) => {
+    if (!x || typeof x !== "object" || scanned.has(x)) return;
+    scanned.add(x);
+    if (Array.isArray(x)) return x.forEach(scan);
+    if (x.kind === "assign" && x.target?.kind !== "name") changedLets.add(rootOf(x.target) ?? {});
+    if (x.kind === "call" && x.callee?.kind === "native" && CHANGES.has(x.callee.name)) changedLets.add(rootOf((x.bound ?? x.args)?.[0]) ?? {});
+    for (const y of childrenOf(x)) scan(y);
+  };
+  scan(resolved?.mainResult?.main);
+  for (const fn of program.functions) scan(fn.source?.node?.body);
   const astOf = (fn) => (fn === program.main ? resolved?.mainResult?.main : fn.source?.node?.body);
 
   const shown = (parts) => parts.map((p) => (typeof p === "string" ? p : p.hole)).join("").replace(/…(…)+/g, "…");
@@ -627,8 +986,17 @@ export function mapOf(program, header, resolved) {
           params.forEach((p, i) => {
             const a = bound[i];
             if (!a) return;
-            const v = a.kind === "default-of" ? (a.param.defaultExpr ? valueIn(a.param.defaultExpr, new Map()) : a.param.defaultValue ?? null) : valueIn(a.kind === "named-arg" ? a.value : a, env);
+            if (a.kind === "default-of") {
+              const v = a.param.defaultExpr ? valueIn(a.param.defaultExpr, new Map()) : a.param.defaultValue ?? null;
+              if (v !== undefined) m.set(p, v);
+              return;
+            }
+            // An argument the compiler knows only to be one of a few is that to the function.
+            const x = a.kind === "named-arg" ? a.value : a;
+            const v = valueIn(x, env);
+            const xs = v === undefined ? possible(x, env) : null;
             if (v !== undefined) m.set(p, v);
+            else if (xs?.length) m.set(p, new Possible(xs));
           });
           seen.set([...m].map(([k, v]) => `${k.name}=${signature(v)}`).join("&"), m);
           if (seen.size > 200) break;
@@ -677,16 +1045,31 @@ export function mapOf(program, header, resolved) {
         }
       }
       if (!exact && !maybe) {
-        // What of the name the compiler knows: every box of the statement's kind whose name fits it.
-        const parts = node?.box?.kind === "string" ? node.box.parts.flatMap((p) => {
-          if (typeof p === "string") return [p];
-          const xs = knownIn(p, cx.envs)?.map(wordsOfValue);
-          return xs && new Set(xs).size === 1 ? [xs[0]] : [HOLE];
-        }) : partsOf(s.box, inv);
-        if (parts.filter((p) => typeof p === "string").join("").length >= 2) {
-          const re = pattern([prefix, ...parts]);
-          maybe = [...byField.keys()].filter((f) => fits(s.op, f) && re.test(f)).map((f) => f.slice(prefix.length));
+        // What of the name the compiler knows, in each name it may be: that name, or every box of the statement's
+        // kind whose name fits it.
+        const ways = new Map();
+        if (node?.box) {
+          for (const env of cx.envs ?? [new Map()]) {
+            const xs = shapes(node.box, env);
+            if (!xs) {
+              ways.clear();
+              break;
+            }
+            for (const parts of xs) ways.set(shown(parts), parts);
+          }
+        } else ways.set("", partsOf(s.box, inv));
+        const names = [];
+        for (const parts of ways.values()) {
+          if (parts.every((p) => typeof p === "string")) names.push(parts.join(""));
+          else if (parts.filter((p) => typeof p === "string").join("").length >= 2) {
+            const re = pattern([prefix, ...parts]);
+            names.push(...[...byField.keys()].filter((f) => fits(s.op, f) && re.test(f)).map((f) => f.slice(prefix.length)));
+          } else {
+            names.length = 0;
+            break;
+          }
         }
+        if (names.length) maybe = names;
       }
       const boxes = exact ?? maybe;
       if (!boxes) return records.push({ boxes: null, made });

@@ -1842,11 +1842,14 @@ around the write that decides only what is written (no question stands in it). A
 credited to the answers that decide whether it runs. The boxes are written as given (`=`, `fill "box" = answer`) or
 deciding what is written. A question with no box decides what is asked when a question stands in a branch its answer
 decides, or when another question's words, default or place are made of it; else it is used by no box (a bool with
-only a `check`). The boxes written by a name the compiler works out (§10.3.1, and also from a call's arguments and the
-fields of a constant's records) are written; a name it cannot tell is looked at for the boxes it may be: the items of a
-constant list or the values of a constant map it is read from, either value of an `if … then … else`, or every box
-of its statement's kind whose name fits the words of it written out (`"City{n}"`: every text box whose name starts
-with `City`). Those boxes are listed as written by a name worked out as the program runs (`writtenByNameWorkedOut`
+only a `check`). The boxes written by a name the compiler works out (§10.3.1, and also from a call's arguments, the
+fields of a constant's records, a let made of such, and what a Stride function returns given such: `fill
+numbered("City", 2)`, `fill_lines(run_of("Notes", 3), notes)`) are written; a name it cannot tell is looked at for
+the boxes it may be: the items of a constant list or the values of a constant map it is read from, either value of an
+`if … then … else`, each name a Stride function called for it may return, an option of its type, a position of a turn
+of a loop over `l[..<5]` (0 to 4) or an item of a constant list zipped with answers, or every box of its statement's
+kind whose name fits the words of it written out (`"City{n}"`: every text box whose name starts with `City`; a
+function returning `"Title_{n}"` for a position the run decides: every text box whose name starts with `Title_`). Those boxes are listed as written by a name worked out as the program runs (`writtenByNameWorkedOut`
 in `--json`), and a name it can tell nothing of is said once, as some box named as the program runs
 (`someBoxNamedAtRun`); the boxes the program names nowhere stay not written. A question whose answer goes into a box
 it cannot tell is said to go into a box named as the program runs (`intoBoxNamedAtRun`); `decidesWhatIsAsked` says
