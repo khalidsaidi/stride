@@ -1,6 +1,6 @@
 // The page `stride run` serves in the browser (§17.18): the program's workflow beside its PDF, as Stride's runner
 // runs it (runtime/runner.js): its questions one at a time, each answer going into the PDF's boxes as it is
-// given, and the filled PDF to download. A source program is compiled again at each reload; its mistakes, if it has
+// given. A source program is compiled again at each reload; its mistakes, if it has
 // any, are the page. The date today() gives is the run's --today when it has one. What the program prints, and a
 // fault in full, go to the browser's console (§17.11). Nothing leaves this computer.
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -123,14 +123,8 @@ try {
   const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   status.textContent = `${count(p.questions.length, "question", "questions")}, ${count(p.boxes.length, "box", "boxes")}. Answers stay on this computer.`;
 
-  const download = document.querySelector("#download");
-  download.hidden = false;
-  download.onclick = async () => {
-    const blob = new Blob([await pdf.saveDocument()], { type: "application/pdf" });
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `${p.form}-filled.pdf` });
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-  };
+  // What each box holds, by the PDF's field name: for the programmer, at the browser's console (stride.boxes()).
+  window.stride = { boxes: () => Object.fromEntries([...byName.keys()].map((name) => [name, read(name) ?? ""])) };
   document.querySelector("#questions").onclick = () => run.toggle();
 } catch (e) {
   stopped(`The workflow could not be opened: ${e.message}`);

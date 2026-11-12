@@ -2,7 +2,7 @@
 
 Stride is a programming language for turning a fillable PDF form into a guided workflow: you write
 which questions to ask and which box each answer goes in, and the person filling the form answers them one at a
-time. The filled PDF downloads from the page; the original is never changed.
+time. The original PDF is never changed.
 
 The compiler checks a program as any compiler does — spelling, names, types — and that each box it names is one
 the form has. It is no stricter than the form itself.

@@ -1,6 +1,6 @@
 // rule 17.18 17.11
 // The workflow in a real (headless) browser, as a person meets it, from source and compiled:
-// - a program that fills and ticks from no answer: the downloaded PDF holds what the terminal says it wrote, and
+// - a program that fills and ticks from no answer: the page holds what the terminal says it wrote, and
 //   its print is in the browser's console;
 // - a question whose default would fault after it: the question is asked; answered, the PDF holds the result;
 //   kept at its default, the fault is shown after it and said in the console in full (code, place, calls), and Back
@@ -23,7 +23,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { tinyPdf } from "../fixtures/tiny-pdf.mjs";
 
 // In a child: each scenario starts `stride run`, opens the page in a headless Chromium, does its steps, and says
-// what the page, its console and the downloaded PDF held.
+// what the page, its console and its boxes held.
 const CHILD = `
 const { spawn } = await import("node:child_process");
 const fs = await import("node:fs");
@@ -58,12 +58,7 @@ for (const sc of JSON.parse(scenarios)) {
     if (st.page) { await page.waitForTimeout(300); out.seen.push(await page.textContent("body")); continue; }
     if (st.download) {
       await page.waitForTimeout(300);
-      const [d] = await Promise.all([page.waitForEvent("download"), page.click("#download")]);
-      const path = cwd + "/" + sc.name.replace(/\\W/g, "_") + "-" + st.download + ".pdf";
-      await d.saveAs(path);
-      const doc = await pdfjs.getDocument({ data: new Uint8Array(fs.readFileSync(path)), verbosity: 0 }).promise;
-      const f = await doc.getFieldObjects();
-      out[st.download] = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v[0].value]));
+      out[st.download] = await page.evaluate(() => window.stride.boxes());
     }
   }
   } catch (e) {

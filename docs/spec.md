@@ -2004,7 +2004,7 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
   compiled, with every check `stride check` makes; when it has mistakes they are said as §16.2 shows them and
   nothing is served (exit 1). Else the workflow is served at `http://127.0.0.1:<port>/` (8080, or `--port`; `--port
   0` takes any free port), to this computer only, until stopped: the PDF, the questions one at a time beside it,
-  each answer going into its boxes as Stride's runner (`runtime/runner.js`) puts it, and the filled PDF to download. Its
+  each answer going into its boxes as Stride's runner (`runtime/runner.js`) puts it; `stride.boxes()` at the browser's console gives what each box holds. Its
   address is printed on stdout and the computer's browser is opened at it, unless the environment variable
   `BROWSER` is `none`. It needs no answers: they are given in the page, and the page sends them nowhere.
 - **In the page.** When the workflow is opened the run's writes are put in the boxes, those made from no answer

@@ -25,7 +25,7 @@ const PAGE = (name, today, writing) => `<!doctype html>
 <body>
 <header><h1><span class="code">${escaped(name)}</span> workflow</h1>
 <p class="line"><span class="status">Loading…</span></p>
-<div class="actions"><button type="button" class="quiet" id="questions">Questions</button><button type="button" id="download" hidden>Download the filled PDF</button></div></header>
+<div class="actions"><button type="button" class="quiet" id="questions">Questions</button></div></header>
 <div id="viewerContainer"><div id="viewer" class="pdfViewer"></div></div>
 <script type="module" src="/app.js"></script>
 </body></html>`;

@@ -75,7 +75,7 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
       return;
     }
     if (at === steps.length) {
-      body.append(el("h2", { textContent: "That is every question." }), el("p", { textContent: "Your answers are in the form. Check it, then download." }));
+      body.append(el("h2", { textContent: "That is every question." }), el("p", { textContent: "Your answers are in the form." }));
       // Answers still not read, or failing a check, are listed with what is said about them, each a way back to it.
       const doubtful = steps.map((s, i) => [s, i]).filter(([s]) => notesOf(s).length);
       if (doubtful.length) {

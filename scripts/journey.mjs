@@ -6,7 +6,7 @@
 // It builds stride, installs it into an empty home folder, and, in a folder outside the repository, with the
 // repository off the PATH: learns from the built-in guide; starts a project; writes a program that uses a library;
 // gives it input every way; tests the project; debugs it; makes a PDF workflow from its PDF, runs it in a browser
-// (headless Chromium), fills it there and downloads the filled PDF; compiles it and runs the compiled workflow in a
+// (headless Chromium), fills it there and reads its boxes; compiles it and runs the compiled workflow in a
 // folder holding only it and its PDF; compiles the script and runs it, and its tests, in another folder without its
 // source; writes the VS Code extension, installs it into a real VS Code and runs it there (with
 // --vscode); and upgrades by installing again. Each step says what it checked; the first that fails stops it, exit 1.
@@ -92,7 +92,7 @@ try {
   expect("its map", stride(["map", "forms/consent.stride"]), (x) => x.stdout.includes("= name") && x.stdout.includes("not written"));
   const pdfjs = await import(join(repo, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"));
   // `stride run <file>` in the browser, the browser left closed; a headless browser answers the question in the
-  // page and downloads the filled PDF; gives what its box "name" holds and the page's errors.
+  // page and reads its boxes; gives what its box "name" holds and the page's errors.
   const inBrowser = async (file, cwd, saveTo) => {
     const server = spawn(windows ? installed : "stride", ["run", file, "--port", "0"], { cwd, env: { ...(windows ? process.env : env), BROWSER: "none" } });
     const url = await new Promise((done, fail) => {
@@ -113,12 +113,11 @@ try {
       await page.waitForSelector("aside.questions input", { timeout: 20_000 });
       await page.fill("aside.questions input", "Ada Lovelace");
       await page.waitForTimeout(300);
-      const [download] = await Promise.all([page.waitForEvent("download"), page.click("#download")]);
-      await download.saveAs(saveTo);
+      const boxes = await page.evaluate(() => window.stride.boxes());
       await browser.close();
-      return errors;
+      return { errors, value: boxes.name ?? null };
     };
-    let errors;
+    let filled;
     if (windows) {
       // On Windows, by Windows' node: the server listens on Windows' own 127.0.0.1, which only Windows reaches.
       cpSync(join(repo, "node_modules/playwright-core"), join(home, "driver/node_modules/playwright-core"), { recursive: true });
@@ -128,23 +127,21 @@ try {
       writeFileSync(join(home, "driver/fill.cjs"), `const { chromium } = require("playwright-core");\nconst fill = ${fill.toString()};\nfill(chromium, {}, process.argv[2], process.argv[3]).then((e) => console.log(JSON.stringify(e)), (e) => { console.log(JSON.stringify([e.message])); });\n`);
       const driven = spawnSync(windows, [winPath(join(home, "driver/fill.cjs")), url, winPath(saveTo)], { cwd: join(home, "driver"), env: wenv, encoding: "utf8", timeout: 180_000 });
       try {
-        errors = JSON.parse(driven.stdout.trim().split("\n").pop());
+        filled = JSON.parse(driven.stdout.trim().split("\n").pop());
       } catch {
-        errors = [`the Windows browser did not run: ${driven.stderr.slice(0, 400)}`];
+        filled = { value: null, errors: [`the Windows browser did not run: ${driven.stderr.slice(0, 400)}`] };
       }
     } else {
       const { chromium } = await import(join(repo, "node_modules/playwright-core/index.mjs"));
       const base = `${process.env.HOME}/.cache/ms-playwright`;
       const shell = readdirSync(base).filter((d) => d.startsWith("chromium_headless_shell-")).sort().pop();
-      errors = await fill(chromium, { executablePath: `${base}/${shell}/chrome-headless-shell-linux64/chrome-headless-shell` }, url, saveTo);
+      filled = await fill(chromium, { executablePath: `${base}/${shell}/chrome-headless-shell-linux64/chrome-headless-shell` }, url, saveTo);
     }
     server.kill();
-    if (!existsSync(saveTo)) return { value: null, errors: [...errors, "nothing was downloaded"] };
-    const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(saveTo)), verbosity: 0 }).promise;
-    return { value: (await doc.getFieldObjects()).name[0].value, errors };
+    return { value: filled.value, errors: filled.errors };
   };
   let b = await inBrowser("forms/consent.stride", work, join(work, "filled.pdf"));
-  b.value === "Ada Lovelace" && !b.errors.length ? ok("stride run: the workflow in a browser, answered there, the filled PDF downloaded") : stop(`stride run in the browser: the downloaded PDF holds ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
+  b.value === "Ada Lovelace" && !b.errors.length ? ok("stride run: the workflow in a browser, answered there, the box filled") : stop(`stride run in the browser: the downloaded PDF holds ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
   expect("the same program in the terminal", stride(["run", "forms/consent.stride", "--terminal", "name=Ada Lovelace"]), (x) => x.status === 0 && x.stdout.includes('"Ada Lovelace"'));
   expect("compile the workflow", stride(["compile", "forms/consent.stride", "-o", "consent.sbc", "-q"]), (x) => x.status === 0 && existsSync(join(work, "consent.sbc")));
   // The compiled workflow in a folder holding nothing but it and its PDF.
@@ -153,7 +150,7 @@ try {
   cpSync(join(work, "consent.sbc"), join(alone, "consent.sbc"));
   cpSync(join(work, "forms/consent.pdf"), join(alone, "consent.pdf"));
   b = await inBrowser("consent.sbc", alone, join(alone, "filled.pdf"));
-  b.value === "Ada Lovelace" && !b.errors.length && readdirSync(alone).sort().join(",") === "consent.pdf,consent.sbc,filled.pdf" ? ok("stride run consent.sbc: the compiled workflow, with only its PDF, in a browser") : stop(`the compiled workflow in the browser: ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
+  b.value === "Ada Lovelace" && !b.errors.length && readdirSync(alone).sort().join(",") === "consent.pdf,consent.sbc" ? ok("stride run consent.sbc: the compiled workflow, with only its PDF, in a browser") : stop(`the compiled workflow in the browser: ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
   writeFileSync(join(alone, "other.pdf"), Buffer.concat([tinyPdf(), Buffer.from("\n%other\n")]));
   expect("a PDF it was not compiled for, refused", stride(["run", "consent.sbc", "--pdf", "other.pdf"], { cwd: alone }), (x) => x.status === 1 && x.stderr.includes("is not the PDF consent.sbc was compiled for"));
   // 8. Sharing a compiled program.

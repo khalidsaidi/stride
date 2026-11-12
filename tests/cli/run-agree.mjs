@@ -1,7 +1,7 @@
 // rule 17.18
 // One program, one set of answers, one date, run in every place: in the browser from its source and from its
-// compiled .sbc (a headless browser answering in the page and downloading the filled PDF), and in the terminal from
-// both. Every run writes the same boxes with the same values: the downloaded PDFs hold what the terminal says it
+// compiled .sbc (a headless browser answering in the page, its boxes read from the page), and in the terminal from
+// both. Every run writes the same boxes with the same values: the page holds what the terminal says it
 // wrote, and the date the page used is the run's --today.
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
@@ -13,7 +13,7 @@ import { tinyPdf } from "../fixtures/tiny-pdf.mjs";
 const TODAY = "2026-02-03";
 
 // In a child: `stride run <file>` in the browser, a headless Chromium answering each question in the page, the
-// filled PDF downloaded and its boxes read back.
+// boxes read from the page.
 const CHILD = `
 const { spawn } = await import("node:child_process");
 const [cli, cwd, file, pw, pdfjsPath, shell, out, answers] = process.argv.slice(1);
@@ -35,13 +35,10 @@ for (const a of JSON.parse(answers)) {
   await page.click("aside.questions .nav .next");
 }
 await page.waitForTimeout(300);
-const [download] = await Promise.all([page.waitForEvent("download"), page.click("#download")]);
-await download.saveAs(out);
+const boxes = await page.evaluate(() => window.stride.boxes());
 await browser.close();
 child.kill();
-const doc = await pdfjs.getDocument({ data: new Uint8Array((await import("node:fs")).readFileSync(out)), verbosity: 0 }).promise;
-const fields = await doc.getFieldObjects();
-console.log(JSON.stringify({ errors, boxes: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, v[0].value])) }));
+console.log(JSON.stringify({ errors, boxes }));
 process.exit(0);
 `;
 

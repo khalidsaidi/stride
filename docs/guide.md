@@ -123,8 +123,8 @@ Then the one path from here to a workflow someone fills:
    program is checked against it.
 2. **The source**, `consent.stride`, edited as above.
 3. **The workflow in your browser**: `stride run consent.stride` checks and compiles the program, opens the
-   workflow beside its PDF, and asks its questions one at a time, each answer going into its boxes; the filled PDF
-   downloads from the page. Nothing needs answering beforehand. Save the source and reload the page to see a
+   workflow beside its PDF, and asks its questions one at a time, each answer going into its boxes; at the browser's
+   console, `stride.boxes()` shows what each box holds. Nothing needs answering beforehand. Save the source and reload the page to see a
    change; a mistake shows in the page, at its place, instead of a broken workflow.
 4. **Tests**: `stride test consent.stride` runs the program on the sample answers in `consent.tests/` and compares
    the boxes it writes (§13).
