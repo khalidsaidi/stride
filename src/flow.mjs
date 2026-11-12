@@ -333,7 +333,11 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
             const r = walkFlow(arm.body, new Set(unset), fn, exits, new Map(env));
             return { ...r, declared: new Set(declaredOn) };
           });
-          if (!s.arms.some((a) => !a.values)) paths.push({ unset: new Set(unset), falls: true, declared: new Set(before) });
+          // A match that names every option of its subject's set is exhaustive (§7.10.2): when no arm falls
+          // through, neither does the match, and a null subject, which no arm takes, is F023 there.
+          const exhaustive = s.missing?.length === 0;
+          s.nullFaults = exhaustive && !paths.some((p) => p.falls);
+          if (!s.arms.some((a) => !a.values) && !s.nullFaults) paths.push({ unset: new Set(unset), falls: true, declared: new Set(before) });
           const all = new Set(paths.flatMap((p) => [...p.declared]));
           for (const x of all) if (!before.has(x) && ["let", "var"].includes(x.kind)) for (const p of paths) if (p.falls && !p.declared.has(x)) p.unset.add(x);
           declaredOn.clear();

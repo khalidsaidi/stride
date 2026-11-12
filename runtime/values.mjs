@@ -292,6 +292,7 @@ export function copy(v, made = new Map(), whole = false) {
   }
   if (v instanceof StrideRecord) {
     const out = new StrideRecord(v.type, [], v.names);
+    if (v.decl) out.decl = v.decl; // the compiler's: which declaration a constant record is of
     made.set(v, out);
     for (const x of v.fields) out.fields.push(copy(x, made, whole));
     return out;

@@ -1,8 +1,0 @@
-form t
-pdf 0000000000000000000000000000000000000000000000000000000000000000
-record person { name: string }
-const c = new person { name: "a" }
-fill "A" = c.name
-# rule S306 16.4 5.3
-# mistake 4 S306
-# mistake 4 S304

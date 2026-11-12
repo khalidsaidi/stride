@@ -48,4 +48,5 @@ match date_of(2026, 1, 2) {
   }
 }
 # rule 6.20 7.10.1 7.10
+# warning 1:10 W017
 # prints ["one few many", "pair", "true", "one 1", "limit", "2", "yes", "[]", "true arm", "tuple arm", "date arm"]

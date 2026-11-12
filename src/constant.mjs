@@ -7,7 +7,7 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet, equal, StrideTuple, StrideMap } from "../runtime/values.mjs";
+import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet, equal, StrideTuple, StrideMap, StrideRecord, StrideSet } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.6, §3.8): a list of options made the set.
 function placed(v, type) {
@@ -30,6 +30,9 @@ const faultOf = (e, f) => {
     return undefined;
   }
 };
+
+// A value whose insides a program may change (§3.4): a map, a record, a set of any type.
+const changes = (v) => v instanceof StrideMap || v instanceof StrideRecord || v instanceof StrideSet;
 
 // `env` gives the value of a name that is known (a loop's counter in one turn). What is known (§11.1) leaves out
 // fields, list items, records made with new and calls of Stride functions.
@@ -78,7 +81,7 @@ function value(e, env, visiting) {
         try {
           const v = value(sym.node.value, env, visiting);
           // A list may be changed after the let is made (§3.4): what it holds then is not known.
-          return v === undefined || v instanceof StrideMap || (Array.isArray(v) && !isSet(placed(v, sym.type))) ? undefined : placed(v, sym.type);
+          return v === undefined || (Array.isArray(v) && !isSet(placed(v, sym.type))) || changes(v) ? undefined : placed(v, sym.type);
         } finally {
           visiting.delete(sym);
         }
@@ -131,6 +134,8 @@ function value(e, env, visiting) {
       // An item of a known list (§6.9.2): F004 unless the position is a whole number from 0 to below the count.
       const l = value(e.target, env, visiting);
       const i = value(e.index, env, visiting);
+      // The value under a key of a known map, null when it has none (§6.11.1).
+      if (l instanceof StrideMap) return i === undefined ? undefined : l.get(i);
       // A known tuple's value at a position written out (§6.17).
       if (l instanceof StrideTuple) return e.position ? l.items[Number(e.index.raw)] ?? null : undefined;
       // A known map's value under a key (§6.9.2): null when it has none.
@@ -152,16 +157,36 @@ function value(e, env, visiting) {
       return items;
     }
     case "map": {
-      // A map written out (§3.10): its keys and values, in order.
-      const m = new StrideMap();
+      // A map written out (§6.11.1): its keys in order, a key written twice keeping its last value.
+      const out = new StrideMap();
       for (const x of e.entries) {
         const k = value(x.key, env, visiting);
-        const v = value(x.value, env, visiting);
-        if (k === undefined || v === undefined) return undefined;
-        if (isNull(k)) return undefined;
-        m.set(k, v);
+        const v = k === undefined || isNull(k) ? undefined : value(x.value, env, visiting);
+        if (v === undefined) return undefined;
+        out.set(placed(k, e.type?.key), placed(v, e.type?.value));
       }
-      return m;
+      return out;
+    }
+    case "new": {
+      // A record written out (§6.14): each field given, or its default, or what a field left out starts as.
+      const decl = e.recordSymbol?.decl;
+      if (!decl) return undefined;
+      const fields = [];
+      for (const f of decl.fields) {
+        const given = e.fields.find((x) => x.name === f.name);
+        const v = given ? value(given.value, env, visiting) : f.node?.default ? value(f.node.default, env, visiting) : f.type?.t === "list" ? [] : f.type?.t === "map" ? new StrideMap() : null;
+        if (v === undefined) return undefined;
+        fields.push(placed(v, f.type));
+      }
+      const out = new StrideRecord(decl.name, fields, decl.fields.map((f) => f.name));
+      out.decl = decl;
+      return out;
+    }
+    case "field": {
+      // A field of a known record.
+      const r = value(e.target, env, visiting);
+      if (!(r instanceof StrideRecord) || e.safe || typeof e.fieldIndex !== "number") return undefined;
+      return r.fields[e.fieldIndex] ?? null;
     }
     case "tuple": {
       const items = [];

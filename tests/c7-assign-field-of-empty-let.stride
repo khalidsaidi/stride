@@ -11,5 +11,6 @@ print(v)
 var w: p
 set(w)
 # rule 7.5.1 F023
+# warning 4:10 W017
 # prints ["p { n: 1 }"]
 # fault F023 at 5:3 a record is needed

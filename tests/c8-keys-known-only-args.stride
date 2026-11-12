@@ -7,6 +7,7 @@ function line(who: string, n: number = 2) {
 line("spouse")
 line(n: 3, who: "child")
 # rule 8.6.2 9.2 9.4
+# warning 3:10 W017
 # answers {"line.name": "A", "line#2.name": "B"}
 # asked ["line.name", "line#2.name"]
 # boxes {"Name2": "A", "Name3": "B"}

@@ -134,6 +134,8 @@ export function fits(value, wanted) {
   }
   if (wanted.t === "map" && value.t === "map") return (value.key.t === "null" || fits(value.key, wanted.key)) && (value.value.t === "null" || fits(value.value, wanted.value));
   if (wanted.t === "set" && value.t === "set") return value.element.t === "null" || fits(value.element, wanted.element);
+  // `set()` holds nothing to tell its type, and takes the one wanted: a set of options among them (§14.4.2).
+  if (wanted.t === "options" && value.t === "set") return value.element.t === "null";
   // A tuple fits a tuple of as many values, each fitting its place.
   if (wanted.t === "tuple" && value.t === "tuple") return value.elements.length === wanted.elements.length && value.elements.every((x, i) => fits(x, wanted.elements[i]));
   return same(value, wanted);
@@ -218,6 +220,9 @@ export function join(a, b) {
   if (a.t === "null") return b;
   if (b.t === "null") return a;
   if (same(a, b) && !["list", "map", "set", "tuple"].includes(a.t)) return a;
+  // A set that holds nothing to tell its type, beside a set of options, is one (§14.4.2).
+  if (a.t === "options" && b.t === "set" && b.element.t === "null") return a;
+  if (b.t === "options" && a.t === "set" && a.element.t === "null") return b;
   if (a.t === "set" && b.t === "set") {
     const e = join(a.element, b.element);
     return e ? set(e) : null;

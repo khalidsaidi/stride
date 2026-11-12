@@ -1,0 +1,8 @@
+function split(n: number) -> (number, number) {
+  return (n // 2, n - n // 2)
+}
+let (a, b) = split(5)
+print(a, b)
+# rule 12.3.1 W017
+# warning 1:10 W017 hides the standard library's split
+# prints ["2 3"]

@@ -1,0 +1,8 @@
+let changes: list<number> = null
+let more = [1, 2, 3]
+print([c for c in changes ?? []])
+print([c * 2 for c in changes ?? more if c > (changes ?? [1])[0]])
+let x: number = null
+print(match 2 { x ?? 2 => "two", else => "other" })
+# rule 6.1.1 6.12
+# prints ["[]", "[4, 6]", "two"]

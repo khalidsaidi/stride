@@ -377,7 +377,7 @@ export function format(text, name = "program.stride") {
 
   // An arm's values, or else.
   function armValues(arm) {
-    return arm.values ? arm.values.map((v) => (v.kind === "number" ? v.raw : v.kind === "plain-string" ? plain(v.value) : expr(v, 1))).join(", ") : "else";
+    return arm.values ? arm.values.map((v) => (v.kind === "number" ? v.raw : v.kind === "plain-string" ? plain(v.value) : expr(v, PRECEDENCE["??"]))).join(", ") : "else";
   }
 
   function expr(e, outer = 0) {
@@ -461,7 +461,7 @@ export function format(text, name = "program.stride") {
         for (;;) {
           const w = last.written ?? last;
           const names = w.names ? `(${w.names.map((n) => n.name).join(", ")})` : `${last.index ? `${last.index}, ` : ""}${last.item}`;
-          fors.push(`for ${names} in ${expr(w.list, 1)}${w.condition ? ` if ${expr(w.condition, 1)}` : ""}`);
+          fors.push(`for ${names} in ${expr(w.list, PRECEDENCE["??"])}${w.condition ? ` if ${expr(w.condition, PRECEDENCE["??"])}` : ""}`);
           if (!last.nested) break;
           last = last.value;
         }

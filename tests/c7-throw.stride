@@ -48,5 +48,6 @@ let throw = 3
 print(throw + 1)
 throw "the end"
 # rule 7.19 13.4 F013
+# warning 12:10 W017
 # prints [": NONAME no name given", "file a", ": NONAME no name given", "x: F013 x is not a file", "again F013 x is not a file", "[] F013", "said", "F013 by fail", "4"]
 # fault F013 at 49:1 the end

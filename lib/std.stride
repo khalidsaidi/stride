@@ -198,6 +198,15 @@ export native function values<k, v>(m: map<k, v>) -> list<v>
 # Whether a map has a key.
 # example: has({"a": 1}, "a") gives true
 export native function has<k, v>(m: map<k, v>, key: k) -> bool
+# The item at a position of a list, or the value under a key of a map; fallback when there is none.
+# example: get([4, 5], 1) gives 5
+# example: get([4, 5], 2) == null gives true
+# example: get([4, 5], -1, 0) gives 0
+# example: [4, 5].get(9, 0) gives 0
+# example: get({"a": 1}, "b", 0) gives 0
+# example: get({"a": 1}, "a") gives 1
+# example: get([4, 5], 0.5) faults F007
+export native function get(l: any, key: any, fallback: any = null) -> any
 # Takes a key out of the map itself, or a value out of the set itself, and gives the map or the set.
 # example: remove({"a": 1, "b": 2}, "a") gives {b: 2}
 # example: remove(set([1, 2, 3]), 2) gives {1, 3}

@@ -95,7 +95,7 @@ export const CODES = {
   },
   "S001": {
     "when": "a character Stride does not read (or a file not UTF-8)",
-    "explanation": "Outside words in quotes, Stride reads names (a–z, digits, _), numbers, and the signs of §2.7. Put other characters in \"…\"."
+    "explanation": "Outside words in quotes, Stride reads names (a–z, digits, _), numbers, and the signs of §2.7. Put other characters in \"…\". `c ? a : b` is written `if c then a else b`."
   },
   "S002": {
     "when": "words in quotes not closed on their line",
@@ -235,7 +235,7 @@ export const CODES = {
   },
   "S201": {
     "when": "a name not defined",
-    "explanation": "The message gives the nearest name visible here."
+    "explanation": "The message gives the nearest name visible here; for a name put in words (`\"Other {explain}\"`), that the braces put a value in, and a brace itself is written `\\{`."
   },
   "S202": {
     "when": "a name used before the line that defines it",
@@ -363,15 +363,11 @@ export const CODES = {
   },
   "S304": {
     "when": "a constant the compiler cannot work out",
-    "explanation": "Constants are made of words, numbers and other constants."
+    "explanation": "Constants are made of words, numbers, dates, other constants, and lists, sets, maps, tuples and records of them (§5.3)."
   },
   "S305": {
     "when": "a constant's value not of its type",
     "explanation": "Fix the type or the value."
-  },
-  "S306": {
-    "when": "a constant that is a record",
-    "explanation": "Constants are words, numbers, dates, true or false, sets, and lists of them."
   },
   "S307": {
     "when": "`fill` with bool",
@@ -707,7 +703,7 @@ export const CODES = {
   },
   "S405": {
     "when": "a function giving a value on some paths only",
-    "explanation": "End every path with a return."
+    "explanation": "End every path with a return; a match that names every option ends every path its arms end (§7.10.2)."
   },
   "S407": {
     "when": "a let or var read where not every path declared it or gave it a value",
@@ -864,6 +860,10 @@ export const CODES = {
   "W011": {
     "when": "an answer under a key no question has",
     "explanation": "Warning, from `stride run`: the answer is not used (§17.12); check the key's spelling."
+  },
+  "W017": {
+    "when": "a function named as one of the standard library's, which it hides (§12.3.1)",
+    "explanation": "Warning: every call of that name in the file calls this function; rename it to keep the library's."
   }
 };
 
@@ -1653,6 +1653,18 @@ export const LIBRARY = [
   {
     "section": "14.4 Lists and sets",
     "signatures": [
+      "get(m: map<K, V>, key: K, fallback: V = null) -> V",
+      "get(l: list<T>, key: number, fallback: T = null) -> T"
+    ],
+    "names": [
+      "get",
+      "get"
+    ],
+    "gives": "the value under the key, or the item at the position key (§6.9.2); fallback when m has no such key, or when key is below 0 or past the last item; a position that is not whole is F007. Its type is V's, or T's, joined with fallback's (§3.9; none is S367); a key of another type is S367, and neither a list nor a map S369"
+  },
+  {
+    "section": "14.4 Lists and sets",
+    "signatures": [
       "remove(m: map<K, V>, key: K) -> map<K, V>"
     ],
     "names": [
@@ -1678,7 +1690,7 @@ export const LIBRARY = [
     "names": [
       "set"
     ],
-    "gives": "a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands (`let s = set()` is S328); a null item is F023"
+    "gives": "a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands — the other side of `??` or of `if … then … else`, a parameter, a return, a field, a typed `let`: there a set of options is one too (§3.6) — (`let s = set()` is S328); a null item is F023"
   },
   {
     "section": "14.4 Lists and sets",
