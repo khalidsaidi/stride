@@ -179,6 +179,29 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     if (fn && fn.result && fn.result.t !== "none" && fn.result.t !== "error" && end.falls) err("S405", fn.node, `${fn.name} gives ${fn.result.t === "record" ? fn.result.decl.name : fn.result.t} on some paths and nothing on others; end every path with a return`);
   }
 
+  // W009 (§8.4.1): a check runs only on an answer, so comparing that answer with null decides nothing.
+  for (const { body } of bodies) {
+    for (const s of statements(body)) {
+      if (s.kind !== "ask" || !s.symbol) continue;
+      const path = s.target.names.slice(1).join(".");
+      const isAnswer = (e) => {
+        const names = [];
+        for (; e?.kind === "field"; e = e.target) names.unshift(e.name);
+        return e?.kind === "name" && e.symbol === s.symbol && names.join(".") === path;
+      };
+      for (const m of s.modifiers) {
+        if (m.kind !== "check") continue;
+        for (const e of subexpressions(m.condition)) {
+          if (e.kind !== "binary" || !["==", "!="].includes(e.op)) continue;
+          const [x, y] = [e.a, e.b];
+          if ((isAnswer(x) && y.kind === "null") || (isAnswer(y) && x.kind === "null")) {
+            warn("W009", e, `this is always ${e.op === "!=" ? "true" : "false"}: a check runs only when the question is answered, so ${s.target.names.join(".")} is never null here`);
+          }
+        }
+      }
+    }
+  }
+
   // W008 (§7.13): in each block, the statement after a return, break or continue there. A statement a known
   // condition passes over is not one: it is unreachable code (§11.3.3), checked and not warned of.
   for (const { body } of bodies) {

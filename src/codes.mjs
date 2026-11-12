@@ -836,6 +836,10 @@ export const CODES = {
   "W008": {
     "when": "a statement after return, break or continue",
     "explanation": "Warning: It never runs; remove it, or the return, break or continue before it."
+  },
+  "W009": {
+    "when": "a check that compares its own answer with null",
+    "explanation": "Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not."
   }
 };
 

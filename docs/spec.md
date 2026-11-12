@@ -773,7 +773,7 @@ which changes nothing below.
 4. **Binding.** The value goes into its place: a new name is defined from here on (§12.2); a field or an item is
    set by §7.5.1 (a null record on the way is made).
 5. **Checks**, each in the order written, with the value bound: when the value is null, no check is worked out
-   and none fails. Otherwise each condition is worked out; when it is false, its message is worked out and recorded;
+   and none fails. A check that compares its own answer with null is always the same, and is warning W009. Otherwise each condition is worked out; when it is false, its message is worked out and recorded;
    when it is true, its message is not worked out (so a passing check's message cannot fault). Every check is
    worked out, not only up to the first that fails; the step records the failed checks' messages in the order the
    checks are written. A default standing for an answer not given is checked like an answer.
@@ -1584,6 +1584,7 @@ its call: the function's name in the call.
 | W006 | a collected item asked and never read | Warning: The same. |
 | W007 | a let or var never used | Warning: Remove it. |
 | W008 | a statement after return, break or continue | Warning: It never runs; remove it, or the return, break or continue before it. |
+| W009 | a check that compares its own answer with null | Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not. |
 | F001–F024 | §13.4 | |
 
 ## 17. The command line

@@ -1,0 +1,8 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask name: string "Name" check name != null "a name is needed"
+ask age: number "Age" check age == null or age > 0 "an age is more than 0"
+print(name ?? "", age ?? 0)
+# rule 8.4.1 W009
+# warning 3:31 W009
+# warning 4:29 W009
