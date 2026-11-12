@@ -10,7 +10,7 @@
 //   # engines vm                          the machine (kept from when there were two engines)
 //   # header-pdf <sha256>, # header-form <id>   the header is for this PDF or form, not the program's (S501, S502)
 //   # std <file>                          this standard library (in tests/lib/) instead of lib/std.stride
-//   # box Name text|check|radio:on|choice:a,b near words   the header's boxes; without any, every box the
+//   # box Name text[:max]|check[:on]|radio:on|choice:a,b near words   the header's boxes; without any, every box the
 //                                         program writes is made a text or check box, with every printed word
 //                                         beside it
 //
@@ -111,12 +111,13 @@ export function expectations(text) {
         out.engines = rest.split(/[\s,]+/).filter(Boolean);
         break;
       case "box": {
-        const p = rest.match(/^(\S+)\s+(text|check|radio:\S+|choice:\S+)(?:\s+near\s+(.*))?$/);
+        const p = rest.match(/^(\S+)\s+(text(?::\d+)?|check(?::\S+)?|radio:\S+|choice:\S+)(?:\s+near\s+(.*))?$/);
         if (!p) throw new Error(`# box Name text|check|radio:on|choice:a,b [near words]: ${rest}`);
         const [what, arg] = p[2].split(":");
         const box = { field: p[1], kind: what, near: p[3] ? [p[3]] : [], page: 1 };
         if (what === "radio") box.on = arg;
-        if (what === "check") box.on = "Yes";
+        if (what === "check") box.on = arg ?? "Yes"; // check:A: one of the field's on values, a widget of its own
+        if (what === "text" && arg) box.max = Number(arg); // text:N: it holds N characters
         if (what === "choice") box.options = arg.split(",");
         out.header.push(box);
         break;

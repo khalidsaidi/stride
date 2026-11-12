@@ -308,7 +308,7 @@ least 1 option (S235). A question's own options obey the same. The
 printed words are the form's own, as its writer reads them.
 
 5.3. **const**: `"const" name [":" type] "=" expr`. Its value is worked out by the compiler (§11): words, a
-number, a date, true or false, a set, or a list of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
+number, a date, true or false, a set, or a list or a map of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
 
 5.4. **function**: `"function" name ["<" name ("," name)* ">"] "(" [param ("," param)*] ")" ["->" type] block`.
 `param = name ":" type ["=" expr]`. §9.
@@ -974,12 +974,39 @@ values, S761. In everything else it is a function written in place: it keeps and
 value, a list box's entries. The header is input: the compiler takes what it says and works nothing out about the
 form. The header's PDF and form must be the program's (S501, S502).
 
+10.2.1. **The header's boxes.** The header lists each of the PDF's fields once, however many widgets it has (copies
+of the form, a field on two pages), the place of its first widget and, when it has more than one, each widget's
+page, place and on value (`widgets`). A check box's `on` is its on value, or the list of them when its widgets have
+their own; a radio group's `on` is the list of its buttons. A field the PDF marks read-only (a calculated total) is
+listed, marked `readonly`. A header that lists a field once per widget is read as one box of all of them.
+
+10.2.2. **Where the header is.** A program's header is beside it: `<program>.boxes.json`, else `<form id>.boxes.json`,
+the id its form line gives (§4.1). `stride check t.stride` with `form w9` reads `w9.boxes.json` when there is no
+`t.boxes.json`. With neither, `check` checks the program alone, and `run` and `compile` say both names.
+
 10.3. **What the compiler looks up.** A box's name written out in the program is looked up in the header, as a
 name is looked up among the declarations: it is one of the form's boxes (S508, with the nearest
 name), and it is written by the statement of its kind: `fill` a text or list box, `tick` a check box, `pick` a
 radio group (S509); a button written out is one the group has (S511); words written out for a list box are one of
 its entries (S514). That is all: the compiler follows no path and proves nothing about what a program does with
 its boxes.
+- 10.3.1. **Names the compiler works out.** A box's name, a button and words for a box that the compiler works
+  out (§11.1) are looked up as those written out are: a constant, an item of a constant list at a position
+  written out, a constant map's value under a key written out, and words made of constants (`"Line {N}"`). Inside
+  `for x in L`, `for i, x in L` or `for k, v in M` over a constant list or map (or `for i in a..b` with bounds
+  written out), a name made only of the loop's names and constants is looked up once for each item:
+  `for b in BOXES { tick b when … }` checks every name of BOXES. A name made of anything else (an answer, a let, a
+  parameter, a call of a Stride function) is worked out as the program runs (§10.4).
+- 10.3.2. **A check box of several on values.** A check box whose widgets have each their own on value (a group of
+  check boxes used as a radio group: one field, `Female`, `Male`, …) is written by `pick` with one of those on
+  values, `pick "Sex" "Male" when …`, which puts that value in the field, as a radio group's button is; an on
+  value it does not have is S511. `tick` writes its first on value. `pick` writes any check box by one of its on
+  values.
+- 10.3.3. **The nearest.** S511 and S514 give the button, on value or entry nearest the words written, when one is
+  near: the same words in other capitals or spaces, an entry the words start with or that starts with them
+  (`"March"` and `"Mar"`), or one a few letters away.
+- 10.3.4. **Longer than the box.** Words the compiler knows (§10.3.1) put in a text box whose header gives a
+  longest length (`max`), and longer than it, are warning W010; they are written as they are.
 
 10.4. **Stride is no stricter than the form.** A form lets a person leave a box empty, or write over one. A
 program may write a box more than once: the later write is the one that stays. A name, a button or words worked
@@ -991,7 +1018,8 @@ F016, and anything else goes in as it is.
 11.1. The compiler works out, before the program runs: a constant's value (§5.3), a parameter's default (§9.2),
 an option's printed words and the words after `faults`. Such a value is made of words, numbers,
 dates, `true`, `false`, `null`, other constants, lists of them, an item of a constant list, and pure natives of
-them. One that is not is S304 (a constant) or S412 (an option's words, the
+them. A map written out of such values is one too, and a constant map's value under a key written out (null when
+it has none). One that is not is S304 (a constant) or S412 (an option's words, the
 words after `faults`).
 
 11.2. **Everything else is worked out as the program runs.** A box's name and a button's, a question's printed
@@ -1563,9 +1591,9 @@ its call: the function's name in the call.
 | S501 | the header for another PDF | Run `stride header <form>.pdf` again, or fix the `pdf` line. |
 | S502 | the header for another form | The same. |
 | S508 | a box the PDF lacks | The message gives the nearest. |
-| S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group. |
-| S511 | a radio button the group lacks | The message lists its buttons. |
-| S514 | a list box entry it lacks | The list box's entries. |
+| S509 | a box written by the wrong statement | fill a text or list box, tick a check box, pick a radio group or a check box by one of its on values (§10.3.2). |
+| S511 | a radio button the group lacks, or an on value a check box lacks | The message lists its buttons, or its on values, and the nearest (§10.3.3). |
+| S514 | a list box entry it lacks | The list box's entries; the message gives the nearest (§10.3.3). |
 | S601 | more than 255 arguments or parameters | Use a record. |
 | S700 | a range's bound that is not a number | `a..b` and `a..<b` are ranges of whole numbers (§6.17). |
 | S720 | throw of a value that is not an error and not words | `throw "message"`, or `throw error("message", code: "CODE")` (§7.19). |
@@ -1585,6 +1613,8 @@ its call: the function's name in the call.
 | W007 | a let or var never used | Warning: Remove it. |
 | W008 | a statement after return, break or continue | Warning: It never runs; remove it, or the return, break or continue before it. |
 | W009 | a check that compares its own answer with null | Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not. |
+| W010 | words written in a text box longer than its longest length | Warning: the form's box holds fewer characters (§10.3.4); they are written as they are. |
+| W011 | an answer under a key no question has | Warning, from `stride run`: the answer is not used (§17.12); check the key's spelling. |
 | F001–F024 | §13.4 | |
 
 ## 17. The command line
@@ -1605,7 +1635,7 @@ its call: the function's name in the call.
 | `stride new <name> [--pdf <file.pdf>]` | §17.6 |
 | `stride init [folder]` | §4.7 |
 | `stride header <file.pdf> [-o file.boxes.json]` | §17.6 |
-| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes not written |
+| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes written by a name worked out as the program runs; the boxes not written (§17.6.1) |
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
 | `stride vscode [-o file.vsix]` | §17.16 |
@@ -1653,9 +1683,12 @@ written (its folder is not there)`, `x.stride: a folder, not a file`), never as 
 itself says so, and that `STRIDE_DEBUG=1` shows where.
 
 17.6. **Starting and editing.**
-- `stride header <file.pdf>` writes the form's header (§10) from its PDF: its sha256, and each box (a check box or
-  radio button one per export value) as the PDF gives it: its kind, export value, longest length, place on its page
-  and its maker's description, when it has one. It works nothing out. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
+- `stride header <file.pdf>` writes the form's header (§10) from its PDF: its sha256, and each box (each field
+  once, §10.2.1) as the PDF gives it: its kind, export values, longest length, place on its page and its maker's
+  description, when it has one. It works nothing out. The fields are those of the PDF's form (its field tree),
+  a widget no page lists among its annotations included and a widget on no page left out; buttons and signatures
+  are not boxes. `header` says how many boxes the form has, and `check` (`no errors (3 questions, 12 boxes in the
+  form)`) counts the same. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
   file name gives the form's id. A file that is not a PDF, or a PDF with no box a person fills, writes nothing
   (exit 1).
 - `stride new <name>` writes a script `<name>.stride` (§4.6) and a test of it `<name>.tests/first.json`; with
@@ -1676,6 +1709,15 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
   the library it is, used from the folder that holds `lib/`; places as the protocol counts them, characters in
   UTF-16 units (columns of §1.3 are characters); a declaration in another file found at that file's own path;
   the rest as §17.16.
+
+17.6.1. **stride map.** The questions are every question the program asks, a question asked in a function under
+the key of the function's first call (§8.6.2). A box's answers are those its words, its condition or its button are
+made of, through lets, the functions called and what they return, and the parameters a function is given. A
+`fill`, `tick` or `pick` whose box's name is worked out as the program runs (§10.4) may write any box of its kind
+whose name fits the parts of the name written out (`"City{n}"`: every text box whose name starts with `City`); those
+boxes are listed as written by a name worked out as the program runs, not as boxes not written. `--json` gives them as
+`writtenByNameWorkedOut`. A question whose answer goes into such a write is said to go into a box named as the
+program runs (`intoBoxNamedAtRun` in `--json`), not to decide only what is asked.
 
 17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program in the
 machine, which tells of each statement as it starts. It prints each statement's file, line and text when it
@@ -1740,6 +1782,10 @@ trace, what a command did (`x.stride: no errors`), prompts.
    converted as §8.7 converts words. For a one_of question, the value is an option's value. For an any_of
    question, the value is one option's value when it is one; else values separated by commas; an option whose
    value holds a comma, given with others, is given in an answers file.
+
+An answer under a key no question of the program has (not asked by the run, and not the key of any of its
+questions, whatever the turns, calls and functions it is asked in) is warning W011 on stderr, naming the key; in
+`--json`, among the diagnostics. The run goes on without it, and exits as it would.
 
 A word is `key=value` when it starts with a letter or `_` and holds such an `=`; any other word is the answers
 file. A file whose name would read as `key=value` is given as `./name`. A second answers file, `-` used for both
@@ -1856,7 +1902,8 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 - **Reloading.** A source program is compiled again each time the page is loaded, its libraries and header read
   again, so saving the source and reloading shows the change. When it has mistakes then, the page shows them,
   with their places, in place of the questions, and gives no workflow until they are mended.
-- **The PDF** is `--pdf`, else `<name>.pdf` beside the program or the bytecode. It is read again at each reload,
+- **The PDF** is `--pdf`, else `<name>.pdf` beside the program or the bytecode, else, for a source program,
+  `<form id>.pdf` beside it (as its header, §10.2.2). It is read again at each reload,
   with the source and its header, so the three may be replaced together while the run goes on. One whose sha256 is
   not the one the program's header names, or for bytecode the one compiled into it, is refused when the run starts
   (exit 1) and at each reload after, with that said, and so is one no longer there; the page is given the reason,

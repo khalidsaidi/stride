@@ -1,0 +1,22 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Line1 text near Line 1
+# box Line2 text near Line 2
+# box Yes1 check near Yes
+# box Kind radio:a near Kind
+const LINES = ["Line1", "Line2", "Line3"]
+const TICKS: map<string, string> = {"first": "Yes1", "second": "Yes2"}
+const N = 2
+const KIND = "Kind"
+fill LINES[0] = "a"
+# mistake 13:6 S508 the PDF has no box "Line3"; did you mean Line1?
+fill LINES[2] = "c"
+tick TICKS["first"] when true
+# mistake 16:6 S508 the PDF has no box "Yes2"; did you mean Yes1?
+tick TICKS["second"] when true
+fill "Line{N}" = "b"
+# mistake 19:1 S509 "Kind" is a radio group; fill cannot write it (pick does)
+fill KIND = "x"
+# mistake 21:6 S508 the PDF has no box "Line9"
+fill "Line{N + 7}" = "z"
+# rule 10.3.1 S508

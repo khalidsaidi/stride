@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Sex check:Female near Sex
+# box Sex check:Male near Sex
+# box Sex check:Non-binary near Sex
+# box Agree check near I agree
+enum sex { "Female" "Female" "Male" "Male" "Non-binary" "Non-binary" }
+ask s: one_of sex "Sex"
+ask agree: bool "I agree"
+pick "Sex" "Male" when s == "Male"
+pick "Sex" "Female" when s == "Female"
+pick "Sex" "{s}" when s == "Non-binary"
+pick "Agree" "Yes" when agree
+# rule 10.3.2 10.2.1
+# run male
+# answers {"s": "Male", "agree": true}
+# boxes {"Sex": "Male", "Agree": "Yes"}
+# run other
+# answers {"s": "Non-binary", "agree": false}
+# boxes {"Sex": "Non-binary"}

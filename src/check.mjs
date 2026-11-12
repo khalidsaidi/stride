@@ -121,7 +121,7 @@ export function check(resolved, diagnostics) {
     if (sym.declaredType && !fitsAt(sym.node.value, type, sym.declaredType)) err("S305", sym.node.value, `${sym.name} is declared ${T.describe(sym.declaredType)}, and its value is ${T.describe(type)}`);
     else if (sym.declaredType) optionLiteral(sym.node.value, sym.declaredType);
     sym.type = sym.declaredType ?? type;
-    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, true or false, a set, or a list of them; ${sym.name} is ${T.describe(sym.type)}`);
+    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, true or false, a set, or a list or a map of them; ${sym.name} is ${T.describe(sym.type)}`);
     return sym.type;
   }
 

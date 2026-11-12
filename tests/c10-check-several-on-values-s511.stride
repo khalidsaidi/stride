@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Sex check:Female near Sex
+# box Sex check:Male near Sex
+# box Radio radio:Yes near Yes
+# box Radio radio:No near No
+ask b: bool "Sex"
+# mistake 9 S511 the check box "Sex" has no on value "male"; it has "Female", "Male"; did you mean "Male"?
+pick "Sex" "male" when b
+# mistake 11 S511 the radio group "Radio" has no button "Yess"; it has "Yes", "No"; did you mean "Yes"?
+pick "Radio" "Yess" when b
+# mistake 13 S509 "Sex" is a check box; fill cannot write it (tick or pick does)
+fill "Sex" = "Male"
+# rule 10.3.2 10.3.3 S511 S509

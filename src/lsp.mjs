@@ -6,7 +6,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, basename, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { compile, projectOf, STD_PATH, stdSource } from "./compile.mjs";
+import { compile, headerPathsOf, projectOf, STD_PATH, stdSource } from "./compile.mjs";
 import { format } from "./format.mjs";
 import { KEYWORDS } from "./syntax.mjs";
 import { describe } from "./types.mjs";
@@ -59,14 +59,15 @@ function compileDoc(uri, text, texts = openTexts()) {
     const dir = basename(lib.folder) === "lib" ? dirname(lib.folder) : lib.folder;
     return { out: compile(`import "${lib.name}"\n`, "library-check.stride", { dir, read, libraries: [lib.folder, ...libraries] }), own: `lib/${lib.name}.stride`, path, problem };
   }
-  const base = path.replace(/\.stride$/, "");
-  const header = disk(`${base}.boxes.json`);
+  const paths = headerPathsOf(path, text);
+  const headerPath = paths.find((p) => existsSync(p)) ?? paths[0];
+  const header = disk(headerPath);
   // A header that is not JSON is said at the top of the file, and the file is checked as if it had none.
   let parsed = null;
   try {
     parsed = header ? JSON.parse(header) : null;
   } catch (e) {
-    problem = `${basename(base)}.boxes.json is not JSON: ${e.message}`;
+    problem = `${basename(headerPath)} is not JSON: ${e.message}`;
   }
   return { out: compile(text, basename(path), { dir: dirname(path), header: parsed, read, libraries }), own: basename(path), path, problem };
 }

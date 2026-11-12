@@ -1,0 +1,14 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Prov text:2 near Province
+# box Note text near Note
+const QUEBEC = "Quebec"
+# warning 7:15 W010 "Quebec" is 6 characters, and the box "Prov" holds 2
+fill "Prov" = QUEBEC
+fill "Prov" = "QC"
+fill "Note" = "a long note with no longest length"
+ask p: string "Province"
+fill "Prov" = p
+# rule 10.3.4 W010
+# answers {"p": "Ontario"}
+# boxes {"Prov": "Ontario", "Note": "a long note with no longest length"}

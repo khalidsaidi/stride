@@ -3,7 +3,7 @@
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
 import { BINARY_OPS, FIELD_STARTS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
-import { D, isNumber, isDate, isSet, isRange, StrideTuple } from "../runtime/values.mjs";
+import { D, isNumber, isDate, isSet, isRange, StrideTuple, StrideMap } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
@@ -312,6 +312,10 @@ export function generate(program, pdf, debug = null) {
       } else if (Array.isArray(v)) {
         v.forEach(value);
         emit(OP.NEW_LIST, v.length);
+      } else if (v instanceof StrideMap) {
+        // A map (§3.10): made empty, then each key and its value put in, in order.
+        emit(OP.NATIVE, nativeIndex("map_of"), 0);
+        for (const [k, x] of v.pairs) (value(k), value(x), emit(OP.NATIVE, nativeIndex("map_put"), 3));
       } else if (v instanceof StrideTuple) {
         // A tuple (§3.11): its values, made a tuple.
         value(v.items);

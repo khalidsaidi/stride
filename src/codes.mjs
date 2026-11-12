@@ -755,15 +755,15 @@ export const CODES = {
   },
   "S509": {
     "when": "a box written by the wrong statement",
-    "explanation": "fill a text or list box, tick a check box, pick a radio group."
+    "explanation": "fill a text or list box, tick a check box, pick a radio group or a check box by one of its on values (§10.3.2)."
   },
   "S511": {
-    "when": "a radio button the group lacks",
-    "explanation": "The message lists its buttons."
+    "when": "a radio button the group lacks, or an on value a check box lacks",
+    "explanation": "The message lists its buttons, or its on values, and the nearest (§10.3.3)."
   },
   "S514": {
     "when": "a list box entry it lacks",
-    "explanation": "The list box's entries."
+    "explanation": "The list box's entries; the message gives the nearest (§10.3.3)."
   },
   "S601": {
     "when": "more than 255 arguments or parameters",
@@ -840,6 +840,14 @@ export const CODES = {
   "W009": {
     "when": "a check that compares its own answer with null",
     "explanation": "Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not."
+  },
+  "W010": {
+    "when": "words written in a text box longer than its longest length",
+    "explanation": "Warning: the form's box holds fewer characters (§10.3.4); they are written as they are."
+  },
+  "W011": {
+    "when": "an answer under a key no question has",
+    "explanation": "Warning, from `stride run`: the answer is not used (§17.12); check the key's spelling."
   }
 };
 

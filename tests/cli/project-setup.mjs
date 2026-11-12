@@ -28,7 +28,7 @@ export function test() {
     expect(["new", "hello"], 1, "is there already");
     expect(["new", "bad name"], 2, "is not a form id");
     expect(["new", "consent", "--pdf", "consent.pdf"], 0, "consent.boxes.json");
-    expect(["check", "consent.stride"], 0, "no errors (1 question, 2 boxes)");
+    expect(["check", "consent.stride"], 0, "no errors (1 question, 2 boxes in the form)");
     expect(["test", "consent.stride"], 0, "1 test passed");
     expect(["map", "consent.stride"], 0, "name                                 = name");
     expect(["map", "consent.stride"], 0, "not written\n  agree");
@@ -39,7 +39,7 @@ export function test() {
     // What the PDF says of each box, and no words worked out from where they stand on the page (§17.6).
     if (name?.kind !== "text" || name.max !== 40 || "near" in name || "printed" in name) problems.push(`the text box: ${JSON.stringify(name)}`);
     if (agree?.kind !== "check" || agree.on !== "Yes" || "near" in agree) problems.push(`the check box: ${JSON.stringify(agree)}`);
-    expect(["header", "consent.pdf", "-o", "again.boxes.json"], 0, "2 boxes of consent.pdf");
+    expect(["header", "consent.pdf", "-o", "again.boxes.json"], 0, "2 boxes in the form consent.pdf");
     if (!existsSync(join(dir, "again.boxes.json"))) problems.push("stride header wrote no again.boxes.json");
     expect(["header", "flat.pdf"], 1, "not a PDF");
     // The PDF where it would go is never written over; the very PDF given, already there, is used as it is.

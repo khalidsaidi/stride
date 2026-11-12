@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Month choice:Jan,Feb,Mar,Apr near Month
+# box State choice:New_York,Texas near State
+# mistake 6 S514 the list box "Month" has no entry "March"; did you mean "Mar"?
+fill "Month" = "March"
+# mistake 8 S514 has no entry "texas"; did you mean "Texas"?
+fill "State" = "texas"
+# mistake 10 S514 has no entry "Zzz"$
+fill "State" = "Zzz"
+# rule 10.3.3 S514

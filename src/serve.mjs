@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join } from "node:path";
-import { compileFile } from "./compile.mjs";
+import { compileFile, headerPathsOf } from "./compile.mjs";
 import { load } from "../runtime/vm.mjs";
 import { fileURLToPath } from "node:url";
 
@@ -52,7 +52,10 @@ export async function bundle() {
 // or { error }. The caller has checked the program compiles and is not a script.
 export async function serve(programPath, { pdfPath = null, port = 8080, today = null } = {}) {
   const fromBytecode = programPath.endsWith(".sbc");
-  const pdfFile = pdfPath ?? programPath.replace(/\.(stride|sbc)$/, ".pdf");
+  // Beside the program, named as it, or for source, as its form (as its header is, §10.2).
+  const named = programPath.replace(/\.(stride|sbc)$/, ".pdf");
+  const asForm = !fromBytecode && existsSync(programPath) ? headerPathsOf(programPath, readFileSync(programPath))[1]?.replace(/\.boxes\.json$/, ".pdf") : null;
+  const pdfFile = pdfPath ?? (!existsSync(named) && asForm && existsSync(asForm) ? asForm : named);
   if (!existsSync(pdfFile)) return { error: `${pdfFile}: no such file; give the form's PDF with --pdf`, usage: true };
   // The PDF as it is now: read again at every load, with the source and its header, so the three may be replaced
   // together while the run goes on.

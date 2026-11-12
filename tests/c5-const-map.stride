@@ -1,0 +1,11 @@
+const FEES: map<string, number> = {"regular": 0, "express": 22.95}
+const PLAIN = {"a": "x", "b": "y"}
+print(FEES["express"])
+print(FEES["none"] ?? 0)
+print(PLAIN)
+let m = FEES
+m["regular"] = 5
+print(FEES["regular"])
+for k, v in PLAIN { print("{k}={v}") }
+# rule 5.3 11.1
+# prints ["22.95", "0", "{a: x, b: y}", "0", "a=x", "b=y"]

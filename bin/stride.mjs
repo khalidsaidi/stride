@@ -63,8 +63,8 @@ const COMMANDS = {
   guide: ["stride guide [topic]", "How to write Stride: the guide, built in. With a topic, the part whose heading holds it; `stride guide coming-from` for someone who knows Go, Java, JavaScript or Python; `stride guide topics` lists them.", {}, "stride guide coming-from"],
   new: ["stride new <name> [--pdf <file.pdf>]", "A new program to start from: <name>.stride, a test in <name>.tests/, and, with --pdf, the form's header <name>.boxes.json read from the PDF.", { "--pdf": ["the form's PDF, whose boxes the program fills", "file.pdf"] }, "stride new w9 --pdf fw9.pdf"],
   init: ["stride init [folder]", "Makes a folder a project: stride.json, saying the Stride it needs, and lib/ for the libraries its programs share.", {}, "stride init"],
-  header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256 and each box as the PDF gives it: its kind, export value, longest length and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
-  map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, and those not written.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
+  header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256 and each box (each field once, with every widget's place) as the PDF gives it: its kind, export values, longest length, whether it is read-only and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
+  map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, those a name worked out as the program runs may write, and those not written.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
   asm: ["stride asm <file.stride|file.sbc>", "The instructions, with their source lines.", { "--ir": ["the intermediate form instead", null] }, "stride asm w9.stride"],
   fmt: ["stride fmt <path …>", "Puts the files in Stride's one layout, comments kept; a folder, every .stride file in it.", { "--check": ["only says which files are not in it", null] }, "stride fmt ."],
   lsp: ["stride lsp", "The language server, for editors: mistakes as you type, completion, signatures, going to a definition, references, renaming, what a name is.", {}, "stride lsp"],
@@ -208,7 +208,7 @@ function program(file, { needBytecode = true, warnings = null, source = null, op
   if (warnings) warnings.push(...ws);
   else if (!quiet) for (const w of ws) err(`${w.format({ color: colours.err })}\n`);
   if (!out.diagnostics.empty) return { out, mistakes: out.diagnostics.sorted().filter((d) => d.severity === "error") };
-  if (!out.header && needBytecode && !out.program?.test && !out.program?.script) return { out, error: `${file}: no header ${out.headerPath}; write it with stride header <form.pdf>` };
+  if (!out.header && needBytecode && !out.program?.test && !out.program?.script) return { out, error: `${file}: no header ${(out.headerPaths ?? [out.headerPath]).join(" or ")}; write it with stride header <form.pdf>` };
   return { out, p: out.bytecode ? load(out.bytecode) : null };
 }
 
@@ -329,6 +329,20 @@ function answersFrom(words, { stdinTaken }) {
   return { answers, given: given || pairs.length > 0, pairs: new Set(pairs.map(([k]) => k)) };
 }
 
+// The keys of answers given that no question of the program has (§17.12): not asked in the run, and not the key of
+// any of its questions, whatever the turns of loops ([n]), the call (#2) and the function it is asked in.
+function unknownKeys(p, keys, steps) {
+  const asked = new Set(steps.map((s) => s.key));
+  const bare = (k) => k.replace(/\[[^\]]*\]/g, "").replace(/#(\d+|any|another)(?=\.|$)/g, "");
+  const names = (p.questions ?? []).map((q) => bare(q.name));
+  const last = (k) => k.split(".").pop();
+  return keys.filter((k) => {
+    if (asked.has(k)) return false;
+    const b = bare(k);
+    return !names.some((n) => b === n || b.endsWith(`.${n}`) || last(b) === last(n));
+  });
+}
+
 // One answer given as words (key=value, or typed at a prompt) to an options question (§17.12): words that are one of
 // its values are that value; at a prompt, else a number is the option of that number. An any_of answer is one value,
 // or values separated by commas; an option whose value holds a comma, alongside others, is given in JSON.
@@ -446,7 +460,7 @@ async function main(argv) {
       if (header.error) return fail(`${pdfPath}: ${header.error}`);
       const w = writing(to, () => writeHeader(to, header));
       if (w) return fail(w);
-      status(`${to}: ${plural(header.boxes.length, "box", "boxes")} of ${pdfPath}, pdf ${header.pdf}`);
+      status(`${to}: ${plural(header.boxes.length, "box", "boxes")} in the form ${pdfPath}, pdf ${header.pdf}`);
       return 0;
     }
     case "new": {
@@ -490,24 +504,27 @@ async function main(argv) {
       const warnings = json ? [] : null;
       const r = program(args[0], { warnings });
       if (r.error) return fileError(r);
-      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], notWritten: [] })), 1) : (report(r.mistakes), 1);
+      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], writtenByNameWorkedOut: [], notWritten: [] })), 1) : (report(r.mistakes), 1);
       if (r.out.program?.script) return fail(`${args[0]} is a script: it writes no boxes (§4.6)`);
       const short = (b) => b.slice(r.p.prefix.length);
       const byKey = new Map();
       for (const l of r.out.links) byKey.set(l.key, [...(byKey.get(l.key) ?? []), l]);
       const linked = new Set(r.out.links.map((l) => l.box));
       const written = [...r.out.written].filter((b) => !linked.has(b));
-      const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b));
+      // A box a name worked out as the program runs may write is not said to be left unwritten.
+      const byName = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b) && r.out.byName?.has(b));
+      const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b) && !r.out.byName?.has(b));
       if (json) {
-        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })) })), writtenFromNoAnswer: written.map(short), notWritten: skipped.map(short) }));
+        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })), intoBoxNamedAtRun: !!r.out.intoNamed?.has(key) })), writtenFromNoAnswer: written.map(short), writtenByNameWorkedOut: byName.map(short), notWritten: skipped.map(short) }));
         return 0;
       }
       out(bold("question → the boxes its answer goes into (= as given)"));
       for (const [key, { printed }] of r.out.keys) {
         const into = byKey.get(key) ?? [];
-        out(`  ${key.padEnd(36)} ${into.length ? into.map((l) => `${l.direct ? "= " : ""}${short(l.box)}`).join(", ") : "(no box: it decides what is asked)"}${printed ? `   "${printed.slice(0, 50)}"` : ""}`);
+        out(`  ${key.padEnd(36)} ${[...into.map((l) => `${l.direct ? "= " : ""}${short(l.box)}`), ...(r.out.intoNamed?.has(key) ? ["(a box named as the program runs)"] : [])].join(", ") || "(no box: it decides what is asked)"}${printed ? `   "${printed.slice(0, 50)}"` : ""}`);
       }
       if (written.length) out(`${bold("\nwritten from no answer")}\n  ${written.map(short).join("\n  ")}`);
+      if (byName.length) out(`${bold("\nwritten by a name worked out as the program runs")}\n  ${byName.map(short).join("\n  ")}`);
       if (skipped.length) out(`${bold("\nnot written")}\n  ${skipped.map(short).join("\n  ")}`);
       return 0;
     }
@@ -568,7 +585,7 @@ async function main(argv) {
         else if (r.error) err(r.error);
         else if (r.mistakes) report(r.mistakes);
         else {
-          status(`${errGreen(`${file}: no errors`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")})` : ""}`);
+          status(`${errGreen(`${file}: no errors`)}${r.p ? ` (${plural(r.p.questions.length, "question")}, ${plural(r.p.boxes.length, "box", "boxes")} in the form)` : ""}`);
         }
       }
       if (json) out(JSON.stringify({ ok: bad === 0, files }));
@@ -650,10 +667,15 @@ async function main(argv) {
         trace?.flush();
       }
       const script = !r.p.form;
+      // An answer under a key no question of the program has is said (W011), and the run goes on without it.
+      const unknown = unknownKeys(r.p, Object.keys(given.answers ?? {}), result.steps);
+      const from = args.slice(1).find((w) => !assignment(w)) ?? "the answers";
+      const unknownWarnings = unknown.map((k) => ({ severity: "warning", code: "W011", message: `no question has the key "${k}"; its answer is not used`, file: given.pairs?.has(k) ? `${k}=…` : from === "-" ? "stdin" : from, line: 0, column: 0, endLine: 0, endColumn: 0 }));
+      if (!json && !quiet) for (const w of unknownWarnings) err(`${w.file}: warning W011: ${w.message}\n`);
       const written = Object.entries(result.named ? result.writes : boxValues(r.p, result.writes)).filter(([, v]) => v !== "" && v !== "Off");
       if (json) {
         const value = (v) => (v === null || v === undefined ? null : Array.isArray(v) ? v.map(value) : typeof v === "boolean" ? v : stringOf(v));
-        out(JSON.stringify({ ok: !result.fault, diagnostics: warnings.map((d) => d.toJSON()), questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
+        out(JSON.stringify({ ok: !result.fault, diagnostics: [...warnings.map((d) => d.toJSON()), ...unknownWarnings], questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
         return result.fault ? 1 : 0;
       }
       // A script gives its print lines as they are; a program also the questions it asked and the boxes it wrote.

@@ -1,0 +1,17 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Row1 text near Row 1
+# box Row2 text near Row 2
+ask n: number "Which row"
+let rows = ["Row1", "Row9"]
+function put(box: string, v: string) { fill box = v }
+fill "Row{n}" = "x"
+fill rows[0] = "y"
+put("Row2", "z")
+# rule 10.3.1 10.4
+# run fine
+# answers {"n": 1}
+# boxes {"Row1": "y", "Row2": "z"}
+# run missing
+# answers {"n": 7}
+# fault F016

@@ -691,7 +691,8 @@ write the same boxes.
 ## 20. The PDF
 
 - `fill "box" = e` writes words into a text box or a list box; `tick "box" when c` ticks a check box; `pick
-  "group" "button" when c` chooses a radio button.
+  "group" "button" when c` chooses a radio button. A check box whose widgets have each their own on value (one
+  field, `Female` and `Male`) is a radio group in all but name: `pick "Sex" "Male" when c` (§10.3.2).
 - **No stricter than the form.** A box written out that the PDF does not have is a mistake, as a misspelt name
   is. A box the program never mentions stays empty, and a box written twice keeps the later write (§10).
 - **The question beside its box.** A question's printed words are the form's own, so a person meets the same words
@@ -731,7 +732,10 @@ tick "agree" when agrees
 ```
 
 - A box's name and a question's printed words are ordinary expressions, worked out as the program runs (§11.2):
-  `fill "Row{n}" = v`. `stride map` lists the boxes a program names outright.
+  `fill "Row{n}" = v`. A name the compiler works out (a constant, `BOXES[0]`, `"Row{N}"`, each item of
+  `for b in BOXES` over a constant list or map) is checked against the form as one written out is (§10.3.1).
+  `stride map` lists the boxes a program names outright, and apart from them those a name worked out as it runs
+  may write.
 - A program never changes the PDF: it only fills its boxes, and nothing a person types leaves their browser.
 
 ## 21. Sharing a program

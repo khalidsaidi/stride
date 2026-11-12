@@ -86,11 +86,13 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
   let pdf = null;
   // A script has no form either (§4.6): its header is empty, whatever file is beside it.
   if (header || program.test || program.script) {
-    pdf = checkForm(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics, { open: !program.test && !program.script && header.open === true });
+    pdf = checkForm(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics, { open: !program.test && !program.script && header.open === true, resolved });
     out.questions = pdf.questions;
     out.boxes = pdf.boxes;
     out.written = pdf.written ?? new Set(pdf.boxes.keys());
     out.links = pdf.links;
+    out.byName = pdf.byName;
+    out.intoNamed = pdf.intoNamed;
     out.keys = pdf.keys;
     phase("pdf");
     if (!diagnostics.empty) return out;
@@ -140,13 +142,13 @@ export function projectOf(path) {
   }
 }
 
-// Compiles the file at `path`, with its header (<form>.boxes.json) beside it, and its project's libraries (§4.7).
+// Compiles the file at `path`, with its header beside it (headerPathsOf), and its project's libraries (§4.7).
 export function compileFile(path, options = {}) {
   const project = projectOf(path);
   if (project) options = { libraries: project.libraries, ...options };
   const source = readFileSync(path);
-  const base = path.replace(/\.stride$/, "");
-  const headerPath = `${base}.boxes.json`;
+  const paths = headerPathsOf(path, source);
+  const headerPath = paths.find((p) => existsSync(p)) ?? paths[0];
   let header = options.header ?? null;
   // A header that is not JSON is the file's own mistake, said with its name.
   if (!header && existsSync(headerPath)) {
@@ -156,5 +158,16 @@ export function compileFile(path, options = {}) {
       throw Object.assign(new Error(`${headerPath} is not JSON: ${e.message}`), { headerProblem: true });
     }
   }
-  return { ...compile(source, basename(path), { dir: dirname(path), header, ...options }), headerPath, header };
+  return { ...compile(source, basename(path), { dir: dirname(path), header, ...options }), headerPath, headerPaths: paths, header };
+}
+
+// Where a program's header may be (§10.2): beside it, named as the program (<program>.boxes.json), or as its form
+// (<form id>.boxes.json, the id its form line gives), in that order.
+export function headerPathsOf(path, source) {
+  const base = path.replace(/\.stride$/, "");
+  const text = typeof source === "string" ? source : new TextDecoder().decode(source);
+  const form = text.replace(/^\uFEFF/, "").match(/^form[ \t]+([A-Za-z0-9][A-Za-z0-9_.-]*)[ \t]*(?:#.*)?$/m)?.[1];
+  const paths = [`${base}.boxes.json`];
+  if (form && form !== basename(base)) paths.push(join(dirname(path), `${form}.boxes.json`));
+  return paths;
 }

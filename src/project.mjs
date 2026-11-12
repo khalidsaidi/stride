@@ -12,6 +12,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import { compile, projectOf, LANGUAGE } from "./compile.mjs";
 import { KEYWORDS } from "./syntax.mjs";
 import { LIBRARY } from "./codes.mjs";
+import { onValuesOf } from "./form.mjs";
 
 // PDF.js, loaded when a PDF is read, never when stride starts. It reads the PDF here, in this process, with its
 // worker loaded beside it, so the one executable, with no worker file and no canvas package, reads PDFs too; the
@@ -45,7 +46,9 @@ export async function headerOf(bytes, form) {
   return { form, pdf: createHash("sha256").update(bytes).digest("hex"), boxes };
 }
 
-export const writeHeader = (path, header) => writeFileSync(path, `${JSON.stringify(header, null, 1)}\n`);
+// One box to a few lines, each of its widgets on one line, and each list of on values or options on one line.
+export const writeHeader = (path, header) =>
+  writeFileSync(path, `${JSON.stringify(header, null, 1).replace(/\{\n\s+"page"[^{}]*\}/g, (w) => w.replace(/\n\s*/g, " ")).replace(/\[\n(\s+"[^"\n]*(?:\\.[^"\n]*)*",?\n)+\s*\]/g, (l) => l.replace(/\n\s*/g, " "))}\n`);
 
 // The longest start every box's name shares, up to a "." (the program's `fields` line, §4.1).
 function prefixOf(names) {
@@ -93,7 +96,7 @@ function starter(name, header, withQuestion = true) {
   if (prefix) lines.push(`fields ${quote(prefix)}`);
   lines.push("", "# The form's other boxes are listed below, each with the statement that writes it. A question's words are", "# the form's own: write them as the form prints them. stride run shows each box's name on the form.", "");
   if (first) lines.push(`ask ${question}: string ${quote(says)}`, `fill ${quote(short(first.field))} = ${question}`, "");
-  const how = { text: (f) => `fill ${quote(short(f))} = …`, choice: (f, b) => `fill ${quote(short(f))} = …   one of: ${(b.options ?? []).slice(0, 8).join(", ")}${(b.options ?? []).length > 8 ? ", …" : ""}`, check: (f) => `tick ${quote(short(f))} when …`, radio: (f, b, all) => `pick ${quote(short(f))} "…" when …   buttons: ${all.map((x) => x.on).join(", ")}` };
+  const how = { text: (f) => `fill ${quote(short(f))} = …`, choice: (f, b) => `fill ${quote(short(f))} = …   one of: ${(b.options ?? []).slice(0, 8).join(", ")}${(b.options ?? []).length > 8 ? ", …" : ""}`, check: (f, b, all) => (onValuesOf(all).length > 1 ? `pick ${quote(short(f))} "…" when …   on values: ${onValuesOf(all).join(", ")}` : `tick ${quote(short(f))} when …`), radio: (f, b, all) => `pick ${quote(short(f))} "…" when …   buttons: ${onValuesOf(all).join(", ")}` };
   for (const f of fields) {
     if (first && f === first.field) continue;
     const all = header.boxes.filter((b) => b.field === f);

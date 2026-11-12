@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Row1 text near Row 1
+# box Row2 text near Row 2
+# box Mark_a check near A
+# box Mark_b check near B
+const ROWS = ["Row1", "Row2", "Row3"]
+const MARKS: map<string, string> = {"a": "Mark_a", "b": "Mark_b", "c": "Mark_c"}
+ask n: number "How many"
+# mistake 11:22 S508 the PDF has no box "Row3"; did you mean Row1?
+for r in ROWS { fill r = "{n}" }
+# mistake 13:28 S508 the PDF has no box "Mark_c"
+for k, box in MARKS { tick box when k == "a" }
+# mistake 15:22 S508 the PDF has no box "Row3"
+for i in 1..3 { fill "Row{i}" = "x" }
+# each item of the list is looked up, whatever the condition around the write
+for i, r in ROWS {
+  if i < 2 {
+    # mistake 20:10 S508 the PDF has no box "Row3"
+    fill r = "{n}"
+  }
+}
+# rule 10.3.1 S508

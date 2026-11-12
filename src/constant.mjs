@@ -7,7 +7,7 @@
 // recorded on the node as `knownFault`: in a constant's value or a default it is mistake S413 (§11.3).
 import { NATIVES } from "../runtime/natives.mjs";
 import { binary, unary } from "../runtime/ops.mjs";
-import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet, equal, StrideTuple } from "../runtime/values.mjs";
+import { StrideFault, words as stringOf, isNull, sliced, sliceBounds, readPosition, outside, copy, set, isSet, equal, StrideTuple, StrideMap } from "../runtime/values.mjs";
 
 // A value placed where `type` is expected, as the machine places it (§3.6, §3.8): a list of options made the set.
 function placed(v, type) {
@@ -77,7 +77,7 @@ function value(e, env, visiting) {
         try {
           const v = value(sym.node.value, env, visiting);
           // A list may be changed after the let is made (§3.4): what it holds then is not known.
-          return v === undefined || (Array.isArray(v) && !isSet(placed(v, sym.type))) ? undefined : placed(v, sym.type);
+          return v === undefined || v instanceof StrideMap || (Array.isArray(v) && !isSet(placed(v, sym.type))) ? undefined : placed(v, sym.type);
         } finally {
           visiting.delete(sym);
         }
@@ -132,6 +132,8 @@ function value(e, env, visiting) {
       const i = value(e.index, env, visiting);
       // A known tuple's value at a position written out (§6.17).
       if (l instanceof StrideTuple) return e.position ? l.items[Number(e.index.raw)] ?? null : undefined;
+      // A known map's value under a key (§6.9.2): null when it has none.
+      if (l instanceof StrideMap) return i === undefined ? undefined : l.get(i);
       if (l === undefined || i === undefined || (l !== null && !Array.isArray(l))) return undefined;
       return faultOf(e, () => {
         const n = readPosition(l, i);
@@ -147,6 +149,18 @@ function value(e, env, visiting) {
         items.push(v);
       }
       return items;
+    }
+    case "map": {
+      // A map written out (§3.10): its keys and values, in order.
+      const m = new StrideMap();
+      for (const x of e.entries) {
+        const k = value(x.key, env, visiting);
+        const v = value(x.value, env, visiting);
+        if (k === undefined || v === undefined) return undefined;
+        if (isNull(k)) return undefined;
+        m.set(k, v);
+      }
+      return m;
     }
     case "tuple": {
       const items = [];
