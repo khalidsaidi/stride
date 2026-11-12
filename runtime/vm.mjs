@@ -597,7 +597,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
         }
         case OP.TICK_AT: {
           const on = truthy(pop());
-          const b = boxAt(pop(), "tick");
+          const name = pop();
+          // A box left unticked that the form does not have is nothing to untick (§10.3).
+          if (!on && !open && !p.boxIndex.has(p.prefix + words(name))) break;
+          const b = boxAt(name, "tick");
           writes.set(b, { kind: "tick", value: on ? p.boxes[b].on ?? "Yes" : "Off", on });
           linked(b);
           break;

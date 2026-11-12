@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+let op = "other"
+tick "{op}_box" when op != "other"
+print("went on")
+# rule 10.3
+# prints ["went on"]

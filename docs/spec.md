@@ -1099,7 +1099,7 @@ its boxes.
   near: the same words in other capitals or spaces, an entry the words start with or that starts with them
   (`"March"` and `"Mar"`), or one a few letters away.
 - 10.3.4. **Longer than the box.** Words the compiler knows (§10.3.1) put in a text box whose header gives a
-  longest length (`max`), and longer than it, are warning W010; they are written as they are.
+  longest length (`max`), and longer than it, are warning W010; they are written as they are. A `tick` whose box is named as the program runs and whose condition is false writes nothing when the form has no such box.
 
 10.4. **Stride is no stricter than the form.** A form lets a person leave a box empty, or write over one. A
 program may write a box more than once: the later write is the one that stays. A name, a button or words worked
