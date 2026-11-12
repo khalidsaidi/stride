@@ -123,8 +123,10 @@ try {
   const count = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   status.textContent = `${count(p.questions.length, "question", "questions")}, ${count(p.boxes.length, "box", "boxes")}. Answers stay on this computer.`;
 
-  // What each box holds, by the PDF's field name: for the programmer, at the browser's console (stride.boxes()).
-  window.stride = { boxes: () => Object.fromEntries([...byName.keys()].map((name) => [name, read(name) ?? ""])) };
+  // What each box holds, by its name as the program writes it (the `fields` prefix taken off, as `stride run
+  // --terminal` names it), each box of the PDF that has a widget: for the programmer, at the browser's console (stride.boxes()).
+  const written = (full) => (full.startsWith(p.prefix) ? full.slice(p.prefix.length) : full);
+  window.stride = { boxes: () => Object.fromEntries([...byName].filter(([, objs]) => objs.length).map(([name]) => [written(name), read(name) ?? ""])) };
   document.querySelector("#questions").onclick = () => run.toggle();
 } catch (e) {
   stopped(`The workflow could not be opened: ${e.message}`);

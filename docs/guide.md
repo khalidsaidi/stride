@@ -124,7 +124,8 @@ Then the one path from here to a workflow someone fills:
 2. **The source**, `consent.stride`, edited as above.
 3. **The workflow in your browser**: `stride run consent.stride` checks and compiles the program, opens the
    workflow beside its PDF, and asks its questions one at a time, each answer going into its boxes; at the browser's
-   console, `stride.boxes()` shows what each box holds. Nothing needs answering beforehand. Save the source and reload the page to see a
+   console, `stride.boxes()` shows what each box holds, by the name the program writes it by (without the `fields`
+   prefix), as `stride run --terminal` names it. Nothing needs answering beforehand. Save the source and reload the page to see a
    change; a mistake shows in the page, at its place, instead of a broken workflow.
 4. **Tests**: `stride test consent.stride` runs the program on the sample answers in `consent.tests/` and compares
    the boxes it writes (§13).
@@ -153,7 +154,7 @@ check` checks without running, and `stride map consent.stride` says which boxes 
 | `list<T>` | any number of items | `[1, 2, 3]` |
 
 Every type also has **null**: no value, what a question not answered or a field not set holds, as `None` or
-`null` elsewhere. Words of no characters `""` and a list with no items `[]` are values, not null. Null is never a
+`null` elsewhere; an any_of's answer is never null, and with nothing chosen it is the set with no options. Words of no characters `""` and a list with no items `[]` are values, not null. Null is never a
 mistake to hold: it counts as `false` in a condition, `"{x}"` and `fill` put in no characters for it, and `==`
 compares it. Computing with it is a fault (F023, §6.3): arithmetic, an order, a field, an item, a library function
 all need a value. Test for it with `== null`, and give a value in its place with `??`:
@@ -751,7 +752,8 @@ write the same boxes.
 
 ## 20. The PDF
 
-- `fill "box" = e` writes words into a text box or a list box; `tick "box" when c` ticks a check box; `pick
+- `fill "box" = e` writes words into a text box or a list box (a drop-down or a list to choose from, whose kind
+  in the header is `choice`); `tick "box" when c` ticks a check box (`tick "box"` alone always ticks it); `pick
   "group" "button" when c` chooses a radio button. A check box whose widgets have each their own on value (one
   field, `Female` and `Male`) is a radio group in all but name: `pick "Sex" "Male" when c` (§10.3.2).
 - **No stricter than the form.** A box written out that the PDF does not have is a mistake, as a misspelt name
@@ -806,8 +808,8 @@ tick "agree" when agrees
   `fill row_box(n) = v`, `fill boxes.city = v`, `fill b = v`; anything else, such as `(if c then "A" else "B")`,
   goes into a `let` first. A name the compiler works out (a constant, `BOXES[0]`, `"Row{N}"`, each item of
   `for b in BOXES` over a constant list or map) is checked against the form as one written out is (§10.3.1).
-  `stride map` lists the boxes a program names outright, and apart from them those a name worked out as it runs
-  may write.
+  `stride map` lists each question with the boxes its answer goes into (a question asked in a loop by its key's
+  pattern, `qty[…]`), the boxes a name worked out as the program runs may write, and those it never names.
 - A program never changes the PDF: it only fills its boxes, and nothing a person types leaves their browser.
 
 ## 21. Sharing a program
@@ -1059,8 +1061,8 @@ so a box per line is `for i in 0..<4 { fill "Explanation line {i + 1}" = explain
 continuation line is `fill "Explanation" = explain?.line(0)` with `fill "Explanation, continued" =
 explain?.rest_lines()`.
 
-**Ticks from an any_of.** An any_of with nothing chosen is null (§8.7), so a test of one option is written on
-`?? []`:
+**Ticks from an any_of.** An any_of is never null: with nothing chosen, or not answered yet, it is the set with
+no options (§8.7), so a test of one option and a loop over the chosen need no guard:
 
 ```stride answers={"wanted":["birth"]}
 enum document {
@@ -1068,8 +1070,8 @@ enum document {
   "death" "Death certificate"
 }
 ask wanted: any_of document "Which documents do you need?"
-print("death" in (wanted ?? []))
-for d in wanted ?? [] {
+print("death" in wanted)
+for d in wanted {
   print(d)
 }
 ```
@@ -1078,4 +1080,4 @@ false
 birth
 ```
 
-and a box per option is `tick "Death" when "death" in (wanted ?? [])`.
+and a box per option is `tick "Death" when "death" in wanted`.

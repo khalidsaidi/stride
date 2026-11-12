@@ -10,6 +10,8 @@
 //   7 form       form.mjs      the boxes the program names, looked up in the form's header
 //   8 generate   codegen.mjs   the bytecode, read back by the machine's own loader before it is given out
 //
+// `stride map` reads the lowered program against the header after these (map.mjs): which boxes each answer goes into.
+//
 // A phase runs only when those before it found no mistake: a mistake in a name would make every type after it
 // wrong, and the person would read a cascade instead of the cause.
 import { existsSync, readFileSync } from "node:fs";
@@ -89,11 +91,6 @@ export function compile(source, name, { dir = ".", header = null, read = diskRea
     pdf = checkForm(program, program.test || program.script ? { form: null, pdf: program.pdf, boxes: [] } : header, diagnostics, { open: !program.test && !program.script && header.open === true, resolved });
     out.questions = pdf.questions;
     out.boxes = pdf.boxes;
-    out.written = pdf.written ?? new Set(pdf.boxes.keys());
-    out.links = pdf.links;
-    out.byName = pdf.byName;
-    out.intoNamed = pdf.intoNamed;
-    out.keys = pdf.keys;
     phase("pdf");
     if (!diagnostics.empty) return out;
   }

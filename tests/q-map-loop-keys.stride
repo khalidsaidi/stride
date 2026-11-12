@@ -1,0 +1,23 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum kind { option "long" "Long form" option "short" "Short form" }
+const PLATES: map<string, number> = {"car": 2, "van": 1}
+let years: map<number, string> = {2024: "a", 2025: "b"}
+let kinds: map<kind, bool> = {"short": true, "long": false}
+for k, v in PLATES {
+  ask plate: string "Plate of the {k}"
+  fill "P{k}" = plate
+}
+for y in years {
+  ask paid: bool "Paid in {y}?"
+  print(paid)
+}
+for k, wanted in kinds {
+  ask copies: number "Copies of {k}"
+  print(copies)
+}
+# rule 8.6.2
+# answers {"plate[van]": "V1", "plate[0]": "X", "paid[2025]": true}
+# asked ["plate[car]", "plate[van]", "paid[2024]", "paid[2025]", "copies[short]", "copies[long]"]
+# prints ["", "true", "", ""]
+# boxes {"Pvan": "V1"}

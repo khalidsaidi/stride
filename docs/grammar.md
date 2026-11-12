@@ -141,6 +141,7 @@ string`. A native's parameter may be `any`; its result may be `any` (the type of
 | `x += e`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=` | `x = x + e`, with x's place worked out once (§7.5); `l += m` adds m's items to the list l holds |
 | `fill "box" = e` | writes words, a number, a date or an option into a text box or a list box |
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is true |
+| `tick "box"` | ticks a check box, always (as `when true`) |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is true |
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
@@ -169,7 +170,7 @@ ask kind: one_of "Kind of taxpayer" {
 }
 ```
 
-The block may also stand before the printed words: `ask n: one_of { option "1" "One" option "2" "Two" } "Plates"`.
+The block may also stand before the printed words: `ask n: one_of { option "1" "One" option "2" "Two" } "Plates"`. The printed words may be a constant, or any expression in brackets: `ask names: string (if joint then "Your names" else "Your name")`.
 `one_of GRADES`, GRADES a constant list of words, takes its items as the options, and the answer is words (§8.2.1).
 `x.label` is an option's printed words, and an option set's name as a value is the list of its options (§5.2.1).
 

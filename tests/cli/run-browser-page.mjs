@@ -94,6 +94,7 @@ export function test() {
       return sha;
     };
     program("constant", 'fill "name" = "Ada"\ntick "agree" when true\nprint("ready")\n');
+    program("prefixed", 'fields "top."\nfill "name" = "Ada"\ntick "agree"\n', tinyPdf({ parent: "top" }));
     program("faulty", 'ask n: number "Full name" default 0\nfunction tenth(d: number) -> number {\n  return 10 / d\n}\nfill "name" = tenth(n)\n');
     program("prints", 'ask who: string "Full name"\nfill "name" = who\nprint("seen: {who}")\n');
     program("moving", 'ask who: string "Full name"\nfill "name" = who\n');
@@ -123,6 +124,7 @@ export function test() {
       { name: "the PDF replaced between the requests", file: "swapped.stride", swapPdf: { file: "swapped.pdf", base64: tinyPdf({ label: "Different name" }).toString("base64") }, steps: [{ page: true }] },
       { name: "a stable print", file: "stable.stride", steps: [{ text: "1" }, { text: "0" }, { text: "2" }, { text: "0" }] },
       { name: "a changing print", file: "prints.stride", steps: [{ text: "Ada" }, { text: "Bo" }] },
+      { name: "prefixed", file: "prefixed.stride", steps: [{ download: "pdf" }] },
     ];
     const r = spawnSync("node", ["--input-type=module", "-e", CHILD, cli, dir, pathToFileURL(join(repo, "node_modules/playwright-core/index.mjs")).href, pathToFileURL(join(repo, "node_modules/pdfjs-dist/legacy/build/pdf.mjs")).href, shell, JSON.stringify(scenarios)], { encoding: "utf8", timeout: 300_000 });
     let got;
@@ -139,6 +141,9 @@ export function test() {
       want(`${how}: the print in the console`, g.console.includes("log ready"), g.console);
       want(`${how}: no page errors`, !g.errors.length, g.errors);
     }
+    // stride.boxes() names each box as the program writes it, the `fields` prefix taken off, as the terminal does.
+    const prefixedTerminal = JSON.parse(stride(["run", "prefixed.stride", "--terminal", "--json"]).stdout).boxes;
+    want("stride.boxes() names the boxes as the terminal does", JSON.stringify(got.prefixed.pdf) === JSON.stringify(prefixedTerminal) && prefixedTerminal.name === "Ada", { browser: got.prefixed.pdf, terminal: prefixedTerminal });
     const answered = got["default faults, answered"];
     want("a question whose default faults, answered: the PDF holds 10 / 2", answered.pdf?.name === "5", answered);
     const mended = got["default faults, kept then mended"];

@@ -10,8 +10,9 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 //   a radio button) when there is more than one.
 // - `on`: a check box's on value, words, when its widgets share one; a list of them when its widgets have their own
 //   (a check-box group used as a radio group); a radio group's buttons, a list.
-// - A choice list carries its options; `tooltip` is the description the PDF's maker gave the box, when there is
-//   one; a box the PDF marks read-only (a calculated total) is `readonly`.
+// - A list box (a drop-down or a list to choose from; its kind is choice) carries its options; `tooltip` is the
+//   description the PDF's maker gave the box, when there is one; a box the PDF marks read-only (a calculated total)
+//   is `readonly`.
 // The fields are found through the form's field tree (AcroForm), so a widget a page's annotations leave out is a
 // box too; a widget on no page is not. Buttons and signatures are not boxes.
 export async function pageBoxes(bytes) {

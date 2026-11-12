@@ -570,7 +570,8 @@ export function lower(resolved, diagnostics, options = {}) {
     inner.locals.set(s.itemSymbol, itemLocal);
     // An unrolled for over a list adds its turn to the keys inside it (§8.6.2): the item's words when it is words,
     // a number, a date, a bool or an option (copies[long], copies[long]#2 for the second long); else its number.
-    const scalar = !overMap && ["string", "number", "date", "bool", "option"].includes(s.itemSymbol.type?.t);
+    // Over a map, the key's words: a map's keys are always one of those (§3.10).
+    const scalar = overMap || ["string", "number", "date", "bool", "option"].includes(s.itemSymbol.type?.t);
     if (s.unroll) inner.suffixes.push(scalar ? IR.native("turn_key", [IR.local(listLocal), IR.local(k)]) : join(IR.constant("["), IR.local(k), IR.constant("]")));
     const base = overMap || overSet ? null : listKey(s.list, ctx);
     if (base) inner.items.set(s.itemSymbol, { base: join(base, IR.constant("["), IR.local(k), IR.constant("]")), suffixes: inner.suffixes.length });
@@ -841,12 +842,13 @@ export function lower(resolved, diagnostics, options = {}) {
         const fn = functionOf(sym);
         // A function written in place calling itself: what it keeps goes along.
         const kept = (sym.keeps ?? []).map((k) => (k.shared ? IR.cellref(ctx.locals.get(k)) : IR.local(ctx.locals.get(k))));
-        if (!sym.effects) return withAt(ordered(IR.call(fn, [...kept, ...args]), kept.length), at);
+        // The call's syntax node stays with it, for `stride map` to read the arguments the compiler knows (map.mjs).
+        if (!sym.effects) return Object.assign(withAt(ordered(IR.call(fn, [...kept, ...args]), kept.length), at), { node: e });
         // §8.6.2: a call that can reach questions adds its segment: the function's name, then the turns of the loops
         // around it; a second call of it there in the same run is name#2, a third name#3. A call named with
         // `as "home"` has that name in place of the function's.
         const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(e.keyAs ? e.keyAs.value : keyName(sym)), suffix(ctx))]), IR.constant("."));
-        return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...kept, ...args]), 2 + kept.length), at);
+        return Object.assign(withAt(ordered(IR.call(fn, [key, IR.constant(""), ...kept, ...args]), 2 + kept.length), at), { node: e });
       }
       case "map":
         return e.entries.reduce((m, x) => IR.native("map_put", [m, expr(x.key, ctx), expr(x.value, ctx)]), IR.native("map_of", []));

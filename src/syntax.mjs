@@ -950,7 +950,7 @@ class Parser {
       return out;
     };
     let options = this.sym("{") ? block() : null;
-    const printed = this.wordsOrName("the question's printed words, in quotes, or a constant that holds them");
+    const printed = this.wordsOrBracketed("the question's printed words, in quotes, a constant that holds them, or an expression in brackets");
     if (this.sym("{")) {
       if (options) throw new SyntaxMistake("the question's options are given once: in one block, before its printed words or after them", this.token.span, "S802");
       options = block();
@@ -1007,14 +1007,16 @@ class Parser {
   tick() {
     const start = this.take();
     const box = this.wordsOrName("the box's name, in quotes, or a constant that holds it");
-    this.expect("keyword", "when", '"when" and a condition');
+    // Without `when`, the box is ticked: the condition is true (§7.7).
+    if (!this.word("when")) return this.node("tick", start, { box, condition: { kind: "bool", value: true, span: box.span }, always: true });
+    this.take();
     return this.node("tick", start, { box, condition: this.condition() });
   }
 
   pick() {
     const start = this.take();
     const box = this.wordsOrName("the radio group's name, in quotes, or a constant that holds it");
-    const button = this.wordsOrName("the button's name, in quotes, or a constant that holds it");
+    const button = this.wordsOrBracketed("the button's name, in quotes, a constant that holds it, or an expression in brackets");
     this.expect("keyword", "when", '"when" and a condition');
     return this.node("pick", start, { box, button, condition: this.condition() });
   }
@@ -1676,6 +1678,11 @@ class Parser {
   wordsOrName(what) {
     if (!this.is("name")) return this.string(what);
     return this.expr();
+  }
+  // A question's printed words, or a pick's button (§8.4.2, §7.8): as above, or any expression in brackets.
+  wordsOrBracketed(what) {
+    if (this.sym("(") && !this.token.broken) return this.primary();
+    return this.wordsOrName(what);
   }
 
   string(what = "words in quotes") {

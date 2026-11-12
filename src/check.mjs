@@ -686,7 +686,7 @@ export function check(resolved, diagnostics) {
 
   function text(e, ctx, what) {
     const type = expr(e, ctx);
-    if (!T.isStringLike(type) && !T.isError(type)) err(null, e, `${what} is words, not ${T.describe(type)}`);
+    if (!T.isStringLike(type) && !T.isError(type)) err("S312", e, `${what} is words, not ${T.describe(type)}`);
   }
 
   // A literal compared with or given to an option must be one of its values.

@@ -220,10 +220,10 @@ export function format(text, name = "program.stride") {
         put(s, indent, `fill ${expr(s.box)} = ${expr(s.value)}`);
         return trailing(s.span.endLine);
       case "tick":
-        put(s, indent, `tick ${expr(s.box)} when ${expr(s.condition)}`);
+        put(s, indent, s.always ? `tick ${expr(s.box)}` : `tick ${expr(s.box)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "pick":
-        put(s, indent, `pick ${expr(s.box)} ${expr(s.button)} when ${expr(s.condition)}`);
+        put(s, indent, `pick ${expr(s.box)} ${str(s.button)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "if":
         return ifChain(s, indent, "if");
@@ -480,6 +480,7 @@ export function format(text, name = "program.stride") {
   function str(e) {
     if (e.kind === "plain-string") return plain(e.value);
     // Known words written as an expression (§7.9.1): a constant, an item of a constant list.
+    if (e.parenthesised) return `(${expr(e)})`;
     if (e.kind !== "string") return expr(e);
     return `"${e.parts.map((p) => (typeof p === "string" ? escape(p) : `{${expr(p)}}`)).join("")}"`;
   }

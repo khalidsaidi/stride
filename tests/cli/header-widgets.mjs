@@ -45,17 +45,19 @@ export function test() {
     expect(["run", "t.stride", "--terminal", "answers.json"], 0, 'answers.json: warning W011: no question has the key "color"', "stderr");
     const quiet = expect(["run", "t.stride", "--terminal", "answers.json"], 0, "name", "stdout");
     if (quiet.stdout.includes("W011")) problems.push("the warning W011 went to stdout");
-    expect(["map", "t.stride"], 0, "written by a name worked out as the program runs\n  total\n  month");
-    const map = expect(["map", "t.stride", "--json"], 0, '"writtenByNameWorkedOut":["total","month"]', "stdout");
-    if (!map.stdout.includes('"notWritten":[]') || !map.stdout.includes('"key":"who","printed":"Name","boxes":[{"box":"name","direct":true}],"intoBoxNamedAtRun":false')) problems.push(`map --json: ${map.stdout}`);
-    // An answer asked in a function goes into the box its function writes; one handed to a function that writes a
-    // box named as it runs is said so.
+    // put("month", "05"): the name a helper is given is known at its call, so the box is written from no answer, and
+    // the box the program never names is not written.
+    expect(["map", "t.stride"], 0, "written from no answer\n  month\n\nnot written\n  total");
+    const map = expect(["map", "t.stride", "--json"], 0, '"writtenFromNoAnswer":["month"],"writtenByNameWorkedOut":[],"someBoxNamedAtRun":false,"notWritten":["total"]', "stdout");
+    if (!map.stdout.includes('"key":"who","printed":"Name","boxes":[{"box":"name","direct":true}],"intoBoxNamedAtRun":false,"decidesWhatIsAsked":false')) problems.push(`map --json: ${map.stdout}`);
+    // An answer asked in a function goes into the box its function writes; one handed to a helper goes into the box
+    // the helper is told to write.
     writeFileSync(
       join(dir, "form-w.stride"),
       `form form-w\npdf ${header.pdf}\nfunction sign() {\n  ask who: string "Name"\n  fill "name" = who\n}\nfunction put(box: string, v: string) { fill box = v }\nsign()\nask m: string "Month"\nput("month", m)\n`,
     );
     expect(["map", "form-w.stride"], 0, "sign.who                             = name");
-    expect(["map", "form-w.stride"], 0, "m                                    (a box named as the program runs)");
+    expect(["map", "form-w.stride"], 0, "m                                    month");
     // With no header of either name, the message names both.
     writeFileSync(join(dir, "u.stride"), `form other\npdf ${header.pdf}\nprint("x")\n`);
     expect(["compile", "u.stride"], 1, "no header u.boxes.json or other.boxes.json");

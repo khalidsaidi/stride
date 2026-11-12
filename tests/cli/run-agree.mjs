@@ -1,8 +1,9 @@
 // rule 17.18
 // One program, one set of answers, one date, run in every place: in the browser from its source and from its
 // compiled .sbc (a headless browser answering in the page, its boxes read from the page), and in the terminal from
-// both. Every run writes the same boxes with the same values: the page holds what the terminal says it
-// wrote, and the date the page used is the run's --today.
+// both. Every run writes the same boxes with the same values, by the same names (as the program writes them, the
+// `fields` prefix taken off): the page holds what the terminal says it wrote, and the date the page used is the
+// run's --today.
 import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync, readdirSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { join } from "node:path";
@@ -52,10 +53,10 @@ export function test() {
     const found = existsSync(base) ? readdirSync(base).filter((d) => d.startsWith("chromium_headless_shell-")).sort().pop() : null;
     if (!found) return ["no headless Chromium in ~/.cache/ms-playwright: npx playwright install chromium-headless-shell"];
     const shell = join(base, found, "chrome-headless-shell-linux64/chrome-headless-shell");
-    writeFileSync(join(dir, "consent.pdf"), tinyPdf());
+    writeFileSync(join(dir, "consent.pdf"), tinyPdf({ parent: "top" }));
     execFileSync("node", [cli, "header", "consent.pdf", "-q"], { cwd: dir });
     const sha = JSON.parse(readFileSync(join(dir, "consent.boxes.json"), "utf8")).pdf;
-    writeFileSync(join(dir, "consent.stride"), `form consent\npdf ${sha}\n\nask full_name: string "Full name"\nask agrees: bool "I agree to the terms"\nif agrees {\n  fill "name" = "{full_name}, {today()}"\n}\ntick "agree" when agrees\n`);
+    writeFileSync(join(dir, "consent.stride"), `form consent\npdf ${sha}\nfields "top."\n\nask full_name: string "Full name"\nask agrees: bool "I agree to the terms"\nif agrees {\n  fill "name" = "{full_name}, {today()}"\n}\ntick "agree" when agrees\n`);
     execFileSync("node", [cli, "compile", "consent.stride", "-q"], { cwd: dir });
     const answers = [{ text: "Ada Lovelace" }, { choose: "yes" }];
     const browserRun = (file, out) => {
@@ -74,7 +75,7 @@ export function test() {
       if (b.errors.length) problems.push(`${how}: the page's errors: ${JSON.stringify(b.errors)}`);
       runs[how] = b.boxes;
     }
-    for (const [how, boxes] of Object.entries(runs)) if (JSON.stringify({ name: boxes?.name, agree: boxes?.agree }) !== JSON.stringify(want)) problems.push(`${how} wrote ${JSON.stringify(boxes)}, expected ${JSON.stringify(want)}`);
+    for (const [how, boxes] of Object.entries(runs)) if (JSON.stringify(boxes) !== JSON.stringify(want)) problems.push(`${how} wrote ${JSON.stringify(boxes)}, expected ${JSON.stringify(want)}`);
   } catch (e) {
     problems.push(`the runs did not finish: ${e.message.slice(0, 400)}`);
   } finally {

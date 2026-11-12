@@ -678,7 +678,8 @@ list box's entries are S514; words it cannot tell beforehand go in as they are. 
 S308, a list or record S309.
 
 7.7. **tick** `tick "box" when c`: ticks the check box (with its own export value) when c is true, else leaves it
-unticked.
+unticked. `tick "box"` with no `when` ticks it, as `tick "box" when true` does; the formatter writes each as it is
+written.
 
 7.8. **pick** `pick "group" "button" when c`: picks that button when c is true.
 
@@ -690,7 +691,10 @@ is not, §10.3).
 7.9. **Words, or an expression that gives them.** Where a statement takes words — a box's name and a button's, a question's printed words, a check's message, a
 collect's questions, the words after `faults` — they are written in quotes, or as an expression that starts with
 a name and gives them: after `const name_box = "f1_01[0]"`, `fill name_box = full_name` fills that box; with
-`const QUESTIONS = ["First?", "Second?"]`, `ask ok: bool QUESTIONS[i]` asks each in its turn of a loop.
+`const QUESTIONS = ["First?", "Second?"]`, `ask ok: bool QUESTIONS[i]` asks each in its turn of a loop. A
+question's printed words and a pick's button may also be any expression in brackets: `ask names: string (if joint
+then "Your names" else "Your name")`, `pick "Filing" (if joint then "Joint" else "Single") when true`; the
+formatter keeps the brackets. Words of another type are S312.
 
 7.10. **if** `if c { … } [else if … | else { … }]`; **match** `match e { "a", "b" => { … } … [else => { … }] }`:
 e a value of any type, each arm's values of a type that compares with it (S329, §7.10.1); values unique (S331), of the set when e is an option (S332); `else` last (S330); a
@@ -902,7 +906,9 @@ turns    = ("[" (whole | words) "]" ["#" whole])*;   # loop turns, outermost fir
   A `for x in l` whose items are words, numbers, dates, bools or options (an any_of's answer among them) is keyed
   by the item's words instead, so an answer stays with its item when the list changes: `for kind in wanted { ask
   copies: number "…" }` asks `copies[long]` and `copies[short]`; an item the list holds earlier too is numbered
-  after the bracket by how many times it has come, `copies[long]#2` for the second `long`. A function called in
+  after the bracket by how many times it has come, `copies[long]#2` for the second `long`. A `for k, v in m` (or `for k in m`) over a
+  map is keyed by the key's words, since a map's keys are words, numbers, dates, bools or options (§3.10): with `m`
+  the map `{"car": 2, "van": 1}`, `for k, v in m { ask plate: string "…" }` asks `plate[car]` and `plate[van]`. A function called in
   such a loop has the same turn in its questions' keys. A
   collect's item k is `list[k]`, so the key of an item is its position in the list.
 
@@ -1063,7 +1069,8 @@ values, S761. In everything else it is a function written in place: it keeps and
 
 10.1. A box's name is the PDF field's full name, after the program's `fields` prefix.
 
-10.2. The form's header lists the PDF's boxes: each one's name, its kind, a check box's or a radio button's export
+10.2. The form's header lists the PDF's boxes: each one's name, its kind (`text` for a text box, `check` for a
+check box, `radio` for a radio group, `choice` for a list box, a drop-down among them), a check box's or a radio button's export
 value, a list box's entries. The header is input: the compiler takes what it says and works nothing out about the
 form. The header's PDF and form must be the program's (S501, S502).
 
@@ -1606,6 +1613,7 @@ its call: the function's name in the call.
 | S309 | `fill` with a list or record | Fill a box with one value: `l[0].name`, `join(…)`. |
 | S310 | a condition of words or an option | Compare it (`== "…"`) or test it (`!= null`). |
 | S311 | a condition that is not bool | Conditions are true or false. |
+| S312 | words wanted, and another type given | A box's name, a question's printed words, a button, a check's message are words: put a number in them as `"…{n}…"`. |
 | S313 | a `for` bound that is not a number | `for i in 1..n` counts numbers. |
 | S314 | `for … in` over something not a list, a map, a set or a range | `for x in l` goes through a list, a map or a set of options; `for i in a..b` counts. |
 | S315 | one answer, let or var with two types | The same question asked, or the same let or var declared, in branches that exclude each other is one name of one type (§12.4). |
@@ -1747,7 +1755,7 @@ its call: the function's name in the call.
 | `stride new <name> [--pdf <file.pdf>]` | §17.6 |
 | `stride init [folder]` | §4.7 |
 | `stride header <file.pdf> [-o file.boxes.json]` | §17.6 |
-| `stride map <file>` | for each question, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes written by a name worked out as the program runs; the boxes not written (§17.6.1) |
+| `stride map <file>` | for each question, by its key or its key's pattern, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes a name worked out as the program runs may write; the boxes not written (§17.6.1) |
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
 | `stride vscode [-o file.vsix]` | §17.16 |
@@ -1822,14 +1830,27 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
   UTF-16 units (columns of §1.3 are characters); a declaration in another file found at that file's own path;
   the rest as §17.16.
 
-17.6.1. **stride map.** The questions are every question the program asks, a question asked in a function under
-the key of the function's first call (§8.6.2). A box's answers are those its words, its condition or its button are
-made of, through lets, the functions called and what they return, and the parameters a function is given. A
-`fill`, `tick` or `pick` whose box's name is worked out as the program runs (§10.4) may write any box of its kind
-whose name fits the parts of the name written out (`"City{n}"`: every text box whose name starts with `City`); those
-boxes are listed as written by a name worked out as the program runs, not as boxes not written. `--json` gives them as
-`writtenByNameWorkedOut`. A question whose answer goes into such a write is said to go into a box named as the
-program runs (`intoBoxNamedAtRun` in `--json`), not to decide only what is asked.
+17.6.1. **stride map.** The questions are every question the program asks, each under its key (§8.6.2), or, where
+the run decides part of the key, under its key's pattern, `…` standing for that part: a question asked in a loop is
+`qty[…]`, one asked in a collect's item `docs[…]`. A function that asks is followed in each call on its own, so
+`ask_party("Agent") as "agent"` and `ask_party("Owner") as "owner"` list `agent.p.name` and `owner.p.name`, and a
+helper's box named from what its call gives it (`fill "{prefix}Name" = p.name`, called with `"A"`) is that box. A
+box's answers are those its words, its condition, its button or its name are made of, through lets, records'
+fields, lists, what the functions called are given and return, and what goes into a list or a record
+(`append(fees, x)` and then `fill "Total" = sum(fees)` puts x into Total); and those of an `if`, `match` or loop
+around the write that decides only what is written (no question stands in it). A write made of no answer at all is
+credited to the answers that decide whether it runs. The boxes are written as given (`=`, `fill "box" = answer`) or
+deciding what is written. A question with no box decides what is asked when a question stands in a branch its answer
+decides, or when another question's words, default or place are made of it; else it is used by no box (a bool with
+only a `check`). The boxes written by a name the compiler works out (§10.3.1, and also from a call's arguments and the
+fields of a constant's records) are written; a name it cannot tell is looked at for the boxes it may be: the items of a
+constant list or the values of a constant map it is read from, either value of an `if … then … else`, or every box
+of its statement's kind whose name fits the words of it written out (`"City{n}"`: every text box whose name starts
+with `City`). Those boxes are listed as written by a name worked out as the program runs (`writtenByNameWorkedOut`
+in `--json`), and a name it can tell nothing of is said once, as some box named as the program runs
+(`someBoxNamedAtRun`); the boxes the program names nowhere stay not written. A question whose answer goes into a box
+it cannot tell is said to go into a box named as the program runs (`intoBoxNamedAtRun`); `decidesWhatIsAsked` says
+whether it decides what is asked.
 
 17.7. **Tracing.** `stride run --terminal --trace` (for a script, `stride run --trace`) on a source file runs the program in the
 machine, which tells of each statement as it starts. It prints each statement's file, line and text when it
@@ -2004,7 +2025,8 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
   compiled, with every check `stride check` makes; when it has mistakes they are said as §16.2 shows them and
   nothing is served (exit 1). Else the workflow is served at `http://127.0.0.1:<port>/` (8080, or `--port`; `--port
   0` takes any free port), to this computer only, until stopped: the PDF, the questions one at a time beside it,
-  each answer going into its boxes as Stride's runner (`runtime/runner.js`) puts it; `stride.boxes()` at the browser's console gives what each box holds. Its
+  each answer going into its boxes as Stride's runner (`runtime/runner.js`) puts it; `stride.boxes()` at the browser's console gives what each box holds, by its name as the program writes it
+  (the `fields` prefix taken off, as `stride run --terminal` names it). Its
   address is printed on stdout and the computer's browser is opened at it, unless the environment variable
   `BROWSER` is `none`. It needs no answers: they are given in the page, and the page sends them nowhere.
 - **In the page.** When the workflow is opened the run's writes are put in the boxes, those made from no answer

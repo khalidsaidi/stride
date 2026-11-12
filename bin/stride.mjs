@@ -25,6 +25,7 @@ import { CODES } from "../src/codes.mjs";
 import { SourceFile, Diagnostics, KIND, plural, faultWords } from "../src/source.mjs";
 import { parseExpression } from "../src/syntax.mjs";
 import { showFunction } from "../src/ir.mjs";
+import { mapOf } from "../src/map.mjs";
 import { VERSION, OP_NAME } from "../runtime/bytecode.mjs";
 import { holdsItself } from "../runtime/values.mjs";
 import { disassemble, load, run, boxValues, stringOf } from "../runtime/vm.mjs";
@@ -507,28 +508,23 @@ async function main(argv) {
       const warnings = json ? [] : null;
       const r = program(args[0], { warnings });
       if (r.error) return fileError(r);
-      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], writtenByNameWorkedOut: [], notWritten: [] })), 1) : (report(r.mistakes), 1);
+      if (r.mistakes) return json ? (out(JSON.stringify({ ok: false, diagnostics: [...warnings, ...r.mistakes].map((d) => d.toJSON()), questions: [], writtenFromNoAnswer: [], writtenByNameWorkedOut: [], someBoxNamedAtRun: false, notWritten: [] })), 1) : (report(r.mistakes), 1);
       if (r.out.program?.script) return fail(`${args[0]} is a script: it writes no boxes (§4.6)`);
       const short = (b) => b.slice(r.p.prefix.length);
-      const byKey = new Map();
-      for (const l of r.out.links) byKey.set(l.key, [...(byKey.get(l.key) ?? []), l]);
-      const linked = new Set(r.out.links.map((l) => l.box));
-      const written = [...r.out.written].filter((b) => !linked.has(b));
-      // A box a name worked out as the program runs may write is not said to be left unwritten.
-      const byName = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b) && r.out.byName?.has(b));
-      const skipped = [...new Set(r.out.header.boxes.map((b) => b.field))].filter((b) => !r.out.written.has(b) && !r.out.byName?.has(b));
+      const m = mapOf(r.out.program, r.out.header, r.out.resolved);
+      const named = m.someBoxNamedAtRun ? "some box named as the program runs" : null;
       if (json) {
-        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: [...r.out.keys].map(([key, { printed }]) => ({ key, printed, boxes: (byKey.get(key) ?? []).map((l) => ({ box: short(l.box), direct: l.direct })), intoBoxNamedAtRun: !!r.out.intoNamed?.has(key) })), writtenFromNoAnswer: written.map(short), writtenByNameWorkedOut: byName.map(short), notWritten: skipped.map(short) }));
+        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: m.questions.map((q) => ({ key: q.key, printed: q.printed, boxes: q.boxes.map((l) => ({ box: short(l.box), direct: l.direct })), intoBoxNamedAtRun: q.intoNamed, decidesWhatIsAsked: q.decides })), writtenFromNoAnswer: m.writtenFromNoAnswer.map(short), writtenByNameWorkedOut: m.writtenByName.map(short), someBoxNamedAtRun: m.someBoxNamedAtRun, notWritten: m.notWritten.map(short) }));
         return 0;
       }
       out(bold("question → the boxes its answer goes into (= as given)"));
-      for (const [key, { printed }] of r.out.keys) {
-        const into = byKey.get(key) ?? [];
-        out(`  ${key.padEnd(36)} ${[...into.map((l) => `${l.direct ? "= " : ""}${short(l.box)}`), ...(r.out.intoNamed?.has(key) ? ["(a box named as the program runs)"] : [])].join(", ") || "(no box: it decides what is asked)"}${printed ? `   "${printed.slice(0, 50)}"` : ""}`);
+      for (const q of m.questions) {
+        const into = [...q.boxes.map((l) => `${l.direct ? "= " : ""}${short(l.box)}`), ...(q.intoNamed ? ["(a box named as the program runs)"] : [])].join(", ");
+        out(`  ${q.key.padEnd(36)} ${into || (q.decides ? "(no box: it decides what is asked)" : "(used by no box)")}${q.printed ? `   "${q.printed.slice(0, 50)}"` : ""}`);
       }
-      if (written.length) out(`${bold("\nwritten from no answer")}\n  ${written.map(short).join("\n  ")}`);
-      if (byName.length) out(`${bold("\nwritten by a name worked out as the program runs")}\n  ${byName.map(short).join("\n  ")}`);
-      if (skipped.length) out(`${bold("\nnot written")}\n  ${skipped.map(short).join("\n  ")}`);
+      if (m.writtenFromNoAnswer.length) out(`${bold("\nwritten from no answer")}\n  ${m.writtenFromNoAnswer.map(short).join("\n  ")}`);
+      if (m.writtenByName.length || named) out(`${bold("\nwritten by a name worked out as the program runs")}\n  ${[...m.writtenByName.map(short), ...(named ? [`(${named})`] : [])].join("\n  ")}`);
+      if (m.notWritten.length) out(`${bold("\nnot written")}\n  ${m.notWritten.map(short).join("\n  ")}`);
       return 0;
     }
     case "doc": {

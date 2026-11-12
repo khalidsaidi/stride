@@ -1,4 +1,4 @@
-// rule 17.3 6.16
+// rule 17.3 6.16 7.7 7.9
 // `stride fmt` (§17): Stride's one layout, comments kept; a statement written over two lines is followed by a blank
 // line only where the source had one.
 import { format } from "../../src/format.mjs";
@@ -20,6 +20,12 @@ export function test() {
     ["print((b ?? c) or d)", "print((b ?? c) or d)"],
     ["print((if c then n else m) ?? 0)", "print((if c then n else m) ?? 0)"],
     ["print(if c then n else (m ?? 0))", "print(if c then n else m ?? 0)"],
+    // tick without when (§7.7) is printed back as written, and `when true` stays.
+    ['tick   "A"', 'tick "A"'],
+    ['tick "A"  when true', 'tick "A" when true'],
+    // Printed words and a button in brackets (§7.9) keep their brackets.
+    ['ask n: string (if j then "A" else "B")', 'ask n: string (if j then "A" else "B")'],
+    ['pick "G" ( W ) when c', 'pick "G" (W) when c'],
   ];
   for (const [from, to] of coalesce) {
     const out = format(`form t\npdf ${pdf}\n${from}\n`, "f.stride").text;

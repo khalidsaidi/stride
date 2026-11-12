@@ -1,0 +1,10 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const MARKS = ["M1", "M2"]
+tick "Always"
+tick "Also" when true
+for m in MARKS {
+  tick m
+}
+# rule 7.7
+# boxes {"Always": "Yes", "Also": "Yes", "M1": "Yes", "M2": "Yes"}

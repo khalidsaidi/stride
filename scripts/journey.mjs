@@ -86,13 +86,14 @@ try {
   expect("the trace", stride(["run", "bills/split.stride", "total=8", "people[0]=Ada", "--trace"]), (x) => x.stderr.includes("→ share(total = 8, n = 1)") && x.stdout === "Ada owes 8.00\n");
   // 7. A PDF workflow: the header from the PDF, the source, the workflow in the browser, its tests, compiled.
   const { tinyPdf } = await import(join(repo, "tests/fixtures/tiny-pdf.mjs"));
-  writeFileSync(join(work, "consent-form.pdf"), tinyPdf());
+  writeFileSync(join(work, "consent-form.pdf"), tinyPdf({ parent: "top" })); // its boxes top.name and top.agree: the program has fields "top."
   expect("stride new from a PDF", stride(["new", "forms/consent", "--pdf", "consent-form.pdf"]), (x) => x.status === 0 && x.stderr.includes("stride run forms/consent.stride") && !x.stderr.includes("preview"));
   expect("its test", stride(["test", "forms/consent.stride"]), (x) => x.status === 0);
   expect("its map", stride(["map", "forms/consent.stride"]), (x) => x.stdout.includes("= name") && x.stdout.includes("not written"));
   const pdfjs = await import(join(repo, "node_modules/pdfjs-dist/legacy/build/pdf.mjs"));
   // `stride run <file>` in the browser, the browser left closed; a headless browser answers the question in the
-  // page and reads its boxes; gives what its box "name" holds and the page's errors.
+  // page and reads its boxes, named as the program writes them (stride.boxes(), the fields prefix taken off); gives
+  // what its box "name" holds and the page's errors.
   const inBrowser = async (file, cwd, saveTo) => {
     const server = spawn(windows ? installed : "stride", ["run", file, "--port", "0"], { cwd, env: { ...(windows ? process.env : env), BROWSER: "none" } });
     const url = await new Promise((done, fail) => {
@@ -151,7 +152,7 @@ try {
   cpSync(join(work, "forms/consent.pdf"), join(alone, "consent.pdf"));
   b = await inBrowser("consent.sbc", alone, join(alone, "filled.pdf"));
   b.value === "Ada Lovelace" && !b.errors.length && readdirSync(alone).sort().join(",") === "consent.pdf,consent.sbc" ? ok("stride run consent.sbc: the compiled workflow, with only its PDF, in a browser") : stop(`the compiled workflow in the browser: ${JSON.stringify(b.value)}; ${JSON.stringify(b.errors)}`);
-  writeFileSync(join(alone, "other.pdf"), Buffer.concat([tinyPdf(), Buffer.from("\n%other\n")]));
+  writeFileSync(join(alone, "other.pdf"), Buffer.concat([tinyPdf({ parent: "top" }), Buffer.from("\n%other\n")]));
   expect("a PDF it was not compiled for, refused", stride(["run", "consent.sbc", "--pdf", "other.pdf"], { cwd: alone }), (x) => x.status === 1 && x.stderr.includes("is not the PDF consent.sbc was compiled for"));
   // 8. Sharing a compiled program.
   expect("compile", stride(["compile", "bills/split.stride", "-o", "split.sbc"]), (x) => x.status === 0);

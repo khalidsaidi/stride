@@ -389,6 +389,10 @@ export const CODES = {
     "when": "a condition that is not bool",
     "explanation": "Conditions are true or false."
   },
+  "S312": {
+    "when": "words wanted, and another type given",
+    "explanation": "A box's name, a question's printed words, a button, a check's message are words: put a number in them as `\"…{n}…\"`."
+  },
   "S313": {
     "when": "a `for` bound that is not a number",
     "explanation": "`for i in 1..n` counts numbers."

@@ -13,8 +13,9 @@
 //   W010         words longer than a text box holds
 //
 // Gives the machine what it needs of the form: every box (its kind, and a check box's export value), every
-// question the program asks, and, for the page and `stride map`, which boxes a question's answer goes into, where the
-// program says so plainly (`fill "box" = answer`, `tick "box" when … answer …`), through the functions it calls.
+// question the program asks, and, for the page, which boxes a question's answer goes into, where the program says so
+// plainly (`fill "box" = answer`, `tick "box" when … answer …`), through the functions it calls. `stride map` follows
+// the program further, each call on its own (map.mjs).
 import { KIND, didYouMean, nearest } from "./source.mjs";
 import { stringOf } from "../runtime/natives.mjs";
 import { evaluate } from "./constant.mjs";
@@ -261,13 +262,10 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
     const kind = entries[0].kind;
     boxes.set(field, { kind: kind === "check" ? "tick" : kind === "radio" ? "pick" : "fill", on: kind === "check" ? onValuesOf(entries)[0] ?? "Yes" : null });
   }
-  const writtenOut = new Set(); // the boxes it writes by a name the compiler knows
-  const patterns = []; // the boxes it writes by a name worked out as it runs: { kind, re }
   const questions = new Set();
   const keys = new Map(); // a question's key, worked out -> { q, printed, node }
   const links = new Map(); // key \t box -> { key, box, direct }
   const maxOf = new Map();
-  const intoNamed = new Set(); // the keys of answers that go into a box named as the program runs
   const turnsOf = loopTurns(resolved);
 
   // ----- which questions' answers each value is made of, through the functions it calls
@@ -374,13 +372,6 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
   // ----- each write
 
   const kinds = { fill: ["text", "choice"], tick: ["check"], pick: ["radio", "check"] };
-  const escape = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const patternOf = (x) => {
-    const w = wordsOf(x);
-    if (w !== undefined) return escape(w);
-    if (x?.e === "concat") return x.parts.map(patternOf).join("");
-    return "[^]*";
-  };
   for (const fn of program.functions) {
     // Which questions each local holds an answer of, in this function: the ask's own local, and a let made from
     // such locals.
@@ -411,11 +402,7 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
       let names = wordsOf(s.box) !== undefined ? [wordsOf(s.box)] : undefined;
       const envs = turnsOf.get(node);
       if (names === undefined && node?.box) names = knownIn(node.box, envs)?.map((v) => (V.isNull(v) ? "" : stringOf(v)));
-      if (names === undefined) {
-        patterns.push({ op: s.op, re: new RegExp(`^${escape(prefix)}${patternOf(s.box)}$`) });
-        for (const a of asksOf([...depsOf(s.op === "fill" ? s.value : s.cond), ...(s.op === "pick" ? depsOf(s.button) : [])])) if (keyOf(a) !== undefined) intoNamed.add(keyOf(a));
-        continue; // worked out as the program runs: the run looks it up
-      }
+      if (names === undefined) continue; // worked out as the program runs: the run looks it up
       const fromLoop = wordsOf(s.box) === undefined;
       const each = (x, astNode) => {
         const w = wordsOf(x);
@@ -436,12 +423,11 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
           errOnce("S508", `nobox\t${full}\t${s.node?.span?.start}`, at, program.script ? `a script has no form, so it has no box "${short}" to write; start the file with form and pdf lines to fill a form (§4.6)` : `the PDF has no box "${short}"${didYouMean(short, shortNames)}`);
           return;
         }
-        writtenOut.add(full);
         if (found) {
           const first = found[0];
           if (!kinds[s.op].includes(first.kind)) {
             const how = { text: "fill", choice: "fill", check: onValuesOf(found).length > 1 ? "tick or pick" : "tick", radio: "pick" }[first.kind];
-            errOnce("S509", `kind\t${full}\t${s.node?.span?.start}`, s.node, `"${short}" is a ${first.kind === "check" ? "check box" : first.kind === "radio" ? "radio group" : `${first.kind} box`}; ${s.op} cannot write it (${how} does)`);
+            errOnce("S509", `kind\t${full}\t${s.node?.span?.start}`, s.node, `"${short}" is a ${first.kind === "check" ? "check box" : first.kind === "radio" ? "radio group" : first.kind === "choice" ? "list box" : `${first.kind} box`}; ${s.op} cannot write it (${how} does)`);
             return;
           }
           if (s.op === "pick") {
@@ -481,15 +467,7 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
     }
   }
 
-  // The boxes a name worked out as the program runs may write: those of the statement's kind whose names fit what
-  // of the name is written out.
-  const byName = new Set();
-  for (const [field, entries] of byField) {
-    if (writtenOut.has(field)) continue;
-    if (patterns.some((p) => kinds[p.op].includes(entries[0].kind) && p.re.test(field))) byName.add(field);
-  }
-
-  return { boxes, written: writtenOut, byName, intoNamed, questions: [...questions], links: [...links.values()], maxOf, keys };
+  return { boxes, questions: [...questions], links: [...links.values()], maxOf, keys };
 }
 
 // The expressions a statement holds, for finding the calls in it.

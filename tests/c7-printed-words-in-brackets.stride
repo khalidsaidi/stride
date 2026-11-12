@@ -1,0 +1,18 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+const WORDS = "Count"
+ask joint: bool "Joint?"
+ask names: string (if joint then "Your names" else "Your name")
+ask kind: one_of (if joint then "Kind of both" else "Kind") {
+  option "a" "A"
+  option "b" "B"
+}
+ask count: number WORDS
+ask other: number (WORDS + " again")
+pick "Filing" (if joint then "Joint" else "Single") when kind == "a"
+fill "Names" = names
+print(count, other)
+# rule 7.9
+# answers {"joint": true, "names": "Ann and Bo", "kind": "a"}
+# steps [{"key": "joint", "printed": "Joint?"}, {"key": "names", "printed": "Your names"}, {"key": "kind", "printed": "Kind of both"}, {"key": "count", "printed": "Count"}, {"key": "other", "printed": "Count again"}]
+# boxes {"Filing": "Joint", "Names": "Ann and Bo"}

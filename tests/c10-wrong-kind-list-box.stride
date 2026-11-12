@@ -1,0 +1,7 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+ask b: bool "Ok"
+tick "State" when b
+# rule 10.3 S509
+# box State choice:NY,CA near State
+# mistake 4 S509 "State" is a list box; tick cannot write it (fill does)

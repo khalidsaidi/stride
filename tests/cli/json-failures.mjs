@@ -32,7 +32,7 @@ export function test() {
     one("compile with source mistakes keeps its result fields", ["compile", "mistake.stride"], 1,
       (d) => d.ok === false && d.diagnostics.some((x) => x.code === "S201") && d.output === null && d.bytes === 0 && d.questions === 0 && d.boxes === 0);
     one("map with source mistakes keeps its result fields", ["map", "mistake.stride"], 1,
-      (d) => d.ok === false && d.diagnostics.some((x) => x.code === "S201") && [d.questions, d.writtenFromNoAnswer, d.notWritten].every((x) => Array.isArray(x) && x.length === 0));
+      (d) => d.ok === false && d.diagnostics.some((x) => x.code === "S201") && [d.questions, d.writtenFromNoAnswer, d.writtenByNameWorkedOut, d.notWritten].every((x) => Array.isArray(x) && x.length === 0) && d.someBoxNamedAtRun === false);
     one("run with answers that are not JSON", ["run", "m.stride", "bad.json"], 1, (d) => failed(d) && d.error.startsWith("bad.json: not JSON"));
     one("test of a program with no tests", ["test", "notes.stride"], 1, failed);
     one("run that faults", ["run", "m.stride", "n=0"], 1, (d) => d.ok === false && d.fault.code === "F001" && !("error" in d));
