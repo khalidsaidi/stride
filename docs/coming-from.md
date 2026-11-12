@@ -15,6 +15,9 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `None`, `nil`, `undefined`, a `NullPointerException` | `null`: every type has it; `x == null` tests it; computing with it is a fault, as a `TypeError` or a `NullPointerException` is |
 | `x ?? 0`, `x ?: 0`, `x or 0`, `x if x is not None else 0` | `x ?? 0`: x, or 0 when x is null; `""`, `0` and `[]` are not null |
 | `a?.b`, `a?.f()`, `a?.b?.c` | the same: null when `a` is null, without reading `b` or calling `f` |
+| `c ? a : b`, `a if c else b` | `if c then a else b`; there is no `?:` |
+| a `let` or `const` scoped to its `if` block | `if` and `match` are not scopes: a name declared in a branch is known after it, and the same name in two branches is one name, of one type (S315); `for`, `collect` and functions are scopes |
+| `` `${x ?? ""}` ``, `f"{x or ''}"` | `"{x}"`: null puts in no characters; `x ?? ""` with a number x is a mistake (S394) |
 | `if x:`, `if (x)` on a value that may be null | `if x { }` for a bool: null counts as false; `if x != null { }` for anything else |
 | `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
 | `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
@@ -89,7 +92,10 @@ list, and neither is null. As in Python, Java and Swift, computing with it stops
 `TypeError` or `NullPointerException` of Stride): arithmetic, `<`, a field, an item, `for`, a library function
 all need a value. What takes it: `==` and `!=`, a condition (null counts as `false`, as `None` is falsy), words
 with values (`"{x}"` puts in nothing, as C# does) and `fill`. `x ?? y` gives a value in its place, as in JavaScript,
-C# and Swift; there is no `?.`: write `if r != null`.
+C# and Swift. `a?.b` and `a?.f()` are null when `a` is null, without reading `b` or calling `f`, as in JavaScript,
+Kotlin and Swift, so `state?.upper()` and `signed?.format("MM/DD/YYYY")` give null for an answer not given yet, and
+`a?.b?.c` stops at the first null. `if r != null { }` guards a whole block. `not x` is true when x is null, as
+`not None` is in Python.
 
 ```stride
 let price: number = null
@@ -116,6 +122,21 @@ false
 true
 0
 null where a number is needed: the left side of +
+```
+
+```stride
+let state: string = null
+let city = "ottawa"
+print(state?.upper() == null)
+print(city?.upper())
+print(city?.replace("o", "0")?.upper())
+print(join(filled([city, state?.upper()]), ", "))
+```
+```output
+true
+OTTAWA
+0TTAWA
+ottawa
 ```
 
 ## Positions count from 0

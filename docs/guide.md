@@ -102,8 +102,12 @@ tick "agree" when agrees
 
 A question not answered yet holds null (§3). `fill` leaves its box blank for it and `tick … when` leaves its box
 unticked, so this program runs before anything is answered. What is worked out from an answer needs the answer:
-`fill "initials" = upper(full_name)` is a fault until the name is given (F023, §11). Give it a value for the time
-being, `upper(full_name ?? "")`, or work it out only when the answer is there, `if full_name != null { … }`.
+`fill "initials" = upper(full_name)` is a fault until the name is given (F023, §11). Work it out only when the
+answer is there: `full_name?.upper()` is null until the name is given (section 3), and `if full_name != null { … }`
+guards a whole block. `upper(full_name ?? "")` gives it a value for the time being.
+
+A program finds its header by its own file name: `consent.stride` is checked against `consent.boxes.json` beside
+it, so a copy saved under another name to try something needs a header of that name too.
 
 A PDF's own names for its boxes are often a machine's (`topmostSubform[0].Page1[0].f1_05[0]`). Give such a box
 a name of your own once, as a constant, and use that name wherever the box goes (§7.9):
@@ -175,6 +179,37 @@ false
 price: 
 null where a number is needed: the left side of +
 ```
+
+`not` of null is true, as `not None` is in Python: while a bool question is unanswered, `not agrees` is true, and
+`agrees == false` is true only for an answer of no.
+
+`a?.f()` and `a?.f` are null when a is null, and otherwise call f on a or read its field f, as in JavaScript,
+Kotlin and Swift; a chain stops at the first null (§6.9.1). It is the way to work something out from an answer
+that may not be given yet. `filled` leaves out the null items of a list, not `""`, so `?.` joins parts where
+`?? ""` would leave an empty part, and a space too many, behind:
+
+```stride
+let city = "Ottawa"
+let state: string = null
+let signed: date = null
+print(city?.upper())
+print(state?.upper() == null)
+print(signed?.format("MM/DD/YYYY") == null)
+print(date_of(2026, 7, 4)?.format("MM/DD/YYYY"))
+print(join(filled([city, state?.upper(), "K1A 0B1"]), " "))
+print(join(filled([city, upper(state ?? ""), "K1A 0B1"]), " "))
+```
+```output
+OTTAWA
+true
+true
+07/04/2026
+Ottawa K1A 0B1
+Ottawa  K1A 0B1
+```
+
+In words, `"{n}"` already puts in no characters for a null n, whatever its type; `"{n ?? ""}"` with a number n is a
+mistake (S394), since a number and words do not join.
 
 Numbers are exact decimals of up to 34 significant digits (§3.3), not binary floating point: `0.1 + 0.2` is `0.3`,
 and `+`, `-` and `*` are exact while their result fits. A result that does not fit, and every `/` that does not come
@@ -682,6 +717,8 @@ copied into `lib/`, or named in `"libraries"`.
 browser at it, and runs until stopped with Ctrl-C; `BROWSER=none` leaves the browser closed, `--pdf` gives the PDF
 when it is not `w9.pdf` beside the program, and `--today` fixes the date the page's `today()` gives. A PDF that is
 not the one the program is for (its sha256 differs) is refused. Nothing a person types leaves the computer.
+What a form program prints goes to the browser's console, not into the page: the page shows the questions, the
+messages of their failed checks and the PDF.
 
 `--terminal` runs a program in the terminal, with every way of giving answers of §1, `--prompt`, `--json` and
 `--trace`; a script always runs there. The browser's options with `--terminal`, or answers without it, are a usage
@@ -698,7 +735,8 @@ write the same boxes.
   on the page and on the form. Stride does not read them off the PDF: you do.
 - **Conditional questions** are questions inside an `if`: asked only when the condition holds.
 - **Repeated rows** are a `collect`: it asks a block of questions for one item, then "Another?", until
-  the answer is no; a `for` then fills one row of boxes per item, `"Name{n}"`.
+  the answer is no; a `for` then fills one row of boxes per item, `"Name{n}"`. A list of plain values, and a
+  list that may have no items, are in section 25.
 
   ```
   record vehicle { vin: string, make: string }
@@ -731,7 +769,10 @@ tick "agree" when agrees
 ```
 
 - A box's name and a question's printed words are ordinary expressions, worked out as the program runs (§11.2):
-  `fill "Row{n}" = v`. `stride map` lists the boxes a program names outright.
+  `fill "Row{n}" = v`. After `fill`, `tick` or `pick`, the name is words in quotes or starts with a name:
+  `fill row_box(n) = v`, `fill boxes.city = v`, `fill b = v`; anything else, such as `(if c then "A" else "B")`,
+  goes into a `let` first. `stride map` lists the boxes a program names outright; a box named as the program runs
+  is listed as not written, even when runs write it, and `stride run --terminal` shows what a run writes.
 - A program never changes the PDF: it only fills its boxes, and nothing a person types leaves their browser.
 
 ## 21. Sharing a program
@@ -779,3 +820,227 @@ Linux. Other platforms are outside this release's scope.
 | a run | calls at most 10,000 deep (F015); no limit of instructions unless the host sets one (F014) |
 | values | numbers below 10^34 with 34 digits |
 | errors | at most 20 errors shown; the rest are counted |
+
+## 25. Questions
+
+**A question's own options** go in a block after its printed words, and a `default` or a `check` after the
+block (§8.3); `one_of S` takes the options of an option set S instead:
+
+```stride answers={"size":"l"}
+ask size: one_of "Shirt size" {
+  option "s" "Small"
+  option "m" "Medium"
+  option "l" "Large"
+} default "m"
+print(size)
+```
+```output
+l
+```
+
+**A brace in words.** In words in quotes `{…}` puts a value in, so a brace that is part of the words, as in a
+PDF box called `Other {explain}`, is written `\{` and `\}` (§2.6):
+
+```stride
+print("Other \{explain\}")
+```
+```output
+Other {explain}
+```
+
+**A check runs only on an answer** (§8.4.1). A question not answered is not checked, so a check that tests its
+own answer for null never fails, and says so (W009): Stride does not make a question required, as a form does not,
+and a box left empty stays empty. A failed check's message goes to the page, or to stderr in the terminal, and the
+run goes on:
+
+```stride answers={"age":"12"}
+ask age: number "Your age" check age >= 18 "you must be 18 or over"
+ask name: string "Your name" check name != null "your name is needed"
+print("age {age}, name {name}")
+```
+```output
+age 12, name 
+```
+```stderr
+guide.stride:2:36: warning W009: this is always true: a check runs only when the question is answered, so name is never null here
+  2 | ask name: string "Your name" check name != null "your name is needed"
+    |                                    ^^^^^^^^^^^^ this is always true: a check runs only when the question is answered, so name is never null here
+  stride explain W009
+
+age: you must be 18 or over
+```
+
+A check that reads another question's answer works it out as any expression does: null there is a fault (F023),
+so give it a value, `check length(vin) == 17 or (model_year ?? 9999) < 1981 "…"`.
+
+**Repeated items.** A `collect` gathers a list of records (section 20) or of plain values; for plain values the
+item is the answer itself, `ask a: string …`. Without `any`, it always asks for item 0, and the list holds that
+item even when nothing is answered. With `any "Any…?"` before its "Another…?", it first asks whether there are
+any, and a no, or no answer yet, leaves the list with no items (§8.5):
+
+```stride answers={"attorneys[0]":"Ada Byron","attorneys[0]#another":"yes","attorneys[1]":"Bo Chen","trips#any":"no"}
+var attorneys: list<string>
+collect a in attorneys "Another attorney?" {
+  ask a: string "Attorney's name"
+}
+print(attorneys)
+var trips: list<string>
+collect t in trips any "Did you travel abroad?" "Another trip?" {
+  ask t: string "Country"
+}
+print(count(trips))
+```
+```output
+[Ada Byron, Bo Chen]
+0
+```
+
+**Keys.** Each question a run reaches has a key, and answers are given by key: on the command line, in
+`answers.json`, in a test (§8.6). `stride run --terminal` lists the keys of the questions it asks. A key is built
+from where the question is asked:
+
+| Asked | Key |
+|---|---|
+| `ask name: …` | `name` |
+| `ask a.city: …`, a field of the var `a` | `a.city` |
+| in a function `ask_address`, called from the program | `ask_address.a.city`; its second call in the run `ask_address#2.a.city` |
+| in a function called through `let mailing = () => ask_address(…)` | `mailing.ask_address.a.city` |
+| in `for i in 1..2` | `parent[1]`, `parent[2]`: the counter's value |
+| in `for x in l`, or a `while` | `copies[0]`, `copies[1]`: the turn, from 0 |
+| in `collect k in kids` | `kids[0]` (a plain value), `kids[0].name` (a record's field); `kids[0]#another`, `kids#any` |
+
+```stride answers={"ask_address.a.street":"1 Main St","ask_address.a.city":"Ottawa","ask_address#2.a.city":"Montreal","mailing.ask_address.a.city":"Hull","parent[2]":"Bo","kids[0]":"Cy"}
+record address {
+  street: string
+  city: string
+}
+function ask_address(whose: string) -> address {
+  var a: address
+  ask a.street: string "{whose}: street"
+  ask a.city: string "{whose}: city"
+  return a
+}
+let home = ask_address("Home")
+let work = ask_address("Work")
+let mailing = () => ask_address("Mailing")
+let post = mailing()
+print("{home.street}, {home.city}")
+print(work.city, post.city)
+for i in 1..2 {
+  ask parent: string "Parent {i}'s name"
+  print("parent {i}: {parent}")
+}
+var kids: list<string>
+collect k in kids "Another child?" {
+  ask k: string "Child's name"
+}
+print(kids)
+```
+```output
+1 Main St, Ottawa
+Montreal Hull
+parent 1: 
+parent 2: Bo
+[Cy]
+```
+
+So a key changes when what it is built from changes: a question, a var, a function or the `let` holding a function
+renamed; a call of the same function added or answered before another (the `#2` moves); a loop over a list whose
+items change, such as an any_of answer, giving an item another turn. Saved answers and tests answer by key, and a
+key no question has answers nothing. Where a key must not move, give each call its own name (`let mailing = () =>
+…`), and loop over a fixed list, skipping the turns not wanted with `continue`, rather than over the answer.
+
+## 26. Patterns from forms
+
+**A helper that asks and returns a record**, as `ask_address` above, asks the same block twice without writing it
+twice; its questions are keyed by the call (section 25).
+
+**Box names in a table.** Forms repeat a block of boxes for each party, row or section. A record of box names, or
+a list, given to a helper, fills each one from the same code:
+
+```stride form
+form consent
+pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76
+
+record person_boxes {
+  name: string
+  agree: string
+}
+function ask_person(b: person_boxes, who: string) {
+  ask full_name: string "{who}: full name"
+  ask agrees: bool "{who}: I agree to the terms"
+  fill b.name = full_name
+  tick b.agree when agrees
+}
+ask_person(new person_boxes { name: "name", agree: "agree" }, "Applicant")
+```
+
+A run of numbered names is a comprehension:
+
+```stride
+let base = "Make"
+print([base] + ["{base}_{n}" for n in 2..4])
+```
+```output
+[Make, Make_2, Make_3, Make_4]
+```
+
+A box's name worked out as the program runs, from a record, a list, a parameter or `{…}`, is not looked up before
+the run (§10.4): a misspelt one stops the run with F016 on the answers that reach it. A name written out, or a
+constant holding one, is looked up (S508, with the nearest name). Give the tests answers that reach every branch.
+
+**A common start of every box's name.** When the PDF's names all start alike (`topmostSubform[0].Page1[0].`),
+write the start once, after the `pdf` line, and every box name the program writes is the rest (§10.1):
+
+```
+form w9
+pdf …
+fields "topmostSubform[0].Page1[0]."
+
+fill "f1_05[0]" = exempt_code
+```
+
+**A long answer over several boxes.** A form often gives a long answer a few lines, each its own box. `line(t,
+n)` is the line at position n of t, null past the last, and `rest_lines(t)` every line after the first:
+
+```stride answers={"explain":"Fell on the ice\nat the corner of Main St\nand Elm St"}
+ask explain: long_text "What happened?"
+print(explain?.line(0))
+print(explain?.rest_lines()?.replace("\n", " "))
+for i in 0..<4 {
+  print("{i + 1}: {explain?.line(i)}")
+}
+```
+```output
+Fell on the ice
+at the corner of Main St and Elm St
+1: Fell on the ice
+2: at the corner of Main St
+3: and Elm St
+4: 
+```
+
+so a box per line is `for i in 0..<4 { fill "Explanation line {i + 1}" = explain?.line(i) }`, and a box with a
+continuation line is `fill "Explanation" = explain?.line(0)` with `fill "Explanation, continued" =
+explain?.rest_lines()`.
+
+**Ticks from an any_of.** An any_of with nothing chosen is null (§8.7), so a test of one option is written on
+`?? []`:
+
+```stride answers={"wanted":["birth"]}
+enum document {
+  "birth" "Birth certificate"
+  "death" "Death certificate"
+}
+ask wanted: any_of document "Which documents do you need?"
+print("death" in (wanted ?? []))
+for d in wanted ?? [] {
+  print(d)
+}
+```
+```output
+false
+birth
+```
+
+and a box per option is `tick "Death" when "death" in (wanted ?? [])`.
