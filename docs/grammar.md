@@ -68,8 +68,8 @@ Lists and functions (§14.4.2): `map(l, f)`, `filter(l, f)`, `reduce(l, start, f
 Dates in words (§14.3.1): `format(d, "dddd, D MMMM YYYY")`, `'…'` for words as they are; `weekday(d)` (0 for Monday); `parse_date("07/04/2026", "MM/DD/YYYY")`.
 
 Numbers are exact: `0.1 + 0.2 == 0.3` is true; `+ - *` round to 34 digits only past them, and `/` rounds its
-quotient to 34 digits, half to even (§3.3). A number has no exponent and no leading zero (`0755` is a mistake;
-an id with leading zeros is words in quotes, §2.5).
+quotient to 34 digits, half to even (§3.3). A number has no leading zero (`0755` is a mistake; an id with
+leading zeros is words in quotes, §2.5); it may have an exponent or another base (`1e5`, `0xFF`, §2.5.1).
 
 Every value may also be null: no value, an answer not given yet. `null` is the null value of any type; `x ==
 null` and `x != null` test it, and `x ?? y` gives y in its place (§3.2, §6.16). `""`, `[]` and `{}` are
@@ -176,7 +176,8 @@ The block may also stand before the printed words: `ask n: one_of { option "1" "
 An `if` and a `match` are not scopes: a question asked in a branch is known after it, and null when that branch
 did not run. A `let` or `var` declared in a branch may be read after it only where every path has declared it
 (§12.1.1). Loops, collects, comprehensions and functions are scopes. A name is used only after the statement
-that defines it; the same name is not defined twice in one function or program.
+that defines it. A `let` or `var` of a name already defined hides the one before it from there on; two questions
+of one name in one function or program are a mistake (S205), since they would have one key (§12.3).
 
 ### Lists and collect
 
@@ -203,7 +204,9 @@ collect t in trips any "Did you take any trips outside the United States?" anoth
 }
 ```
 
-False leaves the list with no items. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
+False leaves the list with no items; without `any`, the list holds item 0 even when nothing is answered. A list
+of plain values asks the item itself: `collect a in attorneys "Another attorney?" { ask a: string "Attorney's
+name" }`, keys `attorneys[0]`, `attorneys[1]`, …. The collect's own questions have the keys `trips#any` and `trips[n]#another`, with
 the turns of any loops around the collect after them: `trips#any[2]` (§8.6.2). The items are answers: a program
 cannot change them. A list is collected once, into a var declared as a list of records or plain values, with no items.
 
@@ -226,6 +229,8 @@ Loosest first (§6.1): `if c then a else b`; `??`; `or`; `and`; `not`; compariso
 - `and` and `or` decide on the left when they can; the right is then not worked out. They always give true or false.
 - `a ?? b` is a when a is not null, else b; b is worked out only then. It chains from the left, and its type is
   the join of a's and b's (§6.16): `fill "Total" = amount ?? 0`, `upper(name ?? "")`.
+- `r?.f` and `r?.f(…)` are null when r is null, and otherwise `r.f` and `r.f(…)`: `name?.upper()`,
+  `signed?.format("MM/DD/YYYY")`; a chain stops at the first null, `a?.b?.c` (§6.9.1).
 - `if c then a else b` works out only the chosen value; its type is the join of a's and b's (§6.13).
 - `l[n]` is the item at position n, the first at 0; a position outside the list is a fault (§6.9.2). `l[a..b]`
   is the items a to b, and `l[a..<b]` the items a to before b (§6.9.3). `[r.name for r in reps if r.copies]` makes a list (§6.12).
@@ -342,8 +347,10 @@ machine and standard library bundled with Node inside);
 - `stride compile <file.stride> [-o <file.sbc>] [--json]` compiles to bytecode; `--json` gives the mistakes in
   one JSON document.
 - `stride check <file.stride> [--json]` runs every check and writes nothing.
-- `stride run <file.stride|.sbc> [answers.json] [--trace] [--today D]` runs with answers (`{ "key": answer }`)
-  and prints the questions asked, the boxes written, what `print` gave and a fault; `--trace` each instruction.
+- `stride run <file.stride|.sbc>` opens a form's workflow in the browser; `stride run <file> --terminal
+  [answers.json] [key=value …] [--trace] [--today D]` runs it in the terminal with answers (`{ "key": answer }`)
+  and prints the questions asked, the boxes written, what `print` gave and a fault; `--trace` follows each
+  statement (§17.7). A script always runs in the terminal.
 - `stride test <file.stride> [name …]` runs the tests in `<file>.tests/`: each `{ "answers", "boxes",
   "asked", "unasked", "loose" }`; every box the test does not list must be empty unless it is loose. `stride test <name>.test.stride` runs a
   test file's `expect`s.
