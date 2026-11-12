@@ -11,6 +11,7 @@ function second() {
 first()
 second()
 # rule 8.6 8.6.1 8.6.2 8.6.4
+# warning 3:10 W017
 # answers {"first.name": "A", "second.name": "B"}
 # asked ["first.name", "second.name"]
 # boxes {"First": "A", "Second": "B"}

@@ -105,7 +105,7 @@ print("done")
 # fault F023 at 50:13 null where a list is needed: the right side of +
 # run in
 # answers {"which": "in"}
-# fault F023 at 53:13 null where a list is needed: the right side of in
+# fault F023 at 53:13 null where a set is needed: the right side of in
 # run in words
 # answers {"which": "in words"}
 # fault F023 at 56:11 null where words are needed: the left side of in

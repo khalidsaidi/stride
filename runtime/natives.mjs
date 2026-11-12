@@ -7,7 +7,7 @@
 // parameter and the kind of value it needs. Then it checks its control arguments — positions, places, widths,
 // paddings, patterns — and faults when one is wrong (§14.0.3.1).
 import { D, StrideFault, StrideRecord, StrideMap, StrideRange, StrideError, copy, StrideDate, isNull, isNumber, isDate, isSet, words, equal, order, set, date, dateFrom, daysIn, num, whole, needed, outside, dayNumber, fromDayNumber, StrideTuple, StrideSet } from "./values.mjs";
-import { power } from "./ops.mjs";
+import { power, binary } from "./ops.mjs";
 
 export { StrideFault, StrideRecord, isNull };
 export const stringOf = words;
@@ -375,13 +375,26 @@ export const NATIVES = {
   // A tuple written out (§6.17), from its values in order.
   tuple_of: { pure: true, internal: true, fn: (items) => new StrideTuple(items) },
   // Sets of any type (§14.4.2). `add` and `remove` change the set they are given, and give it.
-  set: { takes: "items:l", fn: (items) => new StrideSet(items) },
+  set: { pure: true, takes: "items:l", fn: (items) => new StrideSet(items) },
   add: { changes: true, takes: "s:s x:V", fn: (s, x) => (s.add(x), s) },
   // What a for or a comprehension over a set goes through: its values, in the order first added.
   set_items: { pure: true, internal: true, fn: (s) => s.items },
   keys: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([key]) => key) },
   values: { pure: true, takes: "m:m", fn: (m) => m.pairs.map(([, x]) => x) },
   has: { pure: true, takes: "m:m key:V", fn: (m, k) => m.has(k) },
+  // get(l, position, fallback), get(m, key, fallback) (§14.4.1): the item or the value, or fallback when there is
+  // none (a position below 0 or past the last item, a key the map does not have).
+  get: {
+    pure: true,
+    takes: "l:c key:V fallback:V",
+    fn: (l, key, fallback) => {
+      if (l instanceof StrideMap) return l.has(key) ? l.get(key) : fallback ?? null;
+      if (isNull(key)) needed("a number is", "get's key");
+      if (!isNumber(key) || !D.isWhole(key)) throw new StrideFault("F007", `get: a position is a whole number, and this is ${words(key)}`);
+      const n = whole(key);
+      return n !== null && n >= 0 && n < l.length ? l[n] : fallback ?? null;
+    },
+  },
   remove: { pure: true, changes: true, takes: "m:m key:V", fn: (m, k) => (m.remove(k), m) },
   join: { pure: true, takes: "l:l separator:t", fn: (l, sep) => l.map(words).join(sep === undefined ? ", " : text(sep)) },
   first: { pure: true, takes: "l:l", fn: (l) => l[0] ?? null },
@@ -465,7 +478,7 @@ export const NATIVES = {
     },
   },
   // A list of words in quotes where a set is expected (§3.6): the options they name, in the set's order.
-  to_set: { pure: true, internal: true, fn: (l, order) => (isNull(l) ? null : set(l, order)) },
+  to_set: { pure: true, internal: true, fn: (l, order) => (isNull(l) ? null : set(l instanceof StrideSet ? l.items : l, order)) },
   // A for loop's bound (§7.11): a number (F023), and a whole one (F004).
   loop_bound: { pure: true, internal: true, fn: (v) => { if (isNull(v)) needed("a number is", "a loop's bound"); if (whole(v) === null) throw new StrideFault("F004", `a loop's bound is a whole number, and this is ${words(v)}`); return v; } },
   // What a for or a comprehension goes through (§7.11, §6.12): there (F023).
@@ -475,12 +488,28 @@ export const NATIVES = {
   slice_end: { pure: true, internal: true, fn: (v) => D.sub(v ?? needed("a number is", "a bound of [ .. ]"), num(1)) },
   // A date constant, from its words: the compiler's.
   date_from_iso: { pure: true, internal: true, fn: (s) => dateFrom(s) },
+  // A value where the compiler knows the kind it needs (§6.3): null there is F023, in the compiler's words.
+  need: { pure: true, internal: true, fn: (v, kind, what) => (isNull(v) ? needed(kind, what) : v) },
+  // An operator whose null operand the compiler names (§6.3): the kinds of its two sides, as their types give them.
+  operate: {
+    pure: true,
+    internal: true,
+    fn: (a, b, op, kindA, kindB) => {
+      try {
+        return binary(op, a, b);
+      } catch (e) {
+        const side = e instanceof StrideFault && e.code === "F023" ? /the (left|right) side of/.exec(e.message)?.[1] : null;
+        if (side) needed(side === "left" ? kindA : kindB, `the ${side} side of ${op}`);
+        throw e;
+      }
+    },
+  },
   // Whether a value is null: the compiler's, not declared in the standard library.
   is_null: { pure: true, internal: true, fn: (v) => isNull(v) },
 };
 
 // Empty given where a native needs a value (§14.0.3): F023 naming the parameter, before the native does anything.
-const KINDS = { t: "words are", n: "a number is", d: "a date is", l: "a list is", m: "a map is", s: "a set is", v: "a value is" };
+const KINDS = { c: "a list or a map is", t: "words are", n: "a number is", d: "a date is", l: "a list is", m: "a map is", s: "a set is", v: "a value is" };
 for (const [name, native] of Object.entries(NATIVES)) {
   if (!native.takes) continue;
   const params = native.takes.split(" ").map((p) => p.split(":"));

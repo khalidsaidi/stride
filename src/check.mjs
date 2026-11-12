@@ -113,7 +113,7 @@ export function check(resolved, diagnostics) {
       // Made of known values, and its working out faults: a fault certain before the form opens (§11.3.1), which the
       // flow phase reports (§11.3.5).
       sym.fault = faultIn(sym.node.value);
-    } else if (value === undefined) err("S304", sym.node.value, `a constant's value is worked out by the compiler, from words, numbers and other constants; ${sym.name} depends on something that is not`);
+    } else if (value === undefined) err("S304", sym.node.value, `a constant's value is worked out by the compiler, from words, numbers, dates, other constants, and lists, sets, maps, tuples and records of them; ${sym.name} depends on something that is not`);
     else {
       sym.value = value;
       sym.known = true;
@@ -121,7 +121,6 @@ export function check(resolved, diagnostics) {
     if (sym.declaredType && !fitsAt(sym.node.value, type, sym.declaredType)) err("S305", sym.node.value, `${sym.name} is declared ${T.describe(sym.declaredType)}, and its value is ${T.describe(type)}`);
     else if (sym.declaredType) optionLiteral(sym.node.value, sym.declaredType);
     sym.type = sym.declaredType ?? type;
-    if (["record"].includes(sym.type.t)) err("S306", sym.node, `a constant is words, a number, a date, true or false, a set, or a list of them; ${sym.name} is ${T.describe(sym.type)}`);
     return sym.type;
   }
 
@@ -722,7 +721,7 @@ export function check(resolved, diagnostics) {
       case "string":
         for (const p of e.parts) {
           if (typeof p === "string") continue;
-          const t = expr(p, ctx, { allowNone: true });
+          const t = expr(p, ctx, { allowNone: true, inWords: true });
           if (["record", "list", "none"].includes(t.t)) err("S352", p, `{…} puts words, a number, a date or an option into words; this is ${T.describe(t)}`);
         }
         return T.STRING;
@@ -800,7 +799,7 @@ export function check(resolved, diagnostics) {
         return T.BOOL;
       }
       case "binary":
-        return binary(e, ctx);
+        return binary(e, ctx, how);
       case "field": {
         const t = expr(e.target, ctx);
         if (T.isError(t)) return T.ERROR;
@@ -1232,8 +1231,38 @@ export function check(resolved, diagnostics) {
         result = T.ERROR;
       }
     }
+    // get(l, position, fallback), get(m, key, fallback) (§14.4.1): an item of l or a value of m, or fallback.
+    if (sym.kind === "native" && sym.name === "get") result = getting(bound);
     if (sym.kind === "native") nativeDomain(sym, e, bound, sortBy);
     return result;
+  }
+
+  // What get gives (§14.4.1): the list's item type or the map's value type, joined with the fallback's.
+  function getting(bound) {
+    const [l, key, fallback] = bound;
+    const c = l?.type ?? T.ERROR;
+    if (T.isError(c)) return T.ERROR;
+    let item;
+    if (c.t === "list") {
+      item = c.element;
+      if (key?.type && !T.isError(key.type) && key.type.t !== "number" && key.type.t !== "null") err("S367", key, `get's key is a position in the list, a number, and this is ${T.describe(key.type)}`);
+    } else if (c.t === "map") {
+      item = c.value;
+      if (key?.type && !T.isError(key.type) && c.key.t !== "null" && !fitsAt(key, key.type, c.key)) err("S367", key, `get's key is a key of the map, ${T.describe(c.key)}, and this is ${T.describe(key.type)}`);
+      else if (key) optionLiteral(key, c.key);
+    } else if (c.t === "null") return T.NULL;
+    else {
+      err("S369", l, `get takes a list or a map, and this is ${T.describe(c)}`);
+      return T.ERROR;
+    }
+    if (!fallback || fallback.kind === "default-of" || !fallback.type || T.isError(fallback.type)) return item;
+    if (item.t !== "null" && fitsAt(fallback, fallback.type, item)) return (optionLiteral(fallback, item), item);
+    const j = T.join(item, fallback.type);
+    if (!j) {
+      err("S367", fallback, `get's fallback stands for an item, which is ${T.describe(item)}, and this is ${T.describe(fallback.type)}`);
+      return T.ERROR;
+    }
+    return j;
   }
 
   // The element types the list natives take (§14.4), and sorted's field (S399).
@@ -1309,9 +1338,11 @@ export function check(resolved, diagnostics) {
     }
   }
 
-  function binary(e, ctx) {
-    const a = expr(e.a, ctx, { allowNone: true });
-    const b = expr(e.b, ctx, { allowNone: true });
+  function binary(e, ctx, how = {}) {
+    // In words (`"{months ?? ""}"`, §6.10) each value of a ?? chain is put in by its words, whatever its type.
+    const inWords = how.inWords && e.op === "??";
+    const a = expr(e.a, ctx, { allowNone: true, inWords });
+    const b = expr(e.b, ctx, { allowNone: true, inWords });
     // At the operation itself, its brackets left out; in `x -= e`, the `-=` (§16.2.1).
     const err2 = (code, message) => (err(code, { file: e.file, span: e.compound ? e.opSpan : e.bareSpan ?? e.span }, message), T.ERROR);
     const anyError = T.isError(a) || T.isError(b);
@@ -1395,6 +1426,8 @@ export function check(resolved, diagnostics) {
         if (a.t === "options" && b.t === "list" && fitsAt(e.b, b, a)) return (optionLiteral(e.b, a), a);
         if (b.t === "options" && a.t === "list" && fitsAt(e.a, a, b)) return (optionLiteral(e.a, b), b);
         const j = T.join(a, b);
+        const worded = (t) => !["record", "list", "none", "map", "tuple", "function", "caught"].includes(t.t);
+        if (!j && inWords && worded(a) && worded(b)) return T.STRING;
         if (!j) return (err("S394", e.b, `?? gives ${T.describe(a)} on one side and ${T.describe(b)} on the other, which do not join`), T.ERROR);
         return j;
       }

@@ -287,7 +287,7 @@ export function lower(resolved, diagnostics, options = {}) {
       let value = expr(s.value, ctx);
       // l += m adds m's items to the list l holds (§6.5.1), and l holds it still.
       if (s.inPlace) return emit(ctx, { op: "eval", value: withAt(IR.native("extend", [held(dst), value]), placeOf(s, s.opSpan)), node: s });
-      if (s.op) value = withAt(IR.binary(s.op, held(dst), value), placeOf(s, s.opSpan));
+      if (s.op) value = operation(s.op, held(dst), value, target.symbol?.type, s.value.type, placeOf(s, s.opSpan));
       emit(ctx, { op: "set", dst, outer, value: placeAs(value, target.symbol?.type, s.value.type), node: s });
       return;
     }
@@ -325,7 +325,7 @@ export function lower(resolved, diagnostics, options = {}) {
       // The place's current value, read through the same temporaries.
       let read = held(dst);
       for (const p of path) read = p.field !== undefined ? IR.field(read, p.field, p.name) : IR.item(read, withAt(IR.local(p.into), p.index.at));
-      value = withAt(s.inPlace ? IR.native("extend", [read, value]) : IR.binary(s.op, read, value), placeOf(s, s.opSpan));
+      value = s.inPlace ? withAt(IR.native("extend", [read, value]), placeOf(s, s.opSpan)) : operation(s.op, read, value, type, s.value.type, placeOf(s, s.opSpan));
     }
     emit(ctx, { op: "store", dst, outer, path, value: placeAs(value, type, s.value.type), node: s });
   }
@@ -439,7 +439,9 @@ export function lower(resolved, diagnostics, options = {}) {
 
   function lowerMatch(s, ctx) {
     const subject = ctx.fn.local("match", s.subject.type);
-    emit(ctx, { op: "set", dst: subject, value: expr(s.subject, ctx), node: s });
+    // An exhaustive match none of whose arms falls through takes no null subject (§7.10.2).
+    const value = s.nullFaults ? withAt(IR.native("need", [expr(s.subject, ctx), IR.constant(`one of ${s.subject.type.set.name} is`), IR.constant("the subject of a match that names every option")]), placeOf(s.subject, s.subject.span)) : expr(s.subject, ctx);
+    emit(ctx, { op: "set", dst: subject, value, node: s });
     const join = ctx.fn.block();
     for (const arm of s.arms) {
       if (!arm.values) {
@@ -622,8 +624,40 @@ export function lower(resolved, diagnostics, options = {}) {
   // A value of type `from` placed where `type` is expected (§3.6).
   function placeAs(x, type, from) {
     // A list of options placed where a set is expected becomes the set, in declaration order (§3.8).
-    if (type?.t === "options" && from?.t === "list") return IR.native("to_set", [x, IR.constant(type.set.options.map((o) => o.value))]);
+    if (type?.t === "options" && (from?.t === "list" || from?.t === "set")) return IR.native("to_set", [x, IR.constant(type.set.options.map((o) => o.value))]);
     return x;
+  }
+
+  // An operator's null operand is F023, which names the kind of value needed (§6.3). The machine tells it by the
+  // other operand, and `in` by a list; where the types say otherwise (a date beside a number of days, a set, a map
+  // or words after `in`), the operation goes through `operate`, which names the kind the types give.
+  function operation(op, a, b, ta, tb, at) {
+    const ka = kindNeeded(ta), kb = kindNeeded(tb);
+    const told = ["in", "not in"].includes(op) ? kb !== "a list is" && kb !== "a value is" : ["+", "-", "<", "<=", ">", ">="].includes(op) && ka !== kb && ka !== "a value is" && kb !== "a value is";
+    if (told) return withAt(IR.native("operate", [a, b, IR.constant(op), IR.constant(ka), IR.constant(kb)]), at);
+    return withAt(IR.binary(op, a, b), at);
+  }
+  function kindNeeded(t) {
+    switch (t?.t) {
+      case "number":
+        return "a number is";
+      case "date":
+        return "a date is";
+      case "string":
+      case "option":
+        return "words are";
+      case "options":
+      case "set":
+        return "a set is";
+      case "map":
+        return "a map is";
+      case "list":
+        return "a list is";
+      case "range":
+        return "a range is";
+      default:
+        return "a value is";
+    }
   }
 
   // A function's name as a key writes it: after its library's import path when a library declares it (§8.6.2).
@@ -693,7 +727,7 @@ export function lower(resolved, diagnostics, options = {}) {
         if (e.b.type?.t === "options" && e.a.type?.t === "list") a = asSet(a, e.b.type);
         // a ?? b (§6.16): each side placed as their join.
         if (e.op === "??") return IR.binary("??", placeAs(a, e.type, e.a.type), placeAs(b, e.type, e.b.type));
-        return withAt(IR.binary(e.op, a, b), placeOf(e));
+        return operation(e.op, a, b, e.a.type, e.b.type, placeOf(e));
       }
       case "cond":
         return IR.cond(expr(e.condition, ctx), expr(e.yes, ctx), expr(e.no, ctx));

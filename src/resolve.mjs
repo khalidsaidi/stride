@@ -115,7 +115,8 @@ export function resolve(loaded, diagnostics) {
       if (!r) return;
       for (const [name, sym] of r.scope.names) {
         if (!sym.exported) continue;
-        if (imports.names.has(name) && imports.names.get(name) !== sym) {
+        // A library's export hides the standard library's function of its name (§12.3), as the file's own does.
+        if (imports.names.has(name) && imports.names.get(name) !== sym && !imports.names.get(name).unit?.std) {
           const first = from.get(name);
           err("S109", unit.file, useNode?.span ?? null, `${name} is exported by both ${first.file.name} and ${other.file.name}; a file can import only one of them`);
           continue;
@@ -168,6 +169,11 @@ export function resolve(loaded, diagnostics) {
       if (imports.names.get(item.name)?.kind === "module") {
         err("S110", unit.file, item.span, `${item.name} names the library brought in by import … as ${item.name}; give ${what(sym)} another name`);
         continue;
+      }
+      // A function of the file hides a function of the standard library of its name (§12.3.1): W017.
+      const hidden = imports.names.get(item.name);
+      if (!clash && item.kind === "function" && hidden?.unit?.std && ["function", "native"].includes(hidden.kind)) {
+        diagnostics.warn(KIND.NAME, unit.file, nameSpan(unit.file, item.span, item.name), `${item.name} hides the standard library's ${item.name}: every call of ${item.name} in this file calls this function`, [], "W017");
       }
       if (!clash && imports.names.has(item.name)) imports.names.delete(item.name);
       if (clash) {
@@ -722,7 +728,7 @@ export function resolve(loaded, diagnostics) {
       const outer = results.get(unit).mainScope.own(name);
       outer.program = true;
       return outer;
-    } else err("S201", unit.file, node.span, `nothing called ${name} is defined here${OTHER_VALUES[name] ? `; ${OTHER_VALUES[name]}` : didYouMean(name, scope.visible())}`);
+    } else err("S201", unit.file, node.span, `nothing called ${name} is defined here${OTHER_VALUES[name] ? `; ${OTHER_VALUES[name]}` : didYouMean(name, scope.visible())}${node.interpolated ? `; in words, {${name}} puts the value of ${name} in, and a brace itself is written \\{ and \\}` : ""}`);
     return null;
   }
 

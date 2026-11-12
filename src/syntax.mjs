@@ -45,7 +45,7 @@
 //               | "(" expr ")" | "(" expr ("," expr)+ ")" | "function" "(" [params] ")" ["->" type] block
 //               | "[" expr fors "]" | "{" expr ":" expr fors "}" | "{" [expr ":" expr ("," expr ":" expr)*] "}"
 //               | "match" expr "{" ((values | "else") "=>" expr [","])* "}"
-//   fors        = ("for" [name ","] name "in" or ["if" or])+
+//   fors        = ("for" [name ","] name "in" coalesce ["if" coalesce])+
 //               | "(" [name [":" type] ("," name [":" type])*] ")" "=>" (expr | block)
 import { either } from "./source.mjs";
 import * as D from "../runtime/decimal.mjs";
@@ -205,7 +205,7 @@ export function lex(text, cursor = new Cursor(text), until = null) {
       if (!p) {
         if (cursor.at === 0 && text[0] === "\uFEFF") throw new SyntaxMistake("the file starts with a byte-order mark (U+FEFF); save it as UTF-8 without one", spanOf(from, (cursor.next(), cursor.here)), "S001");
         const ch = cursor.next();
-        const why = /[^\x00-\x7f]/.test(ch) && /\p{L}/u.test(ch) ? `; names are written with a–z, A–Z, digits and _` : "";
+        const why = /[^\x00-\x7f]/.test(ch) && /\p{L}/u.test(ch) ? `; names are written with a–z, A–Z, digits and _` : ch === "?" ? "; c ? a : b is written if c then a else b" : "";
         throw new SyntaxMistake(`"${ch}" is not understood here${why}`, spanOf(from, cursor.here), "S001");
       }
       for (let i = 0; i < p.length; i++) cursor.next();
@@ -1041,7 +1041,7 @@ class Parser {
         return { kind: "number", value: t.value, raw: t.raw, span: t.span };
       }
       if (this.sym("=>") || this.sym("}") || this.sym(",")) throw this.mistake("an arm's value");
-      return this.or();
+      return this.coalesce();
     };
     const values = [value()];
     while (this.sym(",")) {
@@ -1543,11 +1543,11 @@ class Parser {
       const names = this.sym("(") ? this.tupleNames() : null;
       const [index, item] = names ? [null, hiddenName(at)] : this.loopNames();
       this.expect("keyword", "in");
-      const list = this.or();
+      const list = this.coalesce();
       let condition = null;
       if (this.word("if")) {
         this.take();
-        condition = this.or();
+        condition = this.coalesce();
       }
       fors.push({ index, item, list, condition, names });
     }
@@ -1661,6 +1661,8 @@ class Parser {
       if (inner.is("end")) throw new SyntaxMistake("{} holds nothing; put a value in it", p.span, "S006");
       const e = inner.expr();
       if (!inner.is("end")) throw inner.mistake('"}"');
+      // A name alone put in words: a name not defined says the braces put a value in (S201).
+      if (e.kind === "name") e.interpolated = true;
       return e;
     });
     return { kind: "string", parts, span: t.span };

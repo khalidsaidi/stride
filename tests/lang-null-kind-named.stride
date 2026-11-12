@@ -1,0 +1,53 @@
+enum contact {
+  "email" "Email"
+  "fax" "Fax"
+}
+let signed: date = null
+let ways: set<contact> = null
+let table: map<string, number> = null
+let words: string = null
+let many: set<number> = null
+try {
+  print(signed + 3)
+} catch e {
+  print(e)
+}
+try {
+  print(today() - signed)
+} catch e {
+  print(e)
+}
+try {
+  print("email" in ways)
+} catch e {
+  print(e)
+}
+try {
+  print("a" not in table)
+} catch e {
+  print(e)
+}
+try {
+  print("a" in words)
+} catch e {
+  print(e)
+}
+try {
+  print(1 in many)
+} catch e {
+  print(e)
+}
+try {
+  print(signed < today())
+} catch e {
+  print(e)
+}
+var moved: date = null
+try {
+  moved += 1
+} catch e {
+  print(e)
+}
+print(moved)
+# rule 6.3 F023
+# prints ["null where a date is needed: the left side of +", "null where a date is needed: the right side of -", "null where a set is needed: the right side of in", "null where a map is needed: the right side of not in", "null where words are needed: the right side of in", "null where a set is needed: the right side of in", "null where a date is needed: the left side of <", "null where a date is needed: the left side of +", ""]

@@ -46,7 +46,8 @@ function noOp(op, a, b) {
 // Empty where the operator needs a value (§6.3): F023, naming the side.
 function sides(op, a, b) {
   if (isNull(a)) needed(kindOf(b), `the left side of ${op}`);
-  if (isNull(b)) needed(kindOf(a), `the right side of ${op}`);
+  // A date is moved by a number of days (§6.4.3).
+  if (isNull(b)) needed(op === "+" && isDate(a) ? "a number is" : kindOf(a), `the right side of ${op}`);
 }
 
 export function binary(op, a, b) {

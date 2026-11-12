@@ -1,0 +1,6 @@
+let months: number = null
+let start: date = null
+let n = 3
+print("[{months ?? ""}]", "{n ?? "none"}", "{start ?? "no date"}", "{months ?? start ?? "-"}")
+# rule 6.10.1
+# prints ["[] 3 no date -"]

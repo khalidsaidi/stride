@@ -308,7 +308,12 @@ least 1 option (S235). A question's own options obey the same. The
 printed words are the form's own, as its writer reads them.
 
 5.3. **const**: `"const" name [":" type] "=" expr`. Its value is worked out by the compiler (§11): words, a
-number, a date, true or false, a set, or a list of them; not a record (S306); worked out at compile time (S304); not made of itself (S303).
+number, a date, true or false, a range, and lists, sets, maps, tuples and records (`new R { … }`) of them; worked out at compile time (S304); not made of itself (S303).
+- 5.3.1. **Tables.** `const fees: map<string, fee> = {"long": new fee { amount: 5 }}` and
+  `const care: map<string, string> = {"basic": "Assistance"}` are constants: a map, a record or a set of any type
+  whose keys, fields and values the compiler works out. A field a `new` leaves out takes its default, which must
+  be worked out too. `C["k"]`, `C.field` and `C[0]` of such a constant are worked out by the compiler (§11.1), and
+  each read gives a new copy (§3.4.1): `var f = fees["long"]` then `f.amount = 1` changes nothing of `fees`.
 
 5.4. **function**: `"function" name ["<" name ("," name)* ">"] "(" [param ("," param)*] ")" ["->" type] block`.
 `param = name ":" type ["=" expr]`. §9.
@@ -347,19 +352,25 @@ postfix     = primary ( "." word | "[" expr "]" | "[" [expr] (".." [expr] | "..<
 args        = arg ("," arg)*;  arg = [name ":"] expr;
 primary     = number | string | "true" | "false" | "null" | name | "(" expr ")"
             | "[" [expr ("," expr)*] "]"
-            | "[" expr "for" [name ","] name "in" expr ["if" expr] "]"
+            | "[" expr ("for" [name ","] name "in" coalesce ["if" coalesce])+ "]"
             | "new" qname "{" (word ":" expr [","])* "}";
 word        = name | keyword;
 ```
 
 Comparisons do not chain (`a < b < c` is S014).
 
+6.1.1. **`??` where `or` stands.** What a comprehension goes through, its condition and a match arm's value are
+each a `coalesce`: `[c for c in changes ?? []]` goes through `changes ?? []`, as Python's `for x in a or b` does.
+Only `if … then … else` there needs brackets.
+
 6.2. **Evaluation order.** Operands left to right; a call's arguments left to right, after the function is known;
 `and` and `or` decide on the left when they can and then do not work out the right; `a ?? b` works out b only when
 a is null; `if c then a else b` works out `c`, then only the chosen branch.
 
 6.3. **Null in operations.** Null is no value, and an operation that needs one faults: F023, whose message says
-what was null (`null where a number is needed: the left side of +`). These are F023 when an operand is null:
+what was null (`null where a number is needed: the left side of +`) and names the kind of value its type is: with
+d a date, `d + 3` says `null where a date is needed: the left side of +`; with s an any_of answer, `"a" in s` says
+`null where a set is needed: the right side of in`. These are F023 when an operand is null:
 - `+ - * / // %` and `-x`, of numbers; `+` joining words or lists; `< <= > >=`;
 - `x in s` and `x not in s` when s is null, or when s is words and x is null (§6.8);
 - `r.f` when r is null (§6.9.1), and `r.f = v` when r is null and not a var (§7.5.1); `l[i]` and `l[a..b]` when l, i, a or b is null (§6.9.2, §6.9.3); an item set at
@@ -450,12 +461,17 @@ is no key of a map; a null s, or a null x within words, is F023 (§6.3).
   arguments only when r is not null. A chain stops at the first null: `a?.b?.c`.
 - 6.9.2. `l[i]`: i a number (S358), l a list, or words (their characters; S359 otherwise). Positions count from 0: `l[0]` is the first
   item and `l[count(l) - 1]` the last. i not whole, below 0, or `count(l)` or more is F004 (i written out not whole or below 0 is S360); l or i null is F023.
+  `get(l, i)` and `l.get(i)` give the item, or null when i is below 0 or past the last item, and `get(l, i, d)`
+  gives d there (§14.4.1), as Kotlin's `getOrNull` and `getOrElse` do: `letters.get(n) ?? string_of(n + 1)`.
 - 6.9.3. `l[a..b]`: the items a to b, both included, and `l[a..<b]` the items a to before b (of words: the characters; `l[a..]` to the last, `l[..b]` and `l[..<b]` from the first), a list of l's element type. a, b whole (F004); l, a or b null is F023; a < 0 counts from 0;
   b beyond the items stops at the last; a > b gives a list with no items (of words: no characters), as `l[a..<a]` does.
 - 6.9.4. `f(args)`: a call (§9).
 
 6.10. **Words with values**: `"Line {n + 1}"` puts the words (§3.5) of each value in; a list, a record or no value
 is S352.
+- 6.10.1. **`??` in words.** A `??` put in words whose two values have no join (§3.9) is allowed when each has
+  words: `"{months ?? ""}"`, with months a number, puts in the number's words, or no characters when it is null.
+  Its type there is `string`. Elsewhere such a `??` is S394.
 
 6.11. **List literal** `[a, b, …]`: its element type is the join (§3.9) of its items' types, taken left to right
 (S361 when two have none). An empty
@@ -511,7 +527,8 @@ S311, S380); null counts as false.
 
 6.16. **`a ?? b`**: a when a is not null, else b; b is worked out only when a is null. Its type is the join
 (§3.9) of a's and b's (S394 when they have none); beside a set, a list of words in quotes names options of the set
-(§3.6, S386): `chosen ?? []` is a set. `??` binds looser than `or` and tighter than `if … then … else`, and chains
+(§3.6, S386): `chosen ?? []` is a set. `set()`, `[]` and `{}` hold nothing that tells their type, and take the
+other side's: `ops ?? set()`, with ops a `set<operation>`, is a `set<operation>` (§14.4.2). `??` binds looser than `or` and tighter than `if … then … else`, and chains
 from the left: `a ?? b ?? c` is the first of the three that is not null, and `a ?? b + 1` is `a ?? (b + 1)`.
 `"" ?? "x"` is `""`, and `[] ?? [1]` is `[]`: neither is null (§3.2). `either(a, b)` (§14.5) gives the same value
 and works out both.
@@ -647,6 +664,15 @@ match on an option with no `else` that misses options gives warning W001.
 when the arms before it did not match. Its type compares
 with the subject's with `==` (§6.6), else S329; an arm is chosen when one of its values equals the subject. So a
 match chooses on a bool, a date or a tuple as it does on words.
+
+7.10.2. **A match that names every option.** A match on an option, without `else`, whose arms name every option
+of its set is exhaustive. When no arm's block reaches its end (each ends in `return`, `throw`, `break` or
+`continue`), the match does not reach the statement after it either: a function needs no return after it (S405),
+and nothing after it runs. Its subject is then taken as one of the options, as Kotlin's `when` and Swift's
+`switch` take a value of their enum: a null subject, which no arm takes, is F023 at the subject (`null where one
+of S is needed: the subject of a match that names every option`). A match some of whose arms reach their end
+lets a null subject take no arm, as any match does (§7.10). A match expression (§6.20) that names every option
+gives null for a null subject.
 
 7.11. **for** `for i in a..b { }`, `for i in a..<b { }`: a and b are worked out once, a then b, before the first turn, and never again;
 i then takes each whole number from a to b, or with `..<` from a to before b (`for i in 0..<count(l)` gives every position of l); none when a > b, or with `..<` when a ≥ b. Changing what a or b was made of inside the loop does
@@ -990,8 +1016,9 @@ F016, and anything else goes in as it is.
 
 11.1. The compiler works out, before the program runs: a constant's value (§5.3), a parameter's default (§9.2),
 an option's printed words and the words after `faults`. Such a value is made of words, numbers,
-dates, `true`, `false`, `null`, other constants, lists of them, an item of a constant list, and pure natives of
-them. One that is not is S304 (a constant) or S412 (an option's words, the
+dates, `true`, `false`, `null`, other constants, lists, sets, maps, tuples and records (`new R { … }`) of them,
+an item of a constant list, the value under a key of a constant map, a field of a constant record, and pure
+natives of them. One that is not is S304 (a constant) or S412 (an option's words, the
 words after `faults`).
 
 11.2. **Everything else is worked out as the program runs.** A box's name and a button's, a question's printed
@@ -1046,6 +1073,11 @@ is known only there (S203).
 12.3. A name defined again hides the one before it from there on: a `let` or `var` of a name already defined, a
 name in a loop's block hiding one outside it, a parameter or local hiding a declaration of its file. Two
 questions of one name in one function or program body are S205: they would have one key (§8.6).
+
+12.3.1. **A function named as one of the standard library's.** A function a file declares, or a library's exported
+function it imports, hides the standard library's function of that name in the file: `split("a,b", ",")` after
+`function split(n: number) -> (string, string)` calls the file's own (S365 there). The declaration is warning
+W017; a record's method hides nothing (§9.8.1).
 
 12.4. The same question asked, or the same let or var declared, in branches that exclude each other (the arms of
 one if or match) is one answer or one name, of one type (S315).
@@ -1242,6 +1274,7 @@ entry says "or a set" (its items are then options).
 | `keys(m: map<K, V>) -> list<K>` | m's keys, in the order they were first given |
 | `values(m: map<K, V>) -> list<V>` | m's values, in the order of their keys |
 | `has(m: map<K, V>, key: K) -> bool` | whether m has the key |
+| `get(m: map<K, V>, key: K, fallback: V = null) -> V`, `get(l: list<T>, key: number, fallback: T = null) -> T` | the value under the key, or the item at the position key (§6.9.2); fallback when m has no such key, or when key is below 0 or past the last item; a position that is not whole is F007. Its type is V's, or T's, joined with fallback's (§3.9; none is S367); a key of another type is S367, and neither a list nor a map S369 |
 | `remove(m: map<K, V>, key: K) -> map<K, V>` | takes the key out of m itself, and gives m |
 | `count(m)` | the number of keys |
 
@@ -1251,7 +1284,7 @@ entry says "or a set" (its items are then options).
 
 | Signature | Gives |
 |---|---|
-| `set(items: list<T> = []) -> set<T>` | a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands (`let s = set()` is S328); a null item is F023 |
+| `set(items: list<T> = []) -> set<T>` | a new set of the items, each once, in the order first met; T words, a number, a date or a bool (S743); `set()` holds none and takes its type from where it stands — the other side of `??` or of `if … then … else`, a parameter, a return, a field, a typed `let`: there a set of options is one too (§3.6) — (`let s = set()` is S328); a null item is F023 |
 | `add(s: set<T>, x: T) -> set<T>` | puts x into s itself, after its other values, when s holds no value equal to it, and gives s; a null x is F023 |
 | `remove(s: set<T>, x: T) -> set<T>` | takes x out of s itself, when s holds it, and gives s |
 | `count(s: set<T>) -> number` | how many values s holds |
@@ -1398,7 +1431,7 @@ its call: the function's name in the call.
 
 | Code | When | Explanation |
 |---|---|---|
-| S001 | a character Stride does not read (or a file not UTF-8) | Outside words in quotes, Stride reads names (a–z, digits, _), numbers, and the signs of §2.7. Put other characters in "…". |
+| S001 | a character Stride does not read (or a file not UTF-8) | Outside words in quotes, Stride reads names (a–z, digits, _), numbers, and the signs of §2.7. Put other characters in "…". `c ? a : b` is written `if c then a else b`. |
 | S002 | words in quotes not closed on their line | Words in quotes end on their line. Close them with `"`; for a line break inside, write `\n`. |
 | S003 | an escape Stride does not have | Inside "…", `\` is followed by `"`, `\`, `{`, `}`, `n`, `t`, `r`, `0`, `xNN` or `u{hex}`. |
 | S004 | a lone `}` in words | `{` and `}` in words put a value in; a brace itself is written `\{` or `\}`. |
@@ -1433,7 +1466,7 @@ its call: the function's name in the call.
 | S111 | a library's name used as a value | Name what it exports: `p.full_name(…)`. |
 | S112 | a library that exports nothing by that name | The message gives its nearest export. |
 | S113 | a function of two libraries kept under names | Say which: `a.f(x)`. |
-| S201 | a name not defined | The message gives the nearest name visible here. |
+| S201 | a name not defined | The message gives the nearest name visible here; for a name put in words (`"Other {explain}"`), that the braces put a value in, and a brace itself is written `\{`. |
 | S202 | a name used before the line that defines it | Statements run in order; move the use after the definition. |
 | S203 | a name defined in a loop used after it | A loop's names are known only inside it; collect into a var declared before. |
 | S205 | two questions of one name | A question's name is its key; give the second another name. |
@@ -1465,9 +1498,8 @@ its call: the function's name in the call.
 | S301 | a native the machine does not have | The standard library declares only what the machine provides. |
 | S302 | a native declared with other parameters | As many as the machine's. |
 | S303 | a constant made of itself | A constant's value cannot need itself. |
-| S304 | a constant the compiler cannot work out | Constants are made of words, numbers and other constants. |
+| S304 | a constant the compiler cannot work out | Constants are made of words, numbers, dates, other constants, and lists, sets, maps, tuples and records of them (§5.3). |
 | S305 | a constant's value not of its type | Fix the type or the value. |
-| S306 | a constant that is a record | Constants are words, numbers, dates, true or false, sets, and lists of them. |
 | S307 | `fill` with bool | A bool goes into a check box: `tick "box" when c`. |
 | S308 | `fill` with several options | `fill "box" = join(s, ", ")`, or a tick for each option. |
 | S309 | `fill` with a list or record | Fill a box with one value: `l[0].name`, `join(…)`. |
@@ -1551,7 +1583,7 @@ its call: the function's name in the call.
 | S394 | a conditional or a `??` whose two values' types have no join | `if c then a else b` and `a ?? b` take the join of a's and b's types (§3.9); a number and words have none. |
 | S396 | a slice bound that is not a number | `l[a..b]`, `l[a..<b]`, numbers. |
 | S399 | `sorted(l, by: "f")` with f not a field of l's records, not written out, or not a number, date or words | `by` names a field of the list's record type, in plain words, whose values can be ordered. |
-| S405 | a function giving a value on some paths only | End every path with a return. |
+| S405 | a function giving a value on some paths only | End every path with a return; a match that names every option ends every path its arms end (§7.10.2). |
 | S407 | a let or var read where not every path declared it or gave it a value | Declare it, or give it a value, on every path before the read (§12.1.1). |
 | S412 | an option's printed words, or the words after `faults`, that the compiler cannot work out | They are written out, or made of constants. |
 | S413 | a constant's value or a default that faults | The compiler works these out; the message gives the fault. |
@@ -1585,6 +1617,7 @@ its call: the function's name in the call.
 | W007 | a let or var never used | Warning: Remove it. |
 | W008 | a statement after return, break or continue | Warning: It never runs; remove it, or the return, break or continue before it. |
 | W009 | a check that compares its own answer with null | Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not. |
+| W017 | a function named as one of the standard library's, which it hides (§12.3.1) | Warning: every call of that name in the file calls this function; rename it to keep the library's. |
 | F001–F024 | §13.4 | |
 
 ## 17. The command line

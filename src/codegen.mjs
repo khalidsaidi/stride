@@ -3,7 +3,7 @@
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
 import { BINARY_OPS, FIELD_STARTS, OP, QUESTION_TYPES, SECTION, VERSION, MAGIC, WRITES, Writer } from "../runtime/bytecode.mjs";
-import { D, isNumber, isDate, isSet, isRange, StrideTuple } from "../runtime/values.mjs";
+import { D, isNumber, isDate, isSet, isRange, StrideTuple, StrideMap, StrideRecord, StrideSet } from "../runtime/values.mjs";
 import { NATIVES } from "../runtime/natives.mjs";
 import * as IR from "./ir.mjs";
 
@@ -316,6 +316,22 @@ export function generate(program, pdf, debug = null) {
         // A tuple (§3.11): its values, made a tuple.
         value(v.items);
         emit(OP.NATIVE, nativeIndex("tuple_of"), 1);
+      } else if (v instanceof StrideMap) {
+        // A map (§3.10): made anew, then each key and its value put in, in order.
+        emit(OP.NATIVE, nativeIndex("map_of"), 0);
+        for (const [k, x] of v.pairs) (value(k), value(x), emit(OP.NATIVE, nativeIndex("map_put"), 3));
+      } else if (v instanceof StrideRecord && v.decl) {
+        emit(OP.NEW_RECORD, recordIndex(v.decl));
+        v.fields.forEach((x, i) => {
+          if (x === null) return;
+          emit(OP.DUP);
+          value(x);
+          emit(OP.SET_FIELD, i);
+        });
+      } else if (v instanceof StrideSet) {
+        // A set of any type (§3.13): its values, made a set.
+        value(v.items);
+        emit(OP.NATIVE, nativeIndex("set"), 1);
       } else throw new Error(`cannot generate the constant ${JSON.stringify(v)}`);
     }
 

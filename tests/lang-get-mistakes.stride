@@ -1,0 +1,10 @@
+let m: map<string, number> = {"a": 1}
+print(get(m, 1))
+print(get([1], "a"))
+print(get(3, 1))
+print(get([1], 0, "x"))
+# rule 14.4.1 S367 S369
+# mistake 2:14 S367
+# mistake 3:16 S367
+# mistake 4:11 S369
+# mistake 5:19 S367

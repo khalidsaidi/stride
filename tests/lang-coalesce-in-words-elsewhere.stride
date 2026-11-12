@@ -1,0 +1,4 @@
+let months: number = null
+let shown = months ?? ""
+# rule 6.10.1 S394
+# mistake 2:23 S394

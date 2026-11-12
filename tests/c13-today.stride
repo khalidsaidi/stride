@@ -6,6 +6,7 @@ function day() -> date {
 fill "A" = day()
 fill "B" = format(today(), "DD.MM.YYYY")
 # rule 13.3 14.0.5 9.9
+# warning 3:10 W017
 # run one
 # today 2026-11-07
 # boxes {"A": "2026-11-07", "B": "07.11.2026"}

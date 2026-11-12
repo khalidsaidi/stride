@@ -1,0 +1,4 @@
+let c = true
+let x = c ? 1 : 2
+# rule S001
+# mistake 2:11 S001 is written if c then a else b

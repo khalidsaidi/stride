@@ -1,0 +1,8 @@
+let letters = ["A", "B"]
+for n in 0..2 {
+  print("Part {letters.get(n) ?? string_of(n + 1)}", get(letters, n, "?"), get(letters, n - 3))
+}
+let m: map<string, number> = {"a": 1}
+print(get(m, "a", 0), get(m, "z", 0), m.get("z") == null)
+# rule 6.9.2 14.4.1
+# prints ["Part A A ", "Part B B ", "Part 3 ? ", "1 0 true"]

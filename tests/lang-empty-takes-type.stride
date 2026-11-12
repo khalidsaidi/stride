@@ -1,0 +1,24 @@
+enum operation { "add" "Add"  "drop" "Drop" }
+record plan { done: set<string>, ops: set<operation> }
+function chosen(ops: set<operation>) -> number {
+  var n = 0
+  for op in ops ?? set() {
+    n += 1
+  }
+  return n
+}
+function none() -> set<operation> {
+  return set()
+}
+function counts(s: set<operation> = set(), m: map<string, number> = {}, l: list<number> = []) -> number {
+  return count(s) + count(m) + count(l)
+}
+let ops: set<operation> = null
+let table: map<string, number> = null
+let all: set<operation> = ["add", "drop"]
+let p = new plan { done: set(), ops: set() }
+let either_way = if count(all) > 1 then all else set()
+print(chosen(null), chosen(all), count(none()), counts(), counts(set(), {}, []), count(p.ops), count(either_way))
+print("add" in (ops ?? set()), "add" in (all ?? set()), count(table ?? {}))
+# rule 6.16 14.4.2
+# prints ["0 2 0 0 0 0 2", "false true 0"]

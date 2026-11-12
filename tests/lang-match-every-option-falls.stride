@@ -1,0 +1,10 @@
+enum grade { "low" "Low"  "high" "High" }
+function points(g: grade) -> number {
+  match g {
+    "low" => { return 1 }
+    "high" => { print("high") }
+  }
+}
+print(points("low"))
+# rule 7.10.2 S405
+# mistake 2:1 S405

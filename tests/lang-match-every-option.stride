@@ -1,0 +1,27 @@
+enum grade { "low" "Low"  "high" "High" }
+function points(g: grade) -> number {
+  match g {
+    "low" => { return 1 }
+    "high" => { return 2 }
+  }
+}
+function label(g: grade) -> string {
+  match g {
+    "low" => { return "L" }
+    "high" => { throw "too high" }
+  }
+}
+function note(g: grade) -> string {
+  var out = "none"
+  match g {
+    "low" => { out = "l" }
+    "high" => { return "h" }
+  }
+  return out
+}
+print(points("low"), points("high"), label("low"), note(null), note("high"))
+print(match null { "low" => 1, "high" => 2 } == null)
+print(points(null))
+# rule 7.10.2 S405 F023
+# prints ["1 2 L none h", "true"]
+# fault F023 at 3:9 null where one of grade is needed: the subject of a match that names every option
