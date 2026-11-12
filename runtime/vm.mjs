@@ -1,5 +1,5 @@
 // The Stride virtual machine (docs/spec.md §13). It runs a compiled workflow (runtime/bytecode.mjs,
-// version 10) on the answers a person has given so far, and gives the questions the run reaches, in order, what
+// version 11) on the answers a person has given so far, and gives the questions the run reaches, in order, what
 // goes into each box, the words given to print, and a fault or none. It is a stack machine with call frames: each
 // call gets its own locals; values are pushed, worked on and popped.
 //
@@ -10,7 +10,7 @@
 // refuses it), and the machine stops at 2,000,000 instructions (F014) and 200 frames (F015). The bytecode is
 // checked when it is loaded and each function decoded once into a list of instructions, which is what runs.
 import { OP, OP_BINARY, OPERANDS, load as loadBytecode, placeAt, disassemble, MAGIC, VERSION, BytecodeError } from "./bytecode.mjs";
-import { NATIVES, setToday, setPrinter, resetCalls } from "./natives.mjs";
+import { NATIVES, setToday, setPrinter, setSteps, resetCalls } from "./natives.mjs";
 import { D, StrideFault, StrideRecord, StrideError, StrideFunction, StrideMap, Cell, isNull, words, printed, copy, set, dateFrom, isNumber, isSet, whole, sliced, sliceBounds, readPosition, needed, outside, expectation, emptyRecord, StrideTuple } from "./values.mjs";
 import { binary, unary, truthy } from "./ops.mjs";
 
@@ -104,7 +104,7 @@ export function convert(question, raw) {
       const order = question.options.map((o) => o.value);
       const out = set(given, order);
       const stray = wrong || given.some((v) => !order.includes(v));
-      return { value: out.length ? out : null, unreadable: stray ? "not among the options" : null };
+      return { value: out, unreadable: stray ? "not among the options" : null };
     }
     default:
       return { value: null, unreadable: null };
@@ -140,11 +140,13 @@ export function run(p, answers = {}, { limit = hostLimit(), depth = DEPTH, trace
   } finally {
     setToday(null);
     setPrinter(null);
+    setSteps(null);
   }
 }
 
 function execute(p, answers, limit, depth, trace, prints, watch, debug, open, onWrite) {
   const steps = [];
+  setSteps(steps);
   const writes = new Map();
   const results = []; // a test file's expectations (§7.17.1), in order
   const subruns = []; // the expectations running now: what to undo, and where to go on after a fault
@@ -524,9 +526,10 @@ function execute(p, answers, limit, depth, trace, prints, watch, debug, open, on
           const has = Object.prototype.hasOwnProperty.call(answers, key);
           const given = has ? convert(q, answers[key]) : { value: undefined, unreadable: null };
           // The default only when the answers do not hold the key at all.
-          // An answer is never words of no characters or a set of no options: it is null (§8.7).
+          // A words answer is never words of no characters: it is null; an any_of answer is never null: nothing
+          // chosen is the set of no options (§8.7).
           const held = has ? given.value : def ?? null;
-          const value = held === "" || (isSet(held) && !held.length) ? null : held;
+          const value = q.type === "any_of" ? held ?? set([], q.options.map((o) => o.value)) : held === "" ? null : held;
           steps.push({ question: q, index: ins.a, key, printed: shown, value, default: def, answered: has, failed: [], unreadable: given.unreadable });
           lastKey[ins.a] = key;
           stack.push(value);

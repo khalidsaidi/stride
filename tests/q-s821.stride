@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+function twice(n: number) -> number {
+  return n * 2
+}
+let f = twice
+fill "A" = "{twice(2) as "t"} {upper("a") as "u"} {f(1) as "v"}"
+# rule S821 8.6.2
+# mistake 7:26 S821
+# mistake 7:46 S821
+# mistake 7:60 S821

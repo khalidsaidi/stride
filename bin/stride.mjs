@@ -373,6 +373,9 @@ function asOptions(p, answers, keys, runOnce) {
 // would stop at a fault after it. What is typed is the answer as typed (§8.7), but for these: an empty line leaves
 // the question unanswered; y and n are yes and no; an option may be given by its number. The end of stdin leaves the
 // rest unanswered.
+// A default of null, of no words or of no options stands for no default (§8.4.1): shown as none.
+const noDefault = (v) => v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length);
+
 function prompt(answers, runOnce) {
   const asked = new Set();
   for (;;) {
@@ -385,7 +388,7 @@ function prompt(answers, runOnce) {
     const hint = { bool: "yes or no", date: "YYYY-MM-DD", number: "a number", one_of: "a number or the value", any_of: "numbers or values, with commas" }[q.type] ?? "words";
     // A person is shown yes and no for a bool, as they type them.
     const offered = typeof s.default === "boolean" ? (s.default ? "yes" : "no") : stringOf(s.default);
-    err(`${s.printed || s.key}${s.default !== undefined && s.default !== null ? ` [${offered}]` : ""}`);
+    err(`${s.printed || s.key}${!noDefault(s.default) ? ` [${offered}]` : ""}`);
     options.forEach((o, i) => err(`  ${i + 1}. ${o.printed} (${o.value})`));
     process.stderr.write(`  ${hint}> `);
     const line = readLine();
@@ -682,7 +685,7 @@ async function main(argv) {
       if (!script) {
         out(bold(`${plural(result.steps.length, "question")} asked:`));
         for (const s of result.steps) {
-          const shown = s.answered ? JSON.stringify(s.value) : s.default !== undefined ? `${JSON.stringify(s.default)} (default)` : "—";
+          const shown = s.answered ? JSON.stringify(s.value) : !noDefault(s.default) ? `${JSON.stringify(s.default)} (default)` : "—";
           const marks = [...(s.unreadable ? [`unreadable: ${s.unreadable}`] : []), ...s.failed.map((m) => `check: ${m}`)];
           out(`  ${s.key.padEnd(40)} ${s.question.type.padEnd(10)} ${shown}${marks.length ? red(`  ${marks.join("; ")}`) : ""}`);
         }

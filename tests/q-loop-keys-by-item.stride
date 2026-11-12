@@ -1,0 +1,35 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum kind { option "long" "Long form" option "short" "Short form" }
+record row { label: string }
+function ask_fee(k: string) -> number {
+  ask fee: number "Fee for {k}"
+  return fee
+}
+ask wanted: any_of kind "Which forms?"
+for k in wanted {
+  ask copies: number "Copies of {k}"
+  print("{k}: {copies}")
+}
+for w in ["a", "b", "a"] {
+  print(ask_fee(w))
+}
+for d in [2, 3] {
+  ask n: number "N{d}"
+  print(n)
+}
+let rows = [new row { label: "x" }, new row { label: "x" }]
+for r in rows {
+  ask note: string "Note on {r.label}"
+  print(note)
+}
+fill "A" = "x"
+# rule 8.6.2 8.6.4
+# run long only
+# answers {"wanted": ["long"], "copies[long]": 2, "copies[short]": 9}
+# asked ["wanted", "copies[long]", "ask_fee[a].fee", "ask_fee[b].fee", "ask_fee[a]#2.fee", "n[2]", "n[3]", "note[0]", "note[1]"]
+# prints ["long: 2", "", "", "", "", "", "", ""]
+# run both
+# answers {"wanted": ["short", "long"], "copies[long]": 2, "copies[short]": 9, "ask_fee[a]#2.fee": 5, "n[3]": 1}
+# asked ["wanted", "copies[long]", "copies[short]", "ask_fee[a].fee", "ask_fee[b].fee", "ask_fee[a]#2.fee", "n[2]", "n[3]", "note[0]", "note[1]"]
+# prints ["long: 2", "short: 9", "", "", "5", "", "1", "", ""]

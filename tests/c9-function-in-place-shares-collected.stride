@@ -10,5 +10,5 @@ function run() -> number {
 }
 fill "A" = "{run()}"
 # rule 9.11 8.5
-# answers {"run.kids[0].k": "a", "run.kids[0]#another": "no"}
+# answers {"run.kids[0]": "a", "run.kids[0]#another": "no"}
 # boxes {"A": "1"}

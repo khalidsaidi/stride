@@ -743,6 +743,14 @@ write the same boxes.
   }
   ```
 
+  The list has no items until a question of the first vehicle is answered; `collect v in vehicles any "Any
+  vehicles?" "Add another vehicle?"` asks first whether there are any (§8.5).
+- **Answer keys** say which answer is which (§8.6): `v.vin` of the second vehicle is `vehicles[1].vin`. A question
+  in a `for` over words or options is keyed by the item, `copies[long]`, so an answer stays with its item. A
+  function that asks a group of questions, called twice, keys the second call's questions `ask_address#2.…`;
+  `ask_address("Home") as "home"` keys them `home.…`. An answer can go into a field of a record a function is
+  given, `ask p.name: string "Name"`, or into an item, `ask m[k]: number "Amount"` (§7.2.1).
+
 ```stride form
 form consent
 pdf 40b82a8804e4bc4b946750dd7b2aca7bdccc4c14fbeb48ada3d91f8c6a125c76

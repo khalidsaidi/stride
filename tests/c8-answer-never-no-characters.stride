@@ -22,14 +22,14 @@ print(made.tags == null)
 print(count(made.tags))
 # rule 8.7 8.4.1 7.4 6.14 3.2
 # run not answered
-# prints ["true","true","true","true","x","false","true","true","false","0"]
+# prints ["true","true","false","false","x","false","true","true","false","0"]
 # run answered with nothing
 # answers {"t": "", "u": "", "m": [], "k": [], "w": ""}
-# prints ["true","true","true","true","","false","true","true","false","0"]
+# prints ["true","true","false","false","","false","true","true","false","0"]
 # run answered with what is no option
 # answers {"m": ["z"], "k": "z"}
-# prints ["true","true","true","true","x","false","true","true","false","0"]
-# steps [{"key": "t"}, {"key": "u"}, {"key": "m", "value": null, "unreadable": "not among the options"}, {"key": "k", "value": null, "unreadable": "not among the options"}, {"key": "w"}]
+# prints ["true","true","false","false","x","false","true","true","false","0"]
+# steps [{"key": "t"}, {"key": "u"}, {"key": "m", "value": [], "unreadable": "not among the options"}, {"key": "k", "value": [], "unreadable": "not among the options"}, {"key": "w"}]
 # run answered
 # answers {"t": "a", "m": ["b", "a"]}
-# prints ["false","true","false","true","x","false","true","true","false","0"]
+# prints ["false","true","false","false","x","false","true","true","false","0"]

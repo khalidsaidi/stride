@@ -2,9 +2,7 @@ form t
 pdf 0000000000000000000000000000000000000000000000000000000000000000
 ask n: number "N"
 ask t: string "T"
-ask l: any_of "L" {
-  option "a" "A"
-}
+var none: list<string> = null
 ask which: string "Which"
 print(not n == 1)
 print(n == null)
@@ -50,7 +48,7 @@ if which == "lists" {
   print([1] + null)
 }
 if which == "in" {
-  print("a" in l)
+  print("a" in none)
 }
 if which == "in words" {
   print(t in "abc")
@@ -66,52 +64,52 @@ print("done")
 # prints ["true","true","[]","7","done"]
 # run add
 # answers {"which": "add"}
-# fault F023 at 14:11 null where a number is needed: the right side of +
+# fault F023 at 12:11 null where a number is needed: the right side of +
 # run add left
 # answers {"which": "add left"}
-# fault F023 at 17:11 null where a number is needed: the left side of +
+# fault F023 at 15:11 null where a number is needed: the left side of +
 # run subtract
 # answers {"which": "subtract"}
-# fault F023 at 20:11 null where a number is needed: the right side of -
+# fault F023 at 18:11 null where a number is needed: the right side of -
 # run multiply
 # answers {"which": "multiply"}
-# fault F023 at 23:11 null where a number is needed: the left side of *
+# fault F023 at 21:11 null where a number is needed: the left side of *
 # run divide
 # answers {"which": "divide"}
-# fault F023 at 26:11 null where a number is needed: the right side of /
+# fault F023 at 24:11 null where a number is needed: the right side of /
 # run floor
 # answers {"which": "floor"}
-# fault F023 at 29:11 null where a number is needed: the right side of //
+# fault F023 at 27:11 null where a number is needed: the right side of //
 # run remainder
 # answers {"which": "remainder"}
-# fault F023 at 32:11 null where a number is needed: the right side of %
+# fault F023 at 30:11 null where a number is needed: the right side of %
 # run negate
 # answers {"which": "negate"}
-# fault F023 at 35:9 null where a number is needed: what - stands before
+# fault F023 at 33:9 null where a number is needed: what - stands before
 # run less
 # answers {"which": "less"}
-# fault F023 at 38:11 null where a number is needed: the left side of <
+# fault F023 at 36:11 null where a number is needed: the left side of <
 # run at least
 # answers {"which": "at least"}
-# fault F023 at 41:11 null where a number is needed: the right side of >=
+# fault F023 at 39:11 null where a number is needed: the right side of >=
 # run words
 # answers {"which": "words"}
-# fault F023 at 44:13 null where words are needed: the right side of +
+# fault F023 at 42:13 null where words are needed: the right side of +
 # run words order
 # answers {"which": "words order"}
-# fault F023 at 47:11 null where words are needed: the left side of <
+# fault F023 at 45:11 null where words are needed: the left side of <
 # run lists
 # answers {"which": "lists"}
-# fault F023 at 50:13 null where a list is needed: the right side of +
+# fault F023 at 48:13 null where a list is needed: the right side of +
 # run in
 # answers {"which": "in"}
-# fault F023 at 53:13 null where a set is needed: the right side of in
+# fault F023 at 51:13 null where a list is needed: the right side of in
 # run in words
 # answers {"which": "in words"}
-# fault F023 at 56:11 null where words are needed: the left side of in
+# fault F023 at 54:11 null where words are needed: the left side of in
 # run augmented
 # answers {"which": "augmented"}
-# fault F023 at 60:9 null where a number is needed: the left side of +
+# fault F023 at 58:9 null where a number is needed: the left side of +
 # run given
-# answers {"n": 2, "t": "x", "l": ["a"]}
+# answers {"n": 2, "t": "x"}
 # prints ["true","false","[2x]","2","done"]

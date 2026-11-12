@@ -40,7 +40,7 @@ print(FIRST)
 print([n ?? 0, 5])
 # rule 6.16 6.1 6.2 3.9 3.6 11.1
 # run empty
-# prints ["7","none","","0","0","false","3","worked out 4","4","2","2","1","true","false","true","true","2","0","b, a","neither","true","made","5","1","[0, 5]"]
+# prints ["7","none","","0","0","false","3","worked out 4","4","2","2","1","true","false","true","true","2","0","","neither","true","made","5","1","[0, 5]"]
 # run given
 # answers {"n": 8, "t": "w", "chosen": ["a"], "one": "b", "p": false}
 # prints ["8","w","","0","0","false","8","8","2","8","1","true","false","false","false","8","1","a","b","false","made","5","1","[8, 5]"]

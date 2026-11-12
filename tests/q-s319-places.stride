@@ -1,0 +1,21 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+record r { name: string }
+var people: list<r>
+collect x in people "Another?" {
+  ask x.name: string "Name"
+}
+for p in people {
+  ask p.name: string "Again"
+}
+ask people[0].name: string "First again"
+const fixed = ["a"]
+ask fixed[0]: string "Fixed"
+var w = "ab"
+ask w[0]: string "Letter"
+fill "A" = w
+# rule S319 7.2.1
+# mistake 9:7 S319
+# mistake 11:5 S319
+# mistake 13:5 S319
+# mistake 15:5 S319

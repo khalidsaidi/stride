@@ -1,4 +1,4 @@
-// Stride's bytecode, version 10 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 11 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 10;
+export const VERSION = 11;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];

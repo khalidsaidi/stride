@@ -274,7 +274,7 @@ export function showStatement(s) {
     case "append":
       return `%${s.dst.name} <- ${showExpr(s.value)}`;
     case "ask":
-      return `ask ${showExpr(s.key)} (${s.q.type}, ${showExpr(s.printed)}) -> %${s.dst.name}${showPath(s.path)}${s.default ? ` default ${showExpr(s.default)}` : ""}`;
+      return `ask ${showExpr(s.key)} (${s.q.type}, ${showExpr(s.printed)}) -> %${s.outer ? `program ${s.outer.name}` : s.dst.name}${showPath(s.path)}${s.default ? ` default ${showExpr(s.default)}` : ""}`;
     case "check":
       return `check ${s.q.name} ${showExpr(s.cond)} else ${showExpr(s.message)}`;
     case "fill":

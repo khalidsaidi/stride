@@ -1,0 +1,27 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+enum vehicle { option "auto" "Automobile" option "moto" "Motorcycle" }
+ask wants: any_of vehicle "Vehicles"
+ask more: any_of vehicle "More" default ["moto"]
+let none: set<vehicle> = null
+ask most: any_of vehicle "Most" default none
+tick "Auto" when "auto" in wants
+tick "None" when count(wants) == 0
+print(wants == null, count(wants), "auto" in wants, more, count(most), most == null)
+# rule 8.7 8.4.1 3.2
+# run not answered
+# prints ["false 0 false moto 0 false"]
+# boxes {"None": "Yes"}
+# run nothing chosen
+# answers {"wants": [], "more": [], "most": ""}
+# prints ["false 0 false  0 false"]
+# boxes {"None": "Yes"}
+# steps [{"key": "wants", "value": []}, {"key": "more", "value": []}, {"key": "most", "value": []}]
+# run not among the options
+# answers {"wants": "auto", "more": ["moto", "car"]}
+# prints ["false 0 false moto 0 false"]
+# steps [{"key": "wants", "value": [], "unreadable": "not among the options"}, {"key": "more", "value": ["moto"], "unreadable": "not among the options"}, {"key": "most", "value": []}]
+# run chosen
+# answers {"wants": ["auto"]}
+# prints ["false 1 true moto 0 false"]
+# boxes {"Auto": "Yes"}

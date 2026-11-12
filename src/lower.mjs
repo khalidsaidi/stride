@@ -220,32 +220,50 @@ export function lower(resolved, diagnostics, options = {}) {
     const sym = s.target.symbol;
     let key;
     let dst;
+    let outer = null; // the program's name, when a function asks into what it holds (§9.1)
     let answerType = sym?.type; // the type of the place the answer goes to
     const path = [];
-    if (names.length === 1 && sym?.kind === "answer") {
+    if (names.length === 1 && !s.target.indexed && sym?.kind === "answer") {
       key = join(ctx.prefix, IR.constant(names[0]), suffix(ctx));
       // The same answer asked in another branch keeps one place, so what comes after reads either.
       dst = ctx.locals.get(sym) ?? ctx.fn.local(names[0], sym.type);
       ctx.locals.set(sym, dst);
     } else {
+      // A field or an item of what a name holds (§7.2): the key is the place as written, each position by its
+      // words (m[home].street); each position is worked out once, with the key (§8.4.1 step 1).
       const it = ctx.items.get(sym);
       const base = it ? it.base : join(ctx.prefix, IR.constant(names[0]));
       const rest = suffix(ctx, it ? it.suffixes : 0);
-      key = join(base, IR.constant(names.length > 1 ? `.${names.slice(1).join(".")}` : ""), rest);
-      dst = ctx.locals.get(sym);
-      // The record on the way to the field is made when its place holds null (§7.5.1).
+      outer = ctx.fnSym && sym.program && !ctx.locals.has(sym) ? sym : null;
+      dst = outer ? null : ctx.locals.get(sym);
+      const steps = [];
+      for (let x = s.target.place; x.kind !== "name"; x = x.target) steps.unshift(x);
+      const parts = [];
       let type = sym.type;
-      for (const name of names.slice(1)) {
-        const i = type.decl.fields.findIndex((f) => f.name === name);
-        path.push({ field: i, name, ensure: type.decl });
-        type = type.decl.fields[i].type;
+      for (const st of steps) {
+        if (st.kind === "field") {
+          const i = type.decl.fields.findIndex((f) => f.name === st.name);
+          // A record is made where a var, a collect's item, a field or an item holds null (§7.5.1).
+          const entry = { field: i, name: st.name };
+          if (path.length || ["var", "item"].includes(sym.kind)) entry.ensure = type.decl;
+          path.push(entry);
+          parts.push(IR.constant(`.${st.name}`));
+          type = type.decl.fields[i].type;
+        } else {
+          const at = ctx.fn.local("at", null);
+          emit(ctx, { op: "set", dst: at, value: withAt(expr(st.index, ctx), placeOf(st)), node: s });
+          path.push({ index: withAt(IR.local(at), placeOf(st)) });
+          parts.push(IR.constant("["), IR.local(at), IR.constant("]"));
+          type = type?.t === "map" ? type.value : type?.element;
+        }
       }
+      key = join(base, ...parts, rest);
       answerType = type;
       path.forEach((p, k) => {
         if (path[k + 1]?.ensure) p.ensureNext = path[k + 1].ensure;
       });
     }
-    if (!dst) throw new Error(`no local for the answer ${names.join(".")}`);
+    if (!dst && !outer) throw new Error(`no local for the answer ${names.join(".")}`);
     const set = s.set;
     const q = new IR.Question({
       name: names.join("."),
@@ -258,12 +276,12 @@ export function lower(resolved, diagnostics, options = {}) {
     });
     const def = s.modifiers.find((m) => m.kind === "default");
     // The default is placed as the answer's type (§3.6, §3.8): words for an any_of made the set, in its order.
-    emit(ctx, { op: "ask", q, key, printed: expr(s.printed, ctx), dst, path, default: def ? placeAs(expr(def.value, ctx), answerType, def.value.type) : null, node: s });
+    emit(ctx, { op: "ask", q, key, printed: expr(s.printed, ctx), dst, outer, path, default: def ? placeAs(expr(def.value, ctx), answerType, def.value.type) : null, node: s });
     // §8.4.1 step 5: the checks, in the order written, after the answer is bound; none when it is null.
     const checks = s.modifiers.filter((m) => m.kind === "check");
     if (checks.length) {
-      let value = IR.local(dst);
-      for (const p of path) value = IR.field(value, p.field, p.name);
+      let value = outer ? IR.outer(outer) : IR.local(dst);
+      for (const p of path) value = p.field !== undefined ? IR.field(value, p.field, p.name) : IR.item(value, p.index);
       const run = ctx.fn.block();
       const after = ctx.fn.block();
       terminate(ctx, { op: "branch", cond: IR.native("is_null", [value]), yes: after, no: run, node: s });
@@ -550,8 +568,10 @@ export function lower(resolved, diagnostics, options = {}) {
       if (s.indexSymbol) inner.locals.set(s.indexSymbol, k);
     }
     inner.locals.set(s.itemSymbol, itemLocal);
-    // An unrolled for over a list adds its turn, the item's number, to the keys inside it (§8.6.2).
-    if (s.unroll) inner.suffixes.push(join(IR.constant("["), IR.local(k), IR.constant("]")));
+    // An unrolled for over a list adds its turn to the keys inside it (§8.6.2): the item's words when it is words,
+    // a number, a date, a bool or an option (copies[long], copies[long]#2 for the second long); else its number.
+    const scalar = !overMap && ["string", "number", "date", "bool", "option"].includes(s.itemSymbol.type?.t);
+    if (s.unroll) inner.suffixes.push(scalar ? IR.native("turn_key", [IR.local(listLocal), IR.local(k)]) : join(IR.constant("["), IR.local(k), IR.constant("]")));
     const base = overMap || overSet ? null : listKey(s.list, ctx);
     if (base) inner.items.set(s.itemSymbol, { base: join(base, IR.constant("["), IR.local(k), IR.constant("]")), suffixes: inner.suffixes.length });
     lowerBlock(s.body, inner);
@@ -597,7 +617,17 @@ export function lower(resolved, diagnostics, options = {}) {
     // Every other question in the turn, and every call that can reach one, is keyed after the item's segment:
     // kids[1].note, kids[1].who().age (§8.6.2).
     turn.prefix = join(itemBase, IR.constant("."));
+    // Without `any`, the first item is in the list only once one of its questions is answered (§8.5.1): the steps
+    // reached before it, to tell.
+    const mark = s.any ? null : ctx.fn.local(`${listSym.name}.steps`, null);
+    if (mark) emit(turn, { op: "set", dst: mark, value: IR.native("steps_count", []), node: s });
     lowerBlock(s.body, turn);
+    if (mark) {
+      const keep = ctx.fn.block();
+      const held = IR.binary("or", IR.binary(">", IR.local(k), IR.constant(V.num(0))), IR.native("answered_since", [IR.local(mark)]));
+      terminate(turn, { op: "branch", cond: held, yes: keep, no: exit, node: s });
+      turn.block = keep;
+    }
     emit(turn, { op: "append", dst: listLocal, value: IR.local(itemLocal), node: s });
     // Another?
     const another = ctx.fn.local(`${listSym.name}.another`, null);
@@ -813,8 +843,9 @@ export function lower(resolved, diagnostics, options = {}) {
         const kept = (sym.keeps ?? []).map((k) => (k.shared ? IR.cellref(ctx.locals.get(k)) : IR.local(ctx.locals.get(k))));
         if (!sym.effects) return withAt(ordered(IR.call(fn, [...kept, ...args]), kept.length), at);
         // §8.6.2: a call that can reach questions adds its segment: the function's name, then the turns of the loops
-        // around it; a second call of it there in the same run is name#2, a third name#3.
-        const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(keyName(sym)), suffix(ctx))]), IR.constant("."));
+        // around it; a second call of it there in the same run is name#2, a third name#3. A call named with
+        // `as "home"` has that name in place of the function's.
+        const key = join(IR.native("call_key", [join(ctx.prefix, IR.constant(e.keyAs ? e.keyAs.value : keyName(sym)), suffix(ctx))]), IR.constant("."));
         return withAt(ordered(IR.call(fn, [key, IR.constant(""), ...kept, ...args]), 2 + kept.length), at);
       }
       case "map":

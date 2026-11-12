@@ -65,7 +65,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
   // A statement's own expressions, not those of the statements inside it.
   function rootsOf(s) {
     return {
-      ask: () => [s.printed, ...(s.set?.anonymous ? s.set.options.map((o) => o.printed) : []), ...s.modifiers.flatMap((m) => (m.kind === "default" ? [m.value] : [m.condition, m.message]))],
+      ask: () => [...positionsOf(s.target.place), s.printed, ...(s.set?.anonymous ? s.set.options.map((o) => o.printed) : []), ...s.modifiers.flatMap((m) => (m.kind === "default" ? [m.value] : [m.condition, m.message]))],
       let: () => [s.value],
       var: () => (s.value ? [s.value] : []),
       fill: () => [s.box, s.value],
@@ -86,6 +86,13 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
       continue: () => [],
       expect: () => [s.value, s.message, s.fault],
     }[s.kind]();
+  }
+
+  // The positions of an ask's place (`m[k].street`: k), which the ask reads.
+  function positionsOf(place) {
+    const out = [];
+    for (let x = place; x && x.kind !== "name"; x = x.target) if (x.kind === "index") out.unshift(x.index);
+    return out;
   }
 
   function* subexpressions(e) {
@@ -177,6 +184,19 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     const end = walkFlow(body, state, fn);
 
     if (fn && fn.result && fn.result.t !== "none" && fn.result.t !== "error" && end.falls) err("S405", fn.node, `${fn.name} gives ${fn.result.t === "record" ? fn.result.decl.name : fn.result.t} on some paths and nothing on others; end every path with a return`);
+  }
+
+  // S821 (§8.6.2): a call named with `as` is one of a function that can reach a question.
+  for (const { body } of bodies) {
+    for (const s of statements(body)) {
+      for (const e of expressionsOf(s)) {
+        if (e.kind !== "call" || !e.keyAs) continue;
+        const callee = e.valueCall ? null : e.callee;
+        if (callee?.kind === "function" && callee.effects) continue;
+        const name = e.target.kind === "name" ? e.target.name : e.target.kind === "field" ? e.target.name : "this function";
+        err("S821", e.keyAs, callee?.kind === "function" ? `${name} asks no question, so its call has no questions to key under "${e.keyAs.value}"` : `only a call of a function declared with function, that asks, keys its questions under a name; ${name} is ${e.valueCall ? "a function value" : "the library's"}`);
+      }
+    }
   }
 
   // W009 (§8.4.1): a check runs only on an answer, so comparing that answer with null decides nothing.
@@ -429,7 +449,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
     }
   }
   const askedInto = new Set();
-  for (const { body } of bodies) for (const s of statements(body)) if (s.kind === "ask" && s.fieldPath && s.target.symbol) askedInto.add(s.target.symbol);
+  for (const { body } of bodies) for (const s of statements(body)) if (s.kind === "ask" && (s.fieldPath || s.target.indexed) && s.target.symbol) askedInto.add(s.target.symbol);
   for (const { body } of bodies) {
     for (const s of statements(body)) {
       if (s.kind === "ask") {
@@ -442,7 +462,7 @@ export function flow(resolved, diagnostics, { session = false } = {}) {
           if (type?.t === "record" && !fieldReads.has(`${type.decl.name}.${last}`) && !session) warn("W005", s.target, `${s.target.names.join(".")} is asked, but no ${type.decl.name}'s ${last} is ever read`);
         }
         // A collected item that is not a record goes into its list: reading the list reads it.
-        const item = s.target.names.length === 1 && s.target.symbol?.kind === "item" ? s.target.symbol : null;
+        const item = s.target.names.length === 1 && !s.target.indexed && s.target.symbol?.kind === "item" ? s.target.symbol : null;
         if (item && !reads.has(item) && !(item.collected && reads.has(item.node.listSymbol)) && !session) warn("W006", s.target, `${item.name} is asked, but never read`);
       }
       // A var asked into is reported by its fields (W005), once, not again as unused.

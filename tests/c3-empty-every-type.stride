@@ -27,4 +27,4 @@ print(e == null)
 print(k == null)
 print(w == null)
 # rule 3.2
-# prints ["true","true","true","true","true","true","true","false","true","false","false"]
+# prints ["true","true","true","true","true","false","true","false","true","false","false"]

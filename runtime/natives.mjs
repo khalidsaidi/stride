@@ -57,6 +57,13 @@ export function resetCalls() {
   callCounts = new Map();
 }
 
+// The steps of the run so far, which the engine sets for each run: a collect's first item is in its list only once
+// one of its questions is answered (§8.5.1).
+let runSteps = [];
+export function setSteps(steps) {
+  runSteps = steps ?? [];
+}
+
 export function setPrinter(f) {
   printer = f ?? (() => {});
 }
@@ -476,6 +483,22 @@ export const NATIVES = {
       const n = (callCounts.get(base) ?? 0) + 1;
       callCounts.set(base, n);
       return n === 1 ? base : `${base}#${n}`;
+    },
+  },
+  // How many questions the run has reached; whether the answers held the key of one reached since (§8.5.1).
+  steps_count: { pure: false, internal: true, fn: () => num(runSteps.length) },
+  answered_since: { pure: false, internal: true, fn: (n) => runSteps.slice(whole(n)).some((s) => s.answered) },
+  // The turn of a for over words, numbers, dates, bools or options, in a key (§8.6.2): the item's words, [long];
+  // an item the list holds earlier too, by how many times it has come: [long]#2.
+  turn_key: {
+    pure: true,
+    internal: true,
+    fn: (l, k) => {
+      const i = whole(k);
+      const w = words(l[i]);
+      let n = 1;
+      for (let j = 0; j < i; j++) if (words(l[j]) === w) n++;
+      return n === 1 ? `[${w}]` : `[${w}]#${n}`;
     },
   },
   // A list of words in quotes where a set is expected (§3.6): the options they name, in the set's order.

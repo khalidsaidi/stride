@@ -16,4 +16,4 @@ for i in 1..2 {
   row(i)
 }
 # rule 8.6.2 8.6.4
-# asked ["age[1][0]", "age[1][1]", "age[1][2]", "age[2][0]", "age[2][1]", "age[2][2]", "row[1].v", "row[2].v"]
+# asked ["age[1][a]", "age[1][b]", "age[1][c]", "age[2][a]", "age[2][b]", "age[2][c]", "row[1].v", "row[2].v"]

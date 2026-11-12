@@ -296,7 +296,7 @@ assembler).
 
 ## Bytecode
 
-Version 10 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
+Version 11 (§18, `runtime/bytecode.mjs`). A file is `STRD`, the version byte, then sections, each a tag,
 its length and its bytes, so a reader skips a section it does not know, and refuses one that holds more or fewer
 bytes than it says: texts, numbers (as their words, never a binary float), the program (form, PDF, prefix),
 boxes (name, how written, export value), records, questions (name, type, option set, options, flags, line),
