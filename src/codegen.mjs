@@ -1,4 +1,4 @@
-// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 11) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
+// Phase 8: generate the bytecode (runtime/bytecode.mjs, version 12) from the checked intermediate form. Each function's blocks are laid out in reverse post-order, so every jump goes forward but the
 // jump back to a loop's head (LOOP); a jump to the block laid out next is left out. Constants are pooled; numbers
 // are written as their words, exact. Every instruction that can fault or ask gets its place (file, line, column)
 // in the place table.
@@ -43,7 +43,7 @@ export function generate(program, pdf, debug = null) {
   const questions = [...pdf.questions];
   const known = new Map(questions.map((q, i) => [q, i]));
   const questionIndex = { has: (q) => known.has(q), get: (q) => (known.has(q) ? known.get(q) : (known.set(q, questions.push(q) - 1), questions.length - 1)) };
-  const boxes = [...pdf.boxes.entries()].map(([name, b]) => ({ name, kind: b.kind, on: b.on }));
+  const boxes = [...pdf.boxes.entries()].map(([name, b]) => ({ name, kind: b.kind, on: b.on, max: b.max }));
   const boxIndex = new Map(boxes.map((b, i) => [b.name, i]));
 
   const code = new Writer();
@@ -609,7 +609,7 @@ export function generate(program, pdf, debug = null) {
   section(SECTION.PROGRAM, (s) => (s.varint(T(program.form)), s.varint(T(program.pdf)), s.varint(T(program.prefix))));
   section(SECTION.BOXES, (s) => {
     s.varint(boxes.length);
-    for (const b of boxes) (s.varint(T(b.name)), s.u8(WRITES.indexOf(b.kind)), opt(s, b.on));
+    for (const b of boxes) (s.varint(T(b.name)), s.u8(WRITES.indexOf(b.kind)), opt(s, b.on), s.varint(b.max ?? 0));
   });
   section(SECTION.RECORDS, (s) => {
     s.varint(records.length);
@@ -637,7 +637,6 @@ export function generate(program, pdf, debug = null) {
       s.varint(T(pdf.keys.get(l.key).printed ?? ""));
       s.varint(boxIndex.get(l.box));
       s.u8(l.direct ? 1 : 0);
-      s.varint(l.direct && pdf.maxOf.get(l.key) && Number.isFinite(pdf.maxOf.get(l.key)) ? pdf.maxOf.get(l.key) : 0);
     }
   });
   section(SECTION.NATIVES, (s) => (s.varint(natives.length), natives.forEach((n) => (s.varint(T(n)), s.varint(NATIVES[n].fn.length)))));

@@ -1,11 +1,11 @@
-// Stride's bytecode, version 11 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
+// Stride's bytecode, version 12 (docs/spec.md §18): what the compiler writes (src/codegen.mjs) and the
 // machine reads (runtime/vm.mjs). A file is "STRD", the version, then sections, each a tag, its length and
 // its bytes, so a reader can skip a section it does not know:
 //
 //    1 texts      every text the program uses, once
 //    2 numbers    every number constant, as its words (§3.3.5): exact, never a binary float
 //    3 program    the form's id, the PDF's sha256, the prefix of its field names
-//    4 boxes      each box the program writes: its name, how (fill, tick, pick), its export value
+//    4 boxes      each box the program writes: its name, how (fill, tick, pick), its export value, the most characters it holds (0: no most)
 //    5 records    each record type: its name, its fields' names and what each starts as (null, a list, a map)
 //    6 questions  each question as written: its name, type, option set, options, flags, line, file
 //    7 natives    the natives the code calls: name and how many values each takes
@@ -19,7 +19,7 @@
 import { D } from "./values.mjs";
 
 export const MAGIC = "STRD";
-export const VERSION = 11;
+export const VERSION = 12;
 
 // What a field of a record made on the way to a field starts as (§7.5.1), by its number in the records section.
 export const FIELD_STARTS = [null, "list", "map"];
@@ -281,7 +281,7 @@ export function load(input) {
         p.prefix = t(s);
         break;
       case SECTION.BOXES:
-        p.boxes = list(() => ({ name: t(s), kind: one(s, WRITES, "the way of writing a box"), on: opt(s) }));
+        p.boxes = list(() => ({ name: t(s), kind: one(s, WRITES, "the way of writing a box"), on: opt(s), max: s.varint() || null }));
         break;
       case SECTION.RECORDS:
         // Each field: its name, then what it starts as in a record made on the way to a field (§7.5.1): 1 a list
@@ -308,7 +308,7 @@ export function load(input) {
         });
         break;
       case SECTION.LINKS:
-        p.links = list(() => ({ key: t(s), question: s.varint(), printed: t(s), box: s.varint(), direct: !!s.u8(), max: s.varint() || null }));
+        p.links = list(() => ({ key: t(s), question: s.varint(), printed: t(s), box: s.varint(), direct: !!s.u8() }));
         break;
       case SECTION.NATIVES:
         p.natives = list(() => ({ name: t(s), params: s.varint() }));
@@ -560,7 +560,7 @@ function verifyStack(p, fn) {
 
 // A program written by hand, as bytes: for the machine's own tests (§19.3), which give it exactly the bytecode no
 // compiler would. `functions` are { name, params, locals, code: [[op, …operands]] }, the first the program's body;
-// texts, numbers (their words), natives ({ name, params }), boxes ({ name, kind, on }) and records ({ name, fields }) as the sections
+// texts, numbers (their words), natives ({ name, params }), boxes ({ name, kind, on, max }) and records ({ name, fields }) as the sections
 // hold them. The machine loads it like any other program: read, then verified.
 export function assemble({ texts = [], numbers = [], natives = [], boxes = [], records = [], functions, form = "t", pdf = "", prefix = "" }) {
   const pool = [...texts];
@@ -591,7 +591,7 @@ export function assemble({ texts = [], numbers = [], natives = [], boxes = [], r
   section(SECTION.TEXTS, (w) => (w.varint(pool.length), pool.forEach((x) => w.text(x))));
   section(SECTION.NUMBERS, (w) => (w.varint(numbers.length), numbers.forEach((n) => w.varint(T(n)))));
   section(SECTION.PROGRAM, (w) => (w.varint(T(form)), w.varint(T(pdf)), w.varint(T(prefix))));
-  section(SECTION.BOXES, (w) => (w.varint(boxes.length), boxes.forEach((b) => (w.varint(T(b.name)), w.u8(WRITES.indexOf(b.kind)), w.varint(b.on ? T(b.on) + 1 : 0)))));
+  section(SECTION.BOXES, (w) => (w.varint(boxes.length), boxes.forEach((b) => (w.varint(T(b.name)), w.u8(WRITES.indexOf(b.kind)), w.varint(b.on ? T(b.on) + 1 : 0), w.varint(b.max ?? 0)))));
   section(SECTION.RECORDS, (w) => (w.varint(records.length), records.forEach((r) => (w.varint(T(r.name)), w.varint(r.fields.length), r.fields.forEach((f, i) => (w.varint(T(f)), w.u8(Math.max(0, FIELD_STARTS.indexOf(r.starts?.[i] ?? null)))))))));
   section(SECTION.NATIVES, (w) => (w.varint(natives.length), natives.forEach((n) => (w.varint(T(n.name)), w.varint(n.params)))));
   section(SECTION.FUNCTIONS, (w) => {

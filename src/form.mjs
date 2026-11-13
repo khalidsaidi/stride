@@ -257,15 +257,16 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
   for (const b of header.boxes) byField.set(b.field, [...(byField.get(b.field) ?? []), b]);
   const shortNames = [...byField.keys()].map((f) => (f.startsWith(prefix) ? f.slice(prefix.length) : f));
 
-  const boxes = new Map(); // full name -> { kind: the statement that writes it, on: a check box's export value }
+  // full name -> { kind: the statement that writes it, on: a check box's export value, max: the most characters a
+  // text box holds }
+  const boxes = new Map();
   for (const [field, entries] of byField) {
     const kind = entries[0].kind;
-    boxes.set(field, { kind: kind === "check" ? "tick" : kind === "radio" ? "pick" : "fill", on: kind === "check" ? onValuesOf(entries)[0] ?? "Yes" : null });
+    boxes.set(field, { kind: kind === "check" ? "tick" : kind === "radio" ? "pick" : "fill", on: kind === "check" ? onValuesOf(entries)[0] ?? "Yes" : null, max: kind === "text" && entries[0].max > 0 ? entries[0].max : null });
   }
   const questions = new Set();
   const keys = new Map(); // a question's key, worked out -> { q, printed, node }
   const links = new Map(); // key \t box -> { key, box, direct }
-  const maxOf = new Map();
   const turnsOf = loopTurns(resolved);
 
   // ----- which questions' answers each value is made of, through the functions it calls
@@ -460,14 +461,12 @@ export function checkForm(program, header, diagnostics, { open = false, resolved
           const was = links.get(id);
           if (!was) links.set(id, { key, box: full, direct: isDirect });
           else if (isDirect) was.direct = true;
-          const max = found?.[0]?.max;
-          if (isDirect && max) maxOf.set(key, Math.min(maxOf.get(key) ?? Infinity, max));
         }
       });
     }
   }
 
-  return { boxes, questions: [...questions], links: [...links.values()], maxOf, keys };
+  return { boxes, questions: [...questions], links: [...links.values()], keys };
 }
 
 // The expressions a statement holds, for finding the calls in it.

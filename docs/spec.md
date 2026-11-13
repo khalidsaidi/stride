@@ -1106,7 +1106,7 @@ its boxes.
   near: the same words in other capitals or spaces, an entry the words start with or that starts with them
   (`"March"` and `"Mar"`), or one a few letters away.
 - 10.3.4. **Longer than the box.** Words the compiler knows (§10.3.1) put in a text box whose header gives a
-  longest length (`max`), and longer than it, are warning W010; they are written as they are. A `tick` whose box is named as the program runs and whose condition is false writes nothing when the form has no such box.
+  longest length (`max`), and longer than it, are warning W010. A text box with a longest length holds that many characters: words longer than it are written, and the box keeps their first `max` characters, in the page, in the PDF and in what `stride run` and `boxValues` (§17.19) say it holds. The answer itself is kept whole: the page takes every character typed, as the terminal does. A `tick` whose box is named as the program runs and whose condition is false writes nothing when the form has no such box.
 
 10.4. **Stride is no stricter than the form.** A form lets a person leave a box empty, or write over one. A
 program may write a box more than once: the later write is the one that stays. A name, a button or words worked
@@ -1732,7 +1732,7 @@ its call: the function's name in the call.
 | W007 | a let or var never used | Warning: Remove it. |
 | W008 | a statement after return, break or continue | Warning: It never runs; remove it, or the return, break or continue before it. |
 | W009 | a check that compares its own answer with null | Warning: a check runs only when the question is answered, so the comparison never changes; Stride does not require an answer, as a form does not. |
-| W010 | words written in a text box longer than its longest length | Warning: the form's box holds fewer characters (§10.3.4); they are written as they are. |
+| W010 | words written in a text box longer than its longest length | Warning: the form's box holds fewer characters (§10.3.4); it keeps the first ones. |
 | W011 | an answer under a key no question has | Warning, from `stride run`: the answer is not used (§17.12); check the key's spelling. |
 | W017 | a function named as one of the standard library's, which it hides (§12.3.1) | Warning: every call of that name in the file calls this function; rename it to keep the library's. |
 | F001–F024 | §13.4 | |
@@ -2036,7 +2036,10 @@ one) in the browser, and a script (§4.6, or bytecode compiled from one) in the 
 - **In the page.** When the workflow is opened the run's writes are put in the boxes, those made from no answer
   among them, and again at each answer. Every question the run reaches is asked, even when the run with the answers
   so far stops at a fault after it, as the prompt asks (§17.12): the fault is shown after the last question
-  reached, and the person can go back to any question and change its answer. Output: §17.11.
+  reached, and the person can go back to any question and change its answer. A question shows its answer, else
+  its default; Next on a question the person has not answered leaves it unanswered, so its default stands for it
+  (§8.4.1), as an empty line at the terminal's prompt does: a collect's first item enters its list only once one
+  of its questions is answered (§8.5.2), in the page as in the terminal. Output: §17.11.
 - **Reloading.** A source program is compiled again each time the page is loaded, its libraries and header read
   again, so saving the source and reloading shows the change. When it has mistakes then, the page shows them,
   with their places, in place of the questions, and gives no workflow until they are mended.
@@ -2073,14 +2076,14 @@ host writes it again after upgrading stride and compiling its programs again. It
 network, storage, page or clock but `today()`. It exports:
 - `load(bytes)`: a compiled program (§18) from its bytes, checked as §18.3 says; a program of another bytecode
   version is refused (`BytecodeError`). The program's `boxes` are its form's boxes by full field name with their
-  kinds (`fill`, `tick`, `pick`) and on values, its `questions` every question with its type and options, and its
+  kinds (`fill`, `tick`, `pick`), on values and a text box's longest length (`max`), its `questions` every question with its type and options, and its
   `links` the boxes each question's answer goes into, by key, as `stride map` says (§17.6.1).
 - `run(program, answers, { today, limit })`: one run on the answers so far, by key (§8.6), as `stride run` makes it
   (§17.18). It gives `steps`, each question the run reached, in order, with its `key`, its `question` (`type`, and
   `options`, each a `value` and its `printed` words), its `printed` words, its `default`, `answered`, the messages of
   its `failed` checks and why its answer is `unreadable`; `writes`; the run's own `links`; `prints`; and `fault`.
 - `boxValues(program, writes)`: what each box of the form holds after the run, by its full field name: the value
-  written, else empty (`""` for words, `"Off"` for a check box or a radio group).
+  written, cut to a text box's longest length (§10.3.4), else empty (`""` for words, `"Off"` for a check box or a radio group).
 - `convert(question, raw)`, `stringOf(value)`, `faultWords(fault)` and `VERSION`, the bytecode version it runs.
 
 How a question is shown, and any words of the host's own around it (help, headings, other languages), are the
@@ -2089,7 +2092,7 @@ same boxes as §17.18's three places.
 
 ## 18. Bytecode
 
-18.1. Version 11. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
+18.1. Version 12. A file is `STRD`, the version byte, then sections (tag, length, bytes); a reader skips a section
 it does not know; a section that holds more or fewer bytes than it says is refused. The program and code sections
 must be there, each once; a tag that comes twice is refused. The places section may be left out: then no fault
 has a source place. The compiler always writes it. Sections may come in any order.

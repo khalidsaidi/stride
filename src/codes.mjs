@@ -867,7 +867,7 @@ export const CODES = {
   },
   "W010": {
     "when": "words written in a text box longer than its longest length",
-    "explanation": "Warning: the form's box holds fewer characters (§10.3.4); they are written as they are."
+    "explanation": "Warning: the form's box holds fewer characters (§10.3.4); it keeps the first ones."
   },
   "W011": {
     "when": "an answer under a key no question has",

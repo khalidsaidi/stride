@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { widgetsPdf } from "../fixtures/widgets-pdf.mjs";
+import { VERSION } from "../../runtime/bytecode.mjs";
 
 export function test() {
   const cli = fileURLToPath(new URL("../../bin/stride.mjs", import.meta.url));
@@ -47,7 +48,7 @@ console.log(JSON.stringify({ version: VERSION, before: shown(before), after: sho
     else {
       const got = JSON.parse(r.stdout);
       const want = {
-        version: 11,
+        version: VERSION,
         before: [{ key: "who", type: "string", printed: "Name", options: [], default: "Ada" }, { key: "sex", type: "one_of", printed: "Sex", options: [["f", "Female"], ["m", "Male"]], default: null }],
         after: ["who", "sex", "month"],
         boxes: { name: "Bo", sex: "Male", total: "", month: "05" },

@@ -11,8 +11,6 @@ import { boxValues, faultWords, load, run, stringOf } from "./vm.mjs";
 const PAGE_LIMIT = 100_000_000;
 
 const blank = (v) => v == null || v === "" || (Array.isArray(v) && !v.length);
-// An answer as the page keeps it: a number or a date as its words, the way a person would type it.
-const kept = (v) => (v !== null && typeof v === "object" && !Array.isArray(v) ? stringOf(v) : v);
 
 // The compiled workflow, from the bytes of its file.
 export const workflow = (bytes) => load(bytes);
@@ -127,8 +125,6 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
       if (input.tagName === "INPUT") input.type = { date: "date", phone: "tel", email: "email" }[q.type] ?? "text";
       if (q.type === "number") input.inputMode = "decimal";
       if (q.type === "long_text") input.rows = 3;
-      const most = into.find((l) => l.direct && l.max)?.max;
-      if (most) input.maxLength = most;
       input.value = value == null ? "" : stringOf(value);
       input.oninput = () => set(input.value);
       body.append(input);
@@ -138,12 +134,9 @@ export function questions(p, { box, read, show, unshow, saved = {}, onChange, on
     const back = el("button", { type: "button", className: "quiet", textContent: "Back", disabled: at === 0 });
     back.onclick = () => (at--, render());
     const next = el("button", { type: "button", className: "next", textContent: "Next" });
-    next.onclick = () => {
-      // Next with the default still there keeps it as the answer.
-      if (!(step.key in answers) && step.default !== undefined && !blank(step.default)) set(kept(step.default));
-      at++;
-      render();
-    };
+    // Next leaves a question not typed in unanswered: its default stands for it (§8.4.1), as an empty line at the
+    // terminal's prompt leaves it, so the page and the terminal give the same boxes for the same answers.
+    next.onclick = () => (at++, render());
     nav.append(back, next);
     panel.onkeydown = (e) => e.key === "Enter" && e.target.tagName !== "TEXTAREA" && next.click();
   }

@@ -11,4 +11,4 @@ ask p: string "Province"
 fill "Prov" = p
 # rule 10.3.4 W010
 # answers {"p": "Ontario"}
-# boxes {"Prov": "Ontario", "Note": "a long note with no longest length"}
+# boxes {"Prov": "On", "Note": "a long note with no longest length"}

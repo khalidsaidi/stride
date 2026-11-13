@@ -693,7 +693,8 @@ export function boxValues(p, writes) {
   const out = {};
   p.boxes.forEach((b, i) => {
     const w = writes.get(i);
-    out[b.name] = w ? w.value : b.kind === "fill" ? "" : "Off";
+    // A text box holds its first `max` characters, as the PDF keeps them (§10.3.4).
+    out[b.name] = !w ? (b.kind === "fill" ? "" : "Off") : b.max && typeof w.value === "string" && [...w.value].length > b.max ? [...w.value].slice(0, b.max).join("") : w.value;
   });
   return out;
 }
