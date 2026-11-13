@@ -170,6 +170,8 @@ export function autoHeader(source, name, options = {}, runs = [{}]) {
     if (kind === "pick") found.set(`${field}\t${button}`, { field, kind: "radio", on: button, page: 1 });
     else if (!found.has(field)) found.set(field, kind === "tick" ? { field, kind: "check", on: "Yes", page: 1 } : { field, kind: "text", page: 1 });
   };
+  // Every box the compiler works out (written out, or from constants and loops over them), of its statement's kind.
+  for (const [field, b] of first.boxes ?? []) if (b.kind !== "pick") add(field, b.kind, null);
   for (const fn of first.program.functions) {
     for (const b of fn.blocks) {
       for (const s of b.stmts) {
