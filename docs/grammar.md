@@ -143,6 +143,7 @@ string`. A native's parameter may be `any`; its result may be `any` (the type of
 | `tick "box" when c` | ticks a check box (with the box's own export value) when the condition is true |
 | `tick "box"` | ticks a check box, always (as `when true`) |
 | `pick "group" "button" when c` | picks that button of a radio group when the condition is true |
+| `pick "group" "button"` | picks that button, always (as `when true`) |
 | `const b = "box"`, then `fill b = e` | a box named once: where words in quotes go (a box's name, a question's words), an expression that starts with a name goes too (§7.9) |
 | `if c { } else if c { } else { }` | one branch |
 | `match e { "a", "b" => { } else => { } }` | one branch by an option's value, by words, or by a number (`1, 2 => { }`) |

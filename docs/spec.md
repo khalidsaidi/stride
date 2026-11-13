@@ -681,7 +681,8 @@ S308, a list or record S309.
 unticked. `tick "box"` with no `when` ticks it, as `tick "box" when true` does; the formatter writes each as it is
 written.
 
-7.8. **pick** `pick "group" "button" when c`: picks that button when c is true.
+7.8. **pick** `pick "group" "button" when c`: picks that button when c is true. `pick "group" "button"` with no
+`when` picks it, as `pick "group" "button" when true` does; the formatter writes each as it is written.
 
 7.8.1. **An option names a button.** The button's name is words or an option (S800 otherwise); an option names the
 button its value is: `pick "Group1" relation when relation != null` picks the button `"Mother"` when relation is

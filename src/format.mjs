@@ -223,7 +223,7 @@ export function format(text, name = "program.stride") {
         put(s, indent, s.always ? `tick ${expr(s.box)}` : `tick ${expr(s.box)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "pick":
-        put(s, indent, `pick ${expr(s.box)} ${str(s.button)} when ${expr(s.condition)}`);
+        put(s, indent, s.always ? `pick ${expr(s.box)} ${str(s.button)}` : `pick ${expr(s.box)} ${str(s.button)} when ${expr(s.condition)}`);
         return trailing(s.span.endLine);
       case "if":
         return ifChain(s, indent, "if");

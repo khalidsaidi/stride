@@ -1017,7 +1017,9 @@ class Parser {
     const start = this.take();
     const box = this.wordsOrName("the radio group's name, in quotes, or a constant that holds it");
     const button = this.wordsOrBracketed("the button's name, in quotes, a constant that holds it, or an expression in brackets");
-    this.expect("keyword", "when", '"when" and a condition');
+    // Without `when`, the button is picked: the condition is true (§7.8).
+    if (!this.word("when")) return this.node("pick", start, { box, button, condition: { kind: "bool", value: true, span: button.span }, always: true });
+    this.take();
     return this.node("pick", start, { box, button, condition: this.condition() });
   }
 

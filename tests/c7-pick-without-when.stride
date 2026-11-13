@@ -1,0 +1,11 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+# box Filing radio:Single
+# box Filing radio:Joint
+# box Kind radio:A
+# box Kind radio:B
+const KIND = "B"
+pick "Filing" "Joint"
+pick "Kind" KIND
+# rule 7.8
+# boxes {"Filing": "Joint", "Kind": "B"}
