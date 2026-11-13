@@ -4,6 +4,12 @@
 // they stood: a comment on its own line goes before the statement after it, at that statement's indent; a
 // comment after code stays at the end of that line.
 //
+// Brackets — a list, a map, a record made with `new`, a call's arguments, a function's parameters, a tuple — keep
+// the line breaks their author wrote after the opening and before the closing bracket, and between items written
+// an item a line; with a break before the closing bracket, the last item takes a comma and the bracket stands at
+// the start of its own line. Other brackets stay on one line when it fits in LIMIT characters; else their items
+// fill each line up to LIMIT, the next line two spaces in. Nothing joins a line past LIMIT.
+//
 // Formatting does not change what a program means: the formatted source parses to the same tree.
 import { Diagnostics, SourceFile } from "./source.mjs";
 import { parse } from "./parse.mjs";
@@ -56,6 +62,105 @@ export function comments(text) {
   return out;
 }
 
+// The longest line `stride fmt` makes by joining items of brackets (a line of a single item, or of words that
+// cannot be broken, may be longer).
+const LIMIT = 120;
+
+// Brackets are printed first as words with marks in them (characters of Unicode's private use area, which a
+// program's own words never hold as they are: escape() writes them as \u{…}); layout() then gives each line its
+// breaks. OPEN and CLOSE stand around a bracket's items; SOFT between two items is a space, or a line break
+// when the next item does not fit; HARD is the author's line break between two items; the edges stand after the
+// opening and before the closing bracket: EDGE_NONE (nothing, or a break when the brackets break with nothing
+// beside them), EDGE_SPACE (a space when the brackets are on one line: `new r { a: 1 }`), EDGE_HARD (the author's
+// line break).
+const OPEN = "\uE000", CLOSE = "\uE001", SOFT = "\uE002", HARD = "\uE003";
+const OPEN_NONE = "\uE004", OPEN_SPACE = "\uE005", OPEN_HARD = "\uE006", CLOSE_NONE = "\uE007", CLOSE_SPACE = "\uE008", CLOSE_HARD = "\uE009";
+const MARKS = /[\uE000-\uE009]/;
+const FLAT = { [SOFT]: " ", [HARD]: " ", [OPEN_NONE]: "", [OPEN_SPACE]: " ", [OPEN_HARD]: "", [CLOSE_NONE]: "", [CLOSE_SPACE]: " ", [CLOSE_HARD]: "", [OPEN]: "", [CLOSE]: "" };
+
+// A printed line's breaks: each pair of brackets on one line when it holds no author's break and fits, with
+// what follows it up to the next place a line may break; else broken, its items two spaces in from the line
+// it opens on.
+function layout(line) {
+  if (!MARKS.test(line)) return line;
+  const tokens = line.split(/([\uE000-\uE009])/).filter((x) => x !== "");
+  const closeOf = new Map(), hard = new Map(), stack = [];
+  tokens.forEach((t, i) => {
+    if (t === OPEN) stack.push(i);
+    else if (t === CLOSE) {
+      const o = stack.pop();
+      closeOf.set(o, i);
+      hard.set(o, tokens.slice(o, i).some((x) => x === HARD || x === OPEN_HARD || x === CLOSE_HARD || x.includes("\n")));
+    }
+  });
+  const width = (from, to) => tokens.slice(from, to).reduce((n, t) => n + (t in FLAT ? FLAT[t].length : t.length), 0);
+  // The words from a place up to where a line may next break: a SOFT, a HARD or a hard edge at any depth.
+  // Outside every bracket, only the marks that close what stands before them count (`)`, `]`, `,`): words there
+  // cannot break, and breaking brackets for them would not make the line fit.
+  const depth = [];
+  tokens.reduce((d, t, i) => ((depth[i] = d), t === OPEN ? d + 1 : t === CLOSE ? d - 1 : d), 0);
+  const until = (from) => {
+    let n = 0;
+    for (let i = from; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (t === SOFT || t === HARD || t === OPEN_HARD || t === CLOSE_HARD) break;
+      if (t.includes("\n")) return n + t.indexOf("\n");
+      if (depth[i] === 0 && t !== OPEN && t !== CLOSE) return n + t.match(/^[^\s]*/)[0].length;
+      n += t in FLAT ? FLAT[t].length : t.length;
+    }
+    return n;
+  };
+  // An item of brackets, from where it starts: its words up to the next item, or for the last one up to the
+  // closing bracket and what follows it up to the next place a line may break.
+  const item = (from) => {
+    let n = 0, d = 0;
+    for (let i = from; i < tokens.length; i++) {
+      const t = tokens[i];
+      if (t === OPEN) d++;
+      else if (t === CLOSE && --d < 0) return n + until(i + 1);
+      else if (d === 0 && (t === SOFT || t === HARD)) return n;
+      else if (t.includes("\n")) return n + t.indexOf("\n");
+      else n += t in FLAT ? FLAT[t].length : t.length;
+    }
+    return n;
+  };
+  let out = "", col = 0, indent = line.match(/^ */)[0];
+  const groups = []; // { flat, base, inner }
+  const newline = (to) => {
+    out = out.replace(/ +$/, "");
+    out += `\n${to}`;
+    col = to.length;
+    indent = to;
+  };
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    const top = groups[groups.length - 1];
+    if (t === OPEN) {
+      const flat = (top?.flat ?? false) || (!hard.get(i) && col + width(i, closeOf.get(i)) + until(closeOf.get(i) + 1) <= LIMIT);
+      groups.push({ flat, base: indent, inner: `${indent}  ` });
+    } else if (t === CLOSE) groups.pop();
+    else if (top?.flat && t in FLAT) out += FLAT[t], (col += FLAT[t].length);
+    else if (t === HARD || t === OPEN_HARD) newline(top.inner);
+    else if (t === CLOSE_HARD) newline(top.base);
+    else if (t === SOFT) {
+      // The next item goes on this line when the whole of it fits, with what follows it there.
+      if (col + 1 + item(i + 1) <= LIMIT) (out += " "), col++;
+      else newline(top.inner);
+    } else if (t === OPEN_SPACE || t === CLOSE_SPACE) (out += " "), col++; // `new r { a: 1,` … `b: 2 }`
+    else if (t in FLAT) continue; // any other edge of brackets that break with no break of the author's: nothing
+    else {
+      out += t;
+      const nl = t.lastIndexOf("\n");
+      if (nl < 0) col += t.length;
+      else {
+        col = t.length - nl - 1;
+        indent = t.slice(nl + 1).match(/^ */)[0];
+      }
+    }
+  }
+  return out;
+}
+
 // How tightly each operator binds (§6.1): `if … then … else` loosest (0), a field, a position or a call tightest (8).
 const PRECEDENCE = { "??": 0.75, or: 1, and: 2, not: 3, "==": 4, "!=": 4, "<": 4, "<=": 4, ">": 4, ">=": 4, in: 4, "not in": 4, "+": 5, "-": 5, "*": 6, "/": 6, "//": 6, "%": 6, neg: 7, "..": 4.5, "..<": 4.5, "**": 7.5 };
 
@@ -71,6 +176,7 @@ export function format(text, name = "program.stride") {
   const lines = [];
   let lastLine = 0; // the last source line printed
   let at = { indent: "", line: 0 }; // the statement being printed, for a function written in place inside it
+  let inWords = 0; // inside words in quotes, where brackets stay on one line
 
   // Comments before a source line, each on its own line.
   function leading(beforeLine, indent) {
@@ -118,7 +224,37 @@ export function format(text, name = "program.stride") {
   for (const item of tree.items) item_(item, "");
   leading(Infinity, "");
   while (lines.length && lines[lines.length - 1] === "") lines.pop();
-  return { text: `${lines.join("\n")}\n`, diagnostics };
+  return { text: `${lines.map(layout).join("\n")}\n`, diagnostics };
+
+  // ----- brackets
+
+  // The line a place in the source stands on.
+  function lineOf(at) {
+    return file.lineStarts.findLastIndex((x) => x <= at) + 1;
+  }
+  // Items between brackets, each printed by print, with the author's line breaks (see the top of the file). In
+  // words in quotes, where a line cannot break, they are joined with spaces.
+  function bracketed(open, close, items, print, { spaced = false, spans = (x) => x.span } = {}) {
+    const edge = spaced ? " " : "";
+    if (!items.length) return `${open}${close}`;
+    const printed = items.map((x) => print(x));
+    if (inWords) return `${open}${edge}${printed.join(", ")}${edge}${close}`;
+    const first = spans(items[0]), last = spans(items[items.length - 1]);
+    const openAt = text.lastIndexOf(open, first.start - 1);
+    const closeAt = text.indexOf(close, last.end);
+    const openHard = openAt >= 0 && lineOf(first.start) > lineOf(openAt);
+    const closeHard = closeAt >= 0 && lineOf(closeAt) > lineOf(Math.max(last.start, last.end - 1));
+    const breaks = items.slice(1).map((x, i) => lineOf(spans(x).start) > lineOf(Math.max(spans(items[i]).start, spans(items[i]).end - 1)));
+    // Items an item a line keep their lines; items that fill lines are filled again, to the limit.
+    const kept = breaks.every((b) => b);
+    let body = printed[0];
+    for (let i = 1; i < items.length; i++) body += `,${kept ? HARD : SOFT}${printed[i]}`;
+    return `${open}${OPEN}${openHard ? OPEN_HARD : spaced ? OPEN_SPACE : OPEN_NONE}${body}${closeHard ? "," : ""}${closeHard ? CLOSE_HARD : spaced ? CLOSE_SPACE : CLOSE_NONE}${CLOSE}${close}`;
+  }
+  // Words printed with no marks: their length as one line.
+  function flatLength(s) {
+    return [...s].reduce((n, c) => n + (c in FLAT ? FLAT[c].length : 1), 0);
+  }
 
   // ----- declarations and statements
 
@@ -152,11 +288,11 @@ export function format(text, name = "program.stride") {
         put(n, indent, `${exp(n)}const ${n.name}${n.type ? `: ${type(n.type)}` : ""} = ${expr(n.value)}`);
         return trailing(n.span.endLine);
       case "native":
-        put(n, indent, `${exp(n)}native function ${n.name}(${n.params.map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""}`);
-        return trailing(n.span.line);
+        put(n, indent, `${exp(n)}native function ${n.name}${params(n.params)}${n.result ? ` -> ${type(n.result)}` : ""}`);
+        return trailing(n.span.endLine);
       case "function":
-        put(n, indent, `${exp(n)}function ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}(${n.params.filter((p) => !p.self || n.selfWritten).map(param).join(", ")})${n.result ? ` -> ${type(n.result)}` : ""} {`);
-        trailing(n.span.line);
+        put(n, indent, `${exp(n)}function ${n.name}${n.typeParams?.length ? `<${n.typeParams.map((t) => t.name).join(", ")}>` : ""}${params(n.params.filter((p) => !p.self || n.selfWritten))}${n.result ? ` -> ${type(n.result)}` : ""} {`);
+        trailing(n.body.length && text.lastIndexOf("{", n.body[0].span.start) > n.span.start ? lineOf(text.lastIndexOf("{", n.body[0].span.start)) : n.span.line);
         block(n.body, `${indent}  `);
         return close(n, indent);
       default:
@@ -165,9 +301,13 @@ export function format(text, name = "program.stride") {
   }
   const DECLARATIONS = new Set(["import", "record", "enum", "const", "native", "function"]);
 
-  // A comment after the opening line of a construct that is all on one line belongs after its closing brace.
-  function opening(n) {
-    if (n.span.line !== n.span.endLine) trailing(n.span.line);
+  // A comment after the opening line of a construct that is all on one line belongs after its closing brace. The
+  // opening line ends at the brace before the first thing inside, which a header written over several lines puts
+  // on a later line.
+  function opening(n, inside = []) {
+    if (n.span.line === n.span.endLine) return;
+    const brace = inside.length ? text.lastIndexOf("{", inside[0].span.start) : -1;
+    trailing(brace >= 0 && brace >= n.span.start ? lineOf(brace) : n.span.line);
   }
 
   function close(n, indent) {
@@ -201,7 +341,7 @@ export function format(text, name = "program.stride") {
           return trailing(s.span.endLine);
         }
         // A check goes on its own line, indented, when the question is long.
-        if (mods.length && (head + mods.join(" ")).length + indent.length > 110) {
+        if (mods.length && flatLength(head + mods.join(" ")) + indent.length > 110) {
           put(s, indent, head);
           for (const m of mods) lines.push(`${indent}  ${m}`);
           lastLine = s.span.endLine;
@@ -229,7 +369,7 @@ export function format(text, name = "program.stride") {
         return ifChain(s, indent, "if");
       case "match":
         put(s, indent, `match ${expr(s.subject)} {`);
-        opening(s);
+        opening(s, s.arms);
         for (const arm of s.arms) {
           put(arm, `${indent}  `, `${armValues(arm)} => {`);
           trailing(arm.span.line);
@@ -239,7 +379,7 @@ export function format(text, name = "program.stride") {
         return close(s, indent);
       case "try":
         put(s, indent, "try {");
-        opening(s);
+        opening(s, s.then);
         block(s.then, `${indent}  `);
         if (s.hasCatch !== false) {
           leading(s.catchLine, `${indent}  `);
@@ -261,22 +401,22 @@ export function format(text, name = "program.stride") {
         return trailing(s.span.endLine);
       case "while":
         put(s, indent, `while ${expr(s.condition)} {`);
-        opening(s);
+        opening(s, s.body);
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "for":
         put(s, indent, `for ${s.counter} in ${expr(s.from)}${s.exclusive ? "..<" : ".."}${expr(s.to)} {`);
-        opening(s);
+        opening(s, s.body);
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "for-each":
         put(s, indent, `for ${s.destructure ? `(${s.destructure.join(", ")})` : `${s.index ? `${s.index}, ` : ""}${s.item}`} in ${expr(s.list)} {`);
-        opening(s);
+        opening(s, s.body);
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "collect":
-        put(s, indent, `collect ${s.index ? `${s.index}, ` : ""}${s.item} in ${s.list}${s.any ? ` any ${str(s.any)} another` : ""} ${str(s.another)} {`);
-        opening(s);
+        put(s, indent, `collect ${s.index ? `${s.index}, ` : ""}${s.item} in ${s.list}${s.any ? ` any ${str(s.any)}` : ""}${s.anotherWritten ? " another" : ""} ${str(s.another)} {`);
+        opening(s, s.body);
         block(s.body, `${indent}  `);
         return close(s, indent);
       case "return":
@@ -310,7 +450,7 @@ export function format(text, name = "program.stride") {
       lines[lines.length - 1] += ` else if ${expr(s.condition)} {`;
       lastLine = s.span.line;
     }
-    opening(s);
+    opening(s, s.then);
     block(s.then, `${indent}  `);
     const elseIf = s.otherwise.length === 1 && s.otherwise[0].kind === "if" && isElseIf(s);
     // Comments before the else belong to the then block; those after it, to the else block.
@@ -347,6 +487,10 @@ export function format(text, name = "program.stride") {
 
   function exp(n) {
     return n.exported ? "export " : "";
+  }
+
+  function params(list) {
+    return bracketed("(", ")", list, param);
   }
 
   function param(p) {
@@ -390,7 +534,7 @@ export function format(text, name = "program.stride") {
         const mine = at;
         leading(mine.line, mine.indent);
         if (mine.line > lastLine + 1 && lines.length && lines[lines.length - 1] !== "") lines.push("");
-        const head = e.short ? `(${e.params.map(param).join(", ")}) =>` : `function(${e.params.map(param).join(", ")})${e.result ? ` -> ${type(e.result)}` : ""}`;
+        const head = e.short ? `${params(e.params)} =>` : `function${params(e.params)}${e.result ? ` -> ${type(e.result)}` : ""}`;
         const from = lines.length;
         lastLine = e.span.line;
         block(e.body, `${mine.indent}  `);
@@ -436,7 +580,7 @@ export function format(text, name = "program.stride") {
       case "index":
         return e.position ? `${expr(e.target, 8)}.${e.index.raw}` : `${expr(e.target, 8)}[${expr(e.index)}]`;
       case "tuple":
-        return `(${e.items.map((a) => expr(a)).join(", ")})`;
+        return bracketed("(", ")", e.items, (a) => expr(a));
       case "match-expr":
         // Written over several lines, an arm a line; else on one, the arms after commas.
         if (e.span.line !== e.span.endLine) {
@@ -447,13 +591,13 @@ export function format(text, name = "program.stride") {
       case "slice":
         return `${expr(e.target, 8)}[${e.from.open ? "" : expr(e.from)}${e.exclusive ? "..<" : ".."}${e.to.open ? "" : expr(e.to)}]`;
       case "call":
-        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}${e.typeArgs ? `<${e.typeArgs.map(type).join(", ")}>` : ""}(${e.args.map((a) => expr(a)).join(", ")})${e.keyAs ? ` as ${str(e.keyAs)}` : ""}`;
+        return `${e.target.parenthesised ? `(${expr(e.target)})` : expr(e.target, 8)}${e.typeArgs ? `<${e.typeArgs.map(type).join(", ")}>` : ""}${bracketed("(", ")", e.args, (a) => expr(a))}${e.keyAs ? ` as ${str(e.keyAs)}` : ""}`;
       case "named-arg":
         return `${e.name}: ${expr(e.value)}`;
       case "list":
-        return `[${e.items.map((a) => expr(a)).join(", ")}]`;
+        return bracketed("[", "]", e.items, (a) => expr(a));
       case "map":
-        return `{${e.entries.map((x) => `${expr(x.key)}: ${expr(x.value)}`).join(", ")}}`;
+        return bracketed("{", "}", e.entries, (x) => `${expr(x.key)}: ${expr(x.value)}`, { spans: (x) => ({ start: x.key.span.start, end: x.value.span.end }) });
       case "comprehension": {
         // Every `for`, outermost first, then the value of the last (§6.12.1); a map's as key: value (§6.12.2).
         const fors = [];
@@ -471,7 +615,7 @@ export function format(text, name = "program.stride") {
       case "cond":
         return wrap(0.5, `if ${expr(e.condition)} then ${expr(e.yes)} else ${expr(e.no)}`);
       case "new":
-        return `new ${e.type} { ${e.fields.map((f) => `${f.name}: ${expr(f.value)}`).join(", ")} }`;
+        return `new ${e.type} ${bracketed("{", "}", e.fields, (f) => `${f.name}: ${expr(f.value)}`, { spaced: true })}`;
       default:
         throw new Error(`stride fmt has no layout for ${e.kind}`);
     }
@@ -482,7 +626,12 @@ export function format(text, name = "program.stride") {
     // Known words written as an expression (§7.9.1): a constant, an item of a constant list.
     if (e.parenthesised) return `(${expr(e)})`;
     if (e.kind !== "string") return expr(e);
-    return `"${e.parts.map((p) => (typeof p === "string" ? escape(p) : `{${expr(p)}}`)).join("")}"`;
+    inWords++;
+    try {
+      return `"${e.parts.map((p) => (typeof p === "string" ? escape(p) : `{${expr(p)}}`)).join("")}"`;
+    } finally {
+      inWords--;
+    }
   }
 
   function plain(v) {
@@ -492,6 +641,6 @@ export function format(text, name = "program.stride") {
   // Words as written in quotes (§1.7): \\, \", \n, \t, \r, \0 and the braces escaped, so they stay words.
   function escape(s) {
     return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "\\r").replace(/\0/g, "\\0").replace(/\{/g, "\\{").replace(/\}/g, "\\}")
-      .replace(/[\u0000-\u001f\u007f]/g, (c) => `\\u{${c.codePointAt(0).toString(16)}}`);
+      .replace(/[\u0000-\u001f\u007f\uE000-\uE009]/gu, (c) => `\\u{${c.codePointAt(0).toString(16)}}`);
   }
 }

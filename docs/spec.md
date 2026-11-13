@@ -1787,6 +1787,15 @@ belonging to libraries retain their original files and locations.
 of its own, in order. A comment after code may move to the end of another line or join another such comment,
 its words kept whole as a comment; no place in its line is kept.
 
+17.3.1. **Brackets.** A list, a map, a record made with `new`, a call's arguments, a function's parameters and a
+tuple keep the line breaks written after their opening and before their closing bracket, and between their items
+when every item stands on a line of its own; with a break before the closing bracket, the last item takes a comma
+and the bracket starts its own line. Any other brackets stay on one line when it fits in 120 characters; else
+their items fill each line up to 120 characters, each line after the first two spaces further in than the line
+the brackets open on. `stride fmt` never joins items onto a line longer than 120 characters; a line holding a
+single item, or words that cannot break, may be longer. Words in quotes keep the brackets inside them on one
+line. A collect keeps `another` where it is written and leaves it out where it is not.
+
 17.4. **stride test names.** After a program, names choose which of its tests in `<file>.tests/` run. After a
 `.test.stride` file a name is a usage mistake (exit 2), before anything runs: its expectations have no names.
 Options such as `--today` stay allowed.

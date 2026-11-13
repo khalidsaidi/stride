@@ -1168,9 +1168,11 @@ class Parser {
       this.take();
       any = this.wordsOrName("the question whether there are any, in quotes, or a constant that holds them");
     }
-    if (this.is("name", "another") && this.peek().type === "string") this.take();
+    // `another` may be written before the question whether there is another; the formatter keeps it as written.
+    const anotherWritten = this.is("name", "another") && this.peek().type === "string";
+    if (anotherWritten) this.take();
     const another = this.wordsOrName("the question whether there is another, in quotes, or a constant that holds them");
-    return this.node("collect", start, { index, item, list, any, another, body: this.block() });
+    return this.node("collect", start, { index, item, list, any, another, anotherWritten, body: this.block() });
   }
 
   // A return's value is on its line: a bare return before the next line's statement has none.
