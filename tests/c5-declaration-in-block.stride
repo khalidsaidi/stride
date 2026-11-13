@@ -1,0 +1,20 @@
+form t
+pdf 0000000000000000000000000000000000000000000000000000000000000000
+if true {
+  record r {
+    a: string
+  }
+}
+function g() {
+  const X = 1
+}
+for i in 0..<2 {
+  function f() -> number {
+    return 1
+  }
+}
+let h = function(n: number) -> number { return n }
+# rule 5.0 S025
+# mistake 4:3 S025
+# mistake 9:3 S025
+# mistake 12:3 S025

@@ -837,6 +837,11 @@ class Parser {
       const start = this.take();
       return this.node("throw", start, { value: this.expr() });
     }
+    // A declaration stands at the top level of the file (§5.0).
+    if (t.type === "keyword" && (["record", "enum", "const", "native", "import", "export"].includes(t.value) || (t.value === "function" && this.peek().type === "name"))) {
+      const what = { record: "a record", enum: "an enum", const: "a constant", native: "a native function", import: "an import", export: "an export", function: "a function" }[t.value];
+      throw new SyntaxMistake(`${what} is declared at the top level of the file, not inside a block: move it out of the block`, t.span, "S025");
+    }
     if (t.type === "keyword") {
       switch (t.value) {
         case "ask":

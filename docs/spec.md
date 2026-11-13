@@ -289,6 +289,10 @@ is there).
 
 ## 5. Declarations
 
+5.0. **At the top level.** Imports, records, enums, constants, natives and functions are declared at the top level
+of the file, outside every block: one inside a block (of an `if`, a loop, a function or any other) is S025. A
+record's methods are its own (§5.1.2), and a function written in place is a value (§9.11).
+
 5.1. **record**: `"record" name "{" (word ":" type [","])* "}"`. A field's name is any word (§2.3.2); field names are unique (S218). A record may
 hold its own type, directly or through a list, a map or other records (a tree, a chain): such a field starts
 null, such a list with no items (§6.14).
@@ -1567,6 +1571,7 @@ its call: the function's name in the call.
 | S022 | an option of a question's own without `option` | A question's own options are written `option "value" "printed words"`. |
 | S023 | `==` where a statement is meant | `x == 1` on its own does nothing; to give a value, `x = 1`. |
 | S024 | two statements on one line with nothing between | A statement starts on a line of its own, or after a `;`; a block may close on the same line. |
+| S025 | a declaration inside a block | Records, enums, constants, functions and imports are declared at the top level of the file, outside every block; move it there. |
 | S101 | `import "std"` | The standard library is in every file already. |
 | S102 | a library path that is not one | Small letters, digits, `-`, `_`, with `/` between folders. |
 | S103 | libraries importing each other in a circle | A library cannot import, through others, a library that imports it. |

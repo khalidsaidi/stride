@@ -437,7 +437,7 @@ export function format(text, name = "program.stride") {
         put(s, indent, `expect ${expr(s.value)}${s.fault ? ` faults ${str(s.fault)}` : s.message ? ` ${str(s.message)}` : ""}`);
         return trailing(s.span.endLine);
       default:
-        // A declaration inside a block is refused by name resolution; printed as it is.
+        // A declaration inside a block is a mistake (S025); printed as it is.
         if (DECLARATIONS.has(s.kind)) return item_(s, indent);
         throw new Error(`stride fmt has no layout for ${s.kind}`);
     }

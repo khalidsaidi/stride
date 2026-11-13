@@ -181,6 +181,10 @@ export const CODES = {
     "when": "two statements on one line with nothing between",
     "explanation": "A statement starts on a line of its own, or after a `;`; a block may close on the same line."
   },
+  "S025": {
+    "when": "a declaration inside a block",
+    "explanation": "Records, enums, constants, functions and imports are declared at the top level of the file, outside every block; move it there."
+  },
   "S101": {
     "when": "`import \"std\"`",
     "explanation": "The standard library is in every file already."
