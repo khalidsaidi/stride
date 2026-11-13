@@ -1,4 +1,4 @@
-// rule 17.3 6.16 7.7 7.9 8.5
+// rule 17.3 17.3.1 6.16 7.7 7.9 8.5
 // `stride fmt` (§17): Stride's one layout, comments kept; a statement written over two lines is followed by a blank
 // line only where the source had one. Brackets keep their author's line breaks, and brackets on one line too long
 // for it wrap at 120 characters; a collect keeps `another` as written.
