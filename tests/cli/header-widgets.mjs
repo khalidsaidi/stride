@@ -49,7 +49,7 @@ export function test() {
     // the box the program never names is not written.
     expect(["map", "t.stride"], 0, "written from no answer\n  month\n\nnot written\n  total");
     const map = expect(["map", "t.stride", "--json"], 0, '"writtenFromNoAnswer":["month"],"writtenByNameWorkedOut":[],"someBoxNamedAtRun":false,"notWritten":["total"]', "stdout");
-    if (!map.stdout.includes('"key":"who","printed":"Name","boxes":[{"box":"name","direct":true}],"intoBoxNamedAtRun":false,"decidesWhatIsAsked":false')) problems.push(`map --json: ${map.stdout}`);
+    if (!map.stdout.includes('"key":"who","type":"string","options":[],"printed":"Name","boxes":[{"box":"name","direct":true}],"intoBoxNamedAtRun":false,"decidesWhatIsAsked":false')) problems.push(`map --json: ${map.stdout}`);
     // An answer asked in a function goes into the box its function writes; one handed to a helper goes into the box
     // the helper is told to write.
     writeFileSync(
