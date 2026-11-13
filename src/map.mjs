@@ -527,6 +527,14 @@ function statementEnvs(body, start) {
         walk(s.body, inner);
         continue;
       }
+      // An if's branch is reached in the ways its condition may lead to it: none, when the compiler knows the
+      // condition leads elsewhere in every way (a field of a record every call gives as null, a flag every call sets).
+      if (s.kind === "if") {
+        const said = envs.map((env) => valueIn(s.condition, env));
+        walk(s.then, envs.filter((_, i) => said[i] !== false));
+        walk(s.otherwise, envs.filter((_, i) => said[i] !== true));
+        continue;
+      }
       for (const c of children(s)) walk(c, envs);
     }
   };
@@ -1106,6 +1114,8 @@ export function mapOf(program, header, resolved) {
               break;
             }
             case "ask": {
+              // A question no way of this invocation reaches is not one of its questions.
+              if (cx.envs && !cx.envs.length) break;
               // A collect's "Another?" is listed after its item's questions.
               const source = sourceOf(s, inv, [...path, s.q.item && s.q.name.endsWith(".another") ? s.node?.span?.end ?? 0 : placeOf(s.node)]);
               let m = ofDeps([source]);
@@ -1125,7 +1135,7 @@ export function mapOf(program, header, resolved) {
             case "fill":
             case "tick":
             case "pick":
-              write(s, cx);
+              if (!cx.envs || cx.envs.length) write(s, cx); // a write no way reaches writes nothing
               break;
             case "eval":
             case "throw":

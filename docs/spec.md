@@ -1857,6 +1857,9 @@ the run decides part of the key, under its key's pattern, `…` standing for tha
 `qty[…]`, one asked in a collect's item `docs[…]`. A function that asks is followed in each call on its own, so
 `ask_party("Agent") as "agent"` and `ask_party("Owner") as "owner"` list `agent.p.name` and `owner.p.name`, and a
 helper's box named from what its call gives it (`fill "{prefix}Name" = p.name`, called with `"A"`) is that box. A
+question or a write in a branch of an `if` that no call reaches is not listed: one asked only when the record a
+call gives has a box's name (`if b.middle != null { … }`) is not listed when every call gives that field as null,
+nor one asked only when a flag is true (`if with_middle { … }`) when every call gives it false. A
 box's answers are those its words, its condition, its button or its name are made of, through lets, records'
 fields, lists, what the functions called are given and return, and what goes into a list or a record
 (`append(fees, x)` and then `fill "Total" = sum(fees)` puts x into Total); and those of an `if`, `match` or loop
