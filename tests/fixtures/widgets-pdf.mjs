@@ -1,7 +1,8 @@
 // A fillable PDF whose fields are not one widget each, for the tests of `stride header`: a text box "name" with two
 // widgets (two copies of the form); a check box "sex" whose two widgets have their own on values, Female and Male (a
 // group of check boxes used as a radio group); a read-only text box "total" (a calculated total); and a text box
-// "month" that the form's field tree holds and the page's annotations leave out. One page, written object by object.
+// "month" of two character cells (a comb field) that the form's field tree holds and the page's annotations leave
+// out. One page, written object by object.
 export function widgetsPdf() {
   const ap = (on) => `/AS /Off /AP << /N << /${on} 13 0 R /Off 13 0 R >> >>`;
   const objects = [
@@ -15,7 +16,7 @@ export function widgetsPdf() {
     `<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [100 200 114 214] /P 3 0 R /F 4 ${ap("Female")} >>`,
     `<< /Type /Annot /Subtype /Widget /Parent 5 0 R /Rect [200 200 214 214] /P 3 0 R /F 4 ${ap("Male")} >>`,
     "<< /Type /Annot /Subtype /Widget /FT /Tx /T (total) /Ff 1 /Rect [100 160 200 180] /P 3 0 R /F 4 /DA (/F1 10 Tf 0 g) >>",
-    "<< /Type /Annot /Subtype /Widget /FT /Tx /T (month) /Rect [250 160 300 180] /P 3 0 R /F 4 /DA (/F1 10 Tf 0 g) /MaxLen 2 >>",
+    "<< /Type /Annot /Subtype /Widget /FT /Tx /T (month) /Ff 16777216 /Rect [250 160 300 180] /P 3 0 R /F 4 /DA (/F1 10 Tf 0 g) /MaxLen 2 >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /XObject /Subtype /Form /BBox [0 0 14 14] /Length 0 >>\nstream\n\nendstream",
   ];

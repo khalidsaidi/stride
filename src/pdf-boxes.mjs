@@ -4,7 +4,8 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 
 // Boxes, one per PDF field: { field, kind: text|check|radio|choice, on, options, page, x1, y1, x2, y2, widgets, max,
-// multiline, readonly, tooltip }, positions in page points from the top left.
+// comb, multiline, readonly, tooltip }, positions in page points from the top left; `comb` marks a text box the PDF
+// divides into `max` cells, a character to each.
 // - A field is one box however many widgets it has (copies of the form, a field on two pages): `page` and x1…y2
 //   are its first widget's, and `widgets` lists every widget's page and place (with its on value for a check box or
 //   a radio button) when there is more than one.
@@ -77,6 +78,8 @@ export async function pageBoxes(bytes) {
     Object.assign(box, placeOf(first));
     const max = first.a?.maxLen || first.o?.charLimit;
     if (max) box.max = max;
+    // A comb field: its max characters each in a cell of its own (a code, a number written digit by digit).
+    if (kind === "text" && (first.a?.comb || first.o?.comb)) box.comb = true;
     if (first.a?.multiLine || first.o?.multiline) box.multiline = true;
     if (mine.some((w) => w.a?.readOnly || w.o?.editable === false)) box.readonly = true;
     const tip = mine.map((w) => w.a?.alternativeText?.trim()).find((t) => t);

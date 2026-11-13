@@ -64,7 +64,7 @@ const COMMANDS = {
   guide: ["stride guide [topic]", "How to write Stride: the guide, built in. With a topic, the part whose heading holds it; `stride guide coming-from` for someone who knows Go, Java, JavaScript or Python; `stride guide topics` lists them.", {}, "stride guide coming-from"],
   new: ["stride new <name> [--pdf <file.pdf>]", "A new program to start from: <name>.stride, a test in <name>.tests/, and, with --pdf, the form's header <name>.boxes.json read from the PDF.", { "--pdf": ["the form's PDF, whose boxes the program fills", "file.pdf"] }, "stride new w9 --pdf fw9.pdf"],
   init: ["stride init [folder]", "Makes a folder a project: stride.json, saying the Stride it needs, and lib/ for the libraries its programs share.", {}, "stride init"],
-  header: ["stride header <file.pdf> [-o <file.boxes.json>]", "The form's header from its PDF: its sha256 and each box (each field once, with every widget's place) as the PDF gives it: its kind, export values, longest length, whether it is read-only and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes; else beside the PDF", "file.boxes.json"] }, "stride header fw9.pdf -o w9.boxes.json"],
+  header: ["stride header <file.pdf> [-o <file>]", "The form's header from its PDF: its sha256 and each box (each field once, with every widget's place) as the PDF gives it: its kind, export values, longest length, whether it is read-only and its maker's description. It works nothing out: the words printed beside a box are yours to add.", { "--output": ["where the header goes, any file name; else <file>.boxes.json beside the PDF", "file"] }, "stride header fw9.pdf -o w9.boxes.json"],
   map: ["stride map <file.stride>", "Which boxes each question's answer goes into (as given, or deciding what is written), the boxes written from no answer, those a name worked out as the program runs may write, and those not written.", { "--json": ["one JSON document", null] }, "stride map w9.stride"],
   asm: ["stride asm <file.stride|file.sbc>", "The instructions, with their source lines.", { "--ir": ["the intermediate form instead", null] }, "stride asm w9.stride"],
   fmt: ["stride fmt <path …>", "Puts the files in Stride's one layout, comments kept; a folder, every .stride file in it.", { "--check": ["only says which files are not in it", null] }, "stride fmt ."],
@@ -459,9 +459,10 @@ async function main(argv) {
       const r = readable(pdfPath);
       if (r.error) return fileError(r);
       const to = values.get("--output") ?? `${pdfPath.replace(/\.pdf$/i, "")}.boxes.json`;
-      if (!to.endsWith(".boxes.json")) return usage("header", `the header's file ends in .boxes.json, and ${to} does not`);
       const { headerOf, writeHeader } = await import("../src/project.mjs");
-      const header = await headerOf(readFileSync(pdfPath), basename(to).replace(/\.boxes\.json$/, ""));
+      // The form's id is the header's file name without .boxes.json, else without its last extension.
+      const id = basename(to).endsWith(".boxes.json") ? basename(to).slice(0, -".boxes.json".length) : basename(to).replace(/(.)\.[^.]*$/, "$1");
+      const header = await headerOf(readFileSync(pdfPath), id);
       if (header.error) return fail(`${pdfPath}: ${header.error}`);
       const w = writing(to, () => writeHeader(to, header));
       if (w) return fail(w);

@@ -1079,7 +1079,9 @@ form. The header's PDF and form must be the program's (S501, S502).
 of the form, a field on two pages), the place of its first widget and, when it has more than one, each widget's
 page, place and on value (`widgets`). A check box's `on` is its on value, or the list of them when its widgets have
 their own; a radio group's `on` is the list of its buttons. A field the PDF marks read-only (a calculated total) is
-listed, marked `readonly`. A header that lists a field once per widget is read as one box of all of them.
+listed, marked `readonly`. A text box's longest length is its `max`; a text box the PDF divides into `max`
+character cells, one character to each (a comb field: a code, a number written digit by digit), is marked
+`comb: true`. A header that lists a field once per widget is read as one box of all of them.
 
 10.2.2. **Where the header is.** A program's header is beside it: `<program>.boxes.json`, else `<form id>.boxes.json`,
 the id its form line gives (§4.1). `stride check t.stride` with `form w9` reads `w9.boxes.json` when there is no
@@ -1758,7 +1760,7 @@ its call: the function's name in the call.
 | `stride doc [word]` | the standard library's entries (§14) whose name, section or description holds the word, each with its signatures, what it gives and its examples (§14.0.7); no word: all of them |
 | `stride new <name> [--pdf <file.pdf>]` | §17.6 |
 | `stride init [folder]` | §4.7 |
-| `stride header <file.pdf> [-o file.boxes.json]` | §17.6 |
+| `stride header <file.pdf> [-o file]` | §17.6 |
 | `stride map <file>` | for each question, by its key or its key's pattern, the boxes its answer goes into, marked `=` where it goes as given; the boxes written from no answer; the boxes a name worked out as the program runs may write; the boxes not written (§17.6.1) |
 | `stride lsp` | §17.6 |
 | `stride dap` | §17.15 |
@@ -1818,12 +1820,13 @@ itself says so, and that `STRIDE_DEBUG=1` shows where.
 
 17.6. **Starting and editing.**
 - `stride header <file.pdf>` writes the form's header (§10) from its PDF: its sha256, and each box (each field
-  once, §10.2.1) as the PDF gives it: its kind, export values, longest length, place on its page and its maker's
+  once, §10.2.1) as the PDF gives it: its kind, export values, longest length, whether it is a comb field, place on its page and its maker's
   description, when it has one. It works nothing out. The fields are those of the PDF's form (its field tree),
   a widget no page lists among its annotations included and a widget on no page left out; buttons and signatures
   are not boxes. `header` says how many boxes the form has, and `check` (`no errors (3 questions, 12 boxes in the
-  form)`) counts the same. It is written to -o, or beside the PDF as `<file>.boxes.json`; the header's
-  file name gives the form's id. A file that is not a PDF, or a PDF with no box a person fills, writes nothing
+  form)`) counts the same. It is written to -o, a file of any name, or beside the PDF as `<file>.boxes.json`;
+  the header's file name gives the form's id: the name without `.boxes.json`, else without its last extension
+  (`-o w9.json` and `-o w9.boxes.json` are both the form `w9`). A file that is not a PDF, or a PDF with no box a person fills, writes nothing
   (exit 1).
 - `stride new <name>` writes a script `<name>.stride` (§4.6) and a test of it `<name>.tests/first.json`; with
   `--pdf`, a program for that form instead: its header `<name>.boxes.json`, the PDF beside it as `<name>.pdf`, a

@@ -31,7 +31,12 @@ export function test() {
     if (of("name").length !== 1 || of("name")[0].widgets?.length !== 2) problems.push(`the box with two widgets: ${JSON.stringify(of("name"))}`);
     if (of("sex").length !== 1 || JSON.stringify(of("sex")[0].on) !== '["Female","Male"]' || of("sex")[0].widgets?.map((w) => w.on).join() !== "Female,Male") problems.push(`the check box of two on values: ${JSON.stringify(of("sex"))}`);
     if (of("total")[0]?.readonly !== true) problems.push(`the read-only box: ${JSON.stringify(of("total"))}`);
-    if (of("month")[0]?.max !== 2) problems.push(`the box the page's annotations leave out: ${JSON.stringify(of("month"))}`);
+    if (of("month")[0]?.max !== 2 || of("month")[0]?.comb !== true) problems.push(`the box the page's annotations leave out, a comb field: ${JSON.stringify(of("month"))}`);
+    if ("comb" in of("name")[0]) problems.push(`a box that is no comb field: ${JSON.stringify(of("name"))}`);
+    // -o takes any file name; the form's id is the name without .boxes.json, else without its last extension.
+    expect(["header", "form-w.pdf", "-o", "hdr.json"], 0, "hdr.json: 4 boxes");
+    const other = JSON.parse(readFileSync(join(dir, "hdr.json"), "utf8"));
+    if (other.form !== "hdr" || other.boxes.length !== 4) problems.push(`header -o hdr.json: the form ${other.form}, ${other.boxes.length} boxes`);
 
     // The program is t.stride; its header is the form's, form-w.boxes.json.
     writeFileSync(
