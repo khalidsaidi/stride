@@ -1194,7 +1194,7 @@ export function mapOf(program, header, resolved) {
   const fields = [...byField.keys()];
   const at = new Map(fields.map((f, i) => [f, i]));
   return {
-    questions: list.map((q) => ({ key: q.key, pattern: q.re, printed: q.printed, boxes: [...q.boxes].sort(([a], [b]) => at.get(a) - at.get(b)).map(([box, direct]) => ({ box, direct })), decides: q.decides, intoNamed: q.intoNamed })),
+    questions: list.map((q) => ({ key: q.key, pattern: q.re, printed: q.printed, type: q.q.type, options: (q.q.options ?? []).map((o) => ({ value: o.value, printed: o.printed })), boxes: [...q.boxes].sort(([a], [b]) => at.get(a) - at.get(b)).map(([box, direct]) => ({ box, direct })), decides: q.decides, intoNamed: q.intoNamed })),
     writtenFromNoAnswer: fields.filter((f) => written.has(f) && !linked.has(f)),
     writtenByName: fields.filter((f) => !written.has(f) && candidates.has(f)),
     someBoxNamedAtRun: somewhere,

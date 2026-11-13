@@ -1493,16 +1493,19 @@ in the document.
 
 A mistake or warning is `{code, severity, file, line, column, endLine, endColumn, message, labels: [{file, line,
 column, endLine, endColumn, message}]}`. The documents, every field always present:
-- `run` (in the terminal, §17.18): `{ok, diagnostics, questions, prints, boxes, fault}`. A question is `{key, type, printed, answered,
-  value, default, unreadable, failed}`; `prints` the lines printed; `boxes` box name to what it holds; `fault`
+- `run` (in the terminal, §17.18): `{ok, diagnostics, questions, prints, boxes, fault}`. A question is `{key, type, options, printed,
+  answered, value, default, unreadable, failed}`, `type` its type's name (`string`, `long_text`, `number`, `date`,
+  `phone`, `email`, `bool`, `one_of`, `any_of`) and `options` its options in order, each `{value, printed}` (`[]`
+  but for one_of and any_of); `prints` the lines printed; `boxes` box name to what it holds; `fault`
   null or `{code, message, file, line, column, stack: [{function, file, line, column}]}`, a place null when there
   is none. With mistakes, `questions` and `prints` are `[]`, `boxes` `{}`, `fault` null.
 - `check`: `{ok, files: [{file, ok, error, diagnostics}]}`; `error` null or what kept the file from being checked.
 - `compile`: `{ok, diagnostics, output, bytes, questions, boxes}`; with mistakes, `output` null.
 - `test`: `{ok, files: [{file, ok, error, diagnostics, tests: [{name, ok, problems}]}]}`.
 - `eval`: `{ok, value, diagnostics, fault}`: `value` the words `stride eval` prints, or null.
-- `map`: `{ok, diagnostics, questions: [{key, printed, boxes: [{box, direct}]}], writtenFromNoAnswer,
-  notWritten}`.
+- `map`: `{ok, diagnostics, questions: [{key, type, options, printed, boxes: [{box, direct}], intoBoxNamedAtRun,
+  decidesWhatIsAsked}], writtenFromNoAnswer, writtenByNameWorkedOut, someBoxNamedAtRun, notWritten}`, a question's
+  `type` and `options` as in `run`'s.
 
 Values: a number as its words (§3.3.5), a JSON string, so no digit is lost (`"1.5"`); words and a date
 (`"2024-01-02"`) as JSON strings; a bool as `true` or `false`; an option as its value; an any_of answer as

@@ -525,7 +525,7 @@ async function main(argv) {
       const m = mapOf(r.out.program, r.out.header, r.out.resolved);
       const named = m.someBoxNamedAtRun ? "some box named as the program runs" : null;
       if (json) {
-        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: m.questions.map((q) => ({ key: q.key, printed: q.printed, boxes: q.boxes.map((l) => ({ box: short(l.box), direct: l.direct })), intoBoxNamedAtRun: q.intoNamed, decidesWhatIsAsked: q.decides })), writtenFromNoAnswer: m.writtenFromNoAnswer.map(short), writtenByNameWorkedOut: m.writtenByName.map(short), someBoxNamedAtRun: m.someBoxNamedAtRun, notWritten: m.notWritten.map(short) }));
+        out(JSON.stringify({ ok: true, diagnostics: warnings.map((d) => d.toJSON()), questions: m.questions.map((q) => ({ key: q.key, type: q.type, options: q.options, printed: q.printed, boxes: q.boxes.map((l) => ({ box: short(l.box), direct: l.direct })), intoBoxNamedAtRun: q.intoNamed, decidesWhatIsAsked: q.decides })), writtenFromNoAnswer: m.writtenFromNoAnswer.map(short), writtenByNameWorkedOut: m.writtenByName.map(short), someBoxNamedAtRun: m.someBoxNamedAtRun, notWritten: m.notWritten.map(short) }));
         return 0;
       }
       out(bold("question → the boxes its answer goes into (= as given)"));
@@ -685,7 +685,7 @@ async function main(argv) {
       const written = Object.entries(result.named ? result.writes : boxValues(r.p, result.writes)).filter(([, v]) => v !== "" && v !== "Off");
       if (json) {
         const value = (v) => (v === null || v === undefined ? null : Array.isArray(v) ? v.map(value) : typeof v === "boolean" ? v : stringOf(v));
-        out(JSON.stringify({ ok: !result.fault, diagnostics: [...warnings.map((d) => d.toJSON()), ...unknownWarnings], questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
+        out(JSON.stringify({ ok: !result.fault, diagnostics: [...warnings.map((d) => d.toJSON()), ...unknownWarnings], questions: result.steps.map((s) => ({ key: s.key, type: s.question.type, options: (s.question.options ?? []).map((o) => ({ value: o.value, printed: o.printed })), printed: s.printed, answered: s.answered, value: value(s.value), default: s.default === undefined ? null : value(s.default), unreadable: s.unreadable ?? null, failed: s.failed })), prints: result.prints, boxes: Object.fromEntries(written.map(([k, v]) => [k.slice(r.p.prefix.length), v])), fault: faultJSON(result.fault) }));
         return result.fault ? 1 : 0;
       }
       // A script gives its print lines as they are; a program also the questions it asked and the boxes it wrote.
