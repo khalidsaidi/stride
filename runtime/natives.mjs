@@ -153,7 +153,7 @@ export const NATIVES = {
     takes: "t:t from:n to:n",
     fn: (t, from, to) => {
       const f = position("slice", from), e = position("slice", to);
-      return e < f ? "" : chars(text(t)).slice(f, e + 1).join("");
+      return e <= f ? "" : chars(text(t)).slice(f, e).join("");
     },
   },
   digits: { pure: true, takes: "t:t", fn: (t) => text(t).replace(/[^0-9]/g, "") },

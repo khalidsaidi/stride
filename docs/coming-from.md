@@ -21,6 +21,7 @@ idioms, the differences, and what to write instead. Every example here is run by
 | `if x:`, `if (x)` on a value that may be null | `if x { }` for a bool: null counts as false; `if x != null { }` for anything else |
 | `list[0]`, `len(list)` | `list[0]`: positions count from 0; `count(list)` |
 | `list[1:3]`, `list.slice(1, 3)` | `list[1..<3]`; `list[1..2]` includes both ends; `list[1..]`, `list[..<3]` |
+| `s.substring(1, 3)`, `s.slice(1, 3)`, `s[1:3]` | `slice(s, 1, 3)`: from 1 up to 3, 3 not included |
 | `"Hello " + name`, f-strings | `"Hello {name}"`; `+` joins words too |
 | `for i := 0; i < n; i++`, `for i in range(n)` | `for i in 0..<n { }`; `for i in 1..n { }` includes n |
 | `xs.forEach`, `for i, x := range xs`, `enumerate(xs)` | `for x in xs { }`, `for i, x in xs { }` (i from 0) |

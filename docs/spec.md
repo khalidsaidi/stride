@@ -1277,7 +1277,7 @@ none. A fault has a code, a message, and the place
 | `length(t: string) -> number` | how many characters; no characters: 0 |
 | `chars(t: string, from: number, to: number) -> string` | characters from..to (positions, both included) of t with spaces, `-`, `–`, `—`, `/`, `.` left out; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters |
 | `character(t: string, n: number) -> string` | the character at position n of t, the same separators left out; n past the end: null |
-| `slice(t: string, from: number, to: number) -> string` | characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters; list slices keep their own rule (§6.9.3) |
+| `slice(t: string, from: number, to: number) -> string` | characters from `from` up to `to`, `to` not included, of t as written, as `l[a..<b]` takes items: `slice(t, 0, length(t))` is all of t; a position below 0 is F007 (§14.0.4); a position past the end stands for the end, so fewer characters, or none; to ≤ from: no characters |
 | `digits(t: string) -> string` | only the digits 0–9 |
 | `letters(t: string) -> string` | only the letters (Unicode) |
 | `is_digits(t: string) -> bool` | true when t has a character and every character is 0–9 |

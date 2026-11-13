@@ -52,7 +52,8 @@ export native function chars(t: string, from: number, to: number) -> string
 # example: character("A1-B2", 2) gives B
 # example: character("A1-B2", 9) == null gives true
 export native function character(t: string, n: number) -> string
-# example: slice("Hello", 1, 3) gives ell
+# example: slice("Hello", 1, 4) gives ell
+# example: slice("Hello", 3, 9) gives lo
 export native function slice(t: string, from: number, to: number) -> string
 # example: digits("(555) 123-4567") gives 5551234567
 export native function digits(t: string) -> string

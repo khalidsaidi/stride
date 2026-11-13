@@ -1000,7 +1000,7 @@ export const LIBRARY = [
     "names": [
       "slice"
     ],
-    "gives": "characters from..to (both included) of t as written; the positions are checked first (§14.0.4: -1 is F007), then to < from: no characters; list slices keep their own rule (§6.9.3)"
+    "gives": "characters from `from` up to `to`, `to` not included, of t as written, as `l[a..<b]` takes items: `slice(t, 0, length(t))` is all of t; a position below 0 is F007 (§14.0.4); a position past the end stands for the end, so fewer characters, or none; to ≤ from: no characters"
   },
   {
     "section": "14.1 Words",
